@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/providers/auth-provider';
+import { AudioPlayer } from '@/components/audio/audio-player';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -42,9 +43,12 @@ export default function RootLayout({
             </div>
             
             {/* Main content */}
-            <main className="relative z-10">
+            <main className="relative z-10 pb-32"> {/* Added padding for audio player */}
               {children}
             </main>
+
+            {/* Global Audio Player */}
+            <AudioPlayer />
           </div>
         </AuthProvider>
       </body>
