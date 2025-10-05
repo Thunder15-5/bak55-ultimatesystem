@@ -2,6 +2,11 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/auth-store';
 
+// Components
+import Layout from './components/Layout';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+
 // Pages
 import HomePage from './pages/home';
 import LoginPage from './pages/login';
@@ -22,89 +27,105 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#2d1b69] to-[#1a1a1a] text-white font-[Inter]">
-      {/* Optional Global Navbar */}
-      {/* <Navbar /> */}
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
+    <div className="min-h-screen bg-gradient-dark text-white font-sans antialiased">
+      {/* Global Layout Wrapper */}
+      <Layout>
+        {/* Conditionally render navbar - show on all pages except auth pages */}
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route
-            path="/login"
-            element={
-              !isAuthenticated ? (
-                <LoginPage />
-              ) : (
-                <Navigate to={getDashboardPath(user?.role)} />
-              )
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              !isAuthenticated ? (
-                <RegisterPage />
-              ) : (
-                <Navigate to={getDashboardPath(user?.role)} />
-              )
-            }
-          />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/competitions" element={<CompetitionsPage />} />
-
-          {/* Protected routes */}
-          <Route
-            path="/artist/dashboard"
-            element={
-              isAuthenticated ? (
-                <ArtistDashboardPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/artist/subscription"
-            element={
-              isAuthenticated ? (
-                <ArtistSubscriptionPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/brand/dashboard"
-            element={
-              isAuthenticated ? (
-                <BrandDashboardPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              isAuthenticated && user?.role === 'admin' ? (
-                <AdminPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+          <Route path="/login" element={null} />
+          <Route path="/register" element={null} />
+          <Route path="/forgot-password" element={null} />
+          <Route path="*" element={<Navbar />} />
         </Routes>
-      </main>
 
-      {/* Optional Global Footer */}
-      {/* <Footer /> */}
+        <main className="flex-1">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route
+              path="/login"
+              element={
+                !isAuthenticated ? (
+                  <LoginPage />
+                ) : (
+                  <Navigate to={getDashboardPath(user?.role)} replace />
+                )
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                !isAuthenticated ? (
+                  <RegisterPage />
+                ) : (
+                  <Navigate to={getDashboardPath(user?.role)} replace />
+                )
+              }
+            />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/competitions" element={<CompetitionsPage />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/artist/dashboard"
+              element={
+                isAuthenticated ? (
+                  <ArtistDashboardPage />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/artist/subscription"
+              element={
+                isAuthenticated ? (
+                  <ArtistSubscriptionPage />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/brand/dashboard"
+              element={
+                isAuthenticated ? (
+                  <BrandDashboardPage />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                isAuthenticated && user?.role === 'admin' ? (
+                  <AdminPage />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+
+        {/* Conditionally render footer - show on all pages except auth pages */}
+        <Routes>
+          <Route path="/login" element={null} />
+          <Route path="/register" element={null} />
+          <Route path="/forgot-password" element={null} />
+          <Route path="*" element={<Footer />} />
+        </Routes>
+      </Layout>
     </div>
   );
 }
 
-function getDashboardPath(role) {
+function getDashboardPath(role?: string): string {
   switch (role) {
     case 'artist':
       return '/artist/dashboard';
