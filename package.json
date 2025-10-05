@@ -22,5 +22,12 @@
     "vite": "^7.1.9",
     "zod": "^3.25.76",
     "zustand": "^4.5.7"
+    "scripts": {
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "build:dev": "vite build --mode development",
+  "preview": "vite preview"
+}
+
   }
 }
