@@ -98,15 +98,15 @@ export function RegistrationSteps() {
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="flex flex-col items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
                   step <= registrationStep
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground'
+                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/50'
+                    : 'bg-dark-700 text-dark-300'
                 }`}
               >
-                {step < registrationStep ? <Check className="h-4 w-4" /> : step}
+                {step < registrationStep ? <Check className="h-5 w-5" /> : step}
               </div>
-              <div className="text-xs mt-2 text-muted-foreground capitalize">
+              <div className="text-xs mt-2 text-dark-200 capitalize font-medium">
                 {step === 1 && 'Role'}
                 {step === 2 && 'Account'}
                 {step === 3 && 'Profile'}
@@ -115,12 +115,12 @@ export function RegistrationSteps() {
             </div>
           ))}
         </div>
-        <div className="relative">
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-border -translate-y-1/2" />
+        <div className="relative h-1">
+          <div className="absolute top-0 left-0 right-0 h-full bg-dark-700 rounded-full" />
           <motion.div
-            className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"
             initial={{ width: '0%' }}
-            animate={{ width: `${((registrationStep - 1) / 2) * 100}%` }}
+            animate={{ width: `${((registrationStep - 1) / 3) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
@@ -137,43 +137,43 @@ export function RegistrationSteps() {
         >
           {/* Step 1: Role Selection */}
           {registrationStep === 1 && (
-            <Card className="p-6">
-              <div className="space-y-2 mb-6">
-                <h3 className="text-2xl font-bold">Join as Artist or Fan</h3>
-                <p className="text-muted-foreground">Choose how you want to experience BAK55</p>
+            <div className="glass rounded-2xl p-8">
+              <div className="space-y-2 mb-8">
+                <h3 className="text-3xl font-bold text-white">Join as Artist or Fan</h3>
+                <p className="text-dark-200">Choose how you want to experience BAK55</p>
               </div>
               <div className="space-y-6">
                 <div className="grid gap-4">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => updateRegistrationData({ role: 'artist' })}
                     className={`p-6 rounded-xl border-2 text-left transition-all duration-300 ${
                       registrationData.role === 'artist'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-card hover:border-primary/50'
+                        ? 'border-primary-500 bg-primary-500/20 shadow-lg shadow-primary-500/30'
+                        : 'border-dark-600 glass-light hover:border-primary-500/50'
                     }`}
                   >
-                    <Music className="h-8 w-8 text-primary mb-3" />
-                    <h3 className="text-xl font-semibold mb-2">Artist</h3>
-                    <p className="text-muted-foreground">
+                    <Music className="h-10 w-10 text-primary-400 mb-3" />
+                    <h3 className="text-xl font-semibold mb-2 text-white">Artist</h3>
+                    <p className="text-dark-200 text-sm">
                       Upload music, join competitions, get discovered, and earn BAKCoins
                     </p>
                   </motion.button>
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => updateRegistrationData({ role: 'user' })}
                     className={`p-6 rounded-xl border-2 text-left transition-all duration-300 ${
                       registrationData.role === 'user'
-                        ? 'border-secondary bg-secondary/10'
-                        : 'border-border bg-card hover:border-secondary/50'
+                        ? 'border-secondary-500 bg-secondary-500/20 shadow-lg shadow-secondary-500/30'
+                        : 'border-dark-600 glass-light hover:border-secondary-500/50'
                     }`}
                   >
-                    <User className="h-8 w-8 text-secondary mb-3" />
-                    <h3 className="text-xl font-semibold mb-2">Fan</h3>
-                    <p className="text-muted-foreground">
+                    <User className="h-10 w-10 text-secondary-400 mb-3" />
+                    <h3 className="text-xl font-semibold mb-2 text-white">Fan</h3>
+                    <p className="text-dark-200 text-sm">
                       Discover new talent, vote in competitions, support artists, and collect exclusive content
                     </p>
                   </motion.button>
@@ -183,7 +183,7 @@ export function RegistrationSteps() {
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-sm text-destructive"
+                    className="text-sm text-red-400"
                   >
                     {errors.role}
                   </motion.p>
@@ -192,117 +192,123 @@ export function RegistrationSteps() {
                 <Button
                   onClick={nextStep}
                   disabled={!registrationData.role}
-                  className="w-full"
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white"
                   size="lg"
                 >
                   Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Step 2: Account Details */}
           {registrationStep === 2 && (
-            <Card className="p-6">
-              <div className="space-y-2 mb-6">
-                <h3 className="text-2xl font-bold">Create Your Account</h3>
-                <p className="text-muted-foreground">Enter your basic account information</p>
+            <div className="glass rounded-2xl p-8">
+              <div className="space-y-2 mb-8">
+                <h3 className="text-3xl font-bold text-white">Create Your Account</h3>
+                <p className="text-dark-200">Enter your basic account information</p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Email Address</label>
+                  <label className="text-sm font-medium text-dark-100">Email Address</label>
                   <Input
                     type="email"
                     placeholder="your@email.com"
                     value={registrationData.email || ''}
                     onChange={(e) => updateRegistrationData({ email: e.target.value })}
+                    variant="glass"
                   />
-                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                  {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Username</label>
+                  <label className="text-sm font-medium text-dark-100">Username</label>
                   <Input
                     placeholder="unique_username"
                     value={registrationData.username || ''}
                     onChange={(e) => updateRegistrationData({ username: e.target.value })}
+                    variant="glass"
                   />
-                  {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
+                  {errors.username && <p className="text-sm text-red-400">{errors.username}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Password</label>
+                  <label className="text-sm font-medium text-dark-100">Password</label>
                   <Input
                     type="password"
                     placeholder="••••••••"
                     value={registrationData.password || ''}
                     onChange={(e) => updateRegistrationData({ password: e.target.value })}
+                    variant="glass"
                   />
-                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                  {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Confirm Password</label>
+                  <label className="text-sm font-medium text-dark-100">Confirm Password</label>
                   <Input
                     type="password"
                     placeholder="••••••••"
                     value={registrationData.confirmPassword || ''}
                     onChange={(e) => updateRegistrationData({ confirmPassword: e.target.value })}
+                    variant="glass"
                   />
-                  {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+                  {errors.confirmPassword && <p className="text-sm text-red-400">{errors.confirmPassword}</p>}
                 </div>
 
                 <div className="flex gap-4 pt-4">
                   <Button
                     onClick={prevStep}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 border-dark-600 text-dark-100 hover:bg-dark-700"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={nextStep}
-                    className="flex-1"
+                    className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
                   >
                     Continue
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Step 3: Profile Setup */}
           {registrationStep === 3 && (
-            <Card className="p-6">
-              <div className="space-y-2 mb-6">
-                <h3 className="text-2xl font-bold">
+            <div className="glass rounded-2xl p-8">
+              <div className="space-y-2 mb-8">
+                <h3 className="text-3xl font-bold text-white">
                   {registrationData.role === 'artist' ? 'Artist Profile' : 'Fan Profile'}
                 </h3>
-                <p className="text-muted-foreground">Tell us more about yourself</p>
+                <p className="text-dark-200">Tell us more about yourself</p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {registrationData.role === 'artist' && (
                   <>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Stage Name</label>
+                      <label className="text-sm font-medium text-dark-100">Stage Name</label>
                       <Input
                         placeholder="Your artist name"
                         value={registrationData.stageName || ''}
                         onChange={(e) => updateRegistrationData({ stageName: e.target.value })}
+                        variant="glass"
                       />
-                      {errors.stageName && <p className="text-sm text-destructive">{errors.stageName}</p>}
+                      {errors.stageName && <p className="text-sm text-red-400">{errors.stageName}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Music Genres</label>
-                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                      <label className="text-sm font-medium text-dark-100">Music Genres</label>
+                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
                         {musicGenres.map((genre) => (
                           <motion.button
                             key={genre}
                             type="button"
+                            whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => {
                               const currentGenres = registrationData.genres || [];
@@ -311,10 +317,10 @@ export function RegistrationSteps() {
                                 : [...currentGenres, genre];
                               updateRegistrationData({ genres: newGenres });
                             }}
-                            className={`p-3 rounded-lg text-sm text-left transition-all ${
+                            className={`p-3 rounded-lg text-sm font-medium text-left transition-all ${
                               registrationData.genres?.includes(genre)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                                : 'glass-light text-dark-100 hover:bg-dark-600'
                             }`}
                           >
                             {genre}
@@ -322,16 +328,16 @@ export function RegistrationSteps() {
                         ))}
                       </div>
                       {errors.genres && (
-                        <p className="text-sm text-destructive mt-2">{errors.genres}</p>
+                        <p className="text-sm text-red-400 mt-2">{errors.genres}</p>
                       )}
                     </div>
                   </>
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Bio</label>
+                  <label className="text-sm font-medium text-dark-100">Bio</label>
                   <textarea
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex min-h-[80px] w-full rounded-lg glass-light border border-dark-600 px-4 py-3 text-sm text-white placeholder:text-dark-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:border-transparent transition-all"
                     placeholder="Tell us about yourself..."
                     value={registrationData.bio || ''}
                     onChange={(e) => updateRegistrationData({ bio: e.target.value })}
@@ -340,33 +346,34 @@ export function RegistrationSteps() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Location</label>
+                  <label className="text-sm font-medium text-dark-100">Location</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-dark-400" />
                     <Input
                       className="pl-10"
                       placeholder="City, Country"
                       value={registrationData.location || ''}
                       onChange={(e) => updateRegistrationData({ location: e.target.value })}
+                      variant="glass"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-3 p-4 glass-light rounded-lg">
                   <input
                     type="checkbox"
                     id="acceptTerms"
                     checked={registrationData.acceptTerms || false}
                     onChange={(e) => updateRegistrationData({ acceptTerms: e.target.checked })}
-                    className="w-4 h-4 rounded border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-5 h-5 mt-0.5 rounded border-dark-500 bg-dark-700 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                   />
-                  <label htmlFor="acceptTerms" className="text-sm">
+                  <label htmlFor="acceptTerms" className="text-sm text-dark-200">
                     I agree to the{' '}
-                    <a href="/terms" className="text-primary hover:underline">
+                    <a href="/terms" className="text-primary-400 hover:text-primary-300 underline">
                       Terms of Service
                     </a>{' '}
                     and{' '}
-                    <a href="/privacy" className="text-primary hover:underline">
+                    <a href="/privacy" className="text-primary-400 hover:text-primary-300 underline">
                       Privacy Policy
                     </a>
                   </label>
@@ -376,7 +383,7 @@ export function RegistrationSteps() {
                   <Button
                     onClick={prevStep}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 border-dark-600 text-dark-100 hover:bg-dark-700"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
@@ -384,13 +391,13 @@ export function RegistrationSteps() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!registrationData.acceptTerms || isLoading}
-                    className="flex-1"
+                    className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white shadow-lg"
                   >
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           )}
         </motion.div>
       </AnimatePresence>
