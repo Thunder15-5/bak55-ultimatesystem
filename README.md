@@ -1,1 +1,0 @@
-BAK55 Platform Foundation - Starter Template
