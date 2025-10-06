@@ -130,7 +130,7 @@ const Waitlist = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">Free</div>
-                <div className="text-xs text-muted-foreground">Lifetime Pro</div>
+                <div className="text-xs text-muted-foreground"> 1 year Pro</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">Q1 2026</div>
