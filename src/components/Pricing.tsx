@@ -25,6 +25,7 @@ const Pricing = () => {
       description: "For serious artists",
       features: [
         "Everything in Basic",
+        "Upload unlimited songs",
         "Enhanced analytics",
         "Priority support",
         "Promotional tools",
