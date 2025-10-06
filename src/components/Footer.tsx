@@ -40,7 +40,7 @@ const Footer = () => {
               <span className="text-xl font-bold text-foreground">BAK55</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Powering African Music's Digital Revolution
+              BAK55 is the essential infrustructure for Powering African Music's Digital Revolution - an - AI - powered talent ecosystem that discovers, develops, and monitizes artists through a proprietary digital economy.
             </p>
           </div>
 
