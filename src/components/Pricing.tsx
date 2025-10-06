@@ -9,8 +9,8 @@ const Pricing = () => {
       description: "Perfect for getting started",
       features: [
         "Platform access",
-        "Upload unlimited songs",
-        "Enter competitions",
+        "Upload 3 songs",
+        "Enter Basic competitions",
         "Earn BAKCoins",
         "Basic analytics",
         "Community access"
