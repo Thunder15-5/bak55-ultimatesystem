@@ -14,16 +14,419 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      artist_profiles: {
+        Row: {
+          created_at: string
+          genres: string[] | null
+          id: string
+          social_links: Json | null
+          stage_name: string | null
+          talent_score: number | null
+          total_earnings: number | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          genres?: string[] | null
+          id?: string
+          social_links?: Json | null
+          stage_name?: string | null
+          talent_score?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          genres?: string[] | null
+          id?: string
+          social_links?: Json | null
+          stage_name?: string | null
+          talent_score?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_profiles: {
+        Row: {
+          company_name: string
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          cover_image: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          entry_fee: number | null
+          genres: string[] | null
+          id: string
+          max_submissions: number | null
+          prize_amount: number
+          rules: Json | null
+          start_date: string
+          status: Database["public"]["Enums"]["competition_status"] | null
+          title: string
+          updated_at: string
+          voting_end_date: string | null
+          voting_start_date: string | null
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          entry_fee?: number | null
+          genres?: string[] | null
+          id?: string
+          max_submissions?: number | null
+          prize_amount: number
+          rules?: Json | null
+          start_date: string
+          status?: Database["public"]["Enums"]["competition_status"] | null
+          title: string
+          updated_at?: string
+          voting_end_date?: string | null
+          voting_start_date?: string | null
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          entry_fee?: number | null
+          genres?: string[] | null
+          id?: string
+          max_submissions?: number | null
+          prize_amount?: number
+          rules?: Json | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["competition_status"] | null
+          title?: string
+          updated_at?: string
+          voting_end_date?: string | null
+          voting_start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string
+          id: string
+          location: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email: string
+          id: string
+          location?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          location?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          artist_id: string
+          audio_url: string
+          competition_id: string
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          id: string
+          status: Database["public"]["Enums"]["submission_status"] | null
+          title: string
+          updated_at: string
+          vote_count: number | null
+        }
+        Insert: {
+          artist_id: string
+          audio_url: string
+          competition_id: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          title: string
+          updated_at?: string
+          vote_count?: number | null
+        }
+        Update: {
+          artist_id?: string
+          audio_url?: string
+          competition_id?: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          title?: string
+          updated_at?: string
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          reference_id: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference_id?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference_id?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          submission_id: string
+          voter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          submission_id: string
+          voter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          submission_id?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "artist" | "brand" | "admin"
+      competition_status:
+        | "draft"
+        | "active"
+        | "voting"
+        | "completed"
+        | "cancelled"
+      submission_status: "pending" | "approved" | "rejected"
+      transaction_type: "purchase" | "earning" | "vote" | "prize" | "refund"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +553,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["artist", "brand", "admin"],
+      competition_status: [
+        "draft",
+        "active",
+        "voting",
+        "completed",
+        "cancelled",
+      ],
+      submission_status: ["pending", "approved", "rejected"],
+      transaction_type: ["purchase", "earning", "vote", "prize", "refund"],
+    },
   },
 } as const

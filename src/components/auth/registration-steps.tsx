@@ -139,8 +139,8 @@ export function RegistrationSteps() {
           {registrationStep === 1 && (
             <div className="glass rounded-2xl p-8">
               <div className="space-y-2 mb-8">
-                <h3 className="text-3xl font-bold text-white">Join as Artist or Fan</h3>
-                <p className="text-dark-200">Choose how you want to experience BAK55</p>
+                <h3 className="text-3xl font-bold text-white">Choose Your Path</h3>
+                <p className="text-dark-200">Select your role on BAK55 Talent</p>
               </div>
               <div className="space-y-6">
                 <div className="grid gap-4">
@@ -157,24 +157,24 @@ export function RegistrationSteps() {
                     <Music className="h-10 w-10 text-primary-400 mb-3" />
                     <h3 className="text-xl font-semibold mb-2 text-white">Artist</h3>
                     <p className="text-dark-200 text-sm">
-                      Upload music, join competitions, get discovered, and earn BAKCoins
+                      Upload music, join competitions, get discovered, and earn rewards
                     </p>
                   </motion.button>
 
                   <motion.button
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => updateRegistrationData({ role: 'user' })}
+                    onClick={() => updateRegistrationData({ role: 'brand' })}
                     className={`p-6 rounded-xl border-2 text-left transition-all duration-300 ${
-                      registrationData.role === 'user'
+                      registrationData.role === 'brand'
                         ? 'border-secondary-500 bg-secondary-500/20 shadow-lg shadow-secondary-500/30'
                         : 'border-dark-600 glass-light hover:border-secondary-500/50'
                     }`}
                   >
                     <User className="h-10 w-10 text-secondary-400 mb-3" />
-                    <h3 className="text-xl font-semibold mb-2 text-white">Fan</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-white">Brand</h3>
                     <p className="text-dark-200 text-sm">
-                      Discover new talent, vote in competitions, support artists, and collect exclusive content
+                      Launch competitions, discover talent, and connect with artists
                     </p>
                   </motion.button>
                 </div>
@@ -330,6 +330,40 @@ export function RegistrationSteps() {
                       {errors.genres && (
                         <p className="text-sm text-red-400 mt-2">{errors.genres}</p>
                       )}
+                    </div>
+                  </>
+                )}
+
+                {registrationData.role === 'brand' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-dark-100">Company Name</label>
+                      <Input
+                        placeholder="Your company name"
+                        value={registrationData.companyName || ''}
+                        onChange={(e) => updateRegistrationData({ companyName: e.target.value })}
+                        variant="glass"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-dark-100">Industry</label>
+                      <Input
+                        placeholder="e.g., Music Production, Fashion"
+                        value={registrationData.industry || ''}
+                        onChange={(e) => updateRegistrationData({ industry: e.target.value })}
+                        variant="glass"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-dark-100">Website</label>
+                      <Input
+                        placeholder="https://yourcompany.com"
+                        value={registrationData.website || ''}
+                        onChange={(e) => updateRegistrationData({ website: e.target.value })}
+                        variant="glass"
+                      />
                     </div>
                   </>
                 )}

@@ -1,9 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { User, UserRole, SocialLinks } from '@/types/user';
+import { Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  role: 'artist' | 'brand' | 'admin';
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  stageName?: string;
+  genres?: string[];
+  companyName?: string;
+  createdAt: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -15,6 +28,7 @@ interface AuthState {
   
   // Actions
   initializeAuth: () => Promise<void>;
+  fetchUserProfile: (userId: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
@@ -30,12 +44,14 @@ interface RegisterData {
   username: string;
   password: string;
   confirmPassword: string;
-  role: UserRole;
+  role: 'artist' | 'brand' | 'admin';
   stageName?: string;
   genres?: string[];
   bio?: string;
   location?: string;
-  socialLinks?: SocialLinks;
+  companyName?: string;
+  industry?: string;
+  website?: string;
   acceptTerms: boolean;
 }
 
@@ -54,21 +70,54 @@ export const useAuthStore = create<AuthState>()(
         
         // Set up auth state listener
         supabase.auth.onAuthStateChange((event, session) => {
-          set({ 
-            session, 
-            user: session?.user ? mapSupabaseUser(session.user) : null,
-            isAuthenticated: !!session 
-          });
+          if (session?.user) {
+            setTimeout(() => {
+              get().fetchUserProfile(session.user.id);
+            }, 0);
+          } else {
+            set({ session: null, user: null, isAuthenticated: false });
+          }
         });
 
         // Check for existing session
         const { data: { session } } = await supabase.auth.getSession();
-        set({ 
-          session,
-          user: session?.user ? mapSupabaseUser(session.user) : null,
-          isAuthenticated: !!session,
-          isLoading: false 
-        });
+        if (session?.user) {
+          await get().fetchUserProfile(session.user.id);
+        }
+        set({ isLoading: false });
+      },
+
+      fetchUserProfile: async (userId: string) => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*, user_roles(role), artist_profiles(*), brand_profiles(*)')
+            .eq('id', userId)
+            .single();
+
+          if (profile) {
+            const role = profile.user_roles?.[0]?.role || 'artist';
+            const user: User = {
+              id: profile.id,
+              email: profile.email,
+              username: profile.username,
+              role: role as 'artist' | 'brand' | 'admin',
+              avatar: profile.avatar_url,
+              bio: profile.bio,
+              location: profile.location,
+              stageName: profile.artist_profiles?.[0]?.stage_name,
+              genres: profile.artist_profiles?.[0]?.genres,
+              companyName: profile.brand_profiles?.[0]?.company_name,
+              createdAt: profile.created_at,
+            };
+
+            const { data: { session } } = await supabase.auth.getSession();
+            set({ user, session, isAuthenticated: true });
+          }
+        } catch (error: any) {
+          console.error('Error fetching profile:', error);
+          set({ user: null, session: null, isAuthenticated: false });
+        }
       },
 
       setRegistrationStep: (step: number) => {
@@ -115,15 +164,27 @@ export const useAuthStore = create<AuthState>()(
                 username: userData.username,
                 role: userData.role,
                 stage_name: userData.stageName,
+                genres: userData.genres,
                 bio: userData.bio,
                 location: userData.location,
+                company_name: userData.companyName,
+                industry: userData.industry,
+                website: userData.website,
               },
             },
           });
 
           if (error) throw error;
 
-          toast.success('Registration successful! Please check your email to verify your account.');
+          toast.success('Registration successful! Welcome to BAK55 Talent!');
+          
+          // Wait a moment for trigger to complete, then fetch profile
+          setTimeout(() => {
+            if (data.user) {
+              get().fetchUserProfile(data.user.id);
+            }
+          }, 1000);
+          
           set({ 
             isLoading: false,
             registrationData: {},
@@ -170,12 +231,42 @@ export const useAuthStore = create<AuthState>()(
         if (!user) return;
 
         try {
-          // Update user metadata in Supabase
-          const { error } = await supabase.auth.updateUser({
-            data: userData,
-          });
+          // Update profile table
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              username: userData.username,
+              bio: userData.bio,
+              location: userData.location,
+              avatar_url: userData.avatar,
+            })
+            .eq('id', user.id);
 
-          if (error) throw error;
+          if (profileError) throw profileError;
+
+          // Update role-specific tables
+          if (user.role === 'artist' && (userData.stageName || userData.genres)) {
+            const { error: artistError } = await supabase
+              .from('artist_profiles')
+              .update({
+                stage_name: userData.stageName,
+                genres: userData.genres,
+              })
+              .eq('user_id', user.id);
+
+            if (artistError) throw artistError;
+          }
+
+          if (user.role === 'brand' && userData.companyName) {
+            const { error: brandError } = await supabase
+              .from('brand_profiles')
+              .update({
+                company_name: userData.companyName,
+              })
+              .eq('user_id', user.id);
+
+            if (brandError) throw brandError;
+          }
 
           set({ user: { ...user, ...userData } });
           toast.success('Profile updated successfully');
@@ -195,19 +286,3 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Helper function to map Supabase user to app User
-function mapSupabaseUser(supabaseUser: SupabaseUser): User {
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || '',
-    role: (supabaseUser.user_metadata?.role as UserRole) || 'user',
-    stageName: supabaseUser.user_metadata?.stage_name,
-    bio: supabaseUser.user_metadata?.bio,
-    location: supabaseUser.user_metadata?.location,
-    avatar: supabaseUser.user_metadata?.avatar_url,
-    socialLinks: supabaseUser.user_metadata?.social_links,
-    createdAt: supabaseUser.created_at,
-    updatedAt: supabaseUser.updated_at || supabaseUser.created_at,
-  };
-}
