@@ -13,7 +13,7 @@ const Privacy = () => {
             <h1 className="text-5xl md:text-6xl font-bold">
               Privacy <span className="text-gradient">Policy</span>
             </h1>
-            <p className="text-muted-foreground">Last updated: January 2026</p>
+            <p className="text-muted-foreground">Last updated: 08 October 2025</p>
           </div>
 
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10">
@@ -123,8 +123,8 @@ const Privacy = () => {
                 </p>
                 <div className="mt-4 p-4 rounded-lg bg-muted/50">
                   <p className="text-muted-foreground">
-                    <strong>Email:</strong> privacy@bak55.com<br />
-                    <strong>Address:</strong> BAK55, Nairobi, Kenya
+                    <strong>Email:</strong> privacy@bak55talent.co.ke<br />
+                    <strong>Address:</strong> BAK55 Talent, Nairobi, Kenya
                   </p>
                 </div>
               </section>
