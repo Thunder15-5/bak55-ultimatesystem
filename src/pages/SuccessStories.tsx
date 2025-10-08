@@ -28,7 +28,7 @@ const SuccessStories = () => {
                 "We're just getting started, but our vision is clear: create pathways to success for African artists who've been locked out of opportunity."
               </p>
               <div className="pt-4">
-                <p className="font-bold text-lg">Atem Bith Madut</p>
+                <p className="font-bold text-lg">Isaac Bith A</p>
                 <p className="text-muted-foreground">Founder & CEO, BAK55</p>
               </div>
             </div>
@@ -39,11 +39,11 @@ const SuccessStories = () => {
               <h2 className="text-3xl font-bold mb-6">Our Track Record</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gradient-primary">3</div>
-                  <p className="text-muted-foreground">Artists reached Top 100 on Boomplay under our management</p>
+                  <div className="text-4xl font-bold text-gradient-primary">5</div>
+                  <p className="text-muted-foreground">Emerging artists successfully helped to record professional songs and EPs, Showcasing our commitment to nurturing and amplifying African talent </p>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gradient-secondary">12</div>
+                  <div className="text-4xl font-bold text-gradient-secondary">10</div>
                   <p className="text-muted-foreground">Live events organized with 500+ average attendance</p>
                 </div>
                 <div className="space-y-2">
