@@ -61,7 +61,7 @@ const Legal = () => {
             <div className="space-y-4 text-muted-foreground">
               <div className="flex justify-between border-b border-primary/10 pb-3">
                 <span className="font-semibold">Company Name:</span>
-                <span>BAK55 Limited</span>
+                <span>BAK55 Talent Limited</span>
               </div>
               <div className="flex justify-between border-b border-primary/10 pb-3">
                 <span className="font-semibold">Registered Address:</span>
@@ -89,7 +89,7 @@ const Legal = () => {
             </p>
             <div className="text-center space-y-2">
               <p className="text-lg">
-                <strong>Legal Department:</strong> legal@bak55.com
+                <strong>Legal Department:</strong> legal@bak55talent.co.ke
               </p>
               <p className="text-sm text-muted-foreground">
                 We aim to respond to all legal inquiries within 48 hours
