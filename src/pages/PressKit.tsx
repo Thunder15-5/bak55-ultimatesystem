@@ -148,7 +148,7 @@ const PressKit = () => {
               </div>
               <div className="pt-6">
                 <p className="text-sm text-muted-foreground">
-                  Follow us: Twitter @BAK55talentc · Instagram @bak55.talent · LinkedIn /company/bak55
+                  Follow us: Twitter @BAK55talent · Instagram @bak55.talent · LinkedIn /company/bak55
                 </p>
               </div>
             </div>
