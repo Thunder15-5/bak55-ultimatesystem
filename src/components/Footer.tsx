@@ -15,7 +15,7 @@ export const Footer = () => {
               <span className="text-2xl font-bold text-gradient">BAK55</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Powering African Music's Digital Revolution
+              Powering African Music's Digital Revolution by building infrustructure for African music digital future an AI powered talent ecosystem that discovers, develops and monetizes artists through a proprietary digital economy. Our platform combines streaming, competition, live events and AI tools in a circular economy powered by BAKCoins.
             </p>
           </div>
 
