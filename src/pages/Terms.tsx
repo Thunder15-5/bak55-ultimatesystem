@@ -13,7 +13,7 @@ const Terms = () => {
             <h1 className="text-5xl md:text-6xl font-bold">
               Terms of <span className="text-gradient">Service</span>
             </h1>
-            <p className="text-muted-foreground">Last updated: January 2026</p>
+            <p className="text-muted-foreground">Last updated: 08 October 2025</p>
           </div>
 
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10">
@@ -152,8 +152,8 @@ const Terms = () => {
                   <p className="text-muted-foreground">
                     For questions about these Terms of Service:
                     <br /><br />
-                    <strong>Email:</strong> legal@bak55.com<br />
-                    <strong>Address:</strong> BAK55, Nairobi, Kenya
+                    <strong>Email:</strong> legal@bak55talent.co.ke<br />
+                    <strong>Address:</strong> BAK55 Talent, Nairobi, Kenya
                   </p>
                 </div>
               </section>
