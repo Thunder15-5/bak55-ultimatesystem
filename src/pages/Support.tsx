@@ -133,7 +133,7 @@ const Support = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <div className="text-sm">
-                  <span className="font-semibold">Email:</span> support@bak55.com
+                  <span className="font-semibold">Email:</span> support@bak55talent.co.ke
                 </div>
                 <div className="text-sm">
                   <span className="font-semibold">Hours:</span> Mon-Fri 9AM-6PM EAT
