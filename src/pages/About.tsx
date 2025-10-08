@@ -71,7 +71,7 @@ const About = () => {
                 <h2 className="text-3xl font-bold">Our Journey</h2>
                 <div className="max-w-2xl mx-auto space-y-4 text-muted-foreground">
                   <p>
-                    Founded by Atem Bith Madut, who spent 5 years managing artists and witnessing firsthand the exploitation in the industry. After helping 3 artists reach Top 100 on Boomplay and organizing 12 live events, Atem recognized the need for systemic change.
+                    Founded by Isaac Bith A., who spent 5 years managing artists and witnessing firsthand the exploitation in the industry. After helping 5 artists Record songs and organizing 10 live events, Isaac recognized the need for systemic change.
                   </p>
                   <p>
                     BAK55 launched in 2025 with a clear mission: use AI and blockchain economics to create a fairer music industry. Starting in Kenya, we're building the infrastructure that will scale across Africa.
