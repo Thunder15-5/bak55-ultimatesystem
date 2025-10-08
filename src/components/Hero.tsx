@@ -51,7 +51,7 @@ export const Hero = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto py-8">
             <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 hover:border-primary/30 transition-all duration-300">
-              <div className="text-4xl font-bold text-gradient-primary mb-2">$2.1B</div>
+              <div className="text-4xl font-bold text-gradient-primary mb-2">$1.7B</div>
               <div className="text-sm text-muted-foreground">African Music Market</div>
             </div>
             <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-secondary/10 hover:border-secondary/30 transition-all duration-300">
