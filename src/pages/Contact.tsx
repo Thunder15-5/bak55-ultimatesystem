@@ -51,10 +51,10 @@ const Contact = () => {
                 </div>
                 <h3 className="font-bold mb-2">Email</h3>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>General: info@bak55.com</p>
-                  <p>Support: support@bak55.com</p>
-                  <p>Press: press@bak55.com</p>
-                  <p>Investors: investor@bak55.com</p>
+                  <p>General: info@bak55talent.co.ke</p>
+                  <p>Support: support@bak55talent.co.ke</p>
+                  <p>Press: press@bak55taent.co.ke</p>
+                  <p>Investors: investor@bak55talent.co.ke</p>
                 </div>
               </Card>
 
