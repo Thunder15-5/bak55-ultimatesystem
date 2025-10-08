@@ -140,7 +140,7 @@ const PressKit = () => {
               <h2 className="text-3xl font-bold">Media Inquiries</h2>
               <div className="space-y-2">
                 <p className="text-lg">
-                  <strong>Press Contact:</strong> press@bak55.com
+                  <strong>Press Contact:</strong> press@bak55talent.co.ke
                 </p>
                 <p className="text-muted-foreground">
                   For interviews, high-resolution assets, or additional information
@@ -148,7 +148,7 @@ const PressKit = () => {
               </div>
               <div className="pt-6">
                 <p className="text-sm text-muted-foreground">
-                  Follow us: Twitter @BAK55Music · Instagram @BAK55Official · LinkedIn /company/bak55
+                  Follow us: Twitter @BAK55talentc · Instagram @bak55.talent · LinkedIn /company/bak55
                 </p>
               </div>
             </div>
