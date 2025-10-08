@@ -193,11 +193,11 @@ const Investors = () => {
             </h2>
             <div className="space-y-6">
               <div className="p-6 rounded-xl bg-muted/50">
-                <h3 className="text-xl font-bold mb-2">Atem Bith Madut - CEO & Vision</h3>
+                <h3 className="text-xl font-bold mb-2">Isaac Bith A - CEO & Vision</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
                   <li>• 5 years artist management (3 artists to Top 100 on Boomplay)</li>
                   <li>• Organized 12 live events with 500+ average attendance</li>
-                  <li>• 50+ industry connections including A&Rs at Mavin Records</li>
+                  <li>• 50+ industry connections including A&Rs at major Record Labels</li>
                   <li>• Previously led digital marketing agency serving 20+ African artists</li>
                 </ul>
               </div>
@@ -205,7 +205,7 @@ const Investors = () => {
               <div className="p-6 rounded-xl bg-muted/50">
                 <h3 className="text-xl font-bold mb-2">CTO & AI Architect (Recruiting)</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>• Full-stack development with M-Pesa integration experience</li>
+                  <li>• Full-stack development with Mobile Money Transfer integration experience</li>
                   <li>• ML specialization and AI recommendation engine background</li>
                   <li>• AWS cloud architecture and real-time data processing</li>
                 </ul>
@@ -245,7 +245,7 @@ const Investors = () => {
                 </Link>
               </div>
               <p className="text-sm text-muted-foreground">
-                investor@bak55.com · Confidential business plan available to qualified investors
+                investor@bak55talent.co.ke · Confidential business plan available to qualified investors
               </p>
             </div>
           </Card>
