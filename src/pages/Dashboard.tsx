@@ -173,7 +173,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {userRole === "artist" && (
-              <Link to="/tracks">
+              <Link to="/upload">
                 <Button variant="hero" className="w-full">
                   <Upload className="mr-2 w-4 h-4" />
                   Upload Track

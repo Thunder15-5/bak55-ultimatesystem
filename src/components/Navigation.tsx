@@ -29,9 +29,12 @@ export function Navigation() {
                 <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
                   Dashboard
                 </Link>
+                <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">
+                  Music
+                </Link>
                 {userRole === "artist" && (
-                  <Link to="/tracks" className="text-foreground hover:text-primary transition-colors">
-                    My Tracks
+                  <Link to="/upload" className="text-foreground hover:text-primary transition-colors">
+                    Upload
                   </Link>
                 )}
                 <Link to="/competitions" className="text-foreground hover:text-primary transition-colors">
@@ -111,13 +114,20 @@ export function Navigation() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/catalog"
+                  className="block py-2 text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Music
+                </Link>
                 {userRole === "artist" && (
                   <Link
-                    to="/tracks"
+                    to="/upload"
                     className="block py-2 text-foreground hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    My Tracks
+                    Upload
                   </Link>
                 )}
                 <Link

@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import UploadTrack from "./pages/UploadTrack";
+import MusicCatalog from "./pages/MusicCatalog";
 import Streaming from "./pages/Streaming";
 import Competitions from "./pages/Competitions";
 import BAKCoins from "./pages/BAKCoins";
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
+            <Route path="/catalog" element={<MusicCatalog />} />
             <Route path="/tracks" element={<ProtectedRoute><div>Tracks page coming soon</div></ProtectedRoute>} />
             <Route path="/wallet" element={<ProtectedRoute><div>Wallet page coming soon</div></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><div>Admin page coming soon</div></ProtectedRoute>} />
