@@ -12,6 +12,9 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import UploadTrack from "./pages/UploadTrack";
 import MusicCatalog from "./pages/MusicCatalog";
+import Wallet from "./pages/Wallet";
+import TrackDetails from "./pages/TrackDetails";
+import Admin from "./pages/Admin";
 import Streaming from "./pages/Streaming";
 import Competitions from "./pages/Competitions";
 import BAKCoins from "./pages/BAKCoins";
@@ -46,9 +49,9 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
             <Route path="/catalog" element={<MusicCatalog />} />
-            <Route path="/tracks" element={<ProtectedRoute><div>Tracks page coming soon</div></ProtectedRoute>} />
-            <Route path="/wallet" element={<ProtectedRoute><div>Wallet page coming soon</div></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><div>Admin page coming soon</div></ProtectedRoute>} />
+            <Route path="/track/:id" element={<TrackDetails />} />
+            <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
             <Route path="/streaming" element={<Streaming />} />
             <Route path="/competitions" element={<Competitions />} />
             <Route path="/bakcoins" element={<BAKCoins />} />

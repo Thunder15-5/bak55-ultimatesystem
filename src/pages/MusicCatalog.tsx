@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
-import { MusicPlayer } from "@/components/MusicPlayer";
-import { Music, Play } from "lucide-react";
+import { Music } from "lucide-react";
 import { toast } from "sonner";
 
 interface Track {
@@ -21,9 +21,9 @@ interface Track {
 }
 
 export default function MusicCatalog() {
+  const navigate = useNavigate();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
 
   useEffect(() => {
     fetchTracks();
@@ -48,14 +48,8 @@ export default function MusicCatalog() {
     }
   };
 
-  const handlePlay = async (track: Track) => {
-    setCurrentTrack(track);
-    
-    // Increment play count
-    await supabase
-      .from("tracks")
-      .update({ plays: track.plays + 1 })
-      .eq("id", track.id);
+  const handleTrackClick = (trackId: string) => {
+    navigate(`/track/${trackId}`);
   };
 
   if (loading) {
@@ -94,7 +88,7 @@ export default function MusicCatalog() {
               <Card
                 key={track.id}
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handlePlay(track)}
+                onClick={() => handleTrackClick(track.id)}
               >
                 <div className="aspect-square relative bg-muted">
                   {track.cover_image ? (
@@ -108,9 +102,6 @@ export default function MusicCatalog() {
                       <Music className="h-16 w-16 text-muted-foreground" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <Play className="h-16 w-16 text-white" />
-                  </div>
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold truncate">{track.title}</h3>
@@ -131,13 +122,6 @@ export default function MusicCatalog() {
           </div>
         )}
       </div>
-
-      {currentTrack && (
-        <MusicPlayer
-          track={currentTrack}
-          onClose={() => setCurrentTrack(null)}
-        />
-      )}
     </div>
   );
 }
