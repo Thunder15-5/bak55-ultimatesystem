@@ -19,7 +19,7 @@ const BuyCoins = () => {
 
   const kshAmount = parseFloat(amount) || 0;
   const bakAmount = kshAmount / 20; // 20 KSh = 1 BAK
-  const MIN_AMOUNT = 100; // Minimum 100 KSh
+  const MIN_AMOUNT = 100; // Minimum 20 KSh
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
