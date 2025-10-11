@@ -34,6 +34,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
+import BuyCoins from "./pages/BuyCoins";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/catalog" element={<MusicCatalog />} />
             <Route path="/track/:id" element={<TrackDetails />} />
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+            <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
             <Route path="/streaming" element={<Streaming />} />
           <Route path="/competitions" element={<Competitions />} />

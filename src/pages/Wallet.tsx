@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Wallet as WalletIcon, ArrowUpRight, ArrowDownRight, Loader2, DollarSign } from "lucide-react";
+import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Transaction {
@@ -20,6 +21,7 @@ interface Transaction {
 
 export default function Wallet() {
   const { user, userRole } = useAuth();
+  const navigate = useNavigate();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,78 +179,84 @@ export default function Wallet() {
             <div className="text-5xl font-bold text-primary mb-4">
               {balance.toFixed(2)} BAK
             </div>
-            {userRole === "artist" && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="hero">
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Request Withdrawal
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Withdraw BAKCoins</DialogTitle>
-                    <DialogDescription>
-                      Convert your BAKCoins to cash. Admin will process your request.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleWithdrawal} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (BAK)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                        placeholder="0.00"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Available: {balance.toFixed(2)} BAK
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="accountName">Account Name</Label>
-                      <Input
-                        id="accountName"
-                        value={accountDetails.accountName}
-                        onChange={(e) => setAccountDetails({ ...accountDetails, accountName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="accountNumber">Account Number</Label>
-                      <Input
-                        id="accountNumber"
-                        value={accountDetails.accountNumber}
-                        onChange={(e) => setAccountDetails({ ...accountDetails, accountNumber: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bankName">Bank Name</Label>
-                      <Input
-                        id="bankName"
-                        value={accountDetails.bankName}
-                        onChange={(e) => setAccountDetails({ ...accountDetails, bankName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={withdrawing}>
-                      {withdrawing ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Submit Request"
-                      )}
+            <div className="flex gap-3">
+              <Button onClick={() => navigate('/wallet/buy-coins')} variant="default">
+                <Plus className="mr-2 h-4 w-4" />
+                Buy BAKCoins
+              </Button>
+              {userRole === "artist" && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      Request Withdrawal
                     </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Withdraw BAKCoins</DialogTitle>
+                      <DialogDescription>
+                        Convert your BAKCoins to cash. Admin will process your request.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleWithdrawal} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount">Amount (BAK)</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(e.target.value)}
+                          placeholder="0.00"
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Available: {balance.toFixed(2)} BAK
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="accountName">Account Name</Label>
+                        <Input
+                          id="accountName"
+                          value={accountDetails.accountName}
+                          onChange={(e) => setAccountDetails({ ...accountDetails, accountName: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="accountNumber">Account Number</Label>
+                        <Input
+                          id="accountNumber"
+                          value={accountDetails.accountNumber}
+                          onChange={(e) => setAccountDetails({ ...accountDetails, accountNumber: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bankName">Bank Name</Label>
+                        <Input
+                          id="bankName"
+                          value={accountDetails.bankName}
+                          onChange={(e) => setAccountDetails({ ...accountDetails, bankName: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={withdrawing}>
+                        {withdrawing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          "Submit Request"
+                        )}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </CardContent>
         </Card>
 
