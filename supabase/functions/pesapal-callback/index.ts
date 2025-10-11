@@ -6,6 +6,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Verify Pesapal webhook signature to prevent payment forgery
+async function verifyPesapalSignature(
+  payload: string,
+  signature: string | null,
+  secret: string
+): Promise<boolean> {
+  if (!signature) {
+    console.error('Missing signature header');
+    return false;
+  }
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(payload)
+    );
+
+    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    const isValid = computedSignature === signature;
+    
+    if (!isValid) {
+      console.error('Signature verification failed', {
+        computed: computedSignature.substring(0, 20) + '...',
+        received: signature.substring(0, 20) + '...'
+      });
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error('Error verifying signature:', error);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   // Always return 200 for webhooks to prevent retries
   if (req.method === 'OPTIONS') {
@@ -17,6 +64,26 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // SECURITY: Verify webhook signature to prevent payment forgery
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-pesapal-signature');
+    const ipnSecret = Deno.env.get('PESAPAL_IPN_SECRET');
+
+    if (ipnSecret) {
+      const isValidSignature = await verifyPesapalSignature(rawBody, signature, ipnSecret);
+      
+      if (!isValidSignature) {
+        console.error('Invalid webhook signature - potential attack attempt');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('✅ Webhook signature verified');
+    } else {
+      console.warn('⚠️ PESAPAL_IPN_SECRET not set - skipping signature verification (INSECURE)');
+    }
 
     const url = new URL(req.url);
     const orderTrackingId = url.searchParams.get('OrderTrackingId');

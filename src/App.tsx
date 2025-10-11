@@ -38,6 +38,7 @@ import BuyCoins from "./pages/BuyCoins";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import PaymentPending from "./pages/PaymentPending";
+import VerifyEmail from "./pages/VerifyEmail";
 import EditCompetition from "./pages/admin/EditCompetition";
 import CashReserve from "./pages/admin/CashReserve";
 import Analytics from "./pages/Analytics";
