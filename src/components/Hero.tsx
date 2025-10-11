@@ -36,32 +36,32 @@ export const Hero = () => {
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight px-4">
             Where African Artists{" "}
             <span className="text-gradient">Build Careers</span>,
-            <br />
-            Not Just Content
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>Not Just Content
           </h1>
 
           {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
             The complete ecosystem combining streaming, competitions, and AI tools—powered by BAKCoins. 
             Discover talent, earn real money, and shape the future of African music.
           </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto py-8">
-            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 hover:border-primary/30 transition-all duration-300">
-              <div className="text-4xl font-bold text-gradient-primary mb-2">$1.7B</div>
-              <div className="text-sm text-muted-foreground">African Music Market</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto py-8 px-4">
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-primary/10 hover:border-primary/30 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-gradient-primary mb-2">$1.7B</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">African Music Market</div>
             </div>
-            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-secondary/10 hover:border-secondary/30 transition-all duration-300">
-              <div className="text-4xl font-bold text-gradient-secondary mb-2">5M+</div>
-              <div className="text-sm text-muted-foreground">Aspiring Artists</div>
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-secondary/10 hover:border-secondary/30 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-gradient-secondary mb-2">5M+</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Aspiring Artists</div>
             </div>
-            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-accent/10 hover:border-accent/30 transition-all duration-300">
-              <div className="text-4xl font-bold text-accent mb-2">92%</div>
-              <div className="text-sm text-muted-foreground">Artists Earn Under $100/mo</div>
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-accent/10 hover:border-accent/30 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-accent mb-2">92%</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Artists Earn Under $100/mo</div>
             </div>
           </div>
 

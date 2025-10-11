@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { tipSchema, mapDatabaseError } from "@/lib/validation";
 
 interface TipDialogProps {
   open: boolean;
@@ -23,39 +24,50 @@ export function TipDialog({ open, onOpenChange, artistId, artistName, trackId, o
   const [loading, setLoading] = useState(false);
 
   const handleSendTip = async () => {
-    const tipAmount = parseFloat(amount);
-    
-    if (!tipAmount || tipAmount <= 0) {
-      toast.error("Please enter a valid tip amount");
-      return;
-    }
-
     setLoading(true);
 
     try {
+      // Validate input
+      const tipAmount = parseFloat(amount);
+      const validated = tipSchema.parse({
+        amount: tipAmount,
+        message: message.trim() || undefined,
+      });
+
+      // Round to 2 decimal places to avoid floating point issues
+      const normalizedAmount = Math.round(validated.amount * 100) / 100;
+
       const { data, error } = await supabase.functions.invoke('send-tip', {
         body: {
           to_artist_id: artistId,
           track_id: trackId,
-          amount: tipAmount,
-          message: message || undefined,
+          amount: normalizedAmount,
+          message: validated.message,
         }
       });
 
-      if (error) throw error;
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to send tip');
+      if (error) {
+        toast.error(mapDatabaseError(error));
+        return;
       }
 
-      toast.success(`Tip of ${tipAmount} BAK sent to ${artistName}!`);
+      if (!data.success) {
+        toast.error(data.error || 'Failed to send tip');
+        return;
+      }
+
+      toast.success(`Tip of ${normalizedAmount} BAK sent to ${artistName}!`);
       onOpenChange(false);
       setAmount("");
       setMessage("");
       onSuccess?.();
     } catch (error: any) {
-      console.error('Tip error:', error);
-      toast.error(error.message || "Failed to send tip");
+      if (error.errors) {
+        // Zod validation error
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to send tip");
+      }
     } finally {
       setLoading(false);
     }
@@ -84,10 +96,11 @@ export function TipDialog({ open, onOpenChange, artistId, artistName, trackId, o
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min="0.1"
-              step="0.1"
+              max="10000"
+              step="0.01"
             />
             <p className="text-xs text-muted-foreground">
-              Minimum: 0.1 BAK
+              Minimum: 0.1 BAK | Maximum: 10,000 BAK
             </p>
           </div>
 

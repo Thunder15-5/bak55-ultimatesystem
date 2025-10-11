@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Menu, X, LogOut, User, Wallet, Music, History, ListMusic } from "lucide-react";
+import { Menu, X, LogOut, User, Wallet, History, ListMusic } from "lucide-react";
 import { useState } from "react";
+import logoImage from "@/assets/bak55-logo.png";
 
 export function Navigation() {
   const { user, signOut, userRole } = useAuth();
@@ -14,12 +15,10 @@ export function Navigation() {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center">
-              <Music className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              BAK55
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logoImage} alt="BAK55 Talent" className="h-10 w-auto" />
+            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              BAK55 Talent
             </span>
           </Link>
 

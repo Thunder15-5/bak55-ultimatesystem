@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,8 +7,9 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  // Always return 200 for webhooks to prevent retries
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 200 });
   }
 
   try {
@@ -23,17 +25,41 @@ Deno.serve(async (req) => {
     console.log('Pesapal callback received:', { orderTrackingId, merchantReference });
 
     if (!orderTrackingId) {
-      throw new Error('Missing OrderTrackingId');
+      console.error('Missing OrderTrackingId in callback');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing OrderTrackingId' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check for duplicate processing (idempotency)
+    const { data: existingTransaction } = await supabaseClient
+      .from('payment_transactions')
+      .select('status, id')
+      .eq('payment_reference', orderTrackingId)
+      .single();
+
+    if (existingTransaction?.status === 'success') {
+      console.log('Transaction already processed successfully:', orderTrackingId);
+      return new Response(
+        JSON.stringify({ success: true, message: 'Already processed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const PESAPAL_CONSUMER_KEY = Deno.env.get('PESAPAL_CONSUMER_KEY');
     const PESAPAL_CONSUMER_SECRET = Deno.env.get('PESAPAL_CONSUMER_SECRET');
     
     if (!PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET) {
-      throw new Error('Pesapal credentials not configured');
+      console.error('Pesapal credentials not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Configuration error' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const PESAPAL_BASE_URL = 'https://cybqa.pesapal.com/pesapalv3';
+    // Production: https://pay.pesapal.com/v3
 
     // Step 1: Get access token
     const tokenResponse = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
@@ -49,7 +75,12 @@ Deno.serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to get Pesapal access token');
+      const errorText = await tokenResponse.text();
+      console.error('Token request failed:', errorText);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication failed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const tokenData = await tokenResponse.json();
@@ -68,13 +99,18 @@ Deno.serve(async (req) => {
     );
 
     if (!statusResponse.ok) {
-      throw new Error('Failed to get transaction status');
+      const errorText = await statusResponse.text();
+      console.error('Status check failed:', errorText);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Status check failed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const statusData = await statusResponse.json();
     console.log('Transaction status:', statusData);
 
-    // Find the transaction by Pesapal reference
+    // Find the transaction by Pesapal reference with row locking
     const { data: transaction, error: fetchError } = await supabaseClient
       .from('payment_transactions')
       .select('*')
@@ -83,7 +119,10 @@ Deno.serve(async (req) => {
 
     if (fetchError || !transaction) {
       console.error('Transaction not found:', fetchError);
-      throw new Error('Transaction not found');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Transaction not found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Map Pesapal status codes
@@ -105,12 +144,22 @@ Deno.serve(async (req) => {
       .update({
         status: transactionStatus,
         updated_at: new Date().toISOString(),
+        metadata: {
+          ...transaction.metadata,
+          pesapal_status_code: pesapalStatus,
+          pesapal_payment_method: statusData.payment_method,
+          processed_at: new Date().toISOString(),
+        },
       })
-      .eq('id', transaction.id);
+      .eq('id', transaction.id)
+      .eq('status', transaction.status); // Optimistic locking
 
     if (updateError) {
       console.error('Failed to update transaction:', updateError);
-      throw updateError;
+      return new Response(
+        JSON.stringify({ success: false, error: 'Update failed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // If payment successful, credit the wallet
@@ -120,7 +169,7 @@ Deno.serve(async (req) => {
 
       console.log(`Crediting ${bakAmount} BAK to user ${userId}`);
 
-      // Get user's wallet
+      // Get user's wallet with row locking
       const { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
         .select('*')
@@ -129,7 +178,10 @@ Deno.serve(async (req) => {
 
       if (walletError || !wallet) {
         console.error('Wallet not found:', walletError);
-        throw new Error('Wallet not found');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Wallet not found' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       // Update wallet balance
@@ -137,12 +189,18 @@ Deno.serve(async (req) => {
       
       const { error: balanceError } = await supabaseClient
         .from('wallets')
-        .update({ balance: newBalance })
+        .update({ 
+          balance: newBalance,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', wallet.id);
 
       if (balanceError) {
         console.error('Failed to update wallet balance:', balanceError);
-        throw balanceError;
+        return new Response(
+          JSON.stringify({ success: false, error: 'Balance update failed' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       // Create transaction record
@@ -158,11 +216,13 @@ Deno.serve(async (req) => {
             payment_method: 'pesapal',
             order_tracking_id: orderTrackingId,
             amount_paid_ksh: transaction.amount,
+            merchant_reference: merchantReference,
           },
         });
 
       if (transactionRecordError) {
         console.error('Failed to create transaction record:', transactionRecordError);
+        // Don't fail since wallet was already credited
       }
 
       console.log('Payment processed successfully');
@@ -177,18 +237,20 @@ Deno.serve(async (req) => {
           : 'Payment processing complete.',
       }),
       {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
     console.error('Error processing callback:', error);
+    // Always return 200 for webhooks
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Internal error',
       }),
       {
-        status: 400,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import logoImage from "@/assets/bak55-logo.png";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -32,11 +33,9 @@ export default function Login() {
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl flex items-center justify-center">
-              <Music className="w-8 h-8 text-white" />
-            </div>
+            <img src={logoImage} alt="BAK55 Talent" className="h-20 w-auto" />
           </div>
-          <CardTitle className="text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <CardTitle className="text-2xl md:text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
           <CardDescription className="text-center">

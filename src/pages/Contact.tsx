@@ -4,30 +4,47 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { contactSchema, mapDatabaseError } from "@/lib/validation";
 
 const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !subject || !message) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+    setLoading(true);
 
     try {
+      // Validate input
+      const validated = contactSchema.parse({
+        name: name.trim(),
+        email: email.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
+      });
+
       const { error } = await supabase
         .from('contacts')
-        .insert([{ name, email, subject, message }]);
+        .insert([
+          {
+            name: validated.name,
+            email: validated.email,
+            subject: validated.subject,
+            message: validated.message,
+          }
+        ]);
 
-      if (error) throw error;
+      if (error) {
+        toast.error(mapDatabaseError(error));
+        return;
+      }
 
       toast.success("Message sent successfully! We'll be in touch soon.");
       setName("");
@@ -35,8 +52,14 @@ const Contact = () => {
       setSubject("");
       setMessage("");
     } catch (error: any) {
-      console.error('Contact form error:', error);
-      toast.error(error.message || "Failed to send message. Please try again.");
+      if (error.errors) {
+        // Zod validation error
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to send message. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,8 +170,18 @@ const Contact = () => {
                     />
                   </div>
 
-                  <Button type="submit" variant="hero" size="lg" className="w-full">
-                    Send Message
+                  <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Send Message
+                      </>
+                    )}
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">

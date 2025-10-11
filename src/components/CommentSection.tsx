@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { MessageCircle, Send, Trash2, Loader2 } from "lucide-react";
+import { commentSchema, sanitizeText, mapDatabaseError } from "@/lib/validation";
 
 interface Comment {
   id: string;
@@ -86,28 +87,37 @@ export function CommentSection({ trackId }: CommentSectionProps) {
       return;
     }
 
-    if (!newComment.trim()) {
-      toast.error("Comment cannot be empty");
-      return;
-    }
-
     setSubmitting(true);
 
     try {
+      // Validate and sanitize input
+      const validated = commentSchema.parse({
+        content: newComment.trim(),
+      });
+      
+      const sanitizedContent = sanitizeText(validated.content);
+
       const { error } = await supabase.from("comments").insert({
         user_id: user.id,
         track_id: trackId,
-        content: newComment.trim(),
+        content: sanitizedContent,
         parent_id: null,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(mapDatabaseError(error));
+        return;
+      }
 
       setNewComment("");
       toast.success("Comment posted!");
       fetchComments();
     } catch (error: any) {
-      toast.error(error.message || "Failed to post comment");
+      if (error.errors) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to post comment");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -119,29 +129,38 @@ export function CommentSection({ trackId }: CommentSectionProps) {
       return;
     }
 
-    if (!replyContent.trim()) {
-      toast.error("Reply cannot be empty");
-      return;
-    }
-
     setSubmitting(true);
 
     try {
+      // Validate and sanitize input
+      const validated = commentSchema.parse({
+        content: replyContent.trim(),
+      });
+      
+      const sanitizedContent = sanitizeText(validated.content);
+
       const { error } = await supabase.from("comments").insert({
         user_id: user.id,
         track_id: trackId,
-        content: replyContent.trim(),
+        content: sanitizedContent,
         parent_id: parentId,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(mapDatabaseError(error));
+        return;
+      }
 
       setReplyContent("");
       setReplyingTo(null);
       toast.success("Reply posted!");
       fetchComments();
     } catch (error: any) {
-      toast.error(error.message || "Failed to post reply");
+      if (error.errors) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to post reply");
+      }
     } finally {
       setSubmitting(false);
     }

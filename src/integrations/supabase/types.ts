@@ -528,6 +528,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          request_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          request_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          request_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       share_analytics: {
         Row: {
           id: string
@@ -911,6 +938,18 @@ export type Database = {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      has_sufficient_balance: {
+        Args: { _amount: number; _user_id: string }
+        Returns: boolean
+      }
+      transfer_funds: {
+        Args: {
+          recipient_id: string
+          sender_id: string
+          transfer_amount: number
         }
         Returns: boolean
       }

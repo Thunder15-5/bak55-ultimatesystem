@@ -231,13 +231,26 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error initiating payment:', error);
+    
+    // Map error to user-friendly message
+    let errorMessage = 'Payment initiation failed';
+    if (error instanceof Error) {
+      if (error.message.includes('Invalid Pesapal credentials')) {
+        errorMessage = 'Payment system configuration error. Please contact support.';
+      } else if (error.message.includes('Invalid login')) {
+        errorMessage = 'Authentication error. Please log in again.';
+      } else if (error.message.includes('Failed to submit order')) {
+        errorMessage = 'Payment gateway error. Please try again.';
+      }
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       }),
       {
-        status: 400,
+        status: 200, // Return 200 to prevent browser errors
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

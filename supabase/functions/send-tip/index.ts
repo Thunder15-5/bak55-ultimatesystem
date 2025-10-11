@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,7 +25,10 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
@@ -33,110 +36,153 @@ Deno.serve(async (req) => {
     );
 
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const tipRequest: TipRequest = await req.json();
 
-    // Validate tip amount
-    if (tipRequest.amount <= 0) {
-      throw new Error('Tip amount must be greater than 0');
+    // Validate input
+    if (!tipRequest.to_artist_id || !tipRequest.amount) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Check sender has sufficient balance
-    const { data: senderWallet, error: walletError } = await supabaseClient
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single();
-
-    if (walletError || !senderWallet) {
-      throw new Error('Wallet not found');
+    if (tipRequest.amount <= 0 || tipRequest.amount > 10000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Tip amount must be between 0.1 and 10,000 BAK' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    if (senderWallet.balance < tipRequest.amount) {
-      throw new Error('Insufficient balance');
+    // Normalize amount to 2 decimal places
+    const normalizedAmount = Math.round(tipRequest.amount * 100) / 100;
+
+    // Cannot tip yourself
+    if (user.id === tipRequest.to_artist_id) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Cannot send tip to yourself' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Get recipient wallet
-    const { data: recipientWallet, error: recipientError } = await supabaseClient
-      .from('wallets')
-      .select('id, user_id, balance')
-      .eq('user_id', tipRequest.to_artist_id)
-      .single();
+    console.log(`Transferring ${normalizedAmount} BAK from ${user.id} to ${tipRequest.to_artist_id}`);
 
-    if (recipientError || !recipientWallet) {
-      throw new Error('Recipient wallet not found');
+    // Use atomic transfer function to prevent race conditions
+    const { data: transferResult, error: transferError } = await supabaseClient.rpc('transfer_funds', {
+      sender_id: user.id,
+      recipient_id: tipRequest.to_artist_id,
+      transfer_amount: normalizedAmount,
+    });
+
+    if (transferError) {
+      console.error('Transfer failed:', transferError);
+      
+      // Map common errors to user-friendly messages
+      let errorMessage = 'Failed to send tip';
+      if (transferError.message?.includes('Insufficient balance')) {
+        errorMessage = 'Insufficient balance';
+      } else if (transferError.message?.includes('Sender wallet not found')) {
+        errorMessage = 'Your wallet is not set up';
+      } else if (transferError.message?.includes('Recipient wallet not found')) {
+        errorMessage = 'Recipient wallet not found';
+      }
+      
+      return new Response(
+        JSON.stringify({ success: false, error: errorMessage }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Deduct from sender
-    const { error: deductError } = await supabaseClient
-      .from('wallets')
-      .update({ balance: senderWallet.balance - tipRequest.amount })
-      .eq('user_id', user.id);
-
-    if (deductError) throw deductError;
-
-    // Add to recipient
-    const { error: addError } = await supabaseClient
-      .from('wallets')
-      .update({ balance: recipientWallet.balance + tipRequest.amount })
-      .eq('user_id', tipRequest.to_artist_id);
-
-    if (addError) {
-      // Rollback sender deduction
-      await supabaseClient
-        .from('wallets')
-        .update({ balance: senderWallet.balance })
-        .eq('user_id', user.id);
-      throw addError;
-    }
-
-    // Record tip
-    const { data: tip, error: tipError } = await supabaseClient
-      .from('tips')
-      .insert({
-        from_user_id: user.id,
-        to_artist_id: tipRequest.to_artist_id,
-        track_id: tipRequest.track_id,
-        amount: tipRequest.amount,
-        message: tipRequest.message,
-      })
-      .select()
-      .single();
-
-    if (tipError) throw tipError;
-
-    // Create transaction records
-    const senderWalletData = await supabaseClient
+    // Get wallet IDs for transaction records
+    const { data: senderWallet } = await supabaseClient
       .from('wallets')
       .select('id')
       .eq('user_id', user.id)
       .single();
 
-    await supabaseClient.from('transactions').insert({
-      wallet_id: senderWalletData.data!.id,
-      type: 'tip_sent',
-      amount: -tipRequest.amount,
-      description: `Tip to artist${tipRequest.message ? ': ' + tipRequest.message : ''}`,
-      reference_id: tip.id,
+    const { data: recipientWallet } = await supabaseClient
+      .from('wallets')
+      .select('id')
+      .eq('user_id', tipRequest.to_artist_id)
+      .single();
+
+    if (!senderWallet || !recipientWallet) {
+      console.error('Wallet lookup failed after transfer');
+      return new Response(
+        JSON.stringify({ 
+          success: true, // Transfer succeeded even though record creation may fail
+          warning: 'Tip sent but transaction record may be incomplete' 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create tip record
+    const { error: tipError } = await supabaseClient.from('tips').insert({
+      from_user_id: user.id,
+      to_artist_id: tipRequest.to_artist_id,
+      track_id: tipRequest.track_id || null,
+      amount: normalizedAmount,
+      message: tipRequest.message || null,
     });
 
-    await supabaseClient.from('transactions').insert({
-      wallet_id: recipientWallet.id,
-      type: 'tip_received',
-      amount: tipRequest.amount,
-      description: `Tip received${tipRequest.message ? ': ' + tipRequest.message : ''}`,
-      reference_id: tip.id,
-    });
+    if (tipError) {
+      console.error('Failed to create tip record:', tipError);
+      // Don't fail the request since the transfer already succeeded
+    }
+
+    // Create transaction records for both sender and recipient
+    const transactionRecords = [
+      {
+        wallet_id: senderWallet.id,
+        type: 'expense',
+        amount: normalizedAmount,
+        description: `Tip sent${tipRequest.message ? `: ${tipRequest.message.substring(0, 50)}` : ''}`,
+        reference_id: tipRequest.track_id || null,
+        metadata: {
+          tip: true,
+          recipient: tipRequest.to_artist_id,
+          track_id: tipRequest.track_id,
+        },
+      },
+      {
+        wallet_id: recipientWallet.id,
+        type: 'income',
+        amount: normalizedAmount,
+        description: `Tip received${tipRequest.message ? `: ${tipRequest.message.substring(0, 50)}` : ''}`,
+        reference_id: tipRequest.track_id || null,
+        metadata: {
+          tip: true,
+          sender: user.id,
+          track_id: tipRequest.track_id,
+        },
+      },
+    ];
+
+    const { error: transactionError } = await supabaseClient
+      .from('transactions')
+      .insert(transactionRecords);
+
+    if (transactionError) {
+      console.error('Failed to create transaction records:', transactionError);
+      // Don't fail since the transfer succeeded
+    }
+
+    console.log('Tip sent successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
-        tip,
         message: 'Tip sent successfully',
+        amount: normalizedAmount,
       }),
       {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
@@ -145,10 +191,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'An unexpected error occurred',
       }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
