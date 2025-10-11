@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { contactSchema, mapDatabaseError } from "@/lib/validation";
 
 const Contact = () => {

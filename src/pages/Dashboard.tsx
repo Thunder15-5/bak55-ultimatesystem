@@ -5,7 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { TrackRecommendations } from "@/components/TrackRecommendations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Music, Wallet, Trophy, TrendingUp, Upload, Vote } from "lucide-react";
 import { Link } from "react-router-dom";
 
