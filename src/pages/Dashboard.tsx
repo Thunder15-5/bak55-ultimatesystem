@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { TrackRecommendations } from "@/components/TrackRecommendations";
@@ -91,6 +92,8 @@ export default function Dashboard() {
             {userRole === "artist" ? "Your artist dashboard" : userRole === "brand" ? "Your brand dashboard" : "Your fan dashboard"}
           </p>
         </div>
+
+        <EmailVerificationBanner />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">

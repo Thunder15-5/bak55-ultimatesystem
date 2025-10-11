@@ -83,9 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/verify-email`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -104,9 +104,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    if (!error) {
-      toast.success("Account created successfully!");
-      navigate("/dashboard");
+    if (!error && data.user) {
+      // Send welcome email
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            to: email,
+            subject: "Welcome to BAK55 Talent!",
+            template: "welcome",
+            data: {
+              username: userData.username || email.split('@')[0],
+            },
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+      }
+
+      toast.success("Account created! Please check your email to verify your account.");
+      navigate("/verify-email");
     }
 
     return { error };

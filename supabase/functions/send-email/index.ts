@@ -1,7 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,6 +111,35 @@ const templates = {
   `,
 };
 
+async function sendEmailViaResend(to: string, subject: string, html: string) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  
+  if (!RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY not configured");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: "BAK55 Talent <notifications@resend.dev>",
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Resend API error: ${error}`);
+  }
+
+  return await response.json();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -131,13 +157,7 @@ serve(async (req) => {
     }
 
     const html = templates[template](data || {});
-
-    const emailResponse = await resend.emails.send({
-      from: "BAK55 Talent <notifications@resend.dev>", // Change to your verified domain
-      to: [to],
-      subject,
-      html,
-    });
+    const emailResponse = await sendEmailViaResend(to, subject, html);
 
     console.log("Email sent successfully:", emailResponse);
 
