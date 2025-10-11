@@ -930,6 +930,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_select_competition_winners: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       calculate_submission_final_scores: {
         Args: { competition_uuid: string }
         Returns: undefined

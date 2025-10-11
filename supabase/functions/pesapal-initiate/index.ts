@@ -108,9 +108,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Pesapal API base URL (use sandbox for testing)
-    const PESAPAL_BASE_URL = 'https://cybqa.pesapal.com/pesapalv3';
-    // Production: https://pay.pesapal.com/v3
+    // Pesapal API base URL
+    const IS_PRODUCTION = Deno.env.get('PESAPAL_ENV') === 'production';
+    const PESAPAL_BASE_URL = IS_PRODUCTION 
+      ? 'https://pay.pesapal.com/v3'
+      : 'https://cybqa.pesapal.com/pesapalv3';
+    
+    console.log('Using Pesapal environment:', IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX');
 
     // Step 1: Get access token
     const tokenResponse = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {

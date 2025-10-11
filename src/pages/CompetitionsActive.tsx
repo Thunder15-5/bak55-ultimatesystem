@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Calendar, Coins, Users } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { EmptyState } from "@/components/EmptyState";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface Competition {
   id: string;

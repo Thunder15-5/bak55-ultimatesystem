@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Music, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { EmptyState } from "@/components/EmptyState";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface Track {
   id: string;
