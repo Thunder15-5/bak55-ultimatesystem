@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { 
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins, Share2
+  TrendingUp, Music, Coins, Share2, Wallet
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -553,6 +553,18 @@ export default function Admin() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex gap-4">
+              <Button onClick={() => navigate('/admin/cash-reserve')} variant="outline">
+                <Wallet className="mr-2 h-4 w-4" />
+                View Cash Reserve Dashboard
+              </Button>
+              <Button onClick={() => navigate('/admin/create-competition')} variant="outline">
+                <Trophy className="mr-2 h-4 w-4" />
+                Create Competition
+              </Button>
             </div>
           </TabsContent>
 

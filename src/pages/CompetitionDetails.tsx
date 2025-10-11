@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
+import { JudgeCompetition } from "@/components/JudgeCompetition";
 
 interface Competition {
   id: string;

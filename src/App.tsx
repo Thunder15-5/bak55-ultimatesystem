@@ -36,6 +36,7 @@ import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
 import EditCompetition from "./pages/admin/EditCompetition";
+import CashReserve from "./pages/admin/CashReserve";
 import Analytics from "./pages/Analytics";
 import ArtistProfile from "./pages/ArtistProfile";
 import Playlists from "./pages/Playlists";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><ListeningHistory /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+            <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/streaming" element={<Streaming />} />
           <Route path="/competitions" element={<Competitions />} />

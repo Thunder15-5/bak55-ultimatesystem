@@ -86,6 +86,10 @@ export default function Wallet() {
       return;
     }
 
+    // Calculate 15% withdrawal fee
+    const withdrawalFee = amount * 0.15;
+    const netAmount = amount - withdrawalFee;
+
     setWithdrawing(true);
 
     try {
@@ -106,11 +110,15 @@ export default function Wallet() {
           amount: -amount,
           type: "withdrawal",
           description: "Withdrawal request",
+          withdrawal_fee: withdrawalFee,
           metadata: {
             status: "pending",
             account_name: accountDetails.accountName,
             account_number: accountDetails.accountNumber,
             bank_name: accountDetails.bankName,
+            gross_amount: amount,
+            fee_amount: withdrawalFee,
+            net_amount: netAmount,
           },
         });
 
@@ -124,7 +132,20 @@ export default function Wallet() {
 
       if (updateError) throw updateError;
 
-      toast.success("Withdrawal request submitted! Admin will process it soon.");
+      // Create admin task for approval
+      await supabase.from("admin_tasks").insert({
+        task_type: "withdrawal_approval",
+        related_id: walletData.id,
+        metadata: {
+          user_id: user.id,
+          amount,
+          fee: withdrawalFee,
+          net_amount: netAmount,
+          account_details: accountDetails,
+        },
+      });
+
+      toast.success(`Withdrawal request submitted! You'll receive ${netAmount.toFixed(2)} BAK after 15% fee.`);
       setWithdrawAmount("");
       setAccountDetails({ accountName: "", accountNumber: "", bankName: "" });
       fetchWalletData();
@@ -211,9 +232,21 @@ export default function Wallet() {
                           placeholder="0.00"
                           required
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Available: {balance.toFixed(2)} BAK
-                        </p>
+                        <div className="text-xs space-y-1">
+                          <p className="text-muted-foreground">
+                            Available: {balance.toFixed(2)} BAK
+                          </p>
+                          {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
+                            <div className="bg-muted p-2 rounded">
+                              <p className="font-medium">Withdrawal Summary:</p>
+                              <p>Gross Amount: {parseFloat(withdrawAmount).toFixed(2)} BAK</p>
+                              <p>15% Fee: {(parseFloat(withdrawAmount) * 0.15).toFixed(2)} BAK</p>
+                              <p className="font-bold text-primary">
+                                You'll receive: {(parseFloat(withdrawAmount) * 0.85).toFixed(2)} BAK
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="accountName">Account Name</Label>

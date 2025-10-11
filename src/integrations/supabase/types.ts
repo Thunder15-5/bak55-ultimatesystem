@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_tasks: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          related_id: string | null
+          status: string | null
+          task_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          related_id?: string | null
+          status?: string | null
+          task_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          related_id?: string | null
+          status?: string | null
+          task_type?: string
+        }
+        Relationships: []
+      }
       artist_profiles: {
         Row: {
           created_at: string
@@ -459,6 +492,38 @@ export type Database = {
         }
         Relationships: []
       }
+      share_analytics: {
+        Row: {
+          id: string
+          platform: string
+          shared_at: string
+          track_id: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          platform: string
+          shared_at?: string
+          track_id: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          platform?: string
+          shared_at?: string
+          track_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_analytics_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           ai_analysis: Json | null
@@ -470,6 +535,7 @@ export type Database = {
           cover_image: string | null
           created_at: string
           description: string | null
+          final_score: number | null
           id: string
           moderated_at: string | null
           moderated_by: string | null
@@ -491,6 +557,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          final_score?: number | null
           id?: string
           moderated_at?: string | null
           moderated_by?: string | null
@@ -512,6 +579,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          final_score?: number | null
           id?: string
           moderated_at?: string | null
           moderated_by?: string | null
@@ -613,9 +681,12 @@ export type Database = {
           description: string | null
           id: string
           metadata: Json | null
+          mpesa_phone_number: string | null
+          mpesa_receipt_number: string | null
           reference_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           wallet_id: string
+          withdrawal_fee: number | null
         }
         Insert: {
           amount: number
@@ -623,9 +694,12 @@ export type Database = {
           description?: string | null
           id?: string
           metadata?: Json | null
+          mpesa_phone_number?: string | null
+          mpesa_receipt_number?: string | null
           reference_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           wallet_id: string
+          withdrawal_fee?: number | null
         }
         Update: {
           amount?: number
@@ -633,9 +707,12 @@ export type Database = {
           description?: string | null
           id?: string
           metadata?: Json | null
+          mpesa_phone_number?: string | null
+          mpesa_receipt_number?: string | null
           reference_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           wallet_id?: string
+          withdrawal_fee?: number | null
         }
         Relationships: [
           {
@@ -752,6 +829,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_submission_final_scores: {
+        Args: { competition_uuid: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

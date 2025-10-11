@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.detect-fraud]
 verify_jwt = false
+
+[functions.mpesa-deposit]
+verify_jwt = false
+
+[functions.mpesa-withdraw]
+verify_jwt = false
+
+[functions.ai-judge-submission]
+verify_jwt = false

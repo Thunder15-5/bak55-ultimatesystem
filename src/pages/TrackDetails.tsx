@@ -411,12 +411,26 @@ export default function TrackDetails() {
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 const url = window.location.href;
                 const text = `Check out "${track.title}" by ${track.profiles.username} on BAK55!`;
                 
+                // Track share analytics
+                if (user) {
+                  await supabase.from('share_analytics').insert({
+                    track_id: id,
+                    user_id: user.id,
+                    platform: navigator.share ? 'native_share' : 'clipboard',
+                  });
+                }
+                
                 if (navigator.share) {
-                  navigator.share({ title: track.title, text, url });
+                  try {
+                    await navigator.share({ title: track.title, text, url });
+                    toast.success("Shared successfully!");
+                  } catch (err) {
+                    // User cancelled share
+                  }
                 } else {
                   navigator.clipboard.writeText(url);
                   toast.success("Link copied to clipboard!");

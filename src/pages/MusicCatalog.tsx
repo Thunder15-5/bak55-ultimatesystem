@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
+import { Label } from "@/components/ui/label";
 import { Music, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ interface Track {
   cover_image: string | null;
   genre: string | null;
   plays: number;
+  created_at: string;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -29,6 +31,8 @@ export default function MusicCatalog() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
+  const [minPlays, setMinPlays] = useState<number>(0);
 
   useEffect(() => {
     fetchTracks();
@@ -36,7 +40,7 @@ export default function MusicCatalog() {
 
   useEffect(() => {
     filterTracks();
-  }, [tracks, searchQuery, genreFilter]);
+  }, [tracks, searchQuery, genreFilter, sortBy, minPlays]);
 
   const fetchTracks = async () => {
     try {
@@ -75,6 +79,26 @@ export default function MusicCatalog() {
       filtered = filtered.filter((track) => track.genre === genreFilter);
     }
 
+    // Minimum plays filter
+    if (minPlays > 0) {
+      filtered = filtered.filter((track) => track.plays >= minPlays);
+    }
+
+    // Sorting
+    switch (sortBy) {
+      case "recent":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "popular":
+        filtered.sort((a, b) => b.plays - a.plays);
+        break;
+      case "oldest":
+        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      default:
+        break;
+    }
+
     setFilteredTracks(filtered);
   };
 
@@ -107,29 +131,53 @@ export default function MusicCatalog() {
         </div>
 
         {/* Search and Filter */}
-        <div className="mb-6 flex gap-4 flex-col md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="mb-6 space-y-4">
+          <div className="flex gap-4 flex-col md:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by track or artist..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={genreFilter} onValueChange={setGenreFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genres</SelectItem>
+                {genres.map((genre) => (
+                  <SelectItem key={genre} value={genre!}>
+                    {genre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Most Recent</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="minPlays" className="whitespace-nowrap">Min Plays:</Label>
             <Input
-              placeholder="Search by track or artist..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              id="minPlays"
+              type="number"
+              min="0"
+              value={minPlays}
+              onChange={(e) => setMinPlays(parseInt(e.target.value) || 0)}
+              className="w-32"
+              placeholder="0"
             />
           </div>
-          <Select value={genreFilter} onValueChange={setGenreFilter}>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Filter by genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
-              {genres.map((genre) => (
-                <SelectItem key={genre} value={genre!}>
-                  {genre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {filteredTracks.length === 0 ? (
