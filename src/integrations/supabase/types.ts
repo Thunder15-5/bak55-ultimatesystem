@@ -367,7 +367,7 @@ export type Database = {
         }
         Relationships: []
       }
-      paystack_transactions: {
+      payment_transactions: {
         Row: {
           amount: number
           created_at: string | null
@@ -375,7 +375,8 @@ export type Database = {
           email: string
           id: string
           metadata: Json | null
-          paystack_reference: string | null
+          payment_provider: string | null
+          payment_reference: string | null
           reference: string
           status: string
           updated_at: string | null
@@ -388,7 +389,8 @@ export type Database = {
           email: string
           id?: string
           metadata?: Json | null
-          paystack_reference?: string | null
+          payment_provider?: string | null
+          payment_reference?: string | null
           reference: string
           status?: string
           updated_at?: string | null
@@ -401,7 +403,8 @@ export type Database = {
           email?: string
           id?: string
           metadata?: Json | null
-          paystack_reference?: string | null
+          payment_provider?: string | null
+          payment_reference?: string | null
           reference?: string
           status?: string
           updated_at?: string | null

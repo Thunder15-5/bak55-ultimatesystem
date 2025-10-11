@@ -76,9 +76,9 @@ Deno.serve(async (req) => {
 
     // Find the transaction by Pesapal reference
     const { data: transaction, error: fetchError } = await supabaseClient
-      .from('paystack_transactions')
+      .from('payment_transactions')
       .select('*')
-      .eq('paystack_reference', orderTrackingId)
+      .eq('payment_reference', orderTrackingId)
       .single();
 
     if (fetchError || !transaction) {
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
 
     // Update transaction status
     const { error: updateError } = await supabaseClient
-      .from('paystack_transactions')
+      .from('payment_transactions')
       .update({
         status: transactionStatus,
         updated_at: new Date().toISOString(),

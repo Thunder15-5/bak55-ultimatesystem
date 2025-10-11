@@ -54,10 +54,11 @@ Deno.serve(async (req) => {
       
       // In test mode, simulate successful payment
       const { error: updateError } = await supabaseClient
-        .from('paystack_transactions')
+        .from('payment_transactions')
         .update({
           status: 'success',
-          paystack_reference: `TEST-${paymentRequest.reference}`,
+          payment_reference: `TEST-${paymentRequest.reference}`,
+          payment_provider: 'pesapal_test',
         })
         .eq('id', paymentRequest.notification_id);
 
@@ -201,9 +202,10 @@ Deno.serve(async (req) => {
 
     // Update transaction with Pesapal reference
     const { error: updateError } = await supabaseClient
-      .from('paystack_transactions')
+      .from('payment_transactions')
       .update({
-        paystack_reference: orderData.order_tracking_id,
+        payment_reference: orderData.order_tracking_id,
+        payment_provider: 'pesapal',
         metadata: {
           ...paymentRequest,
           pesapal_merchant_reference: orderData.merchant_reference,

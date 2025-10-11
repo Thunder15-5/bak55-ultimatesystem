@@ -61,7 +61,7 @@ const BuyCoins = () => {
       const reference = `BAK-${Date.now()}-${user.id.slice(0, 8)}`;
       
       const { data: transaction, error: transactionError } = await supabase
-        .from("paystack_transactions")
+        .from("payment_transactions")
         .insert({
           user_id: user.id,
           amount: kshAmount,
@@ -69,6 +69,7 @@ const BuyCoins = () => {
           email: profile.email,
           reference: reference,
           status: "pending",
+          payment_provider: "pesapal",
           metadata: {
             bak_amount: bakAmount,
             type: "coin_purchase",
@@ -192,9 +193,10 @@ const BuyCoins = () => {
                 <div className="text-sm space-y-1">
                   <p className="font-medium">Payment Information:</p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>You'll be redirected to Pesapal to complete payment</li>
-                    <li>BAKCoins will be added to your wallet instantly after payment</li>
-                    <li>All transactions are secure and encrypted</li>
+                    <li>Secure payment powered by Pesapal</li>
+                    <li>Supports M-Pesa, Cards, and Bank transfers</li>
+                    <li>BAKCoins added instantly after successful payment</li>
+                    <li>All transactions are encrypted and secure</li>
                   </ul>
                 </div>
               </div>

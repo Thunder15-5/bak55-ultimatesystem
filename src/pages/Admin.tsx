@@ -155,7 +155,7 @@ export default function Admin() {
   const fetchCoinPurchases = async () => {
     try {
       const { data, error } = await supabase
-        .from("paystack_transactions")
+        .from("payment_transactions")
         .select(`
           *,
           profiles:user_id (username)
@@ -310,7 +310,7 @@ export default function Admin() {
     try {
       // Update transaction status
       const { error: txError } = await supabase
-        .from("paystack_transactions")
+        .from("payment_transactions")
         .update({ status: "success" })
         .eq("id", purchase.id);
 
@@ -363,7 +363,7 @@ export default function Admin() {
 
     try {
       const { error } = await supabase
-        .from("paystack_transactions")
+        .from("payment_transactions")
         .update({ status: "failed" })
         .eq("id", purchase.id);
 
