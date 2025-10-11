@@ -57,6 +57,7 @@ interface User {
   username: string;
   email: string;
   created_at: string;
+  banned: boolean;
   user_roles: Array<{ role: string }>;
 }
 
@@ -176,6 +177,7 @@ export default function Admin() {
           username,
           email,
           created_at,
+          banned,
           user_roles (role)
         `)
         .order("created_at", { ascending: false });
@@ -418,6 +420,26 @@ export default function Admin() {
       fetchAllData();
     } catch (error: any) {
       toast.error(error.message || "Failed to delete competition");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleBanUser = async (userId: string, currentBanStatus: boolean) => {
+    setProcessing(userId);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ banned: !currentBanStatus })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast.success(currentBanStatus ? "User unbanned successfully" : "User banned successfully");
+      fetchAllData();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update user status");
     } finally {
       setProcessing(null);
     }
@@ -712,12 +734,38 @@ export default function Admin() {
                                   {role.role}
                                 </Badge>
                               ))}
+                              {user.banned && (
+                                <Badge variant="destructive">
+                                  <ShieldAlert className="h-3 w-3 mr-1" />
+                                  Banned
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                             <p className="text-xs text-muted-foreground">
                               Joined: {new Date(user.created_at).toLocaleDateString()}
                             </p>
                           </div>
+                          <Button
+                            variant={user.banned ? "default" : "destructive"}
+                            size="sm"
+                            onClick={() => handleBanUser(user.id, user.banned)}
+                            disabled={processing === user.id}
+                          >
+                            {processing === user.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : user.banned ? (
+                              <>
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                Unban
+                              </>
+                            ) : (
+                              <>
+                                <ShieldAlert className="mr-2 h-4 w-4" />
+                                Ban
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -767,9 +815,16 @@ export default function Admin() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigate(`/competition/${comp.id}`)}
+                              onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}
                             >
                               <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => navigate(`/competition/${comp.id}`)}
+                            >
                               View
                             </Button>
                             {comp.status === "active" && (

@@ -393,6 +393,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned: boolean | null
           bio: string | null
           created_at: string
           email: string
@@ -403,6 +404,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          banned?: boolean | null
           bio?: string | null
           created_at?: string
           email: string
@@ -413,6 +415,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          banned?: boolean | null
           bio?: string | null
           created_at?: string
           email?: string
@@ -425,6 +428,8 @@ export type Database = {
       }
       submissions: {
         Row: {
+          ai_analysis: Json | null
+          ai_analyzed_at: string | null
           ai_score: number | null
           artist_id: string
           audio_url: string
@@ -440,6 +445,8 @@ export type Database = {
           vote_count: number | null
         }
         Insert: {
+          ai_analysis?: Json | null
+          ai_analyzed_at?: string | null
           ai_score?: number | null
           artist_id: string
           audio_url: string
@@ -455,6 +462,8 @@ export type Database = {
           vote_count?: number | null
         }
         Update: {
+          ai_analysis?: Json | null
+          ai_analyzed_at?: string | null
           ai_score?: number | null
           artist_id?: string
           audio_url?: string

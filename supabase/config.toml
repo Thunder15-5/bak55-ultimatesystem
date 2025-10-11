@@ -1,1 +1,13 @@
 project_id = "qtdxzgeeomgukkxfkwmh"
+
+[functions.pesapal-callback]
+verify_jwt = false
+
+[functions.pesapal-initiate]
+verify_jwt = false
+
+[functions.select-competition-winners]
+verify_jwt = false
+
+[functions.analyze-submission]
+verify_jwt = false

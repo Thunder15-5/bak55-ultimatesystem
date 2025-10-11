@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft } from "lucide-react";
+import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 
 interface Competition {
@@ -33,6 +33,9 @@ interface Submission {
   vote_count: number;
   artist_id: string;
   status: string;
+  ai_score: number | null;
+  ai_analysis: any;
+  ai_analyzed_at: string | null;
   profiles: {
     username: string;
   };
@@ -148,6 +151,35 @@ export default function CompetitionDetails() {
       toast({
         title: "Error",
         description: error.message || "Failed to record vote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAnalyzeSubmission = async (submissionId: string) => {
+    try {
+      toast({
+        title: "Analyzing submission",
+        description: "AI analysis in progress...",
+      });
+
+      const { error } = await supabase.functions.invoke('analyze-submission', {
+        body: { submissionId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Analysis complete!",
+        description: "AI scoring has been completed for this submission",
+      });
+
+      fetchSubmissions();
+    } catch (error: any) {
+      console.error('Error analyzing submission:', error);
+      toast({
+        title: "Analysis failed",
+        description: error.message || "Failed to analyze submission",
         variant: "destructive",
       });
     }
@@ -335,14 +367,34 @@ export default function CompetitionDetails() {
                         <span>{submission.vote_count} votes</span>
                       </div>
 
+                      {submission.ai_score !== null && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{submission.ai_score.toFixed(1)}/100</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
                       {isVotingOpen() && (
                         <Button
                           size="sm"
                           variant={userVotes.has(submission.id) ? "secondary" : "default"}
                           onClick={() => handleVote(submission.id)}
                           disabled={userVotes.has(submission.id)}
+                          className="flex-1"
                         >
                           {userVotes.has(submission.id) ? "Voted" : "Vote"}
+                        </Button>
+                      )}
+                      
+                      {userRole === 'admin' && !submission.ai_analyzed_at && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAnalyzeSubmission(submission.id)}
+                        >
+                          <Sparkles className="h-4 w-4" />
                         </Button>
                       )}
                     </div>

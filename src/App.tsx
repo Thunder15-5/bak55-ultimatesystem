@@ -35,6 +35,7 @@ import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
+import EditCompetition from "./pages/admin/EditCompetition";
 import ArtistProfile from "./pages/ArtistProfile";
 import Playlists from "./pages/Playlists";
 import PlaylistDetails from "./pages/PlaylistDetails";
@@ -72,6 +73,11 @@ const App = () => (
           <Route path="/admin/create-competition" element={
             <ProtectedRoute requiredRole="brand">
               <CreateCompetition />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/edit-competition/:id" element={
+            <ProtectedRoute requiredRole="admin">
+              <EditCompetition />
             </ProtectedRoute>
           } />
             <Route path="/bakcoins" element={<BAKCoins />} />
