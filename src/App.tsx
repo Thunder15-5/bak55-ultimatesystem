@@ -35,6 +35,10 @@ import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
+import ArtistProfile from "./pages/ArtistProfile";
+import Playlists from "./pages/Playlists";
+import PlaylistDetails from "./pages/PlaylistDetails";
+import ListeningHistory from "./pages/ListeningHistory";
 
 const queryClient = new QueryClient();
 
@@ -54,8 +58,12 @@ const App = () => (
             <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
             <Route path="/catalog" element={<MusicCatalog />} />
             <Route path="/track/:id" element={<TrackDetails />} />
+            <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
+            <Route path="/playlists" element={<ProtectedRoute><Playlists /></ProtectedRoute>} />
+            <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><ListeningHistory /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
             <Route path="/streaming" element={<Streaming />} />
           <Route path="/competitions" element={<Competitions />} />

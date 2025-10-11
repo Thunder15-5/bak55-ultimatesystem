@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Music, Play, Heart, DollarSign, Loader2, ArrowLeft } from "lucide-react";
+import { Music, Play, Heart, DollarSign, Loader2, ArrowLeft, ListPlus } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Track {
   id: string;
@@ -35,12 +37,18 @@ export default function TrackDetails() {
   const [playing, setPlaying] = useState(false);
   const [tipping, setTipping] = useState(false);
   const [tipAmount, setTipAmount] = useState("");
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+  const [addingToPlaylist, setAddingToPlaylist] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchTrack();
     }
-  }, [id]);
+    if (user) {
+      fetchUserPlaylists();
+    }
+  }, [id, user]);
 
   const fetchTrack = async () => {
     try {
@@ -60,6 +68,51 @@ export default function TrackDetails() {
       navigate("/catalog");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserPlaylists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("playlists")
+        .select("id, title")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPlaylists(data || []);
+    } catch (error: any) {
+      console.error("Failed to load playlists:", error);
+    }
+  };
+
+  const handleAddToPlaylist = async () => {
+    if (!selectedPlaylist) {
+      toast.error("Please select a playlist");
+      return;
+    }
+
+    setAddingToPlaylist(true);
+
+    try {
+      const { error } = await supabase.from("playlist_tracks").insert({
+        playlist_id: selectedPlaylist,
+        track_id: id,
+      });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Track already in playlist");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Added to playlist!");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add to playlist");
+    } finally {
+      setAddingToPlaylist(false);
     }
   };
 
@@ -249,52 +302,117 @@ export default function TrackDetails() {
               </Button>
 
               {user && user.id !== track.artist_id && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" variant="outline">
-                      <Heart className="mr-2 h-5 w-5" />
-                      Tip Artist
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Tip {track.profiles.username}</DialogTitle>
-                      <DialogDescription>
-                        Show your support by sending BAKCoins
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleTip} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="tipAmount">Amount (BAK)</Label>
-                        <Input
-                          id="tipAmount"
-                          type="number"
-                          step="0.01"
-                          value={tipAmount}
-                          onChange={(e) => setTipAmount(e.target.value)}
-                          placeholder="0.00"
-                          required
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={tipping}>
-                        {tipping ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
+                <>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" variant="outline">
+                        <Heart className="mr-2 h-5 w-5" />
+                        Tip Artist
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Tip {track.profiles.username}</DialogTitle>
+                        <DialogDescription>
+                          Show your support by sending BAKCoins
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleTip} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="tipAmount">Amount (BAK)</Label>
+                          <Input
+                            id="tipAmount"
+                            type="number"
+                            step="0.01"
+                            value={tipAmount}
+                            onChange={(e) => setTipAmount(e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={tipping}>
+                          {tipping ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <DollarSign className="mr-2 h-4 w-4" />
+                              Send Tip
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" variant="outline">
+                        <ListPlus className="mr-2 h-5 w-5" />
+                        Add to Playlist
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add to Playlist</DialogTitle>
+                        <DialogDescription>
+                          Choose a playlist to add this track to
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        {playlists.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-muted-foreground mb-4">
+                              You don't have any playlists yet
+                            </p>
+                            <Button onClick={() => navigate("/playlists")}>
+                              Create Playlist
+                            </Button>
+                          </div>
                         ) : (
                           <>
-                            <DollarSign className="mr-2 h-4 w-4" />
-                            Send Tip
+                            <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a playlist" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {playlists.map((playlist) => (
+                                  <SelectItem key={playlist.id} value={playlist.id}>
+                                    {playlist.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              onClick={handleAddToPlaylist} 
+                              className="w-full" 
+                              disabled={addingToPlaylist || !selectedPlaylist}
+                            >
+                              {addingToPlaylist ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Adding...
+                                </>
+                              ) : (
+                                "Add to Playlist"
+                              )}
+                            </Button>
                           </>
                         )}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
             </div>
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-8">
+          <CommentSection trackId={id!} />
         </div>
       </div>
 

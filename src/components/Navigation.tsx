@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, LogOut, User, Wallet, Music } from "lucide-react";
+import { Menu, X, LogOut, User, Wallet, Music, History, ListMusic } from "lucide-react";
 import { useState } from "react";
 
 export function Navigation() {
@@ -42,6 +42,14 @@ export function Navigation() {
                 </Link>
                 <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors">
                   Active Competitions
+                </Link>
+                <Link to="/playlists" className="text-foreground hover:text-primary transition-colors">
+                  <ListMusic className="w-4 h-4 inline mr-1" />
+                  Playlists
+                </Link>
+                <Link to="/history" className="text-foreground hover:text-primary transition-colors">
+                  <History className="w-4 h-4 inline mr-1" />
+                  History
                 </Link>
                 <Link to="/wallet" className="text-foreground hover:text-primary transition-colors">
                   <Wallet className="w-4 h-4 inline mr-1" />
