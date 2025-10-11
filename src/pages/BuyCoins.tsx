@@ -95,16 +95,7 @@ const BuyCoins = () => {
 
       if (error) throw error;
 
-      if (data?.test_mode) {
-        // Test mode - show success message and redirect
-        toast({
-          title: "Test Payment Successful",
-          description: `${bakAmount} BAK added to your wallet (Test Mode)`,
-        });
-        setTimeout(() => {
-          navigate("/payment/success?test=true&ref=" + reference);
-        }, 1500);
-      } else if (data?.redirect_url) {
+      if (data?.redirect_url) {
         // Redirect to Pesapal payment page
         window.location.href = data.redirect_url;
       } else if (!data?.success) {
@@ -146,14 +137,6 @@ const BuyCoins = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Alert className="mb-6 border-primary/20 bg-primary/5">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Test Mode Active</AlertTitle>
-              <AlertDescription className="text-sm">
-                Payment system is running in test mode. Payments will be simulated and BAKCoins will be added instantly to your wallet without actual charges.
-              </AlertDescription>
-            </Alert>
-
             <form onSubmit={handlePurchase} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount (KSh)</Label>

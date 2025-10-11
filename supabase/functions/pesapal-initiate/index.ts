@@ -45,76 +45,13 @@ Deno.serve(async (req) => {
     const PESAPAL_CONSUMER_KEY = Deno.env.get('PESAPAL_CONSUMER_KEY');
     const PESAPAL_CONSUMER_SECRET = Deno.env.get('PESAPAL_CONSUMER_SECRET');
     
-    // Check if in test mode (no credentials configured)
-    const isTestMode = !PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET || 
-                       PESAPAL_CONSUMER_KEY === 'test' || PESAPAL_CONSUMER_SECRET === 'test';
-    
-    if (isTestMode) {
-      console.log('Running in test mode - simulating payment');
-      
-      // In test mode, simulate successful payment
-      const { error: updateError } = await supabaseClient
-        .from('payment_transactions')
-        .update({
-          status: 'success',
-          payment_reference: `TEST-${paymentRequest.reference}`,
-          payment_provider: 'pesapal_test',
-        })
-        .eq('id', paymentRequest.notification_id);
-
-      if (updateError) {
-        console.error('Failed to update transaction:', updateError);
-      }
-
-      // Update wallet balance
-      const { data: wallet } = await supabaseClient
-        .from('wallets')
-        .select('id, balance')
-        .eq('user_id', user.id)
-        .single();
-
-      if (wallet) {
-        const bakAmount = paymentRequest.amount / 20;
-        await supabaseClient
-          .from('wallets')
-          .update({ balance: wallet.balance + bakAmount })
-          .eq('user_id', user.id);
-
-        // Create transaction record
-        await supabaseClient
-          .from('transactions')
-          .insert({
-            wallet_id: wallet.id,
-            type: 'deposit',
-            amount: bakAmount,
-            description: `Test purchase: ${paymentRequest.description}`,
-            metadata: {
-              test_mode: true,
-              ksh_amount: paymentRequest.amount,
-            },
-          });
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          test_mode: true,
-          redirect_url: paymentRequest.callback_url + '?status=success&test=true',
-          message: 'Test payment completed successfully',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (!PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET) {
+      throw new Error('Pesapal credentials not configured. Please contact support.');
     }
 
-    // Pesapal API base URL
-    const IS_PRODUCTION = Deno.env.get('PESAPAL_ENV') === 'production';
-    const PESAPAL_BASE_URL = IS_PRODUCTION 
-      ? 'https://pay.pesapal.com/v3'
-      : 'https://cybqa.pesapal.com/pesapalv3';
-    
-    console.log('Using Pesapal environment:', IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX');
+    // Production Pesapal API
+    const PESAPAL_BASE_URL = 'https://pay.pesapal.com/v3';
+    console.log('Processing payment via Pesapal production API');
 
     // Step 1: Get access token
     const tokenResponse = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
