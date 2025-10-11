@@ -86,7 +86,7 @@ const BuyCoins = () => {
           amount: kshAmount,
           currency: "KES",
           description: `Purchase ${bakAmount} BAKCoins`,
-          callback_url: `${window.location.origin}/wallet`,
+          callback_url: `${window.location.origin}/payment/success`,
           notification_id: transaction.id,
           reference: reference,
           email: profile.email,
@@ -102,11 +102,13 @@ const BuyCoins = () => {
           description: `${bakAmount} BAK added to your wallet (Test Mode)`,
         });
         setTimeout(() => {
-          navigate("/wallet");
+          navigate("/payment/success?test=true&ref=" + reference);
         }, 1500);
       } else if (data?.redirect_url) {
         // Redirect to Pesapal payment page
         window.location.href = data.redirect_url;
+      } else if (!data?.success) {
+        navigate("/payment/failed?error=" + encodeURIComponent(data?.error || "Payment initiation failed"));
       } else {
         throw new Error("Failed to initiate payment");
       }
@@ -126,7 +128,7 @@ const BuyCoins = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container max-w-2xl mx-auto px-4 py-8 mt-20">
+      <div className="container max-w-2xl mx-auto px-4 py-8 pt-24">
         <Button
           variant="ghost"
           onClick={() => navigate("/wallet")}
@@ -138,7 +140,7 @@ const BuyCoins = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Buy BAKCoins</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Buy BAKCoins</CardTitle>
             <CardDescription>
               Purchase BAKCoins to support artists, vote in competitions, and unlock exclusive features
             </CardDescription>
@@ -147,7 +149,7 @@ const BuyCoins = () => {
             <Alert className="mb-6 border-primary/20 bg-primary/5">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Test Mode Active</AlertTitle>
-              <AlertDescription>
+              <AlertDescription className="text-sm">
                 Payment system is running in test mode. Payments will be simulated and BAKCoins will be added instantly to your wallet without actual charges.
               </AlertDescription>
             </Alert>
@@ -203,7 +205,7 @@ const BuyCoins = () => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-12"
                 disabled={isLoading || kshAmount < MIN_AMOUNT}
               >
                 {isLoading ? (

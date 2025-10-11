@@ -114,9 +114,9 @@ export default function Playlists() {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">My Playlists</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Playlists</h1>
             <p className="text-muted-foreground">
               Create and manage your music collections
             </p>
@@ -124,12 +124,12 @@ export default function Playlists() {
 
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Playlist
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md mx-4 sm:mx-auto">
               <DialogHeader>
                 <DialogTitle>Create New Playlist</DialogTitle>
                 <DialogDescription>
@@ -191,10 +191,10 @@ export default function Playlists() {
 
         {playlists.length === 0 ? (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <ListMusic className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No playlists yet</h3>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
+              <ListMusic className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">No playlists yet</h3>
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 text-center">
                 Create your first playlist to start organizing your music
               </p>
               <Button onClick={() => setShowCreateDialog(true)}>
@@ -204,25 +204,25 @@ export default function Playlists() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {playlists.map((playlist) => (
               <Card
                 key={playlist.id}
-                className="cursor-pointer hover:border-primary transition-colors"
+                className="cursor-pointer hover:border-primary transition-all hover:scale-105"
                 onClick={() => navigate(`/playlist/${playlist.id}`)}
               >
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <ListMusic className="h-5 w-5 text-primary" />
-                      <CardTitle className="line-clamp-1">{playlist.title}</CardTitle>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <ListMusic className="h-5 w-5 text-primary flex-shrink-0" />
+                      <CardTitle className="line-clamp-1 text-base sm:text-lg">{playlist.title}</CardTitle>
                     </div>
                     {!playlist.is_public && (
-                      <Lock className="h-4 w-4 text-muted-foreground" />
+                      <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
                   {playlist.description && (
-                    <CardDescription className="line-clamp-2">
+                    <CardDescription className="line-clamp-2 text-sm">
                       {playlist.description}
                     </CardDescription>
                   )}

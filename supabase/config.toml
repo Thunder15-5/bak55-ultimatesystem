@@ -34,7 +34,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.detect-fraud]
-verify_jwt = false
+verify_jwt = true
 
 [functions.mpesa-deposit]
 verify_jwt = false

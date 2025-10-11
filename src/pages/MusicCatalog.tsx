@@ -4,10 +4,12 @@ import { Navigation } from "@/components/Navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { Label } from "@/components/ui/label";
 import { Music, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Track {
   id: string;
@@ -26,6 +28,7 @@ interface Track {
 
 export default function MusicCatalog() {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,9 +125,9 @@ export default function MusicCatalog() {
   return (
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Music Catalog</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Music Catalog</h1>
           <p className="text-muted-foreground">
             Discover amazing tracks from talented artists
           </p>
@@ -132,7 +135,7 @@ export default function MusicCatalog() {
 
         {/* Search and Filter */}
         <div className="mb-6 space-y-4">
-          <div className="flex gap-4 flex-col md:flex-row">
+          <div className="flex gap-4 flex-col sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -143,7 +146,7 @@ export default function MusicCatalog() {
               />
             </div>
             <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Genre" />
               </SelectTrigger>
               <SelectContent>
@@ -156,7 +159,7 @@ export default function MusicCatalog() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -167,14 +170,14 @@ export default function MusicCatalog() {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <Label htmlFor="minPlays" className="whitespace-nowrap">Min Plays:</Label>
+            <Label htmlFor="minPlays" className="whitespace-nowrap text-sm">Min Plays:</Label>
             <Input
               id="minPlays"
               type="number"
               min="0"
               value={minPlays}
               onChange={(e) => setMinPlays(parseInt(e.target.value) || 0)}
-              className="w-32"
+              className="w-full sm:w-32"
               placeholder="0"
             />
           </div>
@@ -183,17 +186,26 @@ export default function MusicCatalog() {
         {filteredTracks.length === 0 ? (
           <Card className="p-12 text-center">
             <Music className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">No tracks yet</h3>
-            <p className="text-muted-foreground">
-              Be the first to upload a track!
+            <h3 className="text-xl font-semibold mb-2">
+              {tracks.length === 0 ? "No tracks yet" : "No tracks found"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {tracks.length === 0 
+                ? "Be the first to upload a track!" 
+                : "Try adjusting your filters"}
             </p>
+            {tracks.length === 0 && userRole === "artist" && (
+              <Button onClick={() => navigate("/upload")} variant="default">
+                Upload Your First Track
+              </Button>
+            )}
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredTracks.map((track) => (
               <Card
                 key={track.id}
-                className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                className="overflow-hidden cursor-pointer hover:shadow-lg transition-all hover:scale-105"
                 onClick={() => handleTrackClick(track.id)}
               >
                 <div className="aspect-square relative bg-muted">

@@ -78,15 +78,15 @@ export default function CompetitionsActive() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Active Competitions</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Active Competitions</h1>
             <p className="text-muted-foreground">Submit your tracks and compete for prizes</p>
           </div>
           {(userRole === 'brand' || userRole === 'admin') && (
             <Link to="/admin/create-competition">
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Trophy className="mr-2 h-4 w-4" />
                 Create Competition
               </Button>
@@ -103,11 +103,11 @@ export default function CompetitionsActive() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {competitions.map((competition) => (
-              <Card key={competition.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={competition.id} className="overflow-hidden hover:shadow-lg transition-all hover:scale-105">
                 {competition.cover_image && (
-                  <div className="h-48 overflow-hidden">
+                  <div className="h-40 sm:h-48 overflow-hidden">
                     <img 
                       src={competition.cover_image} 
                       alt={competition.title}
@@ -115,34 +115,34 @@ export default function CompetitionsActive() {
                     />
                   </div>
                 )}
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-2">{competition.title}</CardTitle>
-                    <Badge variant="secondary">
+                    <CardTitle className="line-clamp-2 text-lg sm:text-xl">{competition.title}</CardTitle>
+                    <Badge variant="secondary" className="text-xs whitespace-nowrap">
                       <Trophy className="h-3 w-3 mr-1" />
                       {competition.prize_amount} BAK
                     </Badge>
                   </div>
-                  <CardDescription className="line-clamp-2">
+                  <CardDescription className="line-clamp-2 text-sm">
                     {competition.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {getTimeRemaining(competition.end_date)}
+                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{getTimeRemaining(competition.end_date)}</span>
                   </div>
                   
                   {competition.entry_fee > 0 && (
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Coins className="h-4 w-4 mr-2" />
+                      <Coins className="h-4 w-4 mr-2 flex-shrink-0" />
                       Entry Fee: {competition.entry_fee} BAK
                     </div>
                   )}
 
                   {competition.max_submissions && (
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-4 w-4 mr-2 flex-shrink-0" />
                       Max: {competition.max_submissions} submissions
                     </div>
                   )}

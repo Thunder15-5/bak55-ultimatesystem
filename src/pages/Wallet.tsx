@@ -184,36 +184,36 @@ export default function Wallet() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">My Wallet</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Wallet</h1>
           <p className="text-muted-foreground">Manage your BAKCoins</p>
         </div>
 
         {/* Balance Card */}
         <Card className="mb-8 border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <WalletIcon className="h-6 w-6" />
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <WalletIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               BAKCoins Balance
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold text-primary mb-4">
+            <div className="text-4xl sm:text-5xl font-bold text-primary mb-4">
               {balance.toFixed(2)} BAK
             </div>
-            <div className="flex gap-3">
-              <Button onClick={() => navigate('/wallet/buy-coins')} variant="default">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={() => navigate('/wallet/buy-coins')} variant="default" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Buy BAKCoins
               </Button>
               {userRole === "artist" && (
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline">
+                    <Button variant="outline" className="w-full sm:w-auto">
                       <DollarSign className="mr-2 h-4 w-4" />
                       Request Withdrawal
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-md mx-4 sm:mx-auto">
                     <DialogHeader>
                       <DialogTitle>Withdraw BAKCoins</DialogTitle>
                       <DialogDescription>
@@ -237,7 +237,7 @@ export default function Wallet() {
                             Available: {balance.toFixed(2)} BAK
                           </p>
                           {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
-                            <div className="bg-muted p-2 rounded">
+                            <div className="bg-muted p-2 rounded text-xs">
                               <p className="font-medium">Withdrawal Summary:</p>
                               <p>Gross Amount: {parseFloat(withdrawAmount).toFixed(2)} BAK</p>
                               <p>15% Fee: {(parseFloat(withdrawAmount) * 0.15).toFixed(2)} BAK</p>
@@ -301,26 +301,32 @@ export default function Wallet() {
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No transactions yet
-              </p>
+              <div className="text-center py-12">
+                <WalletIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground mb-4">No transactions yet</p>
+                <Button onClick={() => navigate('/wallet/buy-coins')} variant="outline" size="sm">
+                  Buy Your First BAKCoins
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {transactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg border hover:bg-accent/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      {getTransactionIcon(tx.type)}
-                      <div>
-                        <p className="font-medium">{tx.description}</p>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="flex-shrink-0">
+                        {getTransactionIcon(tx.type)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{tx.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleString()}
+                          {new Date(tx.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
-                    <div className={`font-bold ${getTransactionColor(tx.type)}`}>
+                    <div className={`font-bold text-sm sm:text-base whitespace-nowrap ${getTransactionColor(tx.type)}`}>
                       {tx.amount > 0 ? "+" : ""}{tx.amount.toFixed(2)} BAK
                     </div>
                   </div>

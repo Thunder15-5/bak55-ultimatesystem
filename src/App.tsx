@@ -35,6 +35,9 @@ import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
+import PaymentPending from "./pages/PaymentPending";
 import EditCompetition from "./pages/admin/EditCompetition";
 import CashReserve from "./pages/admin/CashReserve";
 import Analytics from "./pages/Analytics";
@@ -64,6 +67,9 @@ const App = () => (
             <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
+            <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+            <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
+            <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
             <Route path="/playlists" element={<ProtectedRoute><Playlists /></ProtectedRoute>} />
             <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><ListeningHistory /></ProtectedRoute>} />

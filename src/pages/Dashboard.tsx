@@ -81,7 +81,7 @@ export default function Dashboard() {
       <Navigation />
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
             Welcome back,{" "}
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               {user?.user_metadata?.username || user?.email?.split("@")[0]}
@@ -93,14 +93,14 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card className="border-primary/20 hover:border-primary/40 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">BAKCoins Balance</CardTitle>
               <Wallet className="w-4 h-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
                 {loading ? "..." : stats.balance.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">BAK</p>
@@ -115,7 +115,7 @@ export default function Dashboard() {
                   <Music className="w-4 h-4 text-secondary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-secondary">
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary">
                     {loading ? "..." : stats.tracksCount}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">Uploaded</p>
@@ -128,7 +128,7 @@ export default function Dashboard() {
                   <TrendingUp className="w-4 h-4 text-accent" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-accent">
+                  <div className="text-2xl sm:text-3xl font-bold text-accent">
                     {loading ? "..." : stats.totalPlays}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">All time</p>
@@ -141,7 +141,7 @@ export default function Dashboard() {
                   <Trophy className="w-4 h-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-primary">
+                  <div className="text-2xl sm:text-3xl font-bold text-primary">
                     {loading ? "..." : stats.totalEarnings.toFixed(2)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">BAK earned</p>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 <Vote className="w-4 h-4 text-secondary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-secondary">
+                <div className="text-2xl sm:text-3xl font-bold text-secondary">
                   {loading ? "..." : stats.votesCount}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Cast</p>
@@ -174,17 +174,17 @@ export default function Dashboard() {
                 <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>Jump right into what you need</CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {userRole === "artist" && (
                   <>
                     <Link to="/upload">
-                      <Button variant="hero" className="w-full">
+                      <Button variant="hero" className="w-full h-12">
                         <Upload className="mr-2 w-4 h-4" />
                         Upload Track
                       </Button>
                     </Link>
                     <Link to="/analytics">
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full h-12">
                         <TrendingUp className="mr-2 w-4 h-4" />
                         Analytics
                       </Button>
@@ -192,15 +192,15 @@ export default function Dashboard() {
                   </>
                 )}
                 <Link to="/competitions">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full h-12">
                     <Trophy className="mr-2 w-4 h-4" />
-                    View Competitions
+                    Competitions
                   </Button>
                 </Link>
                 <Link to="/wallet">
-                  <Button variant="secondary" className="w-full">
+                  <Button variant="secondary" className="w-full h-12">
                     <Wallet className="mr-2 w-4 h-4" />
-                    Manage Wallet
+                    Wallet
                   </Button>
                 </Link>
               </CardContent>

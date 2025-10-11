@@ -12,15 +12,55 @@ serve(async (req) => {
   }
 
   try {
-    const { competition_id } = await req.json();
-    
-    if (!competition_id) {
-      throw new Error('competition_id is required');
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Authenticate user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { competition_id } = await req.json();
+    
+    if (!competition_id) {
+      return new Response(
+        JSON.stringify({ error: 'competition_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Admin ${user.id} running fraud detection for competition ${competition_id}`);
 
     // Get voting patterns for this competition
     const { data: votes, error: votesError } = await supabase
@@ -38,7 +78,12 @@ serve(async (req) => {
       `)
       .eq('submissions.competition_id', competition_id);
 
-    if (votesError) throw votesError;
+    if (votesError) {
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch voting data' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Analyze voting patterns
     const voterStats = new Map();
@@ -80,7 +125,12 @@ serve(async (req) => {
 
     // Call Lovable AI for fraud analysis
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -100,18 +150,26 @@ serve(async (req) => {
             content: `Analyze these voting patterns:\n${JSON.stringify(suspiciousPatterns, null, 2)}\n\nDetect fraud indicators like:\n- Vote manipulation (many votes from few users)\n- Coordinated voting\n- Suspicious timing patterns\n- Unrealistic vote counts\n\nReturn JSON: {"fraud_detected": boolean, "risk_level": "low|medium|high", "flagged_items": [{type: string, details: string}], "recommendations": string[]}`
           }
         ],
-        temperature: 0.3,
       }),
     });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       if (aiResponse.status === 402) {
-        throw new Error('AI credits depleted. Please add credits to continue.');
+        return new Response(
+          JSON.stringify({ error: 'AI credits depleted. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      return new Response(
+        JSON.stringify({ error: 'AI analysis failed' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const aiResult = await aiResponse.json();
@@ -127,7 +185,7 @@ serve(async (req) => {
         .select('user_id')
         .eq('role', 'admin');
 
-      if (adminUsers) {
+      if (adminUsers && adminUsers.length > 0) {
         const notifications = adminUsers.map((admin: any) => ({
           user_id: admin.user_id,
           type: 'fraud_alert',
@@ -150,7 +208,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error in detect-fraud:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'An unexpected error occurred' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
