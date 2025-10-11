@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Music, Sparkles, TrendingUp } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import { Link } from "react-router-dom";
 
 export const Hero = () => {
   return (
@@ -66,14 +67,18 @@ export const Hero = () => {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button variant="hero" size="xl" className="group">
-              <Music className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Join as Artist
-            </Button>
-            <Button variant="outline" size="xl" className="group">
-              <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Discover Talent
-            </Button>
+            <Link to="/signup">
+              <Button variant="hero" size="xl" className="group">
+                <Music className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Join as Artist
+              </Button>
+            </Link>
+            <Link to="/streaming">
+              <Button variant="outline" size="xl" className="group">
+                <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Discover Talent
+              </Button>
+            </Link>
           </div>
 
           {/* Trust indicators */}

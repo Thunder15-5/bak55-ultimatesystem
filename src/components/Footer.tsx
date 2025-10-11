@@ -1,5 +1,5 @@
-import { Music } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/bak55-logo.png";
 
 export const Footer = () => {
   return (
@@ -9,10 +9,11 @@ export const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Music className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gradient">BAK55</span>
+              <img 
+                src={logo} 
+                alt="BAK55 Talent" 
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-sm text-muted-foreground">
               Powering African Music's Digital Revolution by building infrustructure for African music digital future an AI powered talent ecosystem that discovers, develops and monetizes artists through a proprietary digital economy. Our platform combines streaming, competition, live events and AI tools in a circular economy powered by BAKCoins.

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -14,17 +15,29 @@ const Contact = () => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !subject || !message) {
       toast.error("Please fill in all fields");
       return;
     }
-    toast.success("Message sent successfully! We'll be in touch soon.");
-    setName("");
-    setEmail("");
-    setSubject("");
-    setMessage("");
+
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .insert([{ name, email, subject, message }]);
+
+      if (error) throw error;
+
+      toast.success("Message sent successfully! We'll be in touch soon.");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      toast.error(error.message || "Failed to send message. Please try again.");
+    }
   };
 
   return (
@@ -154,10 +167,18 @@ const Contact = () => {
                 Follow our journey and stay updated on the latest news
               </p>
               <div className="flex flex-wrap justify-center gap-4 pt-4">
-                <Button variant="outline">Twitter</Button>
-                <Button variant="outline">Instagram</Button>
-                <Button variant="outline">LinkedIn</Button>
-                <Button variant="outline">Facebook</Button>
+                <Button variant="outline" asChild>
+                  <a href="https://twitter.com/bak55talent" target="_blank" rel="noopener noreferrer">Twitter</a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="https://instagram.com/bak55talent" target="_blank" rel="noopener noreferrer">Instagram</a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="https://linkedin.com/company/bak55talent" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="https://facebook.com/bak55talent" target="_blank" rel="noopener noreferrer">Facebook</a>
+                </Button>
               </div>
             </div>
           </Card>

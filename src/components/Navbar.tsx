@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Music, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import logo from "@/assets/bak55-logo.png";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,11 +12,12 @@ export const Navbar = () => {
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Music className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gradient">BAK55</span>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img 
+              src={logo} 
+              alt="BAK55 Talent" 
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+            />
           </Link>
 
           {/* Desktop Navigation */}
