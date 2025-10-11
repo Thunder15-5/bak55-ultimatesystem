@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Upload, Music } from "lucide-react";
+import { Loader2, Upload, Music, Sparkles } from "lucide-react";
 
 export default function UploadTrack() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
+  const [classifyingGenre, setClassifyingGenre] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     genre: "",
@@ -158,6 +159,36 @@ export default function UploadTrack() {
     }
   };
 
+  const handleAutoClassifyGenre = async () => {
+    if (!formData.title) {
+      toast.error("Please enter a track title first");
+      return;
+    }
+
+    setClassifyingGenre(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('classify-genre', {
+        body: {
+          track_id: 'temp',
+          title: formData.title,
+        }
+      });
+
+      if (error) throw error;
+
+      setFormData({ ...formData, genre: data.genre });
+      toast.success(`Genre classified as: ${data.genre}`, {
+        description: `Confidence: ${(data.confidence * 100).toFixed(0)}%`,
+      });
+    } catch (error: any) {
+      console.error('Genre classification error:', error);
+      toast.error(error.message || 'Failed to classify genre');
+    } finally {
+      setClassifyingGenre(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -185,7 +216,28 @@ export default function UploadTrack() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="genre">Genre</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="genre">Genre</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoClassifyGenre}
+                    disabled={classifyingGenre || !formData.title}
+                  >
+                    {classifyingGenre ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Classifying...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-3 w-3" />
+                        AI Classify
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <Input
                   id="genre"
                   value={formData.genre}

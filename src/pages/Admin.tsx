@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
+import { FraudDetection } from "@/components/FraudDetection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -790,78 +791,87 @@ export default function Admin() {
               <CardContent>
                 <div className="space-y-4">
                   {competitions.map((comp) => (
-                    <Card key={comp.id} className="border-2">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              <Trophy className="h-5 w-5 text-primary" />
-                              <h3 className="text-xl font-bold">{comp.title}</h3>
-                              <Badge variant={comp.status === "active" ? "default" : "secondary"}>
-                                {comp.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>Prize:</strong> {comp.prize_amount} BAK
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>Submissions:</strong> {comp.submissions?.length || 0}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>Dates:</strong> {new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}
-                            </p>
-                            {comp.voting_start_date && (
+                    <div key={comp.id} className="space-y-4">
+                      <Card className="border-2">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2 flex-1">
+                              <div className="flex items-center gap-2">
+                                <Trophy className="h-5 w-5 text-primary" />
+                                <h3 className="text-xl font-bold">{comp.title}</h3>
+                                <Badge variant={comp.status === "active" ? "default" : "secondary"}>
+                                  {comp.status}
+                                </Badge>
+                              </div>
                               <p className="text-sm text-muted-foreground">
-                                <strong>Voting:</strong> {new Date(comp.voting_start_date).toLocaleDateString()} - {new Date(comp.voting_end_date).toLocaleDateString()}
+                                <strong>Prize:</strong> {comp.prize_amount} BAK
                               </p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => navigate(`/competition/${comp.id}`)}
-                            >
-                              View
-                            </Button>
-                            {comp.status === "active" && (
+                              <p className="text-sm text-muted-foreground">
+                                <strong>Submissions:</strong> {comp.submissions?.length || 0}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                <strong>Dates:</strong> {new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}
+                              </p>
+                              {comp.voting_start_date && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Voting:</strong> {new Date(comp.voting_start_date).toLocaleDateString()} - {new Date(comp.voting_end_date).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
                               <Button
-                                variant="default"
+                                variant="outline"
                                 size="sm"
-                                onClick={() => handleEndCompetition(comp.id)}
+                                onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => navigate(`/competition/${comp.id}`)}
+                              >
+                                View
+                              </Button>
+                              {comp.status === "active" && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleEndCompetition(comp.id)}
+                                  disabled={processing === comp.id}
+                                >
+                                  {processing === comp.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    "End Early"
+                                  )}
+                                </Button>
+                              )}
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteCompetition(comp.id)}
                                 disabled={processing === comp.id}
                               >
                                 {processing === comp.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  "End Early"
+                                  <Trash2 className="h-4 w-4" />
                                 )}
                               </Button>
-                            )}
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteCompetition(comp.id)}
-                              disabled={processing === comp.id}
-                            >
-                              {processing === comp.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                      
+                      {(comp.status === "active" || comp.status === "voting") && (
+                        <FraudDetection
+                          competitionId={comp.id}
+                          competitionTitle={comp.title}
+                        />
+                      )}
+                    </div>
                   ))}
                 </div>
               </CardContent>

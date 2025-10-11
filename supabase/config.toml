@@ -23,3 +23,12 @@ verify_jwt = false
 
 [functions.send-notification-email]
 verify_jwt = false
+
+[functions.recommend-tracks]
+verify_jwt = false
+
+[functions.classify-genre]
+verify_jwt = false
+
+[functions.detect-fraud]
+verify_jwt = false

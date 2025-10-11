@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
+import { TrackRecommendations } from "@/components/TrackRecommendations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -166,42 +167,50 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Jump right into what you need</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {userRole === "artist" && (
-              <>
-                <Link to="/upload">
-                  <Button variant="hero" className="w-full">
-                    <Upload className="mr-2 w-4 h-4" />
-                    Upload Track
-                  </Button>
-                </Link>
-                <Link to="/analytics">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Jump right into what you need</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {userRole === "artist" && (
+                  <>
+                    <Link to="/upload">
+                      <Button variant="hero" className="w-full">
+                        <Upload className="mr-2 w-4 h-4" />
+                        Upload Track
+                      </Button>
+                    </Link>
+                    <Link to="/analytics">
+                      <Button variant="outline" className="w-full">
+                        <TrendingUp className="mr-2 w-4 h-4" />
+                        Analytics
+                      </Button>
+                    </Link>
+                  </>
+                )}
+                <Link to="/competitions">
                   <Button variant="outline" className="w-full">
-                    <TrendingUp className="mr-2 w-4 h-4" />
-                    Analytics
+                    <Trophy className="mr-2 w-4 h-4" />
+                    View Competitions
                   </Button>
                 </Link>
-              </>
-            )}
-            <Link to="/competitions">
-              <Button variant="outline" className="w-full">
-                <Trophy className="mr-2 w-4 h-4" />
-                View Competitions
-              </Button>
-            </Link>
-            <Link to="/wallet">
-              <Button variant="secondary" className="w-full">
-                <Wallet className="mr-2 w-4 h-4" />
-                Manage Wallet
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+                <Link to="/wallet">
+                  <Button variant="secondary" className="w-full">
+                    <Wallet className="mr-2 w-4 h-4" />
+                    Manage Wallet
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <TrackRecommendations />
+          </div>
+        </div>
       </main>
     </div>
   );
