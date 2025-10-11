@@ -651,6 +651,44 @@ export type Database = {
           },
         ]
       }
+      tips: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user_id: string
+          id: string
+          message: string | null
+          to_artist_id: string
+          track_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user_id: string
+          id?: string
+          message?: string | null
+          to_artist_id: string
+          track_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          message?: string | null
+          to_artist_id?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tips_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tracks: {
         Row: {
           artist_id: string

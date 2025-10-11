@@ -3,16 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Music, Play, Heart, DollarSign, Loader2, ArrowLeft, ListPlus, Share2 } from "lucide-react";
+import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2 } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TipDialog } from "@/components/TipDialog";
 
 interface Track {
   id: string;
@@ -35,8 +34,7 @@ export default function TrackDetails() {
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const [tipping, setTipping] = useState(false);
-  const [tipAmount, setTipAmount] = useState("");
+  const [tipDialogOpen, setTipDialogOpen] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState("");
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
@@ -158,88 +156,6 @@ export default function TrackDetails() {
     setTrack({ ...track, plays: track.plays + 1 });
   };
 
-  const handleTip = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !track) return;
-
-    const amount = parseFloat(tipAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    setTipping(true);
-
-    try {
-      // Get fan's wallet
-      const { data: fanWallet } = await supabase
-        .from("wallets")
-        .select("id, balance")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!fanWallet || fanWallet.balance < amount) {
-        toast.error("Insufficient balance");
-        setTipping(false);
-        return;
-      }
-
-      // Get artist's wallet
-      const { data: artistWallet } = await supabase
-        .from("wallets")
-        .select("id, balance")
-        .eq("user_id", track.artist_id)
-        .single();
-
-      if (!artistWallet) {
-        toast.error("Artist wallet not found");
-        setTipping(false);
-        return;
-      }
-
-      // Deduct from fan's wallet
-      await supabase
-        .from("wallets")
-        .update({ balance: fanWallet.balance - amount })
-        .eq("id", fanWallet.id);
-
-      // Add to artist's wallet
-      await supabase
-        .from("wallets")
-        .update({ balance: artistWallet.balance + amount })
-        .eq("id", artistWallet.id);
-
-      // Create fan's transaction
-      await supabase
-        .from("transactions")
-        .insert({
-          wallet_id: fanWallet.id,
-          amount: -amount,
-          type: "spending",
-          description: `Tip to ${track.profiles.username} for "${track.title}"`,
-          reference_id: track.id,
-        });
-
-      // Create artist's transaction
-      await supabase
-        .from("transactions")
-        .insert({
-          wallet_id: artistWallet.id,
-          amount: amount,
-          type: "tip",
-          description: `Tip from fan for "${track.title}"`,
-          reference_id: track.id,
-        });
-
-      toast.success(`Tipped ${amount} BAK to ${track.profiles.username}!`);
-      setTipAmount("");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send tip");
-    } finally {
-      setTipping(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -303,49 +219,14 @@ export default function TrackDetails() {
 
             {user && user.id !== track.artist_id && (
               <>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" variant="outline">
-                      <Heart className="mr-2 h-5 w-5" />
-                      Tip Artist
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Tip {track.profiles.username}</DialogTitle>
-                      <DialogDescription>
-                        Show your support by sending BAKCoins
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleTip} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="tipAmount">Amount (BAK)</Label>
-                        <Input
-                          id="tipAmount"
-                          type="number"
-                          step="0.01"
-                          value={tipAmount}
-                          onChange={(e) => setTipAmount(e.target.value)}
-                          placeholder="0.00"
-                          required
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={tipping}>
-                        {tipping ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <DollarSign className="mr-2 h-4 w-4" />
-                            Send Tip
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => setTipDialogOpen(true)}
+                >
+                  <Heart className="mr-2 h-5 w-5" />
+                  Tip Artist
+                </Button>
 
                 <Dialog>
                   <DialogTrigger asChild>
@@ -454,6 +335,16 @@ export default function TrackDetails() {
         <MusicPlayer
           track={track}
           onClose={() => setPlaying(false)}
+        />
+      )}
+
+      {track && (
+        <TipDialog
+          open={tipDialogOpen}
+          onOpenChange={setTipDialogOpen}
+          artistId={track.artist_id}
+          artistName={track.profiles.username}
+          trackId={track.id}
         />
       )}
     </div>
