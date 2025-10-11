@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.analyze-submission]
 verify_jwt = false
+
+[functions.artist-analytics]
+verify_jwt = false
+
+[functions.trend-forecast]
+verify_jwt = false
+
+[functions.release-timing]
+verify_jwt = false
