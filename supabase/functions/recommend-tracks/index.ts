@@ -87,11 +87,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a music recommendation AI. Analyze user listening patterns and recommend tracks they might enjoy. Return ONLY a JSON array of track IDs in order of recommendation strength, no additional text.'
+            content: 'You are a music recommendation AI. Analyze user listening patterns and recommend tracks. You must return ONLY a valid JSON array of track IDs with no markdown formatting, no code blocks, no extra text. Just the raw JSON array like ["id1", "id2", "id3"].'
           },
           {
             role: 'user',
-            content: `Based on this listening history:\n${JSON.stringify(listeningProfile, null, 2)}\n\nRecommend tracks from this catalog:\n${JSON.stringify(availableTracks, null, 2)}\n\nReturn only a JSON array of up to 10 track IDs.`
+            content: `Based on this listening history:\n${JSON.stringify(listeningProfile, null, 2)}\n\nRecommend tracks from this catalog:\n${JSON.stringify(availableTracks, null, 2)}\n\nReturn ONLY a JSON array of up to 10 track IDs with no markdown formatting.`
           }
         ],
         temperature: 0.7,
@@ -109,7 +109,12 @@ serve(async (req) => {
     }
 
     const aiResult = await aiResponse.json();
-    const recommendedIds = JSON.parse(aiResult.choices[0].message.content);
+    let responseContent = aiResult.choices[0].message.content;
+    
+    // Clean up markdown code blocks if present
+    responseContent = responseContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const recommendedIds = JSON.parse(responseContent);
 
     // Get full track details for recommendations
     const { data: recommendedTracks, error: recError } = await supabase

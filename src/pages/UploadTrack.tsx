@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Upload, Music, Sparkles } from "lucide-react";
@@ -122,12 +122,12 @@ export default function UploadTrack() {
           // Record transaction
           await supabase
             .from('transactions')
-            .insert({
+            .insert([{
               wallet_id: wallet.id,
-              type: 'debit',
-              amount: competition.entry_fee,
+              type: 'purchase',
+              amount: -competition.entry_fee, // Negative for deduction
               description: `Entry fee for ${competition.title}`,
-            });
+            }]);
         }
 
         // Create submission
