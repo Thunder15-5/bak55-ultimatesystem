@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
+import { ModerationPanel } from "@/components/ModerationPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,7 @@ import { toast } from "sonner";
 import { 
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins
+  TrendingUp, Music, Coins, Share2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -466,7 +467,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Metrics
@@ -492,6 +493,10 @@ export default function Admin() {
             <TabsTrigger value="competitions">
               <Trophy className="h-4 w-4 mr-2" />
               Competitions
+            </TabsTrigger>
+            <TabsTrigger value="moderation">
+              <ShieldAlert className="h-4 w-4 mr-2" />
+              Moderation
             </TabsTrigger>
           </TabsList>
 
@@ -861,6 +866,10 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          {/* Content Moderation Tab */}
+          <TabsContent value="moderation">
+            <ModerationPanel />
           </TabsContent>
         </Tabs>
       </div>

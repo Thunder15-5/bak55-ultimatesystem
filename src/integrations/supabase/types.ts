@@ -268,6 +268,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       paystack_transactions: {
         Row: {
           amount: number
@@ -438,6 +471,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          moderation_status: string | null
           status: Database["public"]["Enums"]["submission_status"] | null
           title: string
           track_id: string | null
@@ -455,6 +492,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
           title: string
           track_id?: string | null
@@ -472,6 +513,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
           title?: string
           track_id?: string | null
@@ -511,6 +556,10 @@ export type Database = {
           duration: number | null
           genre: string | null
           id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          moderation_status: string | null
           plays: number | null
           title: string
           updated_at: string | null
@@ -523,6 +572,10 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
           plays?: number | null
           title: string
           updated_at?: string | null
@@ -535,6 +588,10 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
           plays?: number | null
           title?: string
           updated_at?: string | null

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { Music } from "lucide-react";
+import { Music, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface Track {
@@ -23,11 +25,18 @@ interface Track {
 export default function MusicCatalog() {
   const navigate = useNavigate();
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [genreFilter, setGenreFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchTracks();
   }, []);
+
+  useEffect(() => {
+    filterTracks();
+  }, [tracks, searchQuery, genreFilter]);
 
   const fetchTracks = async () => {
     try {
@@ -41,12 +50,35 @@ export default function MusicCatalog() {
 
       if (error) throw error;
       setTracks(data || []);
+      setFilteredTracks(data || []);
     } catch (error: any) {
       toast.error("Failed to load tracks");
     } finally {
       setLoading(false);
     }
   };
+
+  const filterTracks = () => {
+    let filtered = [...tracks];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (track) =>
+          track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          track.profiles.username.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Genre filter
+    if (genreFilter !== "all") {
+      filtered = filtered.filter((track) => track.genre === genreFilter);
+    }
+
+    setFilteredTracks(filtered);
+  };
+
+  const genres = Array.from(new Set(tracks.map((t) => t.genre).filter(Boolean)));
 
   const handleTrackClick = (trackId: string) => {
     navigate(`/track/${trackId}`);
@@ -74,7 +106,33 @@ export default function MusicCatalog() {
           </p>
         </div>
 
-        {tracks.length === 0 ? (
+        {/* Search and Filter */}
+        <div className="mb-6 flex gap-4 flex-col md:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by track or artist..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={genreFilter} onValueChange={setGenreFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Filter by genre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Genres</SelectItem>
+              {genres.map((genre) => (
+                <SelectItem key={genre} value={genre!}>
+                  {genre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredTracks.length === 0 ? (
           <Card className="p-12 text-center">
             <Music className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">No tracks yet</h3>
@@ -84,7 +142,7 @@ export default function MusicCatalog() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {tracks.map((track) => (
+            {filteredTracks.map((track) => (
               <Card
                 key={track.id}
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"

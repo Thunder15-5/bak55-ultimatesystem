@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Music, Play, Heart, DollarSign, Loader2, ArrowLeft, ListPlus } from "lucide-react";
+import { Music, Play, Heart, DollarSign, Loader2, ArrowLeft, ListPlus, Share2 } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -295,118 +295,138 @@ export default function TrackDetails() {
               </p>
             </div>
 
-            <div className="flex gap-4">
-              <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1">
-                <Play className="mr-2 h-5 w-5" />
-                Play Track
-              </Button>
+          <div className="flex gap-4">
+            <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1">
+              <Play className="mr-2 h-5 w-5" />
+              Play Track
+            </Button>
 
-              {user && user.id !== track.artist_id && (
-                <>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="lg" variant="outline">
-                        <Heart className="mr-2 h-5 w-5" />
-                        Tip Artist
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Tip {track.profiles.username}</DialogTitle>
-                        <DialogDescription>
-                          Show your support by sending BAKCoins
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleTip} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="tipAmount">Amount (BAK)</Label>
-                          <Input
-                            id="tipAmount"
-                            type="number"
-                            step="0.01"
-                            value={tipAmount}
-                            onChange={(e) => setTipAmount(e.target.value)}
-                            placeholder="0.00"
-                            required
-                          />
-                        </div>
-                        <Button type="submit" className="w-full" disabled={tipping}>
-                          {tipping ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <DollarSign className="mr-2 h-4 w-4" />
-                              Send Tip
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="lg" variant="outline">
-                        <ListPlus className="mr-2 h-5 w-5" />
-                        Add to Playlist
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add to Playlist</DialogTitle>
-                        <DialogDescription>
-                          Choose a playlist to add this track to
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        {playlists.length === 0 ? (
-                          <div className="text-center py-4">
-                            <p className="text-muted-foreground mb-4">
-                              You don't have any playlists yet
-                            </p>
-                            <Button onClick={() => navigate("/playlists")}>
-                              Create Playlist
-                            </Button>
-                          </div>
+            {user && user.id !== track.artist_id && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="lg" variant="outline">
+                      <Heart className="mr-2 h-5 w-5" />
+                      Tip Artist
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Tip {track.profiles.username}</DialogTitle>
+                      <DialogDescription>
+                        Show your support by sending BAKCoins
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleTip} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="tipAmount">Amount (BAK)</Label>
+                        <Input
+                          id="tipAmount"
+                          type="number"
+                          step="0.01"
+                          value={tipAmount}
+                          onChange={(e) => setTipAmount(e.target.value)}
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={tipping}>
+                        {tipping ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
                         ) : (
                           <>
-                            <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a playlist" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {playlists.map((playlist) => (
-                                  <SelectItem key={playlist.id} value={playlist.id}>
-                                    {playlist.title}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button 
-                              onClick={handleAddToPlaylist} 
-                              className="w-full" 
-                              disabled={addingToPlaylist || !selectedPlaylist}
-                            >
-                              {addingToPlaylist ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Adding...
-                                </>
-                              ) : (
-                                "Add to Playlist"
-                              )}
-                            </Button>
+                            <DollarSign className="mr-2 h-4 w-4" />
+                            Send Tip
                           </>
                         )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </>
-              )}
-            </div>
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="lg" variant="outline">
+                      <ListPlus className="mr-2 h-5 w-5" />
+                      Add to Playlist
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add to Playlist</DialogTitle>
+                      <DialogDescription>
+                        Choose a playlist to add this track to
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {playlists.length === 0 ? (
+                        <div className="text-center py-4">
+                          <p className="text-muted-foreground mb-4">
+                            You don't have any playlists yet
+                          </p>
+                          <Button onClick={() => navigate("/playlists")}>
+                            Create Playlist
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a playlist" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {playlists.map((playlist) => (
+                                <SelectItem key={playlist.id} value={playlist.id}>
+                                  {playlist.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            onClick={handleAddToPlaylist} 
+                            className="w-full" 
+                            disabled={addingToPlaylist || !selectedPlaylist}
+                          >
+                            {addingToPlaylist ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Adding...
+                              </>
+                            ) : (
+                              "Add to Playlist"
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
+
+            {/* Social Sharing */}
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => {
+                const url = window.location.href;
+                const text = `Check out "${track.title}" by ${track.profiles.username} on BAK55!`;
+                
+                if (navigator.share) {
+                  navigator.share({ title: track.title, text, url });
+                } else {
+                  navigator.clipboard.writeText(url);
+                  toast.success("Link copied to clipboard!");
+                }
+              }}
+            >
+              <Share2 className="mr-2 h-5 w-5" />
+              Share
+            </Button>
+          </div>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Menu, X, LogOut, User, Wallet, Music, History, ListMusic } from "lucide-react";
 import { useState } from "react";
 
@@ -55,6 +56,7 @@ export function Navigation() {
                   <Wallet className="w-4 h-4 inline mr-1" />
                   Wallet
                 </Link>
+                <NotificationBell />
                 <Link to="/profile">
                   <Button variant="ghost" size="sm">
                     <User className="w-4 h-4 mr-2" />
