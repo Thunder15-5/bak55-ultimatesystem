@@ -314,6 +314,12 @@ export default function CompetitionDetails() {
           </Card>
         </div>
 
+        {userRole === 'admin' && (
+          <div className="mb-8">
+            <JudgeCompetition competitionId={id!} />
+          </div>
+        )}
+
         <div>
           <h2 className="text-2xl font-bold mb-6">Submissions ({submissions.length})</h2>
           
