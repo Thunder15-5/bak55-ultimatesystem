@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,28 @@ export default function UploadTrack() {
   });
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [submitToCompetition, setSubmitToCompetition] = useState(false);
+  const [selectedCompetition, setSelectedCompetition] = useState('');
+  const [competitions, setCompetitions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchActiveCompetitions();
+  }, []);
+
+  const fetchActiveCompetitions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('competitions')
+        .select('id, title, entry_fee, end_date')
+        .eq('status', 'active')
+        .gte('end_date', new Date().toISOString());
+
+      if (error) throw error;
+      setCompetitions(data || []);
+    } catch (error) {
+      console.error('Error fetching competitions:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +81,7 @@ export default function UploadTrack() {
       }
 
       // Create track record
-      const { error: dbError } = await supabase
+      const { data: trackData, error: dbError } = await supabase
         .from("tracks")
         .insert({
           artist_id: user.id,
@@ -67,12 +89,68 @@ export default function UploadTrack() {
           genre: formData.genre,
           audio_url: audioUrl,
           cover_image: coverUrl,
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
 
-      toast.success("Track uploaded successfully!");
-      navigate("/dashboard");
+      // Handle competition submission
+      if (submitToCompetition && selectedCompetition) {
+        const competition = competitions.find(c => c.id === selectedCompetition);
+        
+        // Check entry fee and deduct from wallet
+        if (competition?.entry_fee > 0) {
+          const { data: wallet } = await supabase
+            .from('wallets')
+            .select('balance, id')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!wallet || wallet.balance < competition.entry_fee) {
+            toast.error("Insufficient balance for entry fee");
+            return;
+          }
+
+          // Deduct entry fee
+          await supabase
+            .from('wallets')
+            .update({ balance: wallet.balance - competition.entry_fee })
+            .eq('user_id', user.id);
+
+          // Record transaction
+          await supabase
+            .from('transactions')
+            .insert({
+              wallet_id: wallet.id,
+              type: 'debit',
+              amount: competition.entry_fee,
+              description: `Entry fee for ${competition.title}`,
+            });
+        }
+
+        // Create submission
+        const { error: submissionError } = await supabase
+          .from('submissions')
+          .insert({
+            competition_id: selectedCompetition,
+            artist_id: user.id,
+            track_id: trackData.id,
+            title: formData.title,
+            description: formData.description,
+            audio_url: audioUrl,
+            cover_image: coverUrl,
+            status: 'pending',
+          });
+
+        if (submissionError) throw submissionError;
+
+        toast.success("Track uploaded and submitted to competition!");
+      } else {
+        toast.success("Track uploaded successfully!");
+      }
+
+      navigate("/catalog");
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
@@ -136,6 +214,54 @@ export default function UploadTrack() {
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Describe your track..."
+                  rows={3}
+                />
+              </div>
+
+              {competitions.length > 0 && (
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="submitToCompetition"
+                      checked={submitToCompetition}
+                      onChange={(e) => setSubmitToCompetition(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="submitToCompetition" className="cursor-pointer">
+                      Submit to Competition
+                    </Label>
+                  </div>
+
+                  {submitToCompetition && (
+                    <div className="space-y-2">
+                      <Label htmlFor="competition">Select Competition</Label>
+                      <select
+                        id="competition"
+                        value={selectedCompetition}
+                        onChange={(e) => setSelectedCompetition(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                        required={submitToCompetition}
+                      >
+                        <option value="">Choose a competition...</option>
+                        {competitions.map((comp) => (
+                          <option key={comp.id} value={comp.id}>
+                            {comp.title} {comp.entry_fee > 0 && `(${comp.entry_fee} BAK entry fee)`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Button type="submit" className="w-full" disabled={uploading}>
                 {uploading ? (

@@ -38,7 +38,10 @@ export function Navigation() {
                   </Link>
                 )}
                 <Link to="/competitions" className="text-foreground hover:text-primary transition-colors">
-                  Competitions
+                  About Competitions
+                </Link>
+                <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors">
+                  Active Competitions
                 </Link>
                 <Link to="/wallet" className="text-foreground hover:text-primary transition-colors">
                   <Wallet className="w-4 h-4 inline mr-1" />
@@ -68,7 +71,10 @@ export function Navigation() {
                   Streaming
                 </Link>
                 <Link to="/competitions" className="text-foreground hover:text-primary transition-colors">
-                  Competitions
+                  About Competitions
+                </Link>
+                <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors">
+                  Active Competitions
                 </Link>
                 <Link to="/bakcoins" className="text-foreground hover:text-primary transition-colors">
                   BAKCoins
@@ -135,7 +141,14 @@ export function Navigation() {
                   className="block py-2 text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  Competitions
+                  About Competitions
+                </Link>
+                <Link
+                  to="/competitions/active"
+                  className="block py-2 text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Active Competitions
                 </Link>
                 <Link
                   to="/wallet"
@@ -186,7 +199,14 @@ export function Navigation() {
                   className="block py-2 text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  Competitions
+                  About Competitions
+                </Link>
+                <Link
+                  to="/competitions/active"
+                  className="block py-2 text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Active Competitions
                 </Link>
                 <Link
                   to="/bakcoins"

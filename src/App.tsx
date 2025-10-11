@@ -17,6 +17,9 @@ import TrackDetails from "./pages/TrackDetails";
 import Admin from "./pages/Admin";
 import Streaming from "./pages/Streaming";
 import Competitions from "./pages/Competitions";
+import CompetitionsActive from "./pages/CompetitionsActive";
+import CompetitionDetails from "./pages/CompetitionDetails";
+import CreateCompetition from "./pages/admin/CreateCompetition";
 import BAKCoins from "./pages/BAKCoins";
 import AITools from "./pages/AITools";
 import Join from "./pages/Join";
@@ -53,7 +56,14 @@ const App = () => (
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
             <Route path="/streaming" element={<Streaming />} />
-            <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions/active" element={<CompetitionsActive />} />
+          <Route path="/competition/:id" element={<CompetitionDetails />} />
+          <Route path="/admin/create-competition" element={
+            <ProtectedRoute requiredRole="brand">
+              <CreateCompetition />
+            </ProtectedRoute>
+          } />
             <Route path="/bakcoins" element={<BAKCoins />} />
             <Route path="/ai-tools" element={<AITools />} />
             <Route path="/about" element={<About />} />
