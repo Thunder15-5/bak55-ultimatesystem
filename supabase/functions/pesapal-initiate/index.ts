@@ -124,8 +124,8 @@ Deno.serve(async (req) => {
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key:  3eBadvCw2WrmyYzWLqg+DxJm2qEgBVuQ,
-        consumer_secret: 1qEfTBsjLSVBynV/Yl4KV4j3p9c=,
+        consumer_key: PESAPAL_CONSUMER_KEY,
+        consumer_secret: PESAPAL_CONSUMER_SECRET,
       }),
     });
 
