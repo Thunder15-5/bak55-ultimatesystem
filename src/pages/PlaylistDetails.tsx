@@ -29,12 +29,7 @@ interface PlaylistTrack {
     audio_url: string;
     cover_image: string;
     artist_id: string;
-    profiles: {
-      username: string;
-      artist_profiles: {
-        stage_name: string;
-      };
-    };
+    artist_username?: string;
   };
 }
 
@@ -75,19 +70,32 @@ export default function PlaylistDetails() {
         .from("playlist_tracks")
         .select(`
           *,
-          tracks (
-            *,
-            profiles:artist_id (
-              username,
-              artist_profiles (stage_name)
-            )
-          )
+          tracks (*)
         `)
         .eq("playlist_id", id)
         .order("position", { ascending: true });
 
       if (tracksError) throw tracksError;
-      setTracks(tracksData || []);
+
+      const rows = tracksData || [];
+      const artistIds = Array.from(new Set(rows.map((r: any) => r.tracks?.artist_id).filter(Boolean)));
+
+      const { data: artists } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", artistIds.length ? artistIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      const artistMap = new Map((artists || []).map((a: any) => [a.id, a.username]));
+
+      const enriched = rows.map((r: any) => ({
+        ...r,
+        tracks: {
+          ...r.tracks,
+          artist_username: artistMap.get(r.tracks?.artist_id) || "Unknown Artist",
+        },
+      }));
+
+      setTracks(enriched);
     } catch (error: any) {
       toast.error("Failed to load playlist");
       console.error(error);
@@ -138,15 +146,15 @@ export default function PlaylistDetails() {
   };
 
   const handlePlayTrack = (track: PlaylistTrack) => {
-    setCurrentTrack({
-      id: track.tracks.id,
-      title: track.tracks.title,
-      audio_url: track.tracks.audio_url,
-      cover_image: track.tracks.cover_image,
-      profiles: {
-        username: track.tracks.profiles.artist_profiles?.stage_name || track.tracks.profiles.username,
-      },
-    });
+  setCurrentTrack({
+    id: track.tracks.id,
+    title: track.tracks.title,
+    audio_url: track.tracks.audio_url,
+    cover_image: track.tracks.cover_image,
+    profiles: {
+      username: track.tracks.artist_username || "Unknown Artist",
+    },
+  });
 
     if (user) {
       supabase.from("listening_history").insert({
@@ -247,8 +255,7 @@ export default function PlaylistDetails() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{playlistTrack.tracks.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {playlistTrack.tracks.profiles.artist_profiles?.stage_name || 
-                         playlistTrack.tracks.profiles.username}
+                        {playlistTrack.tracks.artist_username}
                       </p>
                     </div>
 

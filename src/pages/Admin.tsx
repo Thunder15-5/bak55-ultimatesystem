@@ -21,20 +21,9 @@ interface WithdrawalRequest {
   wallet_id: string;
   amount: number;
   description: string;
-  metadata: {
-    status: string;
-    account_name: string;
-    account_number: string;
-    bank_name: string;
-  };
+  metadata: any;
   created_at: string;
-  wallets: {
-    user_id: string;
-    profiles: {
-      username: string;
-      email: string;
-    };
-  };
+  wallets?: any;
 }
 
 interface CoinPurchase {
@@ -46,12 +35,8 @@ interface CoinPurchase {
   status: string;
   reference: string;
   created_at: string;
-  metadata: {
-    bak_amount: number;
-  };
-  profiles: {
-    username: string;
-  };
+  metadata: any;
+  profiles?: any;
 }
 
 interface User {
@@ -137,16 +122,17 @@ export default function Admin() {
             profiles:user_id (username, email)
           )
         `)
-        .eq("type", "withdrawal")
+        .gt("withdrawal_fee", 0)
+        .eq("metadata->>status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const pendingRequests = (data || []).filter(
-        (tx) => tx.metadata?.status === "pending"
-      );
+      const pendingRequests = (data as any[] | null)?.filter(
+        (tx: any) => (tx.metadata as any)?.status === "pending"
+      ) || [] as any[];
 
-      setWithdrawalRequests(pendingRequests);
+      setWithdrawalRequests(pendingRequests as any);
     } catch (error: any) {
       console.error("Failed to load withdrawal requests:", error);
     }
@@ -217,7 +203,7 @@ export default function Admin() {
         supabase.from("tracks").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("transactions").select("amount").eq("type", "withdrawal").eq("metadata->>status", "pending"),
+        supabase.from("transactions").select("amount, withdrawal_fee").gt("withdrawal_fee", 0).eq("metadata->>status", "pending"),
       ]);
 
       const pendingWithdrawals = withdrawalsSum.data?.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) || 0;
@@ -340,7 +326,7 @@ export default function Admin() {
       await supabase.from("transactions").insert({
         wallet_id: wallet.id,
         amount: bakAmount,
-        type: "income",
+        type: "earning",
         description: `Purchased ${bakAmount} BAKCoins`,
         reference_id: purchase.id,
         metadata: {

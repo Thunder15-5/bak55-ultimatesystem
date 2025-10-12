@@ -63,15 +63,33 @@ export function CommentSection({ trackId }: CommentSectionProps) {
     try {
       const { data, error } = await supabase
         .from("comments")
-        .select(`
-          *,
-          profiles:user_id (username, avatar_url)
-        `)
+        .select(`*`)
         .eq("track_id", trackId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setComments(data || []);
+
+      const commentRows = data || [];
+      const userIds = Array.from(new Set(commentRows.map((c: any) => c.user_id)));
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      if (profileError) throw profileError;
+
+      const profileMap = new Map((profileData || []).map((p: any) => [p.id, p]));
+
+      const enriched = commentRows.map((c: any) => ({
+        ...c,
+        profiles: {
+          username: profileMap.get(c.user_id)?.username || "User",
+          avatar_url: profileMap.get(c.user_id)?.avatar_url || "",
+        },
+      }));
+
+      setComments(enriched);
     } catch (error: any) {
       console.error("Failed to load comments:", error);
     } finally {

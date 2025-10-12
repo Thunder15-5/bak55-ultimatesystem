@@ -19,12 +19,7 @@ interface HistoryEntry {
     audio_url: string;
     cover_image: string;
     artist_id: string;
-    profiles: {
-      username: string;
-      artist_profiles: {
-        stage_name: string;
-      };
-    };
+    artist_username?: string;
   };
 }
 
@@ -47,20 +42,33 @@ export default function ListeningHistory() {
         .from("listening_history")
         .select(`
           *,
-          tracks (
-            *,
-            profiles:artist_id (
-              username,
-              artist_profiles (stage_name)
-            )
-          )
+          tracks (*)
         `)
         .eq("user_id", user?.id)
         .order("listened_at", { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      setHistory(data || []);
+
+      const historyRows = data || [];
+      const artistIds = Array.from(new Set(historyRows.map((h: any) => h.tracks?.artist_id).filter(Boolean)));
+
+      const { data: artists } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", artistIds.length ? artistIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      const artistMap = new Map((artists || []).map((a: any) => [a.id, a.username]));
+
+      const enriched = historyRows.map((h: any) => ({
+        ...h,
+        tracks: {
+          ...h.tracks,
+          artist_username: artistMap.get(h.tracks?.artist_id) || "Unknown Artist",
+        },
+      }));
+
+      setHistory(enriched);
     } catch (error: any) {
       toast.error("Failed to load listening history");
       console.error(error);
@@ -76,7 +84,7 @@ export default function ListeningHistory() {
       audio_url: entry.tracks.audio_url,
       cover_image: entry.tracks.cover_image,
       profiles: {
-        username: entry.tracks.profiles.artist_profiles?.stage_name || entry.tracks.profiles.username,
+        username: entry.tracks.artist_username || "Unknown Artist",
       },
     });
 
@@ -185,8 +193,7 @@ export default function ListeningHistory() {
                               className="text-sm text-muted-foreground cursor-pointer hover:text-primary"
                               onClick={() => navigate(`/artist/${entry.tracks.artist_id}`)}
                             >
-                              {entry.tracks.profiles.artist_profiles?.stage_name || 
-                               entry.tracks.profiles.username}
+                              {entry.tracks.artist_username}
                             </p>
                           </div>
 

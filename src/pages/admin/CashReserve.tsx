@@ -54,11 +54,11 @@ export default function CashReserve() {
       if (txError) throw txError;
 
       const deposits = transactions
-        .filter((t) => t.type === "deposit")
+        .filter((t: any) => ["earning", "prize", "refund", "purchase"].includes((t as any).type) && parseFloat(t.amount.toString()) > 0)
         .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
 
       const withdrawals = transactions
-        .filter((t) => t.type === "withdrawal")
+        .filter((t: any) => parseFloat((t.withdrawal_fee ?? 0).toString()) > 0 || parseFloat(t.amount.toString()) < 0)
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount.toString())), 0);
 
       const fees = transactions

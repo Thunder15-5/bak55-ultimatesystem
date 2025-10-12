@@ -108,7 +108,7 @@ export default function Wallet() {
         .insert({
           wallet_id: walletData.id,
           amount: -amount,
-          type: "withdrawal",
+          type: "purchase",
           description: "Withdrawal request",
           withdrawal_fee: withdrawalFee,
           metadata: {
