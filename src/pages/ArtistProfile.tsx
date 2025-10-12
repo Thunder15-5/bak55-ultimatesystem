@@ -66,8 +66,20 @@ export default function ArtistProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .select(`
-          *,
-          artist_profiles (*)
+          id,
+          username,
+          bio,
+          location,
+          avatar_url,
+          created_at,
+          artist_profiles (
+            stage_name,
+            genres,
+            social_links,
+            verified,
+            talent_score,
+            total_earnings
+          )
         `)
         .eq("id", id)
         .single();
@@ -320,12 +332,14 @@ export default function ArtistProfile() {
                       </div>
                       <div className="text-xs text-muted-foreground">Talent Score</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">
-                        {artist.artist_profiles.total_earnings.toFixed(0)} BAK
+                    {user?.id === id && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">
+                          {artist.artist_profiles.total_earnings.toFixed(0)} BAK
+                        </div>
+                        <div className="text-xs text-muted-foreground">Total Earnings</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">Total Earnings</div>
-                    </div>
+                    )}
                   </div>
                 </Card>
               )}
