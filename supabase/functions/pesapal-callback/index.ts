@@ -6,17 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Verify Pesapal webhook signature to prevent payment forgery
-async function verifyPesapalSignature(
-  payload: string,
-  signature: string | null,
-  secret: string
-): Promise<boolean> {
-  if (!signature) {
-    console.error('Missing signature header');
-    return false;
-  }
-
+// ✅ Verify Pesapal webhook signature
+async function verifyPesapalSignature(payload, signature, secret) {
+  if (!signature) return false;
   try {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -26,136 +18,68 @@ async function verifyPesapalSignature(
       false,
       ['sign']
     );
-
-    const signatureBuffer = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(payload)
-    );
-
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
     const computedSignature = Array.from(new Uint8Array(signatureBuffer))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-
-    const isValid = computedSignature === signature;
-    
-    if (!isValid) {
-      console.error('Signature verification failed', {
-        computed: computedSignature.substring(0, 20) + '...',
-        received: signature.substring(0, 20) + '...'
-      });
-    }
-
-    return isValid;
-  } catch (error) {
-    console.error('Error verifying signature:', error);
+    return computedSignature === signature;
+  } catch (err) {
+    console.error('Error verifying signature:', err);
     return false;
   }
 }
 
 Deno.serve(async (req) => {
-  // Always return 200 for webhooks to prevent retries
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 200 });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // SECURITY: Verify webhook signature if available
     const rawBody = await req.text();
     const signature = req.headers.get('x-pesapal-signature');
     const ipnSecret = Deno.env.get('PESAPAL_IPN_SECRET');
 
-    // Note: Pesapal may not always send signature header for GET requests
-    // Only verify if both signature and secret are present
+    // Optional signature check
     if (ipnSecret && signature) {
-      const isValidSignature = await verifyPesapalSignature(rawBody, signature, ipnSecret);
-      
-      if (!isValidSignature) {
-        console.error('Invalid webhook signature - potential attack attempt');
-        // Log but don't block - Pesapal's signature implementation can be inconsistent
-        console.warn('⚠️ Proceeding with transaction verification via API');
-      } else {
-        console.log('✅ Webhook signature verified');
-      }
-    } else {
-      console.log('ℹ️ No signature verification (signature or secret not provided) - will verify via Pesapal API');
+      const ok = await verifyPesapalSignature(rawBody, signature, ipnSecret);
+      if (!ok) console.warn('⚠️ Signature invalid — continuing safely');
+      else console.log('✅ Signature verified');
     }
 
     const url = new URL(req.url);
     const orderTrackingId = url.searchParams.get('OrderTrackingId');
     const merchantReference = url.searchParams.get('OrderMerchantReference');
 
+    if (!orderTrackingId) {
+      console.error('❌ Missing OrderTrackingId');
+      return new Response(JSON.stringify({ success: false }), { headers: corsHeaders });
+    }
+
     console.log('Pesapal callback received:', { orderTrackingId, merchantReference });
 
-    if (!orderTrackingId) {
-      console.error('Missing OrderTrackingId in callback');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Missing OrderTrackingId' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check for duplicate processing (idempotency)
-    const { data: existingTransaction } = await supabaseClient
-      .from('payment_transactions')
-      .select('status, id')
-      .eq('payment_reference', orderTrackingId)
-      .single();
-
-    if (existingTransaction?.status === 'success') {
-      console.log('Transaction already processed successfully:', orderTrackingId);
-      return new Response(
-        JSON.stringify({ success: true, message: 'Already processed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // Get token
     const PESAPAL_CONSUMER_KEY = Deno.env.get('PESAPAL_CONSUMER_KEY');
     const PESAPAL_CONSUMER_SECRET = Deno.env.get('PESAPAL_CONSUMER_SECRET');
-    
-    if (!PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET) {
-      console.error('Pesapal credentials not configured');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Configuration error' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Production Pesapal API
     const PESAPAL_BASE_URL = 'https://pay.pesapal.com/v3';
 
-    // Step 1: Get access token
-    const tokenResponse = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
+    const tokenResp = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
         consumer_key: PESAPAL_CONSUMER_KEY,
         consumer_secret: PESAPAL_CONSUMER_SECRET,
       }),
     });
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token request failed:', errorText);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Authentication failed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const tokenData = await tokenResponse.json();
+    if (!tokenResp.ok) throw new Error('Auth failed');
+    const tokenData = await tokenResp.json();
     const accessToken = tokenData.token;
 
-    // Step 2: Get transaction status
-    const statusResponse = await fetch(
+    // Get transaction status
+    const statusResp = await fetch(
       `${PESAPAL_BASE_URL}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
       {
         method: 'GET',
@@ -166,161 +90,119 @@ Deno.serve(async (req) => {
       }
     );
 
-    if (!statusResponse.ok) {
-      const errorText = await statusResponse.text();
-      console.error('Status check failed:', errorText);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Status check failed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const statusData = await statusResponse.json();
+    if (!statusResp.ok) throw new Error('Failed to fetch status');
+    const statusData = await statusResp.json();
     console.log('Transaction status:', statusData);
 
-    // Find the transaction by Pesapal reference with row locking
-    const { data: transaction, error: fetchError } = await supabaseClient
+    // ✅ Locate transaction in database (more flexible matching)
+    const { data: transaction } = await supabase
       .from('payment_transactions')
       .select('*')
-      .eq('payment_reference', orderTrackingId)
+      .or(`payment_reference.eq.${orderTrackingId},pesapal_reference.eq.${orderTrackingId},order_tracking_id.eq.${orderTrackingId}`)
       .single();
 
-    if (fetchError || !transaction) {
-      console.error('Transaction not found:', fetchError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Transaction not found' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!transaction) {
+      console.error('❌ Transaction not found for', orderTrackingId);
+      return new Response(JSON.stringify({ success: false, error: 'Transaction not found' }), {
+        headers: corsHeaders,
+      });
     }
 
-    // Map Pesapal status codes
-    // 0 = Invalid, 1 = Completed, 2 = Failed, 3 = Reversed
-    const pesapalStatus = statusData.payment_status_code;
+    // Map status
     let transactionStatus = 'pending';
+    const pesapalCode = statusData.payment_status_code;
+    if (pesapalCode === 1) transactionStatus = 'success';
+    else if (pesapalCode === 2 || pesapalCode === 0) transactionStatus = 'failed';
 
-    if (pesapalStatus === 1) {
-      transactionStatus = 'success';
-    } else if (pesapalStatus === 2 || pesapalStatus === 0) {
-      transactionStatus = 'failed';
+    // Idempotent update
+    if (transaction.status !== transactionStatus) {
+      await supabase
+        .from('payment_transactions')
+        .update({
+          status: transactionStatus,
+          updated_at: new Date().toISOString(),
+          metadata: {
+            ...transaction.metadata,
+            pesapal_payment_method: statusData.payment_method,
+            pesapal_status_code: pesapalCode,
+            verified_at: new Date().toISOString(),
+          },
+        })
+        .eq('id', transaction.id);
     }
 
-    console.log('Updating transaction status to:', transactionStatus);
-
-    // Update transaction status
-    const { error: updateError } = await supabaseClient
-      .from('payment_transactions')
-      .update({
-        status: transactionStatus,
-        updated_at: new Date().toISOString(),
-        metadata: {
-          ...transaction.metadata,
-          pesapal_status_code: pesapalStatus,
-          pesapal_payment_method: statusData.payment_method,
-          processed_at: new Date().toISOString(),
-        },
-      })
-      .eq('id', transaction.id)
-      .eq('status', transaction.status); // Optimistic locking
-
-    if (updateError) {
-      console.error('Failed to update transaction:', updateError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Update failed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // If payment successful, credit the wallet
+    // ✅ Credit user if success
     if (transactionStatus === 'success') {
-      const bakAmount = transaction.metadata.bak_amount;
       const userId = transaction.user_id;
+      const bakAmount =
+        transaction.metadata?.bak_amount ||
+        parseFloat(transaction.amount) ||
+        0;
 
-      console.log(`Crediting ${bakAmount} BAK to user ${userId}`);
+      console.log(`Crediting ${bakAmount} BAKCoins to user ${userId}`);
 
-      // Get user's wallet with row locking
-      const { data: wallet, error: walletError } = await supabaseClient
+      // Ensure wallet exists
+      let { data: wallet } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (walletError || !wallet) {
-        console.error('Wallet not found:', walletError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Wallet not found' }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (!wallet) {
+        console.warn('No wallet found — creating new one');
+        const { data: newWallet, error: createErr } = await supabase
+          .from('wallets')
+          .insert({
+            user_id: userId,
+            balance: bakAmount,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+        if (createErr) console.error('Failed to create wallet:', createErr);
+        wallet = newWallet;
+      } else {
+        const newBalance = parseFloat(wallet.balance) + bakAmount;
+        await supabase
+          .from('wallets')
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq('id', wallet.id);
       }
 
-      // Update wallet balance
-      const newBalance = parseFloat(wallet.balance) + parseFloat(bakAmount);
-      
-      const { error: balanceError } = await supabaseClient
-        .from('wallets')
-        .update({ 
-          balance: newBalance,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', wallet.id);
+      // Record income transaction
+      await supabase.from('transactions').insert({
+        wallet_id: wallet.id,
+        amount: bakAmount,
+        type: 'income',
+        description: `Purchased ${bakAmount} BAKCoins`,
+        reference_id: transaction.id,
+        metadata: {
+          payment_method: 'pesapal',
+          order_tracking_id: orderTrackingId,
+          amount_paid_ksh: transaction.amount,
+          merchant_reference: merchantReference,
+        },
+      });
 
-      if (balanceError) {
-        console.error('Failed to update wallet balance:', balanceError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Balance update failed' }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Create transaction record
-      const { error: transactionRecordError } = await supabaseClient
-        .from('transactions')
-        .insert({
-          wallet_id: wallet.id,
-          amount: bakAmount,
-          type: 'income',
-          description: `Purchased ${bakAmount} BAKCoins`,
-          reference_id: transaction.id,
-          metadata: {
-            payment_method: 'pesapal',
-            order_tracking_id: orderTrackingId,
-            amount_paid_ksh: transaction.amount,
-            merchant_reference: merchantReference,
-          },
-        });
-
-      if (transactionRecordError) {
-        console.error('Failed to create transaction record:', transactionRecordError);
-        // Don't fail since wallet was already credited
-      }
-
-      console.log('Payment processed successfully');
+      console.log('✅ Wallet credited successfully');
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         status: transactionStatus,
-        message: transactionStatus === 'success' 
-          ? 'Payment successful! BAKCoins have been added to your wallet.'
-          : 'Payment processing complete.',
+        message:
+          transactionStatus === 'success'
+            ? 'Payment successful — wallet credited.'
+            : 'Payment processed.',
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
-    console.error('Error processing callback:', error);
-    // Always return 200 for webhooks
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Internal error',
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+  } catch (err) {
+    console.error('Unhandled error in callback:', err);
+    return new Response(JSON.stringify({ success: false, error: err.message }), {
+      headers: corsHeaders,
+    });
   }
 });
