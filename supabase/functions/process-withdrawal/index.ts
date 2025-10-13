@@ -37,7 +37,12 @@ serve(async (req) => {
 
     const { amount, phone_number }: WithdrawalRequest = await req.json();
 
-    console.log("Processing withdrawal:", { user_id: user.id, amount, phone_number });
+    // Production validation
+    if (typeof amount !== 'number' || isNaN(amount) || !phone_number) {
+      throw new Error("Invalid withdrawal request data");
+    }
+
+    console.log("Processing withdrawal:", { user_id: user.id, amount });
 
     // Validation
     const MIN_WITHDRAWAL = 100; // 100 BAK = 2000 KSh

@@ -52,6 +52,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Production-ready validation
+    if (typeof tipRequest.amount !== 'number' || isNaN(tipRequest.amount)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid tip amount' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (tipRequest.amount <= 0 || tipRequest.amount > 10000) {
       return new Response(
         JSON.stringify({ success: false, error: 'Tip amount must be between 0.1 and 10,000 BAK' }),

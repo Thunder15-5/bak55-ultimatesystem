@@ -990,6 +990,57 @@ export type Database = {
       }
     }
     Views: {
+      public_artist_profiles: {
+        Row: {
+          created_at: string | null
+          genres: string[] | null
+          id: string | null
+          social_links: Json | null
+          stage_name: string | null
+          talent_score: number | null
+          updated_at: string | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          genres?: string[] | null
+          id?: string | null
+          social_links?: Json | null
+          stage_name?: string | null
+          talent_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          genres?: string[] | null
+          id?: string | null
+          social_links?: Json | null
+          stage_name?: string | null
+          talent_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -997,7 +1048,6 @@ export type Database = {
           created_at: string | null
           id: string | null
           location: string | null
-          updated_at: string | null
           username: string | null
         }
         Insert: {
@@ -1006,7 +1056,6 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           location?: string | null
-          updated_at?: string | null
           username?: string | null
         }
         Update: {
@@ -1015,7 +1064,6 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           location?: string | null
-          updated_at?: string | null
           username?: string | null
         }
         Relationships: []
