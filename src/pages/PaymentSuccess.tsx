@@ -22,8 +22,12 @@ export default function PaymentSuccess() {
       fetchTransactionDetails();
     } else {
       setLoading(false);
+      // If no order tracking ID, redirect to wallet after 2 seconds
+      if (!orderTrackingId) {
+        setTimeout(() => navigate('/wallet'), 2000);
+      }
     }
-  }, [orderTrackingId, user]);
+  }, [orderTrackingId, user, navigate]);
 
   const fetchTransactionDetails = async () => {
     try {
@@ -36,6 +40,11 @@ export default function PaymentSuccess() {
 
       if (error) throw error;
       setTransactionDetails(data);
+      
+      // Auto-redirect to wallet after 3 seconds
+      setTimeout(() => {
+        navigate('/wallet');
+      }, 3000);
     } catch (error) {
       console.error("Failed to fetch transaction:", error);
     } finally {
@@ -117,6 +126,9 @@ export default function PaymentSuccess() {
 
             <p className="text-xs text-center text-muted-foreground">
               A confirmation email has been sent to your registered email address
+            </p>
+            <p className="text-sm text-center text-primary font-medium">
+              Redirecting to your wallet in 3 seconds...
             </p>
           </CardContent>
         </Card>

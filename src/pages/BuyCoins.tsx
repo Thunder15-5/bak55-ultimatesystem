@@ -179,12 +179,20 @@ const BuyCoins = () => {
                   <p className="font-medium">Payment Information:</p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
                     <li>Secure payment powered by Pesapal</li>
-                    <li>Supports M-Pesa, Cards, and Bank transfers</li>
+                    <li>Currently supports M-Pesa payments</li>
                     <li>BAKCoins added instantly after successful payment</li>
                     <li>All transactions are encrypted and secure</li>
                   </ul>
                 </div>
               </div>
+              
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Payment Method</AlertTitle>
+                <AlertDescription>
+                  Currently, only M-Pesa payments are active. Other payment methods will be available soon.
+                </AlertDescription>
+              </Alert>
 
               <Button
                 type="submit"

@@ -36,6 +36,40 @@ export default function Wallet() {
   useEffect(() => {
     if (user) {
       fetchWalletData();
+      
+      // Set up realtime subscription for wallet and transactions
+      const channel = supabase
+        .channel('wallet_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'wallets',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('Wallet updated');
+            fetchWalletData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'transactions'
+          },
+          () => {
+            console.log('New transaction detected');
+            fetchWalletData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 

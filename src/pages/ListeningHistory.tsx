@@ -33,6 +33,28 @@ export default function ListeningHistory() {
   useEffect(() => {
     if (user) {
       fetchHistory();
+      
+      // Set up realtime subscription for listening history
+      const channel = supabase
+        .channel('listening_history_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'listening_history',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            console.log('New listening history entry detected');
+            fetchHistory();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
