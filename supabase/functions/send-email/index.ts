@@ -8,7 +8,7 @@ const corsHeaders = {
 interface EmailRequest {
   to: string;
   subject: string;
-  template: 'welcome' | 'verification' | 'competition_submission' | 'competition_winner' | 'withdrawal_request' | 'withdrawal_complete' | 'tip_received';
+  template: 'welcome' | 'verification' | 'competition_submission' | 'competition_winner' | 'withdrawal_request' | 'withdrawal_complete' | 'tip_received' | 'contact_form';
   data?: Record<string, any>;
 }
 
@@ -108,6 +108,16 @@ const templates = {
     <p>Your new wallet balance: ${data.new_balance} BAKCoins</p>
     <p><a href="${data.track_url}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Track</a></p>
     <p>Best regards,<br>The BAK55 Team</p>
+  `,
+  
+  contact_form: (data: any) => `
+    <h1>New Contact Form Submission 📧</h1>
+    <p><strong>From:</strong> ${data.name} (${data.email})</p>
+    <p><strong>Subject:</strong> ${data.subject}</p>
+    <p><strong>Message:</strong></p>
+    <p>${data.message}</p>
+    <hr />
+    <p><small>This email was sent from the BAK55 Contact Form</small></p>
   `,
 };
 

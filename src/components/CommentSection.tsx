@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { MessageCircle, Send, Trash2, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Trash2, Loader2, Heart } from "lucide-react";
 import { commentSchema, sanitizeText, mapDatabaseError } from "@/lib/validation";
 
 interface Comment {
@@ -15,6 +15,8 @@ interface Comment {
   created_at: string;
   user_id: string;
   parent_id: string | null;
+  like_count?: number;
+  user_has_liked?: boolean;
   profiles: {
     username: string;
     avatar_url: string;
@@ -81,12 +83,31 @@ export function CommentSection({ trackId }: CommentSectionProps) {
 
       const profileMap = new Map((profileData || []).map((p: any) => [p.id, p]));
 
+      // Fetch like counts for each comment
+      const commentIds = commentRows.map((c: any) => c.id);
+      const { data: likesData } = await supabase
+        .from("comment_likes")
+        .select("comment_id, user_id")
+        .in("comment_id", commentIds.length ? commentIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      const likeCounts = new Map<string, number>();
+      const userLikes = new Set<string>();
+
+      (likesData || []).forEach((like: any) => {
+        likeCounts.set(like.comment_id, (likeCounts.get(like.comment_id) || 0) + 1);
+        if (user && like.user_id === user.id) {
+          userLikes.add(like.comment_id);
+        }
+      });
+
       const enriched = commentRows.map((c: any) => ({
         ...c,
         profiles: {
           username: profileMap.get(c.user_id)?.username || "User",
           avatar_url: profileMap.get(c.user_id)?.avatar_url || "",
         },
+        like_count: likeCounts.get(c.id) || 0,
+        user_has_liked: userLikes.has(c.id),
       }));
 
       setComments(enriched);
@@ -204,6 +225,41 @@ export function CommentSection({ trackId }: CommentSectionProps) {
     }
   };
 
+  const handleLikeComment = async (commentId: string, currentlyLiked: boolean) => {
+    if (!user) {
+      toast.error("Please log in to like comments");
+      return;
+    }
+
+    try {
+      if (currentlyLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from("comment_likes")
+          .delete()
+          .eq("comment_id", commentId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+      } else {
+        // Like
+        const { error } = await supabase
+          .from("comment_likes")
+          .insert({
+            comment_id: commentId,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+      }
+
+      fetchComments();
+    } catch (error: any) {
+      toast.error("Failed to update like");
+      console.error(error);
+    }
+  };
+
   const topLevelComments = comments.filter((c) => !c.parent_id);
   const getReplies = (parentId: string) =>
     comments.filter((c) => c.parent_id === parentId);
@@ -288,13 +344,24 @@ export function CommentSection({ trackId }: CommentSectionProps) {
 
                     <p className="text-sm">{comment.content}</p>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setReplyingTo(comment.id)}
-                    >
-                      Reply
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleLikeComment(comment.id, comment.user_has_liked || false)}
+                        className={comment.user_has_liked ? "text-primary" : ""}
+                      >
+                        <Heart className={`h-4 w-4 mr-1 ${comment.user_has_liked ? "fill-current" : ""}`} />
+                        {comment.like_count || 0}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setReplyingTo(comment.id)}
+                      >
+                        Reply
+                      </Button>
+                    </div>
 
                     {/* Reply Form */}
                     {replyingTo === comment.id && (
@@ -366,6 +433,16 @@ export function CommentSection({ trackId }: CommentSectionProps) {
                                 )}
                               </div>
                               <p className="text-sm">{reply.content}</p>
+                              
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleLikeComment(reply.id, reply.user_has_liked || false)}
+                                className={reply.user_has_liked ? "text-primary" : ""}
+                              >
+                                <Heart className={`h-3 w-3 mr-1 ${reply.user_has_liked ? "fill-current" : ""}`} />
+                                {reply.like_count || 0}
+                              </Button>
                             </div>
                           </div>
                         ))}

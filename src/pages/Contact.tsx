@@ -30,6 +30,7 @@ const Contact = () => {
         message: message.trim(),
       });
 
+      // Store in database
       const { error } = await supabase
         .from('contacts')
         .insert([
@@ -40,6 +41,21 @@ const Contact = () => {
             message: validated.message,
           }
         ]);
+
+      // Send email notification to admin
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'info@bak55talent.co.ke',
+          subject: `Contact Form: ${validated.subject}`,
+          template: 'contact_form',
+          data: {
+            name: validated.name,
+            email: validated.email,
+            subject: validated.subject,
+            message: validated.message,
+          }
+        }
+      });
 
       if (error) {
         toast.error(mapDatabaseError(error));

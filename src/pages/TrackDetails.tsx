@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2 } from "lucide-react";
+import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2 } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -117,43 +117,84 @@ export default function TrackDetails() {
   const handlePlay = async () => {
     if (!track) return;
     setPlaying(true);
+    
+    // Track play start time for 30-second rule
+    const playStartTime = Date.now();
+    
+    // Wait 30 seconds before counting as legitimate play
+    setTimeout(async () => {
+      const playDuration = Date.now() - playStartTime;
+      
+      // Only count if played for at least 30 seconds
+      if (playDuration >= 30000) {
+        // Increment play count
+        await supabase
+          .from("tracks")
+          .update({ plays: track.plays + 1 })
+          .eq("id", track.id);
 
-    // Increment play count
-    await supabase
-      .from("tracks")
-      .update({ plays: track.plays + 1 })
-      .eq("id", track.id);
+        // Award streaming royalty to artist (0.01 BAK per play)
+        const royaltyAmount = 0.01;
 
-    // Award streaming royalty to artist (0.01 BAK per play)
-    const royaltyAmount = 0.01;
+        // Get artist's wallet
+        const { data: walletData } = await supabase
+          .from("wallets")
+          .select("id, balance")
+          .eq("user_id", track.artist_id)
+          .single();
 
-    // Get artist's wallet
-    const { data: walletData } = await supabase
-      .from("wallets")
-      .select("id, balance")
-      .eq("user_id", track.artist_id)
-      .single();
+        if (walletData) {
+          // Update wallet balance
+          await supabase
+            .from("wallets")
+            .update({ balance: walletData.balance + royaltyAmount })
+            .eq("id", walletData.id);
 
-    if (walletData) {
-      // Update wallet balance
-      await supabase
-        .from("wallets")
-        .update({ balance: walletData.balance + royaltyAmount })
-        .eq("id", walletData.id);
+          // Create transaction record
+          await supabase
+            .from("transactions")
+            .insert({
+              wallet_id: walletData.id,
+              amount: royaltyAmount,
+              type: "earning",
+              description: `Streaming royalty for "${track.title}"`,
+              reference_id: track.id,
+            });
+        }
 
-      // Create transaction record
-      await supabase
-        .from("transactions")
-        .insert({
-          wallet_id: walletData.id,
-          amount: royaltyAmount,
-          type: "earning",
-          description: `Streaming royalty for "${track.title}"`,
-          reference_id: track.id,
-        });
+        // Add to listening history
+        if (user) {
+          await supabase.from("listening_history").insert({
+            user_id: user.id,
+            track_id: track.id,
+          });
+        }
+
+        setTrack({ ...track, plays: track.plays + 1 });
+      }
+    }, 30000); // 30 seconds
+  };
+
+  const handleDeleteTrack = async () => {
+    if (!confirm("Are you sure you want to delete this track? This action cannot be undone.")) {
+      return;
     }
 
-    setTrack({ ...track, plays: track.plays + 1 });
+    try {
+      // Delete track (CASCADE will handle related data)
+      const { error } = await supabase
+        .from("tracks")
+        .delete()
+        .eq("id", track.id);
+
+      if (error) throw error;
+
+      toast.success("Track deleted successfully");
+      navigate("/catalog");
+    } catch (error: any) {
+      toast.error("Failed to delete track");
+      console.error(error);
+    }
   };
 
   if (loading) {
@@ -211,11 +252,22 @@ export default function TrackDetails() {
               </p>
             </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1">
               <Play className="mr-2 h-5 w-5" />
               Play Track
             </Button>
+
+            {user && user.id === track.artist_id && (
+              <Button 
+                size="lg" 
+                variant="destructive"
+                onClick={handleDeleteTrack}
+              >
+                <Trash2 className="mr-2 h-5 w-5" />
+                Delete Track
+              </Button>
+            )}
 
             {user && user.id !== track.artist_id && (
               <>

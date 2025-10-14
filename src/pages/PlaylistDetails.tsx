@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ArrowLeft, Play, Trash2, Loader2, ListMusic } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { AddTracksDialog } from "@/components/AddTracksDialog";
 
 interface Playlist {
   id: string;
@@ -208,10 +209,17 @@ export default function PlaylistDetails() {
                 </div>
               </div>
               {isOwner && (
-                <Button variant="destructive" onClick={handleDeletePlaylist}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Playlist
-                </Button>
+                <div className="flex gap-2">
+                  <AddTracksDialog 
+                    playlistId={id!}
+                    existingTrackIds={tracks.map(t => t.tracks.id)}
+                    onTracksAdded={fetchPlaylistData}
+                  />
+                  <Button variant="destructive" onClick={handleDeletePlaylist}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Playlist
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
