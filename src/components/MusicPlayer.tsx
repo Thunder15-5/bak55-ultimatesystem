@@ -157,7 +157,7 @@ export function MusicPlayer({ track, onClose }: MusicPlayerProps) {
               variant="ghost"
               size="icon"
               onClick={toggleMute}
-              className="h-8 w-8 hidden sm:flex"
+              className="h-8 w-8"
             >
               {isMuted || volume === 0 ? (
                 <VolumeX className="h-4 w-4" />
@@ -170,7 +170,7 @@ export function MusicPlayer({ track, onClose }: MusicPlayerProps) {
               max={1}
               step={0.01}
               onValueChange={handleVolumeChange}
-              className="w-16 sm:w-24 hidden sm:block"
+              className="w-16 sm:w-24"
             />
             <Button
               variant="ghost"

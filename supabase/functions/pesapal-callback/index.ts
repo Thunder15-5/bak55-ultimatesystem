@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // ✅ Verify Pesapal webhook signature
-async function verifyPesapalSignature(payload, signature, secret) {
+async function verifyPesapalSignature(payload: string, signature: string | null, secret: string): Promise<boolean> {
   if (!signature) return false;
   try {
     const encoder = new TextEncoder();
@@ -170,11 +170,11 @@ Deno.serve(async (req) => {
           .eq('id', wallet.id);
       }
 
-      // Record income transaction
+      // Record earning transaction
       await supabase.from('transactions').insert({
         wallet_id: wallet.id,
         amount: bakAmount,
-        type: 'income',
+        type: 'earning',
         description: `Purchased ${bakAmount} BAKCoins`,
         reference_id: transaction.id,
         metadata: {
@@ -199,9 +199,9 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error('Unhandled error in callback:', err);
-    return new Response(JSON.stringify({ success: false, error: err.message }), {
+    return new Response(JSON.stringify({ success: false, error: err?.message || 'Unknown error' }), {
       headers: corsHeaders,
     });
   }

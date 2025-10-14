@@ -43,16 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user role
-          setTimeout(async () => {
-            const { data: roleData } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session.user.id)
-              .single();
-            
-            setUserRole(roleData?.role ?? null);
-          }, 0);
+          // Fetch user role immediately without setTimeout
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id)
+            .single()
+            .then(({ data: roleData }) => {
+              setUserRole(roleData?.role ?? null);
+            });
         } else {
           setUserRole(null);
         }

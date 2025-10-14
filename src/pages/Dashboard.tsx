@@ -23,8 +23,42 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchStats();
+      
+      // Subscribe to wallet changes for real-time balance updates
+      const walletChannel = supabase
+        .channel('dashboard_wallet')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, () => {
+          fetchStats();
+        })
+        .subscribe();
+      
+      // Subscribe to artist profile changes for real-time earnings updates
+      let artistChannel: any = null;
+      if (userRole === 'artist') {
+        artistChannel = supabase
+          .channel('dashboard_artist')
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'artist_profiles',
+            filter: `user_id=eq.${user.id}`
+          }, () => {
+            fetchStats();
+          })
+          .subscribe();
+      }
+      
+      return () => {
+        supabase.removeChannel(walletChannel);
+        if (artistChannel) supabase.removeChannel(artistChannel);
+      };
     }
-  }, [user]);
+  }, [user, userRole]);
 
   const fetchStats = async () => {
     try {

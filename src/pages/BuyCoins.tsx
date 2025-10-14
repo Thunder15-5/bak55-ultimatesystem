@@ -179,7 +179,7 @@ const BuyCoins = () => {
                   <p className="font-medium">Payment Information:</p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
                     <li>Secure payment powered by Pesapal</li>
-                    <li>Currently supports M-Pesa payments</li>
+                    <li>Supports M-Pesa, Airtel Money, Visa, Mastercard</li>
                     <li>BAKCoins added instantly after successful payment</li>
                     <li>All transactions are encrypted and secure</li>
                   </ul>
@@ -188,9 +188,9 @@ const BuyCoins = () => {
               
               <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Payment Method</AlertTitle>
+                <AlertTitle>Available Payment Methods</AlertTitle>
                 <AlertDescription>
-                  Currently, only M-Pesa payments are active. Other payment methods will be available soon.
+                  Pay securely using M-Pesa, Airtel Money, Credit/Debit Cards (Visa, Mastercard), and more through Pesapal's secure gateway.
                 </AlertDescription>
               </Alert>
 
