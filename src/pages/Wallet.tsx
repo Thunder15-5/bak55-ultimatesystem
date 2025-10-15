@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign } from "lucide-react";
+import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Transaction {
@@ -206,8 +207,20 @@ export default function Wallet() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-24 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="container mx-auto px-4 py-8 pt-24">
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Wallet</h1>
+            <p className="text-muted-foreground">Manage your BAKCoins</p>
+          </div>
+          <Card className="mb-8">
+            <CardContent className="p-8">
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <TransactionSkeleton key={i} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

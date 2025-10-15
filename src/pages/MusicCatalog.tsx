@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
 
 interface Track {
   id: string;
@@ -115,10 +116,18 @@ export default function MusicCatalog() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-32">
         <Navigation />
-        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="container mx-auto px-4 py-8 pt-24">
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Music Catalog</h1>
+            <p className="text-muted-foreground">Discover amazing tracks from talented artists</p>
+          </div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <TrackCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       </div>
     );

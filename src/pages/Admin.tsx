@@ -196,7 +196,17 @@ export default function Admin() {
 
   const fetchMetrics = async () => {
     try {
-      const [usersCount, artistsCount, brandsCount, tracksCount, compsCount, activeCompsCount, withdrawalsSum] = await Promise.all([
+      const [
+        usersCount, 
+        artistsCount, 
+        brandsCount, 
+        tracksCount, 
+        compsCount, 
+        activeCompsCount, 
+        withdrawalsSum,
+        totalPlaysData,
+        revenueData,
+      ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "artist"),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "brand"),
@@ -204,9 +214,13 @@ export default function Admin() {
         supabase.from("competitions").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("transactions").select("amount, withdrawal_fee").gt("withdrawal_fee", 0).eq("metadata->>status", "pending"),
+        supabase.from("tracks").select("plays"),
+        supabase.from("payment_transactions").select("amount").eq("status", "success"),
       ]);
 
       const pendingWithdrawals = withdrawalsSum.data?.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) || 0;
+      const totalPlays = totalPlaysData.data?.reduce((sum, track) => sum + (track.plays || 0), 0) || 0;
+      const totalRevenue = revenueData.data?.reduce((sum, tx) => sum + Number(tx.amount), 0) || 0;
 
       setMetrics({
         totalUsers: usersCount.count || 0,
@@ -215,7 +229,7 @@ export default function Admin() {
         totalTracks: tracksCount.count || 0,
         totalCompetitions: compsCount.count || 0,
         activeCompetitions: activeCompsCount.count || 0,
-        totalRevenue: 0, // Calculate from transactions if needed
+        totalRevenue: totalRevenue,
         pendingWithdrawals,
       });
     } catch (error: any) {
@@ -523,6 +537,19 @@ export default function Admin() {
                   <div className="text-2xl font-bold">{metrics.totalCompetitions}</div>
                   <p className="text-xs text-muted-foreground">
                     {metrics.activeCompetitions} active
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.totalRevenue.toFixed(0)} KES</div>
+                  <p className="text-xs text-muted-foreground">
+                    From coin purchases
                   </p>
                 </CardContent>
               </Card>

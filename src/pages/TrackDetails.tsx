@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,15 +38,42 @@ export default function TrackDetails() {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState("");
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [liking, setLiking] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchTrack();
+      fetchLikeData();
     }
     if (user) {
       fetchUserPlaylists();
     }
   }, [id, user]);
+
+  useEffect(() => {
+    // Subscribe to realtime like updates
+    const channel = supabase
+      .channel('track_likes_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'track_likes',
+          filter: `track_id=eq.${id}`
+        },
+        () => {
+          fetchLikeData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
 
   const fetchTrack = async () => {
     try {
@@ -81,6 +108,79 @@ export default function TrackDetails() {
       setPlaylists(data || []);
     } catch (error: any) {
       console.error("Failed to load playlists:", error);
+    }
+  };
+
+  const fetchLikeData = async () => {
+    if (!id) return;
+
+    try {
+      // Get like count
+      const { count, error: countError } = await supabase
+        .from("track_likes")
+        .select("*", { count: "exact", head: true })
+        .eq("track_id", id);
+
+      if (countError) throw countError;
+      setLikeCount(count || 0);
+
+      // Check if current user has liked
+      if (user) {
+        const { data, error: likeError } = await supabase
+          .from("track_likes")
+          .select("id")
+          .eq("track_id", id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (likeError) throw likeError;
+        setIsLiked(!!data);
+      }
+    } catch (error: any) {
+      console.error("Failed to load like data:", error);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      toast.error("Please log in to like tracks");
+      navigate("/login");
+      return;
+    }
+
+    setLiking(true);
+
+    try {
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from("track_likes")
+          .delete()
+          .eq("track_id", id)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+        setIsLiked(false);
+        setLikeCount(prev => prev - 1);
+        toast.success("Removed from liked tracks");
+      } else {
+        // Like
+        const { error } = await supabase
+          .from("track_likes")
+          .insert({
+            track_id: id,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+        setIsLiked(true);
+        setLikeCount(prev => prev + 1);
+        toast.success("Added to liked tracks!");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update like status");
+    } finally {
+      setLiking(false);
     }
   };
 
@@ -240,16 +340,19 @@ export default function TrackDetails() {
             <div>
               <h1 className="text-4xl font-bold mb-2">{track.title}</h1>
               <p className="text-xl text-muted-foreground">
-                by {track.profiles.username}
+                by <Link to={`/artist/${track.artist_id}`} className="text-primary hover:underline">
+                  {track.profiles.username}
+                </Link>
               </p>
               {track.genre && (
                 <p className="text-sm text-muted-foreground mt-2">
                   Genre: {track.genre}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
-                {track.plays} plays
-              </p>
+              <div className="flex gap-4 text-sm text-muted-foreground mt-2">
+                <p>{track.plays} plays</p>
+                <p>• {likeCount} {likeCount === 1 ? 'like' : 'likes'}</p>
+              </div>
             </div>
 
           <div className="flex gap-4 flex-wrap">
@@ -257,6 +360,22 @@ export default function TrackDetails() {
               <Play className="mr-2 h-5 w-5" />
               Play Track
             </Button>
+
+            {user && (
+              <Button 
+                onClick={handleLike} 
+                disabled={liking}
+                size="lg"
+                variant={isLiked ? "default" : "outline"}
+              >
+                {liking ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Heart className={`mr-2 h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                )}
+                {isLiked ? 'Liked' : 'Like'}
+              </Button>
+            )}
 
             {user && user.id === track.artist_id && (
               <Button 

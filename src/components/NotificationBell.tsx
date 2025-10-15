@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { 
+  Bell, Heart, UserPlus, Music, Trophy, 
+  Coins, MessageCircle, CheckCheck 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -97,6 +100,43 @@ export function NotificationBell() {
     }
   };
 
+  const markAllAsRead = async () => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+      toast.success("All notifications marked as read");
+    } catch (error: any) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'tip':
+        return <Coins className="h-5 w-5 text-yellow-500" />;
+      case 'follow':
+        return <UserPlus className="h-5 w-5 text-blue-500" />;
+      case 'like':
+        return <Heart className="h-5 w-5 text-red-500" />;
+      case 'comment':
+        return <MessageCircle className="h-5 w-5 text-green-500" />;
+      case 'competition_win':
+        return <Trophy className="h-5 w-5 text-amber-500" />;
+      case 'upload':
+        return <Music className="h-5 w-5 text-purple-500" />;
+      default:
+        return <Bell className="h-5 w-5 text-muted-foreground" />;
+    }
+  };
+
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     if (notification.link) {
@@ -119,8 +159,19 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-semibold">Notifications</h3>
+          {unreadCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={markAllAsRead}
+              className="text-xs"
+            >
+              <CheckCheck className="h-4 w-4 mr-1" />
+              Mark all read
+            </Button>
+          )}
         </div>
         <ScrollArea className="h-96">
           {notifications.length === 0 ? (
@@ -138,6 +189,7 @@ export function NotificationBell() {
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start gap-3">
+                    {getNotificationIcon(notification.type)}
                     <div className="flex-1">
                       <p className="font-medium text-sm">{notification.title}</p>
                       <p className="text-xs text-muted-foreground mt-1">
