@@ -38,6 +38,7 @@ import BuyCoins from "./pages/BuyCoins";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import PaymentPending from "./pages/PaymentPending";
+import PesapalCallback from "./pages/PesapalCallback";
 import VerifyEmail from "./pages/VerifyEmail";
 import EditCompetition from "./pages/admin/EditCompetition";
 import CashReserve from "./pages/admin/CashReserve";
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
           <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
           <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
+          <Route path="/pesapal/callback" element={<PesapalCallback />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/playlists" element={<ProtectedRoute><Playlists /></ProtectedRoute>} />
             <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />

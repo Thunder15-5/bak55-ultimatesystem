@@ -43,17 +43,20 @@ const Contact = () => {
         ]);
 
       // Send email notification to admin
-      await supabase.functions.invoke('send-email', {
+      await supabase.functions.invoke('send-notification-email', {
         body: {
           to: 'info@bak55talent.co.ke',
-          subject: `Contact Form: ${validated.subject}`,
-          template: 'contact_form',
-          data: {
-            name: validated.name,
-            email: validated.email,
-            subject: validated.subject,
-            message: validated.message,
-          }
+          subject: `📧 Contact Form: ${validated.subject}`,
+          html: `
+            <h2>New Contact Form Submission</h2>
+            <p><strong>Name:</strong> ${validated.name}</p>
+            <p><strong>Email:</strong> ${validated.email}</p>
+            <p><strong>Subject:</strong> ${validated.subject}</p>
+            <p><strong>Message:</strong></p>
+            <p>${validated.message.replace(/\n/g, '<br>')}</p>
+            <hr>
+            <p><small>Submitted at ${new Date().toLocaleString()}</small></p>
+          `
         }
       });
 
@@ -62,7 +65,9 @@ const Contact = () => {
         return;
       }
 
-      toast.success("Message sent successfully! We'll be in touch soon.");
+      toast.success("Message sent successfully!", {
+        description: "We'll get back to you within 24-48 hours"
+      });
       setName("");
       setEmail("");
       setSubject("");

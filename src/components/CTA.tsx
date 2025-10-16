@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const benefits = [
   "Founding artist status with lifetime benefits",
@@ -13,15 +14,43 @@ const benefits = [
 
 export const CTA = () => {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast.error("Please enter your email");
       return;
     }
-    toast.success("Thanks! We'll be in touch soon.");
-    setEmail("");
+
+    setIsSubmitting(true);
+    try {
+      // Send notification email to admin
+      const { error } = await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: 'info@bak55talent.co.ke',
+          subject: '🎯 New Early Access Signup',
+          html: `
+            <h2>New Early Access Request</h2>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Form:</strong> Get Early Access (Homepage CTA)</p>
+          `
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Thanks! We'll be in touch soon.", {
+        description: "Your early access request has been received."
+      });
+      setEmail("");
+    } catch (error: any) {
+      console.error('Error submitting early access:', error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -72,8 +101,8 @@ export const CTA = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 h-12 bg-background/50 border-primary/20 focus:border-primary"
                 />
-                <Button type="submit" variant="hero" size="lg" className="group">
-                  Get Early Access
+                <Button type="submit" variant="hero" size="lg" className="group" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Get Early Access"}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>

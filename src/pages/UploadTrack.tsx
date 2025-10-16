@@ -247,14 +247,17 @@ export default function UploadTrack() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="audio">Audio File *</Label>
+                <Label htmlFor="audio">Audio File * (MP3, WAV, M4A, FLAC)</Label>
                 <Input
                   id="audio"
                   type="file"
-                  accept="audio/*"
+                  accept=".mp3,.wav,.m4a,.flac,.aac,.ogg,audio/mpeg,audio/wav,audio/x-m4a,audio/flac"
                   onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Only audio files are accepted (no videos)
+                </p>
               </div>
 
               <div className="space-y-2">

@@ -96,13 +96,15 @@ Deno.serve(async (req) => {
     const ipnData = await ipnResponse.json();
     console.log('IPN registration response:', ipnData);
 
-    // Step 3: Submit order request
+    // Create Pesapal order with custom domain callback
+    const callbackUrl = `https://www.bak55talent.co.ke/pesapal/callback`;
+    
     const orderPayload = {
       id: paymentRequest.notification_id,
       currency: paymentRequest.currency,
       amount: paymentRequest.amount,
       description: paymentRequest.description,
-      callback_url: paymentRequest.callback_url,
+      callback_url: callbackUrl,
       notification_id: ipnData.ipn_id || ipnData.ipn_registration_id,
       billing_address: {
         email_address: paymentRequest.email,

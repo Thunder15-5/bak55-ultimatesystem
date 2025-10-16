@@ -1,46 +1,69 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface NotificationRequest {
+interface NotificationEmailRequest {
   to: string;
   subject: string;
-  message: string;
+  html: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { to, subject, message }: NotificationRequest = await req.json();
+    const { to, subject, html }: NotificationEmailRequest = await req.json();
+
+    console.log('Sending notification email:', { to, subject });
+
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     
-    console.log(`Email notification: ${subject} to ${to}`);
-    console.log(`Message: ${message}`);
-    
-    // Email system ready - configure RESEND_API_KEY secret and add Resend integration
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: "Email notification logged successfully"
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY not configured");
+    }
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "BAK55 Talent <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Resend API error: ${error}`);
+    }
+
+    const emailResponse = await response.json();
+    console.log("Email sent successfully:", emailResponse);
+
+    return new Response(JSON.stringify(emailResponse), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
   } catch (error: any) {
-    console.error('Error in send-notification-email:', error);
+    console.error("Error in send-notification-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }
