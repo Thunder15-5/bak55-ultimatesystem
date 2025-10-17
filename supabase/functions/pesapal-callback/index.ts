@@ -37,11 +37,14 @@ async function processTransaction(
   orderTrackingId: string,
   merchantReference: string | null
 ) {
-  // Map status
+  // ✅ Improved status mapping (Pesapal API codes)
   let transactionStatus = 'pending';
-  const pesapalCode = statusData.payment_status_code;
+  const pesapalCode = Number(statusData.payment_status_code);
+
   if (pesapalCode === 1) transactionStatus = 'success';
-  else if (pesapalCode === 2 || pesapalCode === 0) transactionStatus = 'failed';
+  else if (pesapalCode === 2 || pesapalCode === 3) transactionStatus = 'failed';
+  else if (pesapalCode === 4) transactionStatus = 'pending';
+  else transactionStatus = 'unknown';
 
   // Idempotent update
   if (transaction.status !== transactionStatus) {
@@ -61,6 +64,12 @@ async function processTransaction(
       .eq('id', transaction.id);
   }
 
+  // ✅ Skip if already successful (prevent double credit)
+  if (transaction.status === 'success') {
+    console.log('⏩ Transaction already marked success — skipping double credit');
+    return { success: true, status: 'success', message: 'Already processed' };
+  }
+
   // ✅ Credit user if success
   if (transactionStatus === 'success') {
     const userId = transaction.user_id;
@@ -69,14 +78,16 @@ async function processTransaction(
       parseFloat(transaction.amount) ||
       0;
 
-    console.log(`Crediting ${bakAmount} BAKCoins to user ${userId}`);
+    console.log(`💰 Crediting ${bakAmount} BAKCoins to user ${userId}`);
 
     // Ensure wallet exists
-    let { data: wallet } = await supabase
+    let { data: wallet, error: walletErr } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
       .single();
+
+    if (walletErr) console.error('⚠️ Wallet fetch error:', walletErr);
 
     if (!wallet) {
       console.warn('No wallet found — creating new one');
@@ -90,14 +101,22 @@ async function processTransaction(
         })
         .select()
         .single();
-      if (createErr) console.error('Failed to create wallet:', createErr);
+      if (createErr) console.error('❌ Failed to create wallet:', createErr);
       wallet = newWallet;
     } else {
-      const newBalance = parseFloat(wallet.balance) + bakAmount;
-      await supabase
+      console.log('🔍 Wallet before credit:', wallet);
+
+      // ✅ Safe number addition
+      const currentBalance = Number(wallet.balance ?? 0);
+      const newBalance = parseFloat((currentBalance + bakAmount).toFixed(2));
+
+      const { error: updateErr } = await supabase
         .from('wallets')
         .update({ balance: newBalance, updated_at: new Date().toISOString() })
         .eq('id', wallet.id);
+
+      if (updateErr) console.error('❌ Wallet update failed:', updateErr);
+      else console.log(`✅ Wallet credited. Old: ${wallet.balance}, New: ${newBalance}`);
     }
 
     // Record earning transaction
@@ -154,7 +173,10 @@ Deno.serve(async (req) => {
 
     if (!orderTrackingId) {
       console.error('❌ Missing OrderTrackingId');
-      return new Response(JSON.stringify({ success: false }), { headers: corsHeaders });
+      return new Response(
+        JSON.stringify({ success: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Pesapal callback received:', { orderTrackingId, merchantReference });
@@ -195,8 +217,6 @@ Deno.serve(async (req) => {
 
     // ✅ Locate transaction in database (search by reference or metadata)
     let transaction = null;
-    
-    // Try by payment_reference or reference
     const { data: txByRef } = await supabase
       .from('payment_transactions')
       .select('*')
@@ -206,21 +226,20 @@ Deno.serve(async (req) => {
     if (txByRef) {
       transaction = txByRef;
     } else {
-      // Try searching in metadata
       const { data: txByMetadata } = await supabase
         .from('payment_transactions')
         .select('*')
         .contains('metadata', { order_tracking_id: orderTrackingId })
         .maybeSingle();
-      
       transaction = txByMetadata;
     }
 
     if (!transaction) {
       console.error('❌ Transaction not found for', orderTrackingId);
-      return new Response(JSON.stringify({ success: false, error: 'Transaction not found' }), {
-        headers: corsHeaders,
-      });
+      return new Response(
+        JSON.stringify({ success: false, error: 'Transaction not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Process the transaction
@@ -238,8 +257,9 @@ Deno.serve(async (req) => {
     );
   } catch (err: any) {
     console.error('Unhandled error in callback:', err);
-    return new Response(JSON.stringify({ success: false, error: err?.message || 'Unknown error' }), {
-      headers: corsHeaders,
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: err?.message || 'Unknown error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });
