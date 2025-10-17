@@ -135,7 +135,7 @@ async function sendEmailViaResend(to: string, subject: string, html: string) {
       "Authorization": `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: "BAK55 Talent <notifications@resend.dev>",
+      from: "BAK55 Talent <notifications@bak55talent.co.ke>",
       to: [to],
       subject,
       html,
