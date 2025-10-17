@@ -29,49 +29,51 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4 py-8">
       <Card className="w-full max-w-md border-primary/20">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <img src={logoImage} alt="BAK55 Talent" className="h-20 w-auto" />
+        <CardHeader className="space-y-1 p-4 sm:p-6">
+          <div className="flex items-center justify-center mb-3 sm:mb-4">
+            <img src={logoImage} alt="BAK55 Talent" className="h-16 sm:h-20 w-auto" />
           </div>
-          <CardTitle className="text-2xl md:text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <CardTitle className="text-xl sm:text-2xl md:text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm">
             Login to your BAK55 Talent account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-11"
                 required
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 p-4 sm:p-6">
             <Button
               type="submit"
               variant="hero"
-              className="w-full"
+              className="w-full h-11 md:h-12 touch-manipulation"
               disabled={loading}
             >
               {loading ? (

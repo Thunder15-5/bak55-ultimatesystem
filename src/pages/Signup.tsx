@@ -56,41 +56,43 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4 py-8 md:py-12">
       <Card className="w-full max-w-2xl border-primary/20">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <img src={logoImage} alt="BAK55 Talent" className="h-20 w-auto" />
+        <CardHeader className="space-y-1 p-4 sm:p-6">
+          <div className="flex items-center justify-center mb-3 sm:mb-4">
+            <img src={logoImage} alt="BAK55 Talent" className="h-16 sm:h-20 w-auto" />
           </div>
-          <CardTitle className="text-2xl md:text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <CardTitle className="text-xl sm:text-2xl md:text-3xl text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             Join BAK55 Talent
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm">
             Create your account and start your music journey
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className="text-sm">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="h-11"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password" className="text-sm">Password *</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-11"
                   required
                 />
               </div>
@@ -98,22 +100,23 @@ export default function Signup() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username *</Label>
+                <Label htmlFor="username" className="text-sm">Username *</Label>
                 <Input
                   id="username"
                   placeholder="coolartist123"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  className="h-11"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">I am a... *</Label>
+                <Label htmlFor="role" className="text-sm">I am a... *</Label>
                 <Select value={role} onValueChange={(value: any) => setRole(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-background">
                     <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="artist">Artist</SelectItem>
                     <SelectItem value="brand">Brand/Partner</SelectItem>
@@ -124,21 +127,23 @@ export default function Signup() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
+                <Label htmlFor="displayName" className="text-sm">Display Name</Label>
                 <Input
                   id="displayName"
                   placeholder="John Doe"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location" className="text-sm">Location</Label>
                 <Input
                   id="location"
                   placeholder="Nairobi, Kenya"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
+                  className="h-11"
                 />
               </div>
             </div>
@@ -146,21 +151,23 @@ export default function Signup() {
             {role === "artist" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="stageName">Stage Name</Label>
+                  <Label htmlFor="stageName" className="text-sm">Stage Name</Label>
                   <Input
                     id="stageName"
                     placeholder="DJ Cool"
                     value={stageName}
                     onChange={(e) => setStageName(e.target.value)}
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="genres">Genres (comma-separated)</Label>
+                  <Label htmlFor="genres" className="text-sm">Genres (comma-separated)</Label>
                   <Input
                     id="genres"
                     placeholder="Afrobeats, Hip Hop, R&B"
                     value={genres}
                     onChange={(e) => setGenres(e.target.value)}
+                    className="h-11"
                   />
                 </div>
               </>
@@ -169,42 +176,45 @@ export default function Signup() {
             {role === "brand" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
+                  <Label htmlFor="companyName" className="text-sm">Company Name</Label>
                   <Input
                     id="companyName"
                     placeholder="Music Company Inc."
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="industry">Industry</Label>
+                  <Label htmlFor="industry" className="text-sm">Industry</Label>
                   <Input
                     id="industry"
                     placeholder="Entertainment"
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
+                    className="h-11"
                   />
                 </div>
               </>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio" className="text-sm">Bio</Label>
               <Textarea
                 id="bio"
                 placeholder="Tell us about yourself..."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
+                className="resize-none"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 p-4 sm:p-6">
             <Button
               type="submit"
               variant="hero"
-              className="w-full"
+              className="w-full h-11 md:h-12 touch-manipulation"
               disabled={loading}
             >
               {loading ? (

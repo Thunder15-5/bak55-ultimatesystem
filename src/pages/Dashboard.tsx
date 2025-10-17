@@ -114,9 +114,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+      <main className="container mx-auto px-4 pt-20 md:pt-24 pb-8 md:pb-12">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
             Welcome back,{" "}
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               {user?.user_metadata?.username || user?.email?.split("@")[0]}
@@ -130,7 +130,7 @@ export default function Dashboard() {
         <EmailVerificationBanner />
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8">
           <Card className="border-primary/20 hover:border-primary/40 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">BAKCoins Balance</CardTitle>

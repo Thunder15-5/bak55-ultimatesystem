@@ -105,9 +105,9 @@ export default function CompetitionsActive() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {competitions.map((competition) => (
-              <Card key={competition.id} className="overflow-hidden hover:shadow-lg transition-all hover:scale-105">
+              <Card key={competition.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] touch-manipulation">
                 {competition.cover_image && (
                   <div className="h-40 sm:h-48 overflow-hidden">
                     <img 
@@ -160,7 +160,7 @@ export default function CompetitionsActive() {
                   )}
 
                   <Link to={`/competition/${competition.id}`} className="block">
-                    <Button className="w-full mt-2">View Details</Button>
+                    <Button className="w-full mt-2 h-10 md:h-11 touch-manipulation">View Details</Button>
                   </Link>
                 </CardContent>
               </Card>

@@ -130,16 +130,16 @@ const BuyCoins = () => {
         </Button>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-xl sm:text-2xl">Buy BAKCoins</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Purchase BAKCoins to support artists, vote in competitions, and unlock exclusive features
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePurchase} className="space-y-6">
+          <CardContent className="p-4 sm:p-6">
+            <form onSubmit={handlePurchase} className="space-y-4 md:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (KSh)</Label>
+                <Label htmlFor="amount" className="text-sm font-medium">Amount (KSh)</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -148,6 +148,7 @@ const BuyCoins = () => {
                   onChange={(e) => setAmount(e.target.value)}
                   min={MIN_AMOUNT}
                   step="10"
+                  className="h-11 md:h-12 text-base"
                   required
                 />
                 <p className="text-sm text-muted-foreground">
@@ -196,7 +197,7 @@ const BuyCoins = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12"
+                className="w-full h-12 md:h-14 text-base touch-manipulation"
                 disabled={isLoading || kshAmount < MIN_AMOUNT}
               >
                 {isLoading ? (

@@ -88,10 +88,10 @@ const Contact = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center space-y-6 mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold">
+          <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-16">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold">
               Get in <span className="text-gradient">Touch</span>
             </h1>
             <p className="text-xl text-muted-foreground">
@@ -145,8 +145,8 @@ const Contact = () => {
               <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
                 <h2 className="text-3xl font-bold mb-6">Send Us a Message</h2>
                 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div>
                       <label className="block text-sm font-medium mb-2">Name *</label>
                       <Input
@@ -154,7 +154,8 @@ const Contact = () => {
                         placeholder="Your name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="bg-background/50 border-primary/20 focus:border-primary"
+                        className="bg-background/50 border-primary/20 focus:border-primary h-11"
+                        required
                       />
                     </div>
                     
@@ -165,7 +166,8 @@ const Contact = () => {
                         placeholder="your.email@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="bg-background/50 border-primary/20 focus:border-primary"
+                        className="bg-background/50 border-primary/20 focus:border-primary h-11"
+                        required
                       />
                     </div>
                   </div>
@@ -177,7 +179,8 @@ const Contact = () => {
                       placeholder="What is this about?"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="bg-background/50 border-primary/20 focus:border-primary"
+                      className="bg-background/50 border-primary/20 focus:border-primary h-11"
+                      required
                     />
                   </div>
 
@@ -187,19 +190,20 @@ const Contact = () => {
                       placeholder="Tell us more..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="bg-background/50 border-primary/20 focus:border-primary min-h-[200px]"
+                      className="bg-background/50 border-primary/20 focus:border-primary min-h-[150px] md:min-h-[200px]"
+                      required
                     />
                   </div>
 
-                  <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                  <Button type="submit" variant="hero" size="lg" className="w-full h-12 md:h-14 text-base" disabled={loading}>
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
+                        <Send className="w-5 h-5 mr-2" />
                         Send Message
                       </>
                     )}

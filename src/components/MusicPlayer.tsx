@@ -110,9 +110,9 @@ export function MusicPlayer({ track, onClose }: MusicPlayerProps) {
                 </div>
               )}
             </div>
-            <div className="min-w-0 flex-1 hidden sm:block">
-              <p className="font-semibold truncate text-sm sm:text-base">{track.title}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold truncate text-xs sm:text-sm md:text-base">{track.title}</p>
+              <p className="text-xs text-muted-foreground truncate hidden sm:block">
                 {track.profiles.username}
               </p>
             </div>
@@ -152,12 +152,12 @@ export function MusicPlayer({ track, onClose }: MusicPlayerProps) {
           </div>
 
           {/* Volume & Close */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end max-w-[140px] sm:max-w-none">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleMute}
-              className="h-8 w-8"
+              className="h-8 w-8 flex-shrink-0"
             >
               {isMuted || volume === 0 ? (
                 <VolumeX className="h-4 w-4" />
@@ -170,13 +170,13 @@ export function MusicPlayer({ track, onClose }: MusicPlayerProps) {
               max={1}
               step={0.01}
               onValueChange={handleVolumeChange}
-              className="w-16 sm:w-24"
+              className="hidden sm:block w-20 md:w-24"
             />
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8"
+              className="h-8 w-8 flex-shrink-0"
             >
               <X className="h-4 w-4" />
             </Button>

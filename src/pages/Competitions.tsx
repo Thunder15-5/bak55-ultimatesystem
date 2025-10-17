@@ -11,14 +11,14 @@ const Competitions = () => {
       <Navbar />
       
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4">
         <div className="container mx-auto max-w-6xl text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
             <Trophy className="w-4 h-4 text-secondary" />
             <span className="text-sm font-medium">Competition Engine</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight">
             Compete, Win,
             <br />
             <span className="text-gradient">Get Discovered</span>
@@ -39,36 +39,36 @@ const Competitions = () => {
       {/* How Competitions Work */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-12 md:mb-16">
             How <span className="text-gradient">Competitions Work</span>
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center mb-4">
-                <Clock className="w-6 h-6 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <Card className="p-6 md:p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center mb-4">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Bi-Weekly Micro Competitions</h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-3">Bi-Weekly Micro Competitions</h3>
               <p className="text-muted-foreground">
                 Themed competitions every two weeks. Genre-specific, skill-based, or creative challenges.
               </p>
             </Card>
             
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center mb-4">
-                <Trophy className="w-6 h-6 text-white" />
+            <Card className="p-6 md:p-8 bg-card/50 backdrop-blur-sm border-secondary/10 hover:border-secondary/30 transition-all">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center mb-4">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Quarterly Championships</h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-3">Quarterly Championships</h3>
               <p className="text-muted-foreground">
                 Major competitions with live event finals. Bigger prizes, industry exposure, brand partnerships.
               </p>
             </Card>
             
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-accent/10">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
+            <Card className="p-6 md:p-8 bg-card/50 backdrop-blur-sm border-accent/10 hover:border-accent/30 transition-all">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center mb-4">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Hybrid Judging</h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-3">Hybrid Judging</h3>
               <p className="text-muted-foreground">
                 70% fan votes + 30% expert & AI scoring. Fair, transparent, and community-driven.
               </p>
@@ -78,13 +78,13 @@ const Competitions = () => {
       </section>
 
       {/* Prize Structure */}
-      <section className="py-20 px-4 bg-card/30">
+      <section className="py-12 md:py-20 px-4 bg-card/30">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-4xl font-bold text-center mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
             Win <span className="text-gradient-secondary">Real Cash Prizes</span>
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             <Card className="p-8 text-center bg-gradient-to-br from-secondary/20 to-secondary/5 border-secondary/30">
               <Award className="w-16 h-16 text-secondary mx-auto mb-4" />
               <div className="text-4xl font-bold text-gradient-secondary mb-2">1st Place</div>

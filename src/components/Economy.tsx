@@ -18,10 +18,10 @@ const coinSinks = [
 
 export const Economy = () => {
   return (
-    <section className="py-24 px-4 relative">
+    <section className="py-12 md:py-24 px-4 relative">
       <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-6xl font-bold">
+        <div className="text-center mb-12 md:mb-16 space-y-3 md:space-y-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold">
             The <span className="text-gradient">BAKCoins</span> Circular Economy
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -30,14 +30,14 @@ export const Economy = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-12">
           {/* Artist Value Creation */}
-          <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10 space-y-6">
+          <Card className="p-6 md:p-8 bg-card/50 backdrop-blur-sm border-primary/10 space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                <Coins className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center flex-shrink-0">
+                <Coins className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold">Artists Earn BAKCoins</h3>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold">Artists Earn BAKCoins</h3>
             </div>
             
             <div className="space-y-3">
@@ -59,12 +59,12 @@ export const Economy = () => {
           </Card>
 
           {/* Fan Participation */}
-          <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10 space-y-6">
+          <Card className="p-6 md:p-8 bg-card/50 backdrop-blur-sm border-secondary/10 space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold">Fans Use BAKCoins</h3>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold">Fans Use BAKCoins</h3>
             </div>
             
             <div className="space-y-4">
@@ -94,9 +94,9 @@ export const Economy = () => {
         </div>
 
         {/* Value Preservation */}
-        <Card className="p-8 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
-          <div className="text-center space-y-4">
-            <h3 className="text-2xl font-bold">Value Preservation & Coin Sinks</h3>
+        <Card className="p-6 md:p-8 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
+          <div className="text-center space-y-3 md:space-y-4">
+            <h3 className="text-xl md:text-2xl font-bold">Value Preservation & Coin Sinks</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Strategic mechanisms maintain BAKCoins value while creating additional revenue streams:
             </p>

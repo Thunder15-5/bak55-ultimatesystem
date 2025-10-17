@@ -33,13 +33,13 @@ const features = [
 
 export const Features = () => {
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
+    <section className="py-12 md:py-24 px-4 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
       <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-6xl font-bold">
+        <div className="text-center mb-12 md:mb-16 space-y-3 md:space-y-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold">
             Four Pillars,{" "}
             <span className="text-gradient">One Ecosystem</span>
           </h2>
@@ -48,7 +48,7 @@ export const Features = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
           {features.map((feature, index) => (
             <Card
               key={index}
@@ -58,17 +58,17 @@ export const Features = () => {
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-5`} />
               </div>
               
-              <div className="relative p-8 space-y-6">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-card to-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="relative p-6 md:p-8 space-y-4 md:space-y-6">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-card to-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <img 
                     src={feature.icon} 
                     alt={feature.title}
-                    className="w-12 h-12 object-contain"
+                    className="w-10 h-10 md:w-12 md:h-12 object-contain"
                   />
                 </div>
                 
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold">{feature.title}</h3>
+                <div className="space-y-2 md:space-y-3">
+                  <h3 className="text-xl md:text-2xl font-bold">{feature.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
