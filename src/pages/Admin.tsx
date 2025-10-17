@@ -378,6 +378,36 @@ export default function Admin() {
     }
   };
 
+  const handleVerifyPesapalPayment = async (purchase: CoinPurchase) => {
+    setProcessing(purchase.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-pesapal-payment', {
+        body: { transaction_id: purchase.id },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        if (data.status === 'success') {
+          toast.success("Payment verified and wallet credited!");
+        } else if (data.status === 'failed') {
+          toast.error("Payment verification failed - transaction was not successful");
+        } else {
+          toast.info(`Payment status: ${data.status}`);
+        }
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Verification failed');
+      }
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast.error(error.message || "Failed to verify payment");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const handleEndCompetition = async (competitionId: string) => {
     setProcessing(competitionId);
 
@@ -669,7 +699,9 @@ export default function Admin() {
             <Card>
               <CardHeader>
                 <CardTitle>Pending Coin Purchase Requests</CardTitle>
-                <CardDescription>Approve manual BAKCoin purchases</CardDescription>
+                <CardDescription>
+                  Verify Pesapal payments or approve manual BAKCoin purchases
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {coinPurchases.length === 0 ? (
@@ -681,13 +713,16 @@ export default function Admin() {
                     {coinPurchases.map((purchase) => (
                       <Card key={purchase.id} className="border-2">
                         <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-4">
                             <div className="space-y-2 flex-1">
                               <div className="flex items-center gap-2">
                                 <Coins className="h-5 w-5 text-primary" />
                                 <h3 className="text-xl font-bold">
                                   {purchase.metadata.bak_amount} BAK
                                 </h3>
+                                {purchase.metadata.order_tracking_id && (
+                                  <Badge variant="outline">Pesapal</Badge>
+                                )}
                               </div>
                               <p className="text-sm text-muted-foreground">
                                 <strong>User:</strong> {purchase.profiles?.username} ({purchase.email})
@@ -698,23 +733,47 @@ export default function Admin() {
                               <p className="text-sm text-muted-foreground">
                                 <strong>Reference:</strong> {purchase.reference}
                               </p>
+                              {purchase.metadata.order_tracking_id && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Order ID:</strong> {purchase.metadata.order_tracking_id}
+                                </p>
+                              )}
                               <p className="text-xs text-muted-foreground">
                                 Requested: {new Date(purchase.created_at).toLocaleString()}
                               </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col gap-2">
+                              {purchase.metadata.order_tracking_id && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleVerifyPesapalPayment(purchase)}
+                                  disabled={processing === purchase.id}
+                                  className="w-full"
+                                >
+                                  {processing === purchase.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <ShieldCheck className="mr-2 h-4 w-4" />
+                                      Verify Payment
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                               <Button
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleApproveCoinPurchase(purchase)}
                                 disabled={processing === purchase.id}
+                                className="w-full"
                               >
                                 {processing === purchase.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                   <>
                                     <Check className="mr-2 h-4 w-4" />
-                                    Approve
+                                    Manual Approve
                                   </>
                                 )}
                               </Button>
@@ -723,6 +782,7 @@ export default function Admin() {
                                 size="sm"
                                 onClick={() => handleRejectCoinPurchase(purchase)}
                                 disabled={processing === purchase.id}
+                                className="w-full"
                               >
                                 {processing === purchase.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -3,6 +3,9 @@ project_id = "qtdxzgeeomgukkxfkwmh"
 [functions.pesapal-callback]
 verify_jwt = false
 
+[functions.verify-pesapal-payment]
+verify_jwt = true
+
 [functions.send-tip]
 verify_jwt = true
 

@@ -29,6 +29,105 @@ async function verifyPesapalSignature(payload: string, signature: string | null,
   }
 }
 
+// Helper function to process transaction and credit wallet
+async function processTransaction(
+  transaction: any,
+  statusData: any,
+  supabase: any,
+  orderTrackingId: string,
+  merchantReference: string | null
+) {
+  // Map status
+  let transactionStatus = 'pending';
+  const pesapalCode = statusData.payment_status_code;
+  if (pesapalCode === 1) transactionStatus = 'success';
+  else if (pesapalCode === 2 || pesapalCode === 0) transactionStatus = 'failed';
+
+  // Idempotent update
+  if (transaction.status !== transactionStatus) {
+    await supabase
+      .from('payment_transactions')
+      .update({
+        status: transactionStatus,
+        updated_at: new Date().toISOString(),
+        metadata: {
+          ...transaction.metadata,
+          pesapal_payment_method: statusData.payment_method,
+          pesapal_status_code: pesapalCode,
+          pesapal_confirmation_code: statusData.confirmation_code,
+          verified_at: new Date().toISOString(),
+        },
+      })
+      .eq('id', transaction.id);
+  }
+
+  // ✅ Credit user if success
+  if (transactionStatus === 'success') {
+    const userId = transaction.user_id;
+    const bakAmount =
+      transaction.metadata?.bak_amount ||
+      parseFloat(transaction.amount) ||
+      0;
+
+    console.log(`Crediting ${bakAmount} BAKCoins to user ${userId}`);
+
+    // Ensure wallet exists
+    let { data: wallet } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (!wallet) {
+      console.warn('No wallet found — creating new one');
+      const { data: newWallet, error: createErr } = await supabase
+        .from('wallets')
+        .insert({
+          user_id: userId,
+          balance: bakAmount,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (createErr) console.error('Failed to create wallet:', createErr);
+      wallet = newWallet;
+    } else {
+      const newBalance = parseFloat(wallet.balance) + bakAmount;
+      await supabase
+        .from('wallets')
+        .update({ balance: newBalance, updated_at: new Date().toISOString() })
+        .eq('id', wallet.id);
+    }
+
+    // Record earning transaction
+    await supabase.from('transactions').insert({
+      wallet_id: wallet.id,
+      amount: bakAmount,
+      type: 'earning',
+      description: `Purchased ${bakAmount} BAKCoins`,
+      reference_id: transaction.id,
+      metadata: {
+        payment_method: 'pesapal',
+        order_tracking_id: orderTrackingId,
+        amount_paid_ksh: transaction.amount,
+        merchant_reference: merchantReference,
+      },
+    });
+
+    console.log('✅ Wallet credited successfully');
+  }
+
+  return {
+    success: true,
+    status: transactionStatus,
+    message:
+      transactionStatus === 'success'
+        ? 'Payment successful — wallet credited.'
+        : 'Payment processed.',
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -94,12 +193,28 @@ Deno.serve(async (req) => {
     const statusData = await statusResp.json();
     console.log('Transaction status:', statusData);
 
-    // ✅ Locate transaction in database (more flexible matching)
-    const { data: transaction } = await supabase
+    // ✅ Locate transaction in database (search by reference or metadata)
+    let transaction = null;
+    
+    // Try by payment_reference or reference
+    const { data: txByRef } = await supabase
       .from('payment_transactions')
       .select('*')
-      .or(`payment_reference.eq.${orderTrackingId},pesapal_reference.eq.${orderTrackingId},order_tracking_id.eq.${orderTrackingId}`)
-      .single();
+      .or(`payment_reference.eq.${orderTrackingId},reference.eq.${merchantReference || ''}`)
+      .maybeSingle();
+
+    if (txByRef) {
+      transaction = txByRef;
+    } else {
+      // Try searching in metadata
+      const { data: txByMetadata } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .contains('metadata', { order_tracking_id: orderTrackingId })
+        .maybeSingle();
+      
+      transaction = txByMetadata;
+    }
 
     if (!transaction) {
       console.error('❌ Transaction not found for', orderTrackingId);
@@ -108,95 +223,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Map status
-    let transactionStatus = 'pending';
-    const pesapalCode = statusData.payment_status_code;
-    if (pesapalCode === 1) transactionStatus = 'success';
-    else if (pesapalCode === 2 || pesapalCode === 0) transactionStatus = 'failed';
-
-    // Idempotent update
-    if (transaction.status !== transactionStatus) {
-      await supabase
-        .from('payment_transactions')
-        .update({
-          status: transactionStatus,
-          updated_at: new Date().toISOString(),
-          metadata: {
-            ...transaction.metadata,
-            pesapal_payment_method: statusData.payment_method,
-            pesapal_status_code: pesapalCode,
-            verified_at: new Date().toISOString(),
-          },
-        })
-        .eq('id', transaction.id);
-    }
-
-    // ✅ Credit user if success
-    if (transactionStatus === 'success') {
-      const userId = transaction.user_id;
-      const bakAmount =
-        transaction.metadata?.bak_amount ||
-        parseFloat(transaction.amount) ||
-        0;
-
-      console.log(`Crediting ${bakAmount} BAKCoins to user ${userId}`);
-
-      // Ensure wallet exists
-      let { data: wallet } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (!wallet) {
-        console.warn('No wallet found — creating new one');
-        const { data: newWallet, error: createErr } = await supabase
-          .from('wallets')
-          .insert({
-            user_id: userId,
-            balance: bakAmount,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-        if (createErr) console.error('Failed to create wallet:', createErr);
-        wallet = newWallet;
-      } else {
-        const newBalance = parseFloat(wallet.balance) + bakAmount;
-        await supabase
-          .from('wallets')
-          .update({ balance: newBalance, updated_at: new Date().toISOString() })
-          .eq('id', wallet.id);
-      }
-
-      // Record earning transaction
-      await supabase.from('transactions').insert({
-        wallet_id: wallet.id,
-        amount: bakAmount,
-        type: 'earning',
-        description: `Purchased ${bakAmount} BAKCoins`,
-        reference_id: transaction.id,
-        metadata: {
-          payment_method: 'pesapal',
-          order_tracking_id: orderTrackingId,
-          amount_paid_ksh: transaction.amount,
-          merchant_reference: merchantReference,
-        },
-      });
-
-      console.log('✅ Wallet credited successfully');
-    }
+    // Process the transaction
+    const result = await processTransaction(
+      transaction,
+      statusData,
+      supabase,
+      orderTrackingId,
+      merchantReference
+    );
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        status: transactionStatus,
-        message:
-          transactionStatus === 'success'
-            ? 'Payment successful — wallet credited.'
-            : 'Payment processed.',
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err: any) {
