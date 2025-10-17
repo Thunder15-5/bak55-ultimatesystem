@@ -9,10 +9,9 @@ interface PaymentRequest {
   amount: number;
   currency: string;
   description: string;
-  callback_url: string;
-  notification_id: string;
-  reference: string;
+  callback_url?: string;
   email: string;
+  user_id?: string;
 }
 
 Deno.serve(async (req) => {
@@ -21,181 +20,117 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Try to identify user (optional)
+    let userEmail = '';
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    if (authHeader) {
+      const { data: { user }, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+      if (!error && user) userEmail = user.email ?? '';
     }
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const body: PaymentRequest = await req.json();
+    console.log('Payment initiation:', body);
 
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (!body.amount || !body.email) {
+      throw new Error('Missing amount or email');
     }
 
-    const paymentRequest: PaymentRequest = await req.json();
-    console.log('Payment request:', paymentRequest);
-
-    const PESAPAL_CONSUMER_KEY = Deno.env.get('PESAPAL_CONSUMER_KEY');
-    const PESAPAL_CONSUMER_SECRET = Deno.env.get('PESAPAL_CONSUMER_SECRET');
-    
-    if (!PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET) {
-      throw new Error('Pesapal credentials not configured. Please contact support.');
-    }
-
-    // Production Pesapal API
+    // --- Pesapal Auth ---
     const PESAPAL_BASE_URL = 'https://pay.pesapal.com/v3';
-    console.log('Processing payment via Pesapal production API');
-
-    // Step 1: Get access token
-    const tokenResponse = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: PESAPAL_CONSUMER_KEY,
-        consumer_secret: PESAPAL_CONSUMER_SECRET,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token request failed:', errorText);
-      throw new Error('Invalid Pesapal credentials. Please configure valid API keys or use test mode.');
+    const consumerKey = Deno.env.get('PESAPAL_CONSUMER_KEY');
+    const consumerSecret = Deno.env.get('PESAPAL_CONSUMER_SECRET');
+    if (!consumerKey || !consumerSecret) {
+      throw new Error('Missing Pesapal credentials');
     }
 
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.token;
-
-    console.log('Got Pesapal access token');
-
-    // Step 2: Register IPN (if not already registered)
-    const ipnUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/pesapal-callback`;
-    
-    const ipnResponse = await fetch(`${PESAPAL_BASE_URL}/api/URLSetup/RegisterIPN`, {
+    const tokenRes = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        url: ipnUrl,
-        ipn_notification_type: 'GET',
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ consumer_key: consumerKey, consumer_secret: consumerSecret }),
     });
 
-    const ipnData = await ipnResponse.json();
-    console.log('IPN registration response:', ipnData);
+    if (!tokenRes.ok) {
+      throw new Error(`Pesapal token error: ${await tokenRes.text()}`);
+    }
 
-    // Create Pesapal order with custom domain callback
-    const callbackUrl = `https://www.bak55talent.co.ke/pesapal/callback`;
-    
+    const { token } = await tokenRes.json();
+
+    // --- Order details ---
+    const transactionId = crypto.randomUUID();
+    const callbackUrl =
+      body.callback_url ||
+      `${Deno.env.get('SUPABASE_URL')}/functions/v1/pesapal-callback`;
+
     const orderPayload = {
-      id: paymentRequest.notification_id,
-      currency: paymentRequest.currency,
-      amount: paymentRequest.amount,
-      description: paymentRequest.description,
+      id: transactionId,
+      currency: body.currency || 'KES',
+      amount: body.amount,
+      description: body.description || 'BAK55 Token Purchase',
       callback_url: callbackUrl,
-      notification_id: ipnData.ipn_id || ipnData.ipn_registration_id,
+      notification_id: Deno.env.get('PESAPAL_NOTIFICATION_ID'),
       billing_address: {
-        email_address: paymentRequest.email,
-        phone_number: '',
-        country_code: 'KE',
-        first_name: user.email?.split('@')[0] || 'User',
-        middle_name: '',
+        email_address: body.email,
+        first_name: userEmail?.split('@')[0] || 'User',
         last_name: '',
-        line_1: '',
-        line_2: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        zip_code: '',
+        country_code: 'KE',
       },
     };
 
     console.log('Submitting order:', orderPayload);
 
-    const orderResponse = await fetch(`${PESAPAL_BASE_URL}/api/Transactions/SubmitOrderRequest`, {
+    const orderRes = await fetch(`${PESAPAL_BASE_URL}/api/Transactions/SubmitOrderRequest`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(orderPayload),
     });
 
-    if (!orderResponse.ok) {
-      const errorText = await orderResponse.text();
-      console.error('Order submission failed:', errorText);
-      throw new Error('Failed to submit order to Pesapal');
+    const orderData = await orderRes.json();
+    if (!orderRes.ok) {
+      console.error('Pesapal order failed:', orderData);
+      throw new Error(orderData.message || 'Failed to create Pesapal order');
     }
 
-    const orderData = await orderResponse.json();
-    console.log('Order response:', orderData);
+    // --- Save to Supabase ---
+    const { error: insertError } = await supabase.from('payment_transactions').insert({
+      id: transactionId,
+      user_id: body.user_id || null,
+      email: body.email,
+      amount: body.amount,
+      status: 'pending',
+      pesapal_tracking_id: orderData.order_tracking_id,
+      created_at: new Date().toISOString(),
+    });
 
-    // Update transaction with Pesapal reference
-    const { error: updateError } = await supabaseClient
-      .from('payment_transactions')
-      .update({
-        payment_reference: orderData.order_tracking_id,
-        payment_provider: 'pesapal',
-        metadata: {
-          ...paymentRequest,
-          pesapal_merchant_reference: orderData.merchant_reference,
-          pesapal_order_tracking_id: orderData.order_tracking_id,
-        },
-      })
-      .eq('id', paymentRequest.notification_id);
-
-    if (updateError) {
-      console.error('Failed to update transaction:', updateError);
+    if (insertError) {
+      console.error('Supabase insert error:', insertError);
+      throw new Error('Database insert failed');
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         redirect_url: orderData.redirect_url,
-        order_tracking_id: orderData.order_tracking_id,
-        merchant_reference: orderData.merchant_reference,
+        tracking_id: orderData.order_tracking_id,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
-    console.error('Error initiating payment:', error);
-    
-    // Map error to user-friendly message
-    let errorMessage = 'Payment initiation failed';
-    if (error instanceof Error) {
-      if (error.message.includes('Invalid Pesapal credentials')) {
-        errorMessage = 'Payment system configuration error. Please contact support.';
-      } else if (error.message.includes('Invalid login')) {
-        errorMessage = 'Authentication error. Please log in again.';
-      } else if (error.message.includes('Failed to submit order')) {
-        errorMessage = 'Payment gateway error. Please try again.';
-      }
-    }
-    
+
+  } catch (err) {
+    console.error('Error:', err);
     return new Response(
       JSON.stringify({
         success: false,
-        error: errorMessage,
+        error: err.message || 'Something went wrong',
       }),
-      {
-        status: 200, // Return 200 to prevent browser errors
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
