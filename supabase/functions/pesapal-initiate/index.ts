@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const transactionId = crypto.randomUUID();
     const callbackUrl =
       body.callback_url ||
-      `${Deno.env.get('SUPABASE_URL')}/functions/v1/pesapal-callback`;
+      `https://bak55talent.co.ke/pesapal/callback`;
 
     const orderPayload = {
       id: transactionId,
