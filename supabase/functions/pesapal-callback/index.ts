@@ -135,12 +135,12 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error("Pesapal Callback Error:", err);
     return new Response(
       JSON.stringify({
         success: false,
-        error: err.message || "Unexpected error occurred",
+        error: err?.message || "Unexpected error occurred",
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
