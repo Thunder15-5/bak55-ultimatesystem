@@ -78,13 +78,35 @@ Deno.serve(async (req) => {
     console.log("Tracking ID:", trackingId);
 
     // --- 3️⃣ Update Supabase transaction record ---
-    const { data: txRecord, error: fetchError } = await supabase
+    // Try to find by order_tracking_id in metadata first, then by payment_reference
+    let txRecord: any = null;
+    let fetchError: any = null;
+    
+    // First attempt: search by order_tracking_id in metadata
+    const { data: metadataSearch, error: metadataError } = await supabase
       .from("payment_transactions")
-      .select("id, user_id, amount, status, metadata")
-      .eq("payment_reference", trackingId)
+      .select("id, user_id, amount, status, metadata, payment_reference")
+      .contains("metadata", { order_tracking_id: trackingId })
       .single();
+    
+    if (metadataSearch) {
+      txRecord = metadataSearch;
+    } else {
+      // Second attempt: search by payment_reference column
+      const { data: refSearch, error: refError } = await supabase
+        .from("payment_transactions")
+        .select("id, user_id, amount, status, metadata, payment_reference")
+        .eq("payment_reference", trackingId)
+        .single();
+      
+      if (refSearch) {
+        txRecord = refSearch;
+      } else {
+        fetchError = refError || metadataError;
+      }
+    }
 
-    if (fetchError) {
+    if (fetchError || !txRecord) {
       console.error("Fetch transaction error:", fetchError);
       throw new Error("Transaction not found in database.");
     }
@@ -94,7 +116,7 @@ Deno.serve(async (req) => {
     // Map status to internal format
     let internalStatus = "pending";
     if (paymentStatus?.toLowerCase() === "completed") {
-      internalStatus = "completed";
+      internalStatus = "success"; // Changed from "completed" to match other parts
     } else if (paymentStatus?.toLowerCase() === "failed") {
       internalStatus = "failed";
     }
@@ -106,14 +128,14 @@ Deno.serve(async (req) => {
         status: internalStatus,
         updated_at: new Date().toISOString(),
         metadata: {
-          ...txRecord.metadata,
+          ...(txRecord.metadata || {}),
           pesapal_payment_method: statusData.payment_method,
           pesapal_status_code: statusData.payment_status_code,
           pesapal_confirmation_code: statusData.confirmation_code,
           pesapal_callback_at: new Date().toISOString(),
         },
       })
-      .eq("payment_reference", trackingId);
+      .eq("id", txRecord.id); // Use ID instead of payment_reference
 
     if (updateError) {
       console.error("Failed to update payment record:", updateError);
@@ -124,10 +146,10 @@ Deno.serve(async (req) => {
 
     // --- 5️⃣ If payment successful, credit BAKCoins ---
     if (paymentStatus?.toLowerCase() === "completed") {
-      // Calculate BAKCoins: Use metadata.bak_amount if available, otherwise convert from KES
-      // Conversion rate: 20 KES = 1 BAKCoin
-      const bakAmount = txRecord.metadata?.bak_amount || (parseFloat(amount) / 20);
-      const coinsToAdd = Math.floor(bakAmount);
+      // Get metadata safely
+      const metadata = txRecord.metadata as any;
+      const bakAmount = metadata?.bak_amount || (parseFloat(amount) / 20);
+      const coinsToAdd = bakAmount; // Don't floor, keep decimal precision
 
       console.log(`Calculated BAKCoins to credit: ${coinsToAdd} (from ${amount} KES)`);
 
@@ -137,16 +159,55 @@ Deno.serve(async (req) => {
         .eq("user_id", txRecord.user_id)
         .single();
 
-      if (walletError) {
+      if (walletError || !wallet) {
         console.error("Wallet fetch error:", walletError);
-        throw new Error("User wallet not found.");
+        // Create wallet if it doesn't exist
+        const { data: newWallet, error: createError } = await supabase
+          .from("wallets")
+          .insert({ user_id: txRecord.user_id, balance: coinsToAdd.toString() })
+          .select("id, balance")
+          .single();
+        
+        if (createError) {
+          throw new Error("Failed to create wallet.");
+        }
+        
+        console.log(`✅ Wallet created with ${coinsToAdd} BAKCoins`);
+        
+        // Create transaction record
+        await supabase.from("transactions").insert({
+          wallet_id: newWallet.id,
+          amount: coinsToAdd.toString(),
+          type: "earning",
+          description: `Purchased ${coinsToAdd.toFixed(2)} BAKCoins via Pesapal`,
+          reference_id: txRecord.id,
+          metadata: {
+            payment_method: "pesapal",
+            order_tracking_id: trackingId,
+            amount_paid_ksh: amount,
+            pesapal_status: paymentStatus,
+            pesapal_confirmation_code: statusData.confirmation_code,
+          },
+        });
+        
+        console.log(`🎉 Successfully credited ${coinsToAdd} BAKCoins to user ${txRecord.user_id}`);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            status: paymentStatus,
+            order_tracking_id: trackingId,
+            message: "Payment processed successfully",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
-      const newBalance = (parseFloat(wallet?.balance) || 0) + coinsToAdd;
+      const newBalance = (parseFloat(wallet.balance.toString()) || 0) + coinsToAdd;
 
       const { error: walletUpdateError } = await supabase
         .from("wallets")
-        .update({ balance: newBalance, updated_at: new Date().toISOString() })
+        .update({ balance: newBalance.toString(), updated_at: new Date().toISOString() })
         .eq("user_id", txRecord.user_id);
 
       if (walletUpdateError) {
@@ -159,9 +220,9 @@ Deno.serve(async (req) => {
       // --- 6️⃣ Create transaction record for audit trail ---
       const { error: txError } = await supabase.from("transactions").insert({
         wallet_id: wallet.id,
-        amount: coinsToAdd,
+        amount: coinsToAdd.toString(),
         type: "earning",
-        description: `Purchased ${coinsToAdd} BAKCoins via Pesapal`,
+        description: `Purchased ${coinsToAdd.toFixed(2)} BAKCoins via Pesapal`,
         reference_id: txRecord.id,
         metadata: {
           payment_method: "pesapal",
