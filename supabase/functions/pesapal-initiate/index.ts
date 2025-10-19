@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     console.log('Payment initiation:', body);
 
     if (!body.amount || !body.email || !body.user_id) {
-      throw new Error('Missing required fields: amount, email, or user_id');
+      throw new Error('Missing required fields: amount, email, and user_id');
     }
 
     // --- Pesapal Auth ---
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       payment_provider: 'pesapal',
       metadata: {
         order_tracking_id: orderData.order_tracking_id,
-        bak_amount: parseFloat(body.amount) / 20,
+        bak_amount: body.amount / 20,
         type: 'coin_purchase',
       },
       created_at: new Date().toISOString(),

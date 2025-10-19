@@ -147,7 +147,8 @@ export default function CashReserve() {
 
       if (fetchError) throw fetchError;
 
-      const bakAmount = payment.metadata?.bak_amount || payment.amount / 20;
+      const metadata = payment.metadata as any;
+      const bakAmount = metadata?.bak_amount || payment.amount / 20;
 
       // Update payment status
       const { error: updateError } = await supabase
@@ -167,7 +168,7 @@ export default function CashReserve() {
       if (!wallet) {
         const { data: newWallet, error: createError } = await supabase
           .from("wallets")
-          .insert({ user_id: payment.user_id, balance: bakAmount })
+          .insert({ user_id: payment.user_id, balance: bakAmount.toString() })
           .select()
           .single();
         if (createError) throw createError;
@@ -175,14 +176,14 @@ export default function CashReserve() {
       } else {
         await supabase
           .from("wallets")
-          .update({ balance: parseFloat(wallet.balance) + bakAmount })
+          .update({ balance: (parseFloat(wallet.balance.toString()) + bakAmount).toString() })
           .eq("id", wallet.id);
       }
 
       // Create transaction record
       await supabase.from("transactions").insert({
         wallet_id: wallet.id,
-        amount: bakAmount,
+        amount: bakAmount.toString(),
         type: "earning",
         description: `Purchased ${bakAmount} BAKCoins (Admin Approved)`,
         reference_id: transactionId,
@@ -314,39 +315,43 @@ export default function CashReserve() {
                   <p className="text-center text-muted-foreground py-8">No pending payments</p>
                 ) : (
                   <div className="space-y-4">
-                    {pendingPayments.map((payment) => (
-                      <Card key={payment.id} className="border-2">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <p className="font-medium">
-                                {payment.amount} {payment.currency} → {(payment.metadata?.bak_amount || payment.amount / 20).toFixed(2)} BAK
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Email: {payment.email}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Reference: {payment.reference}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Created: {new Date(payment.created_at).toLocaleString()}
-                              </p>
+                    {pendingPayments.map((payment) => {
+                      const metadata = payment.metadata as any;
+                      const bakAmount = metadata?.bak_amount || payment.amount / 20;
+                      return (
+                        <Card key={payment.id} className="border-2">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="font-medium">
+                                  {payment.amount} {payment.currency} → {bakAmount.toFixed(2)} BAK
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Email: {payment.email}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Reference: {payment.reference}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Created: {new Date(payment.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="destructive" 
+                                  onClick={() => handleRejectPayment(payment.id)}
+                                >
+                                  Reject
+                                </Button>
+                                <Button onClick={() => handleApprovePayment(payment.id)}>
+                                  Approve
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="destructive" 
-                                onClick={() => handleRejectPayment(payment.id)}
-                              >
-                                Reject
-                              </Button>
-                              <Button onClick={() => handleApprovePayment(payment.id)}>
-                                Approve
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
