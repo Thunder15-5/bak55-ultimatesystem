@@ -137,13 +137,29 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Profile Settings
+      
+      {/* Hero Section */}
+      <section className="pt-24 pb-12 px-4">
+        <div className="container mx-auto max-w-4xl text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Avatar className="w-5 h-5">
+              <AvatarImage src={profile.avatarUrl} />
+              <AvatarFallback className="text-xs">{profile.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">Profile Settings</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            Your <span className="text-gradient">Profile</span>
           </h1>
-
-          <Card className="border-primary/20 mb-6">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Manage your account settings and preferences
+          </p>
+        </div>
+      </section>
+      
+      <main className="container mx-auto px-4 pb-12">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
               <CardDescription>Upload your avatar</CardDescription>
@@ -188,7 +204,7 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20 mb-6">
+          <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
               <CardDescription>Your public profile details</CardDescription>
@@ -239,7 +255,7 @@ export default function Profile() {
           </Card>
 
           {userRole === "artist" && (
-            <Card className="border-primary/20 mb-6">
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Artist Profile</CardTitle>
                 <CardDescription>Your artist-specific information</CardDescription>
@@ -275,6 +291,7 @@ export default function Profile() {
 
           <Button
             variant="hero"
+            size="lg"
             className="w-full"
             onClick={handleSave}
             disabled={loading}

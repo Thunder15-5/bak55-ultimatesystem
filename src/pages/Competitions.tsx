@@ -28,11 +28,18 @@ const Competitions = () => {
             Regular competitions with real cash prizes. Fair hybrid judging combines fan votes with expert AI analysis.
           </p>
           
-          <Link to="/join">
-            <Button variant="hero" size="xl">
-              Enter a Competition
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/competitions/active">
+              <Button variant="hero" size="xl">
+                View Active Competitions
+              </Button>
+            </Link>
+            <Link to="/join">
+              <Button variant="outline" size="xl">
+                Join as Artist
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

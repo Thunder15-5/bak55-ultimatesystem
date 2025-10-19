@@ -192,15 +192,29 @@ export default function UploadTrack() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto">
+      
+      {/* Hero Section */}
+      <section className="pt-24 pb-12 px-4">
+        <div className="container mx-auto max-w-4xl text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Music className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Upload Track</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            Share Your <span className="text-gradient">Music</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Upload your track and reach thousands of listeners across the platform
+          </p>
+        </div>
+      </section>
+      
+      <div className="container mx-auto px-4 pb-12">
+        <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur-sm border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-6 w-6" />
-              Upload New Track
-            </CardTitle>
+            <CardTitle className="text-2xl">Track Details</CardTitle>
             <CardDescription>
-              Share your music with the world
+              Fill in the information about your music
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -318,7 +332,7 @@ export default function UploadTrack() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={uploading}>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={uploading}>
                 {uploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

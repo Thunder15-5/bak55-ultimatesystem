@@ -227,28 +227,40 @@ export default function CompetitionDetails() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <Link to="/competitions/active">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Competitions
-          </Button>
-        </Link>
-
+      
+      {/* Hero Section */}
+      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
         {competition.cover_image && (
-          <div className="w-full h-64 md:h-96 rounded-lg overflow-hidden mb-8">
-            <img 
-              src={competition.cover_image} 
-              alt={competition.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <>
+            <div className="absolute inset-0 z-0">
+              <img 
+                src={competition.cover_image} 
+                alt={competition.title}
+                className="w-full h-full object-cover blur-3xl opacity-20"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background z-0" />
+          </>
         )}
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
+          <Link to="/competitions/active">
+            <Button variant="ghost" className="mb-6 hover:bg-primary/10">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Competitions
+            </Button>
+          </Link>
+        </div>
+      </section>
+      
+      <div className="container mx-auto px-4 pb-12 -mt-8 relative z-10">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2">
-            <h1 className="text-4xl font-bold mb-4">{competition.title}</h1>
-            <p className="text-lg text-muted-foreground mb-6">{competition.description}</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
+              {competition.title}
+            </h1>
+            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">{competition.description}</p>
 
             {competition.genres && competition.genres.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
@@ -259,7 +271,7 @@ export default function CompetitionDetails() {
             )}
           </div>
 
-          <Card>
+          <Card className="bg-card/50 backdrop-blur-sm border-primary/20 sticky top-24">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
@@ -304,7 +316,7 @@ export default function CompetitionDetails() {
 
               {userRole === 'artist' && isSubmissionOpen() && (
                 <Link to="/upload">
-                  <Button className="w-full">
+                  <Button variant="hero" className="w-full">
                     <Music className="mr-2 h-4 w-4" />
                     Submit Track
                   </Button>
@@ -324,17 +336,17 @@ export default function CompetitionDetails() {
           <h2 className="text-2xl font-bold mb-6">Submissions ({submissions.length})</h2>
           
           {submissions.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Music className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg text-muted-foreground">No submissions yet</p>
-                <p className="text-sm text-muted-foreground mt-2">Be the first to submit your track!</p>
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+              <CardContent className="py-16 text-center">
+                <Music className="h-16 w-16 mx-auto mb-6 text-primary/50" />
+                <p className="text-xl font-semibold mb-2">No submissions yet</p>
+                <p className="text-muted-foreground">Be the first to submit your track!</p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {submissions.map((submission, index) => (
-                <Card key={submission.id} className="relative">
+                <Card key={submission.id} className="relative bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all group">
                   {index < 3 && submission.status === 'winner' && (
                     <div className="absolute top-2 right-2 z-10">
                       <Badge className="bg-yellow-500">
