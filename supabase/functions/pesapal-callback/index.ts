@@ -20,6 +20,10 @@ Deno.serve(async (req) => {
       new URL(req.url).searchParams
     );
 
+    console.log("=== Pesapal IPN Received ===");
+    console.log("OrderTrackingId:", OrderTrackingId);
+    console.log("OrderMerchantReference:", OrderMerchantReference);
+
     if (!OrderTrackingId) {
       throw new Error("Missing OrderTrackingId in query.");
     }
@@ -69,11 +73,15 @@ Deno.serve(async (req) => {
     const amount = statusData.amount;
     const trackingId = statusData.order_tracking_id;
 
+    console.log("Payment status from Pesapal:", paymentStatus);
+    console.log("Amount:", amount);
+    console.log("Tracking ID:", trackingId);
+
     // --- 3️⃣ Update Supabase transaction record ---
     const { data: txRecord, error: fetchError } = await supabase
       .from("payment_transactions")
-      .select("id, user_id, amount, status")
-      .eq("pesapal_tracking_id", trackingId)
+      .select("id, user_id, amount, status, metadata")
+      .eq("payment_reference", trackingId)
       .single();
 
     if (fetchError) {
@@ -81,28 +89,51 @@ Deno.serve(async (req) => {
       throw new Error("Transaction not found in database.");
     }
 
+    console.log("Transaction found:", txRecord.id);
+
+    // Map status to internal format
+    let internalStatus = "pending";
+    if (paymentStatus?.toLowerCase() === "completed") {
+      internalStatus = "completed";
+    } else if (paymentStatus?.toLowerCase() === "failed") {
+      internalStatus = "failed";
+    }
+
     // --- 4️⃣ Update transaction status ---
     const { error: updateError } = await supabase
       .from("payment_transactions")
       .update({
-        status: paymentStatus?.toLowerCase() || "unknown",
+        status: internalStatus,
         updated_at: new Date().toISOString(),
-        metadata: statusData,
+        metadata: {
+          ...txRecord.metadata,
+          pesapal_payment_method: statusData.payment_method,
+          pesapal_status_code: statusData.payment_status_code,
+          pesapal_confirmation_code: statusData.confirmation_code,
+          pesapal_callback_at: new Date().toISOString(),
+        },
       })
-      .eq("pesapal_tracking_id", trackingId);
+      .eq("payment_reference", trackingId);
 
     if (updateError) {
       console.error("Failed to update payment record:", updateError);
       throw updateError;
     }
 
-    // --- 5️⃣ If payment successful, credit BAKCoins or wallet ---
+    console.log("Transaction status updated to:", internalStatus);
+
+    // --- 5️⃣ If payment successful, credit BAKCoins ---
     if (paymentStatus?.toLowerCase() === "completed") {
-      const coinsToAdd = Math.floor(parseFloat(amount)); // 1 KES = 1 BAKCoin, adjust if needed
+      // Calculate BAKCoins: Use metadata.bak_amount if available, otherwise convert from KES
+      // Conversion rate: 20 KES = 1 BAKCoin
+      const bakAmount = txRecord.metadata?.bak_amount || (parseFloat(amount) / 20);
+      const coinsToAdd = Math.floor(bakAmount);
+
+      console.log(`Calculated BAKCoins to credit: ${coinsToAdd} (from ${amount} KES)`);
 
       const { data: wallet, error: walletError } = await supabase
         .from("wallets")
-        .select("balance")
+        .select("id, balance")
         .eq("user_id", txRecord.user_id)
         .single();
 
@@ -111,11 +142,11 @@ Deno.serve(async (req) => {
         throw new Error("User wallet not found.");
       }
 
-      const newBalance = (wallet?.balance || 0) + coinsToAdd;
+      const newBalance = (parseFloat(wallet?.balance) || 0) + coinsToAdd;
 
       const { error: walletUpdateError } = await supabase
         .from("wallets")
-        .update({ balance: newBalance })
+        .update({ balance: newBalance, updated_at: new Date().toISOString() })
         .eq("user_id", txRecord.user_id);
 
       if (walletUpdateError) {
@@ -123,7 +154,34 @@ Deno.serve(async (req) => {
         throw new Error("Failed to update wallet balance.");
       }
 
-      console.log(`Credited ${coinsToAdd} BAKCoins to user ${txRecord.user_id}`);
+      console.log(`✅ Wallet updated: ${wallet.balance} → ${newBalance} BAKCoins`);
+
+      // --- 6️⃣ Create transaction record for audit trail ---
+      const { error: txError } = await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        amount: coinsToAdd,
+        type: "earning",
+        description: `Purchased ${coinsToAdd} BAKCoins via Pesapal`,
+        reference_id: txRecord.id,
+        metadata: {
+          payment_method: "pesapal",
+          order_tracking_id: trackingId,
+          amount_paid_ksh: amount,
+          pesapal_status: paymentStatus,
+          pesapal_confirmation_code: statusData.confirmation_code,
+        },
+      });
+
+      if (txError) {
+        console.error("Failed to create transaction record:", txError);
+        // Don't throw - wallet is already updated, just log the error
+      } else {
+        console.log("✅ Transaction record created");
+      }
+
+      console.log(`🎉 Successfully credited ${coinsToAdd} BAKCoins to user ${txRecord.user_id}`);
+    } else {
+      console.log(`Payment not completed. Status: ${paymentStatus}`);
     }
 
     return new Response(

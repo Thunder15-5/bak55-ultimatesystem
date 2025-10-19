@@ -125,9 +125,10 @@ Deno.serve(async (req) => {
     // Credit wallet if successful
     if (transactionStatus === 'success') {
       const userId = transaction.user_id;
-      const bakAmount = transaction.metadata?.bak_amount || parseFloat(transaction.amount) || 0;
+      // Calculate BAKCoins: Use metadata.bak_amount if available, otherwise convert from KES (20 KES = 1 BAK)
+      const bakAmount = transaction.metadata?.bak_amount || (parseFloat(transaction.amount) / 20) || 0;
 
-      console.log(`Crediting ${bakAmount} BAKCoins to user ${userId}`);
+      console.log(`Crediting ${bakAmount} BAKCoins to user ${userId} (from ${transaction.amount} KES)`);
 
       // Get or create wallet
       let { data: wallet } = await supabase
