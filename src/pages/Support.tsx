@@ -7,22 +7,49 @@ import { Textarea } from "@/components/ui/textarea";
 import { HelpCircle, Mail, MessageSquare, Book } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Support = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) {
       toast.error("Please fill in all fields");
       return;
     }
-    toast.success("Message sent! We'll get back to you within 24 hours.");
-    setName("");
-    setEmail("");
-    setMessage("");
+
+    setIsSubmitting(true);
+    try {
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .insert({ name, email, message });
+
+      if (dbError) throw dbError;
+
+      // Send notification email to admin
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'support@bak55talent.co.ke',
+          subject: '🎫 New Support Ticket',
+          template: 'contact',
+          data: { name, email, message, type: 'Support Form' }
+        }
+      });
+
+      toast.success("Message sent! We'll get back to you within 24 hours.");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (error: any) {
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -118,8 +145,8 @@ const Support = () => {
                   />
                 </div>
 
-                <Button type="submit" variant="hero" size="lg" className="w-full">
-                  Send Message
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </div>

@@ -14,7 +14,10 @@ export class AppError extends Error {
 }
 
 export const handleSupabaseError = (error: any): string => {
-  console.error('Supabase error:', error);
+  // Log only in development
+  if (import.meta.env.DEV) {
+    console.error('Supabase error:', error);
+  }
   
   // Map common Supabase errors to user-friendly messages
   if (error?.message?.includes('JWT')) {
@@ -55,7 +58,9 @@ export const withErrorHandling = async <T>(
   try {
     return await operation();
   } catch (error: any) {
-    console.error(`Error in ${context}:`, error);
+    if (import.meta.env.DEV) {
+      console.error(`Error in ${context}:`, error);
+    }
     throw new AppError(
       handleSupabaseError(error),
       error?.code || 'UNKNOWN_ERROR'

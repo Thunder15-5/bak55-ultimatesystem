@@ -25,28 +25,42 @@ export const CTA = () => {
 
     setIsSubmitting(true);
     try {
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('early_access_signups')
+        .insert({ email, source: 'homepage_cta' });
+
+      if (dbError) {
+        if (dbError.code === '23505') {
+          toast.info("You're already on the list!", {
+            description: "We'll notify you when we launch."
+          });
+          setEmail("");
+          return;
+        }
+        throw dbError;
+      }
+
       // Send notification email to admin
-      const { error } = await supabase.functions.invoke('send-notification-email', {
+      await supabase.functions.invoke('send-email', {
         body: {
           to: 'info@bak55talent.co.ke',
           subject: '🎯 New Early Access Signup',
-          html: `
-            <h2>New Early Access Request</h2>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-            <p><strong>Form:</strong> Get Early Access (Homepage CTA)</p>
-          `
+          template: 'contact',
+          data: {
+            name: 'Early Access User',
+            email,
+            message: `New early access signup from homepage CTA at ${new Date().toLocaleString()}`,
+            type: 'Early Access'
+          }
         }
       });
-
-      if (error) throw error;
 
       toast.success("Thanks! We'll be in touch soon.", {
         description: "Your early access request has been received."
       });
       setEmail("");
     } catch (error: any) {
-      console.error('Error submitting early access:', error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
