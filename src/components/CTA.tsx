@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,39 +54,40 @@ export const CTA = () => {
   };
 
   return (
-    <section className="py-12 md:py-24 px-4 relative overflow-hidden">
+    <section className="py-16 md:py-28 px-4 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/4 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-secondary/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto max-w-5xl relative z-10">
-        <div className="rounded-2xl md:rounded-3xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-primary/20 p-6 sm:p-8 md:p-12 lg:p-16 shadow-2xl">
-          <div className="text-center space-y-6 md:space-y-8">
+        <div className="rounded-3xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-primary/20 p-8 sm:p-12 md:p-16 shadow-2xl animate-fade-in-up">
+          <div className="text-center space-y-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-              <span className="text-xs sm:text-sm font-semibold text-primary">Join the 100 Artist Alliance</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-sm font-semibold text-primary">Join the 100 Artist Alliance</span>
             </div>
 
             {/* Headline */}
-            <div className="space-y-3 md:space-y-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold leading-tight">
+            <div className="space-y-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight">
                 Be Among the First
                 <br />
                 <span className="text-gradient">Shape African Music's Future</span>
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Join our exclusive founding artist program. Limited to 100 artists in Kenya for our MVP launch.
               </p>
             </div>
 
             {/* Benefits */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 max-w-3xl mx-auto text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
               {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-start gap-2 sm:gap-3">
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">{benefit}</span>
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">{benefit}</span>
                 </div>
               ))}
             </div>
@@ -99,10 +100,10 @@ export const CTA = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-11 md:h-12 bg-background/50 border-primary/20 focus:border-primary text-sm"
+                  className="flex-1 h-12 bg-background/50 border-primary/20 focus:border-primary"
                   required
                 />
-                <Button type="submit" variant="hero" size="lg" className="group h-11 md:h-12 whitespace-nowrap touch-manipulation" disabled={isSubmitting}>
+                <Button type="submit" variant="hero" size="lg" className="group h-12 whitespace-nowrap" disabled={isSubmitting}>
                   {isSubmitting ? "Sending..." : "Get Early Access"}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
