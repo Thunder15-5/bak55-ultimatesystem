@@ -313,53 +313,83 @@ export default function TrackDetails() {
   return (
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <Button variant="ghost" onClick={() => navigate("/catalog")} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Catalog
-        </Button>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Cover Image */}
-          <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-            {track.cover_image ? (
+      
+      {/* Hero Section with Cover Art */}
+      <div className="relative min-h-[60vh] flex items-end">
+        {/* Blurred Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          {track.cover_image ? (
+            <>
               <img
                 src={track.cover_image}
                 alt={track.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover blur-3xl scale-110 opacity-30"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Music className="h-32 w-32 text-muted-foreground" />
-              </div>
-            )}
-          </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-radial from-primary/10 via-background to-background" />
+          )}
+        </div>
+        
+        {/* Content */}
+        <div className="relative container mx-auto px-4 py-8 pt-24">
+          <Button variant="ghost" onClick={() => navigate("/catalog")} className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Catalog
+          </Button>
 
-          {/* Track Info */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">{track.title}</h1>
-              <p className="text-xl text-muted-foreground">
-                by <Link to={`/artist/${track.artist_id}`} className="text-primary hover:underline">
-                  {track.profiles.username}
-                </Link>
-              </p>
-              {track.genre && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Genre: {track.genre}
-                </p>
+          <div className="grid md:grid-cols-2 gap-8 items-end">
+            {/* Cover Image */}
+            <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl border border-primary/20">
+              {track.cover_image ? (
+                <img
+                  src={track.cover_image}
+                  alt={track.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
+                  <Music className="h-32 w-32 text-muted-foreground/50" />
+                </div>
               )}
-              <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-                <p>{track.plays} plays</p>
-                <p>• {likeCount} {likeCount === 1 ? 'like' : 'likes'}</p>
-              </div>
             </div>
 
-          <div className="flex gap-4 flex-wrap">
-            <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1">
-              <Play className="mr-2 h-5 w-5" />
-              Play Track
-            </Button>
+            {/* Track Info */}
+            <div className="space-y-6 pb-4">
+              <div className="space-y-3">
+                <h1 className="text-4xl md:text-5xl font-heading font-bold leading-tight animate-fade-in">
+                  {track.title}
+                </h1>
+                <p className="text-xl text-muted-foreground animate-fade-in">
+                  by <Link to={`/artist/${track.artist_id}`} className="text-primary hover:text-primary-glow transition-colors font-medium">
+                    {track.profiles.username}
+                  </Link>
+                </p>
+                {track.genre && (
+                  <div className="inline-block">
+                    <span className="px-4 py-2 rounded-full bg-primary/20 text-primary text-sm font-medium">
+                      {track.genre}
+                    </span>
+                  </div>
+                )}
+                <div className="flex gap-6 text-sm text-muted-foreground pt-2">
+                  <div className="flex items-center gap-2">
+                    <Play className="h-4 w-4" />
+                    <span className="font-medium">{track.plays} plays</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-4 w-4" />
+                    <span className="font-medium">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>
+                  </div>
+                </div>
+               </div>
+
+              <div className="flex gap-3 flex-wrap">
+                <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1 h-14 text-lg">
+                  <Play className="mr-2 h-5 w-5 fill-current" />
+                  Play Track
+                </Button>
 
             {user && (
               <Button 
@@ -455,15 +485,15 @@ export default function TrackDetails() {
                       )}
                     </div>
                   </DialogContent>
-                </Dialog>
-              </>
-            )}
+              </Dialog>
+            </>
+          )}
 
-            {/* Social Sharing */}
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={async () => {
+          {/* Social Sharing */}
+          <Button 
+            size="lg" 
+            variant="outline"
+            onClick={async () => {
                 const url = window.location.href;
                 const text = `Check out "${track.title}" by ${track.profiles.username} on BAK55!`;
                 
@@ -489,12 +519,13 @@ export default function TrackDetails() {
                 }
               }}
             >
-              <Share2 className="mr-2 h-5 w-5" />
-              Share
-            </Button>
-          </div>
-          </div>
+            <Share2 className="mr-2 h-5 w-5" />
+            Share
+          </Button>
         </div>
+      </div>
+    </div>
+  </div>
 
         {/* Comments Section */}
         <div className="mt-8">

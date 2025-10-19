@@ -49,15 +49,18 @@ const AITools = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Hero */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-6xl text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+      {/* Enhanced Hero */}
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-background to-background" />
+        
+        <div className="container mx-auto max-w-6xl text-center space-y-8 relative">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 animate-fade-in">
             <Brain className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">AI-Powered Infrastructure</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+          <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight animate-fade-in">
             Professional Tools
             <br />
             <span className="text-gradient">Powered by AI</span>
@@ -80,14 +83,20 @@ const AITools = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tools.map((tool, index) => (
-              <Card key={index} className="group p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all hover:scale-105">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <tool.icon className="w-7 h-7 text-white" />
+              <Card 
+                key={index} 
+                className="group p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 hover:shadow-elegant transition-all hover:scale-[1.02] cursor-pointer"
+              >
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <tool.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">{tool.title}</h3>
+                <h3 className="text-2xl font-heading font-bold mb-3 group-hover:text-primary transition-colors">{tool.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   {tool.description}
                 </p>
+                <Button variant="ghost" className="mt-4 group-hover:bg-primary/10">
+                  Learn More →
+                </Button>
               </Card>
             ))}
           </div>

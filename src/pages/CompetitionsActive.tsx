@@ -80,21 +80,37 @@ export default function CompetitionsActive() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Active Competitions</h1>
-            <p className="text-muted-foreground">Submit your tracks and compete for prizes</p>
+      
+      {/* Hero Section */}
+      <div className="relative bg-gradient-radial from-primary/10 via-background to-background border-b border-primary/10">
+        <div className="container mx-auto px-4 py-12 pt-32">
+          <div className="max-w-4xl mx-auto text-center space-y-4 mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 animate-fade-in">
+              <Trophy className="w-4 h-4 text-secondary" />
+              <span className="text-sm font-medium">Active Now</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold leading-tight animate-fade-in">
+              Active <span className="text-gradient-secondary">Competitions</span>
+            </h1>
+            <p className="text-lg text-muted-foreground animate-fade-in">
+              Submit your tracks and compete for prizes
+            </p>
           </div>
-          {(userRole === 'brand' || userRole === 'admin') && (
-            <Link to="/admin/create-competition">
-              <Button className="w-full sm:w-auto">
-                <Trophy className="mr-2 h-4 w-4" />
-                Create Competition
-              </Button>
-            </Link>
-          )}
+          
+          <div className="flex justify-center">
+            {(userRole === 'brand' || userRole === 'admin') && (
+              <Link to="/admin/create-competition">
+                <Button variant="hero" size="lg">
+                  <Trophy className="mr-2 h-5 w-5" />
+                  Create Competition
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8">
 
         {competitions.length === 0 ? (
           <Card>
@@ -107,20 +123,23 @@ export default function CompetitionsActive() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {competitions.map((competition) => (
-              <Card key={competition.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] touch-manipulation">
+              <Card key={competition.id} className="overflow-hidden hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] touch-manipulation border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm group">
                 {competition.cover_image && (
-                  <div className="h-40 sm:h-48 overflow-hidden">
+                  <div className="h-40 sm:h-48 overflow-hidden relative">
                     <img 
                       src={competition.cover_image} 
                       alt={competition.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
                 )}
                 <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-2 text-lg sm:text-xl">{competition.title}</CardTitle>
-                    <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                    <CardTitle className="line-clamp-2 text-lg sm:text-xl font-heading group-hover:text-primary transition-colors">
+                      {competition.title}
+                    </CardTitle>
+                    <Badge className="text-xs whitespace-nowrap bg-gradient-to-r from-secondary to-secondary-glow border-0">
                       <Trophy className="h-3 w-3 mr-1" />
                       {competition.prize_amount} BAK
                     </Badge>

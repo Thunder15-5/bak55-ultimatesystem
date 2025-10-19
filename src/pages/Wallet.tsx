@@ -235,21 +235,26 @@ export default function Wallet() {
           <p className="text-muted-foreground">Manage your BAKCoins</p>
         </div>
 
-        {/* Balance Card */}
-        <Card className="mb-8 border-primary/20">
+        {/* Enhanced Balance Card */}
+        <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-elegant">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
-              <WalletIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+            <CardTitle className="flex items-center gap-3 text-xl sm:text-2xl font-heading">
+              <div className="p-2 rounded-xl bg-primary/20">
+                <WalletIcon className="h-6 w-6 text-primary" />
+              </div>
               BAKCoins Balance
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl sm:text-5xl font-bold text-primary mb-4">
-              {balance.toFixed(2)} BAK
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="text-5xl sm:text-6xl font-bold text-gradient animate-fade-in">
+                {balance.toFixed(2)}
+              </div>
+              <div className="text-lg text-muted-foreground font-medium">BAKCoins</div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={() => navigate('/wallet/buy-coins')} variant="default" className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button onClick={() => navigate('/wallet/buy-coins')} variant="hero" size="lg" className="w-full sm:w-auto">
+                <Plus className="mr-2 h-5 w-5" />
                 Buy BAKCoins
               </Button>
               {userRole === "artist" && (
