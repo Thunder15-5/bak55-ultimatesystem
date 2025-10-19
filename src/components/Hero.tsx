@@ -37,10 +37,10 @@ export const Hero = () => {
 
             {/* Main Headline with staggered animation */}
             <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up break-words">
               Building Infrastructure for
             </h1>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up break-words" style={{ animationDelay: '0.1s' }}>
               <span className="text-gradient-primary">
                 African Music's Digital Future
               </span>
@@ -48,7 +48,7 @@ export const Hero = () => {
             </div>
 
             {/* Subheadline */}
-            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in-up break-words" style={{ animationDelay: '0.2s' }}>
               An AI-powered talent ecosystem transforming how African artists{" "}
               <span className="text-foreground font-semibold">monetize, grow,</span> and build{" "}
               <span className="text-foreground font-semibold">sustainable music careers</span> through streaming, competitions, and a creator-first economy.

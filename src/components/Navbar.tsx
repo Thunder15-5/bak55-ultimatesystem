@@ -8,15 +8,15 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-primary/20 shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-primary/20 shadow-lg overflow-x-hidden">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0">
             <img 
               src={logo} 
               alt="BAK55 Talent" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform"
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform flex-shrink-0"
             />
           </Link>
 
