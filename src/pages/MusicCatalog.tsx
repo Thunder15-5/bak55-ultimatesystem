@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Music, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
 
 interface Track {
@@ -30,6 +31,7 @@ interface Track {
 export default function MusicCatalog() {
   const navigate = useNavigate();
   const { userRole } = useAuth();
+  const { playTrack } = useMusicPlayer();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,13 +234,12 @@ export default function MusicCatalog() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredTracks.map((track) => (
+            {filteredTracks.map((track, index) => (
               <Card 
                 key={track.id} 
-                className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer hover:scale-[1.02] touch-manipulation border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm"
-                onClick={() => navigate(`/track/${track.id}`)}
+                className="group overflow-hidden hover:shadow-elegant transition-all duration-300 border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm"
               >
-                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5">
+                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 cursor-pointer" onClick={() => navigate(`/track/${track.id}`)}>
                   {track.cover_image ? (
                     <img 
                       src={track.cover_image} 
@@ -251,9 +252,17 @@ export default function MusicCatalog() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <div className="bg-primary/90 backdrop-blur-sm rounded-full p-4 scale-90 group-hover:scale-100 transition-transform">
-                      <Play className="text-white h-8 w-8 fill-white" />
-                    </div>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      className="h-16 w-16 rounded-full scale-90 group-hover:scale-100 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playTrack(track, filteredTracks.slice(index));
+                      }}
+                    >
+                      <Play className="h-8 w-8 fill-white ml-1" />
+                    </Button>
                   </div>
                 </div>
                 <CardHeader className="p-4">

@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { toast } from "sonner";
 import { 
   UserPlus, UserMinus, Music, Users, TrendingUp,
-  MapPin, Calendar, ExternalLink, Loader2, Play
+  MapPin, Calendar, ExternalLink, Loader2, Play, Plus
 } from "lucide-react";
-import { MusicPlayer } from "@/components/MusicPlayer";
 
 interface ArtistData {
   id: string;
@@ -34,6 +34,7 @@ interface ArtistData {
 interface Track {
   id: string;
   title: string;
+  artist_id: string;
   genre: string;
   audio_url: string;
   cover_image: string;
@@ -45,13 +46,13 @@ export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { playTrack, addToQueue } = useMusicPlayer();
   const [artist, setArtist] = useState<ArtistData | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [following, setFollowingLoading] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState<any | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -186,30 +187,48 @@ export default function ArtistProfile() {
     }
   };
 
-  const handleTrackPlay = (track: Track) => {
-    setCurrentTrack({
+  const handleTrackPlay = (track: Track, index: number) => {
+    const trackWithProfile = {
       id: track.id,
       title: track.title,
+      artist_id: track.artist_id,
       audio_url: track.audio_url,
       cover_image: track.cover_image,
+      genre: track.genre,
       profiles: {
         username: artist?.artist_profiles?.stage_name || artist?.username || '',
+        avatar_url: artist?.avatar_url,
       },
-    });
+    };
+    playTrack(trackWithProfile, tracks.slice(index).map(t => ({
+      id: t.id,
+      title: t.title,
+      artist_id: t.artist_id,
+      audio_url: t.audio_url,
+      cover_image: t.cover_image,
+      genre: t.genre,
+      profiles: {
+        username: artist?.artist_profiles?.stage_name || artist?.username || '',
+        avatar_url: artist?.avatar_url,
+      },
+    })));
+  };
 
-    // Record listening history
-    if (user) {
-      supabase.from("listening_history").insert({
-        user_id: user.id,
-        track_id: track.id,
-      });
-    }
-
-    // Increment play count
-    supabase
-      .from("tracks")
-      .update({ plays: (track.plays || 0) + 1 })
-      .eq("id", track.id);
+  const handleAddToQueue = (track: Track) => {
+    const trackWithProfile = {
+      id: track.id,
+      title: track.title,
+      artist_id: track.artist_id,
+      audio_url: track.audio_url,
+      cover_image: track.cover_image,
+      genre: track.genre,
+      profiles: {
+        username: artist?.artist_profiles?.stage_name || artist?.username || '',
+        avatar_url: artist?.avatar_url,
+      },
+    };
+    addToQueue(trackWithProfile);
+    toast.success("Added to queue");
   };
 
   if (loading) {
@@ -361,64 +380,69 @@ export default function ArtistProfile() {
                 No tracks uploaded yet
               </p>
             ) : (
-              <div className="space-y-4">
-                {tracks.map((track) => (
-                  <Card
+              <div className="space-y-2">
+                {tracks.map((track, index) => (
+                  <div
                     key={track.id}
-                    className="border-2 hover:border-primary transition-colors cursor-pointer"
-                    onClick={() => navigate(`/track/${track.id}`)}
+                    className="group flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTrackPlay(track);
-                          }}
-                        >
-                          <Play className="h-5 w-5" />
-                        </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleTrackPlay(track, index)}
+                      className="flex-shrink-0"
+                    >
+                      <Play className="h-5 w-5" />
+                    </Button>
 
-                        {track.cover_image && (
-                          <img
-                            src={track.cover_image}
-                            alt={track.title}
-                            className="h-16 w-16 rounded object-cover"
-                          />
-                        )}
-
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{track.title}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            {track.genre && <Badge variant="outline">{track.genre}</Badge>}
-                            <div className="flex items-center gap-1">
-                              <TrendingUp className="h-3 w-3" />
-                              {track.plays || 0} plays
-                            </div>
-                          </div>
+                    <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0 cursor-pointer" onClick={() => navigate(`/track/${track.id}`)}>
+                      {track.cover_image ? (
+                        <img
+                          src={track.cover_image}
+                          alt={track.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Music className="h-5 w-5 text-muted-foreground" />
                         </div>
+                      )}
+                    </div>
 
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(track.created_at).toLocaleDateString()}
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/track/${track.id}`)}>
+                      <h3 className="font-semibold truncate">{track.title}</h3>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        {track.genre && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
+                            {track.genre}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          {track.plays || 0}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground flex-shrink-0 hidden md:block">
+                      {new Date(track.created_at).toLocaleDateString()}
+                    </div>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleAddToQueue(track)}
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {currentTrack && (
-        <MusicPlayer
-          track={currentTrack}
-          onClose={() => setCurrentTrack(null)}
-        />
-      )}
     </div>
   );
 }
