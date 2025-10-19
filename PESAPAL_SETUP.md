@@ -1,5 +1,69 @@
 # Pesapal Integration Setup Guide
 
+## 🔴 CRITICAL ISSUE - PAYMENT BLOCKED
+
+**Problem:** Payment initiation is failing because `PESAPAL_NOTIFICATION_ID` is set to a URL instead of an IPN ID.
+
+**Current Value (WRONG):** `https://bak55talent.co.ke/pesapal/callback`  
+**Required Value:** An IPN ID (UUID) like `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+
+**Impact:** All payment attempts are failing. Users cannot buy BAKCoins.
+
+---
+
+## ⚡ IMMEDIATE FIX REQUIRED (30 minutes)
+
+### Step 1: Get Pesapal Access Token
+
+```bash
+curl --location 'https://pay.pesapal.com/v3/api/Auth/RequestToken' \
+--header 'Content-Type: application/json' \
+--data '{
+  "consumer_key": "YOUR_PESAPAL_CONSUMER_KEY",
+  "consumer_secret": "YOUR_PESAPAL_CONSUMER_SECRET"
+}'
+```
+
+**Save the `token` from the response.**
+
+### Step 2: Register IPN URL with Pesapal
+
+```bash
+curl --location 'https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN_FROM_STEP_1' \
+--header 'Content-Type: application/json' \
+--data '{
+  "url": "https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/pesapal-callback",
+  "ipn_notification_type": "POST"
+}'
+```
+
+**Response will look like:**
+```json
+{
+  "ipn_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "url": "https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/pesapal-callback",
+  "created_date": "2025-10-19T..."
+}
+```
+
+### Step 3: Update the Secret
+
+1. Copy the `ipn_id` from the response (NOT the url)
+2. Update your `PESAPAL_NOTIFICATION_ID` secret with this IPN ID
+3. The value should be just the UUID, like: `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+
+### Step 4: Test Payment
+
+1. Go to `/wallet` → Click "Buy BAKCoins"
+2. Enter amount (minimum 100 KSh)
+3. Click "Proceed to Payment"
+4. Should redirect to Pesapal payment page ✅
+5. Complete payment
+6. Should credit wallet automatically ✅
+
+---
+
 ## Current Status
 The Pesapal payment integration is fully implemented in code. However, to make it work in production, you need to complete the following setup steps with Pesapal.
 

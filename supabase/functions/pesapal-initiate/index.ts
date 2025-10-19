@@ -85,9 +85,16 @@ Deno.serve(async (req) => {
     });
 
     const orderData = await orderRes.json();
+    console.log('Pesapal response:', orderData);
+    
     if (!orderRes.ok) {
       console.error('Pesapal order failed:', orderData);
       throw new Error(orderData.message || 'Failed to create Pesapal order');
+    }
+
+    if (!orderData.redirect_url) {
+      console.error('No redirect_url in Pesapal response:', orderData);
+      throw new Error('Pesapal did not return a payment URL. Please check IPN configuration.');
     }
 
     // --- Save to Supabase ---
