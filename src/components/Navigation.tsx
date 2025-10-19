@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Menu, X, LogOut, User, Wallet, History, ListMusic } from "lucide-react";
+import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import logoImage from "@/assets/bak55-logo.png";
 
@@ -58,19 +58,20 @@ export function Navigation() {
                   Wallet
                 </Link>
                 <NotificationBell />
+                {userRole === "admin" && (
+                  <Link to="/admin">
+                    <Button variant="hero" size="sm" className="shadow-lg">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/profile">
                   <Button variant="ghost" size="sm">
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </Button>
                 </Link>
-                {userRole === "admin" && (
-                  <Link to="/admin">
-                    <Button variant="secondary" size="sm">
-                      Admin
-                    </Button>
-                  </Link>
-                )}
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
@@ -178,10 +179,11 @@ export function Navigation() {
                 {userRole === "admin" && (
                   <Link
                     to="/admin"
-                    className="block py-2 text-foreground hover:text-primary transition-colors"
+                    className="block py-3 px-4 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                     onClick={() => setIsOpen(false)}
                   >
-                    Admin
+                    <BarChart3 className="w-4 h-4 inline mr-2" />
+                    Admin Panel
                   </Link>
                 )}
                 <Button

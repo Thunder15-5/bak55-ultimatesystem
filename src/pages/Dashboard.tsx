@@ -150,6 +150,30 @@ export default function Dashboard() {
 
         <EmailVerificationBanner />
 
+        {/* Admin Panel CTA - Only visible to admins */}
+        {userRole === "admin" && (
+          <Card className="mb-8 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 border-primary/30 shadow-xl animate-fade-in-up">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-6 h-6 text-primary" />
+                    <h2 className="text-2xl font-bold">Admin Panel</h2>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Manage platform operations, users, competitions, and finances
+                  </p>
+                </div>
+                <Link to="/admin">
+                  <Button size="lg" variant="hero" className="shadow-lg w-full md:w-auto">
+                    Open Admin Panel
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           {statCards.map((stat, index) => (
