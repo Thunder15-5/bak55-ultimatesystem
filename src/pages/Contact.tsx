@@ -110,7 +110,7 @@ const Contact = () => {
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>General: info@bak55talent.co.ke</p>
                   <p>Support: support@bak55talent.co.ke</p>
-                  <p>Press: press@bak55taent.co.ke</p>
+                  <p>Press: press@bak55talent.co.ke</p>
                   <p>Investors: investor@bak55talent.co.ke</p>
                 </div>
               </Card>

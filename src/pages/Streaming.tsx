@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, Radio, Users, TrendingUp, Globe, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { StatsBar } from "@/components/StatsBar";
 
 const features = [
   {
@@ -65,6 +66,9 @@ const Streaming = () => {
           </div>
         </div>
       </section>
+
+      {/* Live Platform Stats */}
+      <StatsBar />
 
       {/* Features Grid */}
       <section className="py-12 md:py-20 px-4">
