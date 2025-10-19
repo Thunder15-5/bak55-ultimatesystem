@@ -19,8 +19,8 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
       </div>
 
-      {/* Animated gradient orbs */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      {/* Animated gradient orbs - hidden on mobile to prevent overlap */}
+      <div className="absolute inset-0 z-0 overflow-hidden hidden md:block">
         <div className="absolute top-1/4 -left-12 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 -right-12 w-96 h-96 bg-secondary/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" />
@@ -37,14 +37,14 @@ export const Hero = () => {
 
             {/* Main Headline with staggered animation */}
             <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up">
-                Building Infrastructure for
-              </h1>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <span className="text-gradient bg-gradient-hero">
-                  African Music's Digital Future
-                </span>
-              </h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up">
+              Building Infrastructure for
+            </h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <span className="text-gradient-primary">
+                African Music's Digital Future
+              </span>
+            </h1>
             </div>
 
             {/* Subheadline */}
