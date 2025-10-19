@@ -41,7 +41,7 @@ const sendEmailViaSMTP = async (
   type?: string
 ) => {
   const SMTP_HOST = Deno.env.get("SMTP_HOST");
-  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
   const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME");
   const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
 
@@ -62,14 +62,25 @@ const sendEmailViaSMTP = async (
   });
 
   const client = new SmtpClient();
+  let isConnected = false;
 
   try {
-    await client.connectTLS({
+    // Set a connection timeout
+    const connectPromise = client.connectTLS({
       hostname: SMTP_HOST,
       port: SMTP_PORT,
       username: SMTP_USERNAME,
       password: SMTP_PASSWORD,
     });
+
+    // Add 30-second timeout for connection
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('SMTP connection timeout after 30s')), 30000)
+    );
+
+    await Promise.race([connectPromise, timeoutPromise]);
+    isConnected = true;
+    console.log('SMTP connection established successfully');
 
     // Send to primary recipient
     await client.send({
@@ -106,14 +117,30 @@ const sendEmailViaSMTP = async (
       }
     }
 
-    await client.close();
+    if (isConnected) {
+      await client.close();
+    }
     
     console.log("Notification email sent successfully via SMTP");
     return { success: true };
   } catch (error) {
-    console.error("SMTP error:", error);
-    await client.close();
-    throw error;
+    console.error("SMTP error details:", {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      host: SMTP_HOST,
+      port: SMTP_PORT
+    });
+    
+    if (isConnected) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error("Error closing SMTP connection:", closeError);
+      }
+    }
+    
+    throw new Error(`Failed to send email via SMTP: ${error.message}. Please verify SMTP server is accessible and credentials are correct.`);
   }
 };
 
