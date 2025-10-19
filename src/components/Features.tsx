@@ -12,11 +12,11 @@ const features = [
     icon: streamingIcon,
     iconFallback: Music2,
     title: "Streaming Hub",
-    description: "Fair play tracking, transparent royalties, and direct fan engagement. Every stream counts, every artist gets paid fairly.",
+    description: "Track your music's performance with detailed analytics. Monitor plays, audience growth, and engagement metrics in real-time.",
     color: "from-primary to-primary-glow",
     gradient: "bg-gradient-to-br from-primary/10 to-primary-glow/5",
     link: "/streaming",
-    stats: "Fair Royalties",
+    stats: "Full Analytics",
   },
   {
     icon: competitionIcon,

@@ -227,40 +227,11 @@ export default function TrackDetails() {
       
       // Only count if played for at least 30 seconds
       if (playDuration >= 30000) {
-        // Increment play count
+        // Increment play count for analytics
         await supabase
           .from("tracks")
           .update({ plays: track.plays + 1 })
           .eq("id", track.id);
-
-        // Award streaming royalty to artist (0.01 BAK per play)
-        const royaltyAmount = 0.01;
-
-        // Get artist's wallet
-        const { data: walletData } = await supabase
-          .from("wallets")
-          .select("id, balance")
-          .eq("user_id", track.artist_id)
-          .single();
-
-        if (walletData) {
-          // Update wallet balance
-          await supabase
-            .from("wallets")
-            .update({ balance: walletData.balance + royaltyAmount })
-            .eq("id", walletData.id);
-
-          // Create transaction record
-          await supabase
-            .from("transactions")
-            .insert({
-              wallet_id: walletData.id,
-              amount: royaltyAmount,
-              type: "earning",
-              description: `Streaming royalty for "${track.title}"`,
-              reference_id: track.id,
-            });
-        }
 
         // Add to listening history
         if (user) {

@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/card";
 import { ArrowRight, Coins, DollarSign, Music, TrendingUp, Users, Zap, Sparkles } from "lucide-react";
 
 const earningStreams = [
-  { icon: Music, label: "Streaming Royalties", color: "text-primary" },
   { icon: TrendingUp, label: "Competition Prizes", color: "text-secondary" },
   { icon: Users, label: "Fan Tips", color: "text-accent" },
   { icon: Zap, label: "Platform Contributions", color: "text-primary" },

@@ -27,7 +27,7 @@ const steps = [
     icon: Wallet,
     step: "04",
     title: "Earn & Grow",
-    description: "Earn BAKCoins through streams, prizes, and tips. Cash out anytime via M-Pesa (15% platform fee, 10% for high earners).",
+    description: "Earn BAKCoins through competition prizes and fan tips. Cash out anytime via M-Pesa (15% platform fee, 10% for high earners).",
     color: "from-primary via-secondary to-accent",
   },
 ];

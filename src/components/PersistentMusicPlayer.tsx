@@ -81,18 +81,11 @@ export function PersistentMusicPlayer() {
               .single();
             
             if (data) {
+              // Update play count for analytics
               await supabase
                 .from("tracks")
                 .update({ plays: (data.plays || 0) + 1 })
                 .eq("id", currentTrack.id);
-              
-              // Distribute royalties
-              await supabase.functions.invoke('send-tip', {
-                body: {
-                  track_id: currentTrack.id,
-                  amount: 0.01,
-                },
-              });
             }
           } catch (error) {
             console.error(error);

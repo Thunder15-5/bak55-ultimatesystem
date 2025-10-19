@@ -119,7 +119,35 @@ export default function CompetitionDetails() {
       return;
     }
 
+    const VOTE_COST = 1; // 1 BAKCoin per vote
+
     try {
+      // Check wallet balance
+      const { data: wallet, error: walletError } = await supabase
+        .from("wallets")
+        .select("id, balance")
+        .eq("user_id", user.id)
+        .single();
+
+      if (walletError || !wallet) {
+        toast({
+          title: "Wallet Error",
+          description: "Unable to access your wallet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (wallet.balance < VOTE_COST) {
+        toast({
+          title: "Insufficient Balance",
+          description: `You need ${VOTE_COST} BAKCoin to vote. Current balance: ${wallet.balance.toFixed(2)} BAK`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Record vote
       const { error } = await supabase
         .from('votes')
         .insert({
@@ -140,9 +168,28 @@ export default function CompetitionDetails() {
         return;
       }
 
+      // Deduct vote cost from wallet
+      const { error: walletUpdateError } = await supabase
+        .from("wallets")
+        .update({ balance: wallet.balance - VOTE_COST })
+        .eq("id", wallet.id);
+
+      if (walletUpdateError) {
+        throw walletUpdateError;
+      }
+
+      // Create transaction record
+      await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        amount: -VOTE_COST,
+        type: "purchase",
+        description: `Vote in competition`,
+        reference_id: submissionId,
+      });
+
       toast({
         title: "Vote recorded!",
-        description: "Your vote has been counted",
+        description: `Your vote has been counted. ${VOTE_COST} BAK deducted.`,
       });
 
       setUserVotes(prev => new Set([...prev, submissionId]));

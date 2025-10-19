@@ -7,13 +7,6 @@ import { Link } from "react-router-dom";
 
 const earningMethods = [
   {
-    icon: Music,
-    title: "Streaming Royalties",
-    amount: "Variable",
-    description: "Earn BAKCoins every time someone streams your music. Fair rates calculated transparently.",
-    color: "from-primary to-primary-glow",
-  },
-  {
     icon: Trophy,
     title: "Competition Prizes",
     amount: "Up to KSh 50K+",
@@ -53,7 +46,7 @@ const HowToEarn = () => {
           </div>
 
           {/* Earning Methods */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {earningMethods.map((method, index) => (
               <Card key={index} className="p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${method.color} flex items-center justify-center mb-6`}>
@@ -118,7 +111,7 @@ const HowToEarn = () => {
               <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10 text-center">
                 <DollarSign className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Emerging Artist</h3>
-                <p className="text-muted-foreground text-sm mb-4">100 streams/day, 1 competition/month</p>
+                <p className="text-muted-foreground text-sm mb-4">1 competition/month, tips</p>
                 <div className="text-3xl font-bold text-gradient-primary">KSh 5-10K</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>
@@ -126,7 +119,7 @@ const HowToEarn = () => {
               <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10 text-center">
                 <DollarSign className="w-12 h-12 text-secondary mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Growing Artist</h3>
-                <p className="text-muted-foreground text-sm mb-4">1000 streams/day, active fan base</p>
+                <p className="text-muted-foreground text-sm mb-4">Active fan base, regular wins</p>
                 <div className="text-3xl font-bold text-gradient-secondary">KSh 30-50K</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>
@@ -134,7 +127,7 @@ const HowToEarn = () => {
               <Card className="p-8 bg-card/50 backdrop-blur-sm border-accent/10 text-center">
                 <DollarSign className="w-12 h-12 text-accent mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Established Artist</h3>
-                <p className="text-muted-foreground text-sm mb-4">10K+ streams/day, regular wins</p>
+                <p className="text-muted-foreground text-sm mb-4">Multiple competitions, large fanbase</p>
                 <div className="text-3xl font-bold text-accent">KSh 100K+</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>

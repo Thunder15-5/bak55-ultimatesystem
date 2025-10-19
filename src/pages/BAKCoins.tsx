@@ -43,17 +43,7 @@ const BAKCoinsPage = () => {
             How Artists <span className="text-gradient">Earn BAKCoins</span>
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Streaming Royalties</h3>
-              <p className="text-muted-foreground">
-                Earn BAKCoins every time someone streams your music. Fair rates that actually compensate artists for their work.
-              </p>
-            </Card>
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10 hover:border-secondary/30 transition-all">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center mb-4">
                 <Coins className="w-6 h-6 text-white" />
