@@ -143,8 +143,8 @@ const HowToEarn = () => {
 
           {/* CTA */}
           <div className="text-center pt-16">
-            <Link to="/join">
-              <Button variant="hero" size="xl">
+            <Link to="/join" className="inline-block w-full sm:w-auto max-w-md mx-auto">
+              <Button variant="hero" size="xl" className="w-full sm:w-auto">
                 Start Earning Today
               </Button>
             </Link>

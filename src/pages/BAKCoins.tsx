@@ -131,7 +131,7 @@ const BAKCoinsPage = () => {
       {/* Withdrawal Info */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Card className="p-12 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
+          <Card className="p-6 sm:p-12 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
             <div className="text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
                 <Shield className="w-4 h-4 text-primary" />
@@ -183,8 +183,8 @@ const BAKCoinsPage = () => {
                 </div>
               </div>
               
-              <Link to="/join">
-                <Button variant="hero" size="xl" className="mt-8">
+              <Link to="/join" className="inline-block w-full sm:w-auto">
+                <Button variant="hero" size="xl" className="mt-8 w-full sm:w-auto">
                   Start Earning BAKCoins
                 </Button>
               </Link>

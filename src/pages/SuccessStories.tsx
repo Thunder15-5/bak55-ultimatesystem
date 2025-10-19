@@ -77,14 +77,14 @@ const SuccessStories = () => {
               </div>
             </Card>
 
-            <Card className="p-12 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
+            <Card className="p-6 sm:p-12 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
               <div className="text-center space-y-6">
                 <h2 className="text-3xl font-bold">Your Success Story Starts Here</h2>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                   Join the movement to build a fairer music industry. Be part of the first wave of artists who prove that sustainable careers are possible without exploitation.
                 </p>
-                <Link to="/join">
-                  <Button variant="hero" size="xl">
+                <Link to="/join" className="inline-block w-full sm:w-auto">
+                  <Button variant="hero" size="xl" className="w-full sm:w-auto">
                     Become a Founding Artist
                   </Button>
                 </Link>

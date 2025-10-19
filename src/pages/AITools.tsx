@@ -70,8 +70,8 @@ const AITools = () => {
             End-to-end artificial intelligence integration that helps you create better, reach more fans, and make smarter career decisions.
           </p>
           
-          <Link to="/join">
-            <Button variant="hero" size="xl">
+          <Link to="/join" className="inline-block w-full sm:w-auto max-w-md mx-auto">
+            <Button variant="hero" size="xl" className="w-full sm:w-auto">
               Access AI Tools
             </Button>
           </Link>

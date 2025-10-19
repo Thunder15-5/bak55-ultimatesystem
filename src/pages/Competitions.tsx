@@ -29,13 +29,13 @@ const Competitions = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/competitions/active">
-              <Button variant="hero" size="xl">
+            <Link to="/competitions/active" className="inline-block w-full sm:w-auto">
+              <Button variant="hero" size="xl" className="w-full sm:w-auto">
                 View Active Competitions
               </Button>
             </Link>
-            <Link to="/join">
-              <Button variant="outline" size="xl">
+            <Link to="/join" className="inline-block w-full sm:w-auto">
+              <Button variant="outline" size="xl" className="w-full sm:w-auto">
                 Join as Artist
               </Button>
             </Link>

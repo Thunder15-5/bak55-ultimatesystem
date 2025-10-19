@@ -53,13 +53,13 @@ const Streaming = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/join">
-              <Button variant="hero" size="xl">
+            <Link to="/join" className="inline-block w-full sm:w-auto">
+              <Button variant="hero" size="xl" className="w-full sm:w-auto">
                 Start Streaming
               </Button>
             </Link>
-            <Link to="/about">
-              <Button variant="outline" size="xl">
+            <Link to="/about" className="inline-block w-full sm:w-auto">
+              <Button variant="outline" size="xl" className="w-full sm:w-auto">
                 Learn More
               </Button>
             </Link>
