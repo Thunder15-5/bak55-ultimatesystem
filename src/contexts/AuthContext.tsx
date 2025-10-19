@@ -43,14 +43,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user role immediately without setTimeout
+          // Fetch user roles and prefer admin if available
           supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", session.user.id)
-            .single()
-            .then(({ data: roleData }) => {
-              setUserRole(roleData?.role ?? null);
+            .then(({ data: roles }) => {
+              const role = roles?.some((r: any) => r.role === 'admin')
+                ? 'admin'
+                : roles?.[0]?.role ?? null;
+              setUserRole(role);
             });
         } else {
           setUserRole(null);
@@ -68,9 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from("user_roles")
           .select("role")
           .eq("user_id", session.user.id)
-          .single()
-          .then(({ data: roleData }) => {
-            setUserRole(roleData?.role ?? null);
+          .then(({ data: roles }) => {
+            const role = roles?.some((r: any) => r.role === 'admin')
+              ? 'admin'
+              : roles?.[0]?.role ?? null;
+            setUserRole(role);
             setLoading(false);
           });
       } else {
@@ -134,16 +138,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!error && data.user) {
-      // Check user role and redirect accordingly
-      const { data: roleData } = await supabase
+      // Check user roles and redirect accordingly
+      const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", data.user.id)
-        .single();
+        .eq("user_id", data.user.id);
+
+      const role = roles?.some((r: any) => r.role === 'admin') ? 'admin' : roles?.[0]?.role ?? null;
 
       toast.success("Logged in successfully!");
       
-      if (roleData?.role === "admin") {
+      if (role === "admin") {
         navigate("/admin");
       } else {
         navigate("/dashboard");
