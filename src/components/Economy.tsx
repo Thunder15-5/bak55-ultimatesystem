@@ -60,7 +60,7 @@ export const Economy = () => {
 
             <div className="pt-4 flex items-center gap-2 text-sm text-muted-foreground border-t border-primary/10">
               <DollarSign className="w-4 h-4" />
-              <span>Withdraw to cash with 15% processing fee · Volume discounts available</span>
+              <span>Withdraw to cash via M-Pesa · 15% platform fee (10% for top earners)</span>
             </div>
           </Card>
 

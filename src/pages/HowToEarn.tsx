@@ -96,8 +96,8 @@ const HowToEarn = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-accent">3</div>
-                  <div className="text-sm font-semibold">Processing Fee</div>
-                  <p className="text-xs text-muted-foreground">15% standard (volume discounts available)</p>
+                  <div className="text-sm font-semibold">Platform Processing Fee</div>
+                  <p className="text-xs text-muted-foreground">15% standard withdrawal fee (10% for high earners)</p>
                 </div>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-gradient-primary">4</div>

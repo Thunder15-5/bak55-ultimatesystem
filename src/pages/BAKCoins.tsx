@@ -133,24 +133,53 @@ const BAKCoinsPage = () => {
         <div className="container mx-auto max-w-4xl">
           <Card className="p-12 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
             <div className="text-center space-y-6">
-              <Shield className="w-16 h-16 text-primary mx-auto" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Platform Withdrawal Policy</span>
+              </div>
               <h2 className="text-3xl font-bold">Simple, Transparent Withdrawals</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Convert BAKCoins to cash through M-Pesa integration. 15% processing fee with volume-based discounts for high earners.
+                Our M-Pesa integration fees are designed to be fair and sustainable, supporting platform operations while keeping artist earnings high.
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-gradient-primary mb-2">15%</div>
-                  <div className="text-sm text-muted-foreground">Standard Fee</div>
+                  <div className="text-sm text-muted-foreground">Standard Withdrawal Fee</div>
+                  <div className="text-xs text-muted-foreground/70 mt-1">For all cash withdrawals</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-gradient-secondary mb-2">10%</div>
-                  <div className="text-sm text-muted-foreground">High Volume</div>
+                  <div className="text-sm text-muted-foreground">High Volume Discount</div>
+                  <div className="text-xs text-muted-foreground/70 mt-1">For verified artists earning 10K+ BAKCoins/month</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-accent mb-2">24hrs</div>
                   <div className="text-sm text-muted-foreground">Processing Time</div>
+                  <div className="text-xs text-muted-foreground/70 mt-1">M-Pesa transfer timeline</div>
+                </div>
+              </div>
+
+              {/* Industry Comparison */}
+              <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-primary/10 text-left">
+                <h3 className="text-sm font-semibold text-primary mb-3 text-center">Why These Fees?</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <p>Lower than traditional streaming platforms (30-50% revenue share)</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <p>Covers M-Pesa transaction costs and platform sustainability</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <p>High earners get better rates (10% vs standard 15%)</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <p>24-hour processing ensures reliable, fast payouts</p>
+                  </div>
                 </div>
               </div>
               
