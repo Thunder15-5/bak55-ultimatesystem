@@ -41,8 +41,28 @@ export const StatsBar = () => {
   }, []);
 
   return (
-    <section className="px-4 pb-8">
+    <section className="px-4 py-16 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      </div>
+      
       <div className="container mx-auto max-w-6xl">
+        {/* Section Header */}
+        <div className="text-center mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm font-semibold text-primary uppercase tracking-wide">
+              Live Platform Metrics
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold">
+            Our <span className="text-gradient">Growing Community</span>
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Real-time statistics from our platform. Join our founding artists today!
+          </p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
           {/* Tracks */}
           <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
@@ -94,6 +114,13 @@ export const StatsBar = () => {
               </div>
             </div>
           </Card>
+        </div>
+        
+        {/* Early Access Message */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-muted-foreground">
+            🚀 <span className="font-semibold text-primary">Early Access Phase</span> · Be among the first 100 artists
+          </p>
         </div>
       </div>
     </section>

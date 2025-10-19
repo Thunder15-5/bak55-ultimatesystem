@@ -22,11 +22,11 @@ const testimonials = [
   },
 ];
 
-const metrics = [
-  { icon: Users, value: "5K+", label: "Active Users" },
-  { icon: Music, value: "2K+", label: "Tracks Uploaded" },
-  { icon: DollarSign, value: "KSh 2.5M", label: "Paid to Artists" },
-  { icon: TrendingUp, value: "15M+", label: "Total Streams" },
+const projectionMetrics = [
+  { icon: Users, value: "2,000+", label: "Target Users", sublabel: "Year 1 Goal" },
+  { icon: Music, value: "500+", label: "Target Tracks", sublabel: "Year 1 Goal" },
+  { icon: DollarSign, value: "KSh 1M+", label: "Artist Payouts", sublabel: "Year 1 Target" },
+  { icon: TrendingUp, value: "100K+", label: "Platform Streams", sublabel: "Year 1 Target" },
 ];
 
 export const SocialProof = () => {
@@ -46,12 +46,12 @@ export const SocialProof = () => {
           </div>
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight">
-            Join Thousands Building Their <br className="hidden sm:block" />
-            <span className="text-gradient">Music Careers</span>
+            Join Early Artists Building <br className="hidden sm:block" />
+            <span className="text-gradient">Africa's Music Future</span>
           </h2>
           
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Real artists, real earnings, real impact on the African music industry
+            Be part of our founding community shaping the future of African music monetization
           </p>
         </div>
 
@@ -82,21 +82,37 @@ export const SocialProof = () => {
           ))}
         </div>
 
-        {/* Platform Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 md:p-12 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-primary/20 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          {metrics.map((metric, index) => (
-            <div key={index} className="text-center group">
-              <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <metric.icon className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">
-                {metric.value}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {metric.label}
-              </div>
+        {/* Year 1 Projections */}
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
+              <span className="text-xs font-semibold text-secondary uppercase tracking-wide">
+                Year 1 Growth Targets
+              </span>
             </div>
-          ))}
+            <p className="text-xs text-muted-foreground mt-2">
+              Our ambitious goals for the first year of operations
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 md:p-12 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-primary/20 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            {projectionMetrics.map((metric, index) => (
+              <div key={index} className="text-center group">
+                <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <metric.icon className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">
+                  {metric.value}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {metric.label}
+                </div>
+                <div className="text-xs text-muted-foreground/60 mt-1">
+                  {metric.sublabel}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
