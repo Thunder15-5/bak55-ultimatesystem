@@ -24,6 +24,7 @@ export default function CashReserve() {
   const [loading, setLoading] = useState(true);
   const [reserveData, setReserveData] = useState<ReserveData | null>(null);
   const [pendingTasks, setPendingTasks] = useState<any[]>([]);
+  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
 
   useEffect(() => {
     if (userRole !== "admin") {
@@ -33,6 +34,7 @@ export default function CashReserve() {
     }
     fetchReserveData();
     fetchPendingTasks();
+    fetchPendingPayments();
   }, [userRole]);
 
   const fetchReserveData = async () => {
@@ -104,6 +106,21 @@ export default function CashReserve() {
     }
   };
 
+  const fetchPendingPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("payment_transactions")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPendingPayments(data || []);
+    } catch (error: any) {
+      console.error("Failed to load pending payments:", error);
+    }
+  };
+
   const handleApproveWithdrawal = async (taskId: string) => {
     try {
       const { error } = await supabase.functions.invoke("mpesa-withdraw", {
@@ -117,6 +134,87 @@ export default function CashReserve() {
       fetchReserveData();
     } catch (error: any) {
       toast.error(error.message || "Failed to process withdrawal");
+    }
+  };
+
+  const handleApprovePayment = async (transactionId: string) => {
+    try {
+      const { data: payment, error: fetchError } = await supabase
+        .from("payment_transactions")
+        .select("*")
+        .eq("id", transactionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const bakAmount = payment.metadata?.bak_amount || payment.amount / 20;
+
+      // Update payment status
+      const { error: updateError } = await supabase
+        .from("payment_transactions")
+        .update({ status: "success", updated_at: new Date().toISOString() })
+        .eq("id", transactionId);
+
+      if (updateError) throw updateError;
+
+      // Get or create wallet
+      let { data: wallet } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", payment.user_id)
+        .single();
+
+      if (!wallet) {
+        const { data: newWallet, error: createError } = await supabase
+          .from("wallets")
+          .insert({ user_id: payment.user_id, balance: bakAmount })
+          .select()
+          .single();
+        if (createError) throw createError;
+        wallet = newWallet;
+      } else {
+        await supabase
+          .from("wallets")
+          .update({ balance: parseFloat(wallet.balance) + bakAmount })
+          .eq("id", wallet.id);
+      }
+
+      // Create transaction record
+      await supabase.from("transactions").insert({
+        wallet_id: wallet.id,
+        amount: bakAmount,
+        type: "earning",
+        description: `Purchased ${bakAmount} BAKCoins (Admin Approved)`,
+        reference_id: transactionId,
+        metadata: {
+          payment_method: "pesapal",
+          amount_paid_ksh: payment.amount,
+          admin_approved: true,
+          approved_by: user?.id,
+        },
+      });
+
+      toast.success("Payment approved and BAKCoins credited!");
+      fetchPendingPayments();
+      fetchReserveData();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to approve payment");
+    }
+  };
+
+  const handleRejectPayment = async (transactionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("payment_transactions")
+        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .eq("id", transactionId);
+
+      if (error) throw error;
+
+      toast.success("Payment rejected");
+      fetchPendingPayments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reject payment");
     }
   };
 
@@ -140,7 +238,7 @@ export default function CashReserve() {
             <h1 className="text-4xl font-bold mb-2">Cash Reserve Management</h1>
             <p className="text-muted-foreground">Platform financial overview</p>
           </div>
-          <Button onClick={() => { fetchReserveData(); fetchPendingTasks(); }}>
+          <Button onClick={() => { fetchReserveData(); fetchPendingTasks(); fetchPendingPayments(); }}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -204,6 +302,55 @@ export default function CashReserve() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Pending Coin Purchase Approvals */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Pending Coin Purchases</CardTitle>
+                <CardDescription>{pendingPayments.length} coin purchases waiting for verification</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pendingPayments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No pending payments</p>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingPayments.map((payment) => (
+                      <Card key={payment.id} className="border-2">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="font-medium">
+                                {payment.amount} {payment.currency} → {(payment.metadata?.bak_amount || payment.amount / 20).toFixed(2)} BAK
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Email: {payment.email}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Reference: {payment.reference}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Created: {new Date(payment.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="destructive" 
+                                onClick={() => handleRejectPayment(payment.id)}
+                              >
+                                Reject
+                              </Button>
+                              <Button onClick={() => handleApprovePayment(payment.id)}>
+                                Approve
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Pending Withdrawal Approvals */}
             <Card>

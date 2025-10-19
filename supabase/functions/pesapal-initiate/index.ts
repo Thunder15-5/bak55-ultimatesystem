@@ -25,19 +25,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Try to identify user (optional)
-    let userEmail = '';
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const { data: { user }, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (!error && user) userEmail = user.email ?? '';
-    }
-
     const body: PaymentRequest = await req.json();
     console.log('Payment initiation:', body);
 
-    if (!body.amount || !body.email) {
-      throw new Error('Missing amount or email');
+    if (!body.amount || !body.email || !body.user_id) {
+      throw new Error('Missing required fields: amount, email, or user_id');
     }
 
     // --- Pesapal Auth ---
@@ -75,7 +67,7 @@ Deno.serve(async (req) => {
       notification_id: Deno.env.get('PESAPAL_NOTIFICATION_ID'),
       billing_address: {
         email_address: body.email,
-        first_name: userEmail?.split('@')[0] || 'User',
+        first_name: body.email.split('@')[0] || 'User',
         last_name: '',
         country_code: 'KE',
       },
@@ -101,11 +93,18 @@ Deno.serve(async (req) => {
     // --- Save to Supabase ---
     const { error: insertError } = await supabase.from('payment_transactions').insert({
       id: transactionId,
-      user_id: body.user_id || null,
+      user_id: body.user_id,
       email: body.email,
       amount: body.amount,
+      currency: body.currency || 'KES',
+      reference: transactionId,
       status: 'pending',
-      pesapal_tracking_id: orderData.order_tracking_id,
+      payment_provider: 'pesapal',
+      metadata: {
+        order_tracking_id: orderData.order_tracking_id,
+        bak_amount: parseFloat(body.amount) / 20,
+        type: 'coin_purchase',
+      },
       created_at: new Date().toISOString(),
     });
 

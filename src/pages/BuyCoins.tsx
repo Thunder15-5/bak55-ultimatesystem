@@ -57,38 +57,14 @@ const BuyCoins = () => {
         throw new Error("Profile not found");
       }
 
-      // Create pending transaction record
-      const reference = `BAK-${Date.now()}-${user.id.slice(0, 8)}`;
-      
-      const { data: transaction, error: transactionError } = await supabase
-        .from("payment_transactions")
-        .insert({
-          user_id: user.id,
-          amount: kshAmount,
-          currency: "KES",
-          email: profile.email,
-          reference: reference,
-          status: "pending",
-          payment_provider: "pesapal",
-          metadata: {
-            bak_amount: bakAmount,
-            type: "coin_purchase",
-          },
-        })
-        .select()
-        .single();
-
-      if (transactionError) throw transactionError;
-
-      // Initiate Pesapal payment
+      // Initiate Pesapal payment (will create transaction record)
       const { data, error } = await supabase.functions.invoke("pesapal-initiate", {
         body: {
+          user_id: user.id,
           amount: kshAmount,
           currency: "KES",
           description: `Purchase ${bakAmount} BAKCoins`,
           callback_url: `${window.location.origin}/payment/success`,
-          notification_id: transaction.id,
-          reference: reference,
           email: profile.email,
         },
       });
