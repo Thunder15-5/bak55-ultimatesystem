@@ -11,13 +11,13 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-primary/10">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-primary/10 shadow-sm">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logoImage} alt="BAK55 Talent" className="h-10 w-auto" />
-            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <Link to="/" className="flex items-center gap-3 group">
+            <img src={logoImage} alt="BAK55 Talent" className="h-10 w-auto group-hover:scale-110 transition-transform" />
+            <span className="text-xl md:text-2xl font-heading font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               BAK55 Talent
             </span>
           </Link>
@@ -26,11 +26,13 @@ export function Navigation() {
           <div className="hidden md:flex items-center gap-6">
             {user ? (
               <>
-                <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
-                  Dashboard
+                <Link to="/dashboard" className="text-foreground hover:text-primary transition-all relative group">
+                  <span>Dashboard</span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
                 </Link>
-                <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">
-                  Music
+                <Link to="/catalog" className="text-foreground hover:text-primary transition-all relative group">
+                  <span>Music</span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
                 </Link>
                 {userRole === "artist" && (
                   <Link to="/upload" className="text-foreground hover:text-primary transition-colors">

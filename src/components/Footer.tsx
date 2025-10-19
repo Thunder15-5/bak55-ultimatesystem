@@ -3,16 +3,16 @@ import logo from "@/assets/bak55-logo.png";
 
 export const Footer = () => {
   return (
-    <footer className="py-8 md:py-12 px-4 border-t border-primary/10">
+    <footer className="py-8 md:py-12 px-4 border-t border-primary/10 bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto max-w-7xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
           {/* Brand */}
           <div className="space-y-3 md:space-y-4 sm:col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 group">
               <img 
                 src={logo} 
                 alt="BAK55 Talent" 
-                className="h-8 sm:h-10 w-auto object-contain"
+                className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform"
               />
             </Link>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -22,12 +22,12 @@ export const Footer = () => {
 
           {/* Platform */}
           <div className="space-y-3 md:space-y-4">
-            <h4 className="font-semibold text-sm sm:text-base">Platform</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base">Platform</h4>
             <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
-              <li><Link to="/streaming" className="hover:text-primary transition-colors">Streaming Hub</Link></li>
-              <li><Link to="/competitions" className="hover:text-primary transition-colors">Competitions</Link></li>
-              <li><Link to="/bakcoins" className="hover:text-primary transition-colors">BAKCoins</Link></li>
-              <li><Link to="/ai-tools" className="hover:text-primary transition-colors">AI Tools</Link></li>
+              <li><Link to="/streaming" className="hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform">Streaming Hub</Link></li>
+              <li><Link to="/competitions" className="hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform">Competitions</Link></li>
+              <li><Link to="/bakcoins" className="hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform">BAKCoins</Link></li>
+              <li><Link to="/ai-tools" className="hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform">AI Tools</Link></li>
             </ul>
           </div>
 

@@ -122,23 +122,33 @@ export default function Playlists() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Playlists</h1>
-            <p className="text-muted-foreground">
-              Create and manage your music collections
-            </p>
-          </div>
+      
+      {/* Hero Section */}
+      <div className="relative bg-gradient-radial from-primary/10 via-background to-background border-b border-primary/10">
+        <div className="container mx-auto px-4 py-12 pt-32">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 animate-fade-in">
+                  <ListMusic className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Your Collections</span>
+                </div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold leading-tight animate-fade-in">
+                  My <span className="text-gradient">Playlists</span>
+                </h1>
+                <p className="text-lg text-muted-foreground animate-fade-in">
+                  Create and manage your music collections
+                </p>
+              </div>
 
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Playlist
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto">
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="hero" size="lg" className="w-full sm:w-auto">
+                    <Plus className="mr-2 h-5 w-5" />
+                    Create Playlist
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md mx-4 sm:mx-auto">
               <DialogHeader>
                 <DialogTitle>Create New Playlist</DialogTitle>
                 <DialogDescription>
@@ -192,22 +202,28 @@ export default function Playlists() {
                   ) : (
                     "Create Playlist"
                   )}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+            </div>
+          </div>
         </div>
-
+      </div>
+      
+      <div className="container mx-auto px-4 py-8">
         {playlists.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16">
-              <ListMusic className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-4" />
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">No playlists yet</h3>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4 text-center">
+          <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
+            <CardContent className="flex flex-col items-center justify-center py-16 sm:py-20">
+              <div className="p-6 rounded-full bg-primary/10 mb-6">
+                <ListMusic className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-heading font-semibold mb-3">No playlists yet</h3>
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 text-center max-w-md">
                 Create your first playlist to start organizing your music
               </p>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button onClick={() => setShowCreateDialog(true)} variant="hero" size="lg">
+                <Plus className="mr-2 h-5 w-5" />
                 Create Your First Playlist
               </Button>
             </CardContent>
@@ -217,32 +233,38 @@ export default function Playlists() {
             {playlists.map((playlist) => (
               <Card
                 key={playlist.id}
-                className="cursor-pointer hover:border-primary transition-all hover:scale-105"
+                className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm"
                 onClick={() => navigate(`/playlist/${playlist.id}`)}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <ListMusic className="h-5 w-5 text-primary flex-shrink-0" />
-                      <CardTitle className="line-clamp-1 text-base sm:text-lg">{playlist.title}</CardTitle>
+                <CardHeader className="p-6">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <ListMusic className="h-5 w-5 text-primary flex-shrink-0" />
+                      </div>
+                      <CardTitle className="line-clamp-1 text-lg sm:text-xl font-heading group-hover:text-primary transition-colors">
+                        {playlist.title}
+                      </CardTitle>
                     </div>
                     {!playlist.is_public && (
-                      <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="p-1.5 rounded-lg bg-muted/50">
+                        <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
                     )}
                   </div>
                   {playlist.description && (
-                    <CardDescription className="line-clamp-2 text-sm">
+                    <CardDescription className="line-clamp-2 text-sm leading-relaxed">
                       {playlist.description}
                     </CardDescription>
                   )}
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                <CardContent className="px-6 pb-6">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Music className="h-4 w-4" />
-                      {playlist.playlist_tracks?.length || 0} tracks
+                      <span className="font-medium">{playlist.playlist_tracks?.length || 0} tracks</span>
                     </div>
-                    <div className="text-xs">
+                    <div className="text-xs text-muted-foreground">
                       {new Date(playlist.created_at).toLocaleDateString()}
                     </div>
                   </div>

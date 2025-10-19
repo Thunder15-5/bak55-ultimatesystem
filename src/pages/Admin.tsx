@@ -493,8 +493,14 @@ export default function Admin() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your platform</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4 animate-fade-in">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Administration</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-2 animate-fade-in">
+            Admin <span className="text-gradient">Dashboard</span>
+          </h1>
+          <p className="text-lg text-muted-foreground animate-fade-in">Manage your platform</p>
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">

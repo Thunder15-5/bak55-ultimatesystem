@@ -8,25 +8,32 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-4xl">
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-background to-background" />
+        
+        <div className="container mx-auto max-w-4xl relative">
           <div className="text-center space-y-6 mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 animate-fade-in">
+              <Target className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Our Story</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-heading font-bold animate-fade-in">
               About <span className="text-gradient">BAK55</span>
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
               Building the essential infrastructure for African music's digital future
             </p>
           </div>
 
           <div className="space-y-12">
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center flex-shrink-0">
-                  <Target className="w-6 h-6 text-white" />
+            <Card className="p-8 md:p-10 bg-card/50 backdrop-blur-sm border-primary/10 hover:shadow-elegant transition-all">
+              <div className="flex items-start gap-4 md:gap-6 mb-6">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Target className="w-7 h-7 md:w-8 md:h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
+                  <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our Mission</h2>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     To create a fair, transparent, and artist-first ecosystem where African musicians can build sustainable careers without exploitation. We combine AI technology with a circular economy to ensure artists are fairly compensated and fans actively participate in success stories.
                   </p>
@@ -34,13 +41,13 @@ const About = () => {
               </div>
             </Card>
 
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center flex-shrink-0">
-                  <Eye className="w-6 h-6 text-white" />
+            <Card className="p-8 md:p-10 bg-card/50 backdrop-blur-sm border-secondary/10 hover:shadow-elegant transition-all">
+              <div className="flex items-start gap-4 md:gap-6 mb-6">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Eye className="w-7 h-7 md:w-8 md:h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold mb-4">Our Vision</h2>
+                  <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Our Vision</h2>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     To become the default platform for the next generation of African artists—a place where talent is discovered, developed, and monetized fairly. We envision a future where every African artist has access to professional tools, global audiences, and sustainable income streams.
                   </p>
@@ -49,17 +56,21 @@ const About = () => {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-8 bg-card/50 backdrop-blur-sm border-accent/10">
-                <Music className="w-12 h-12 text-accent mb-4" />
-                <h3 className="text-2xl font-bold mb-3">The Problem We Solve</h3>
+              <Card className="p-8 md:p-10 bg-card/50 backdrop-blur-sm border-accent/10 hover:shadow-elegant transition-all group">
+                <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:scale-110 transition-transform">
+                  <Music className="w-10 h-10 text-accent" />
+                </div>
+                <h3 className="text-2xl font-heading font-bold mb-3">The Problem We Solve</h3>
                 <p className="text-muted-foreground">
                   92% of African artists earn under $100/month despite industry growth. Standard label contracts claim 50-80% of rights. We're changing that with fair compensation and artist ownership.
                 </p>
               </Card>
 
-              <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
-                <Users className="w-12 h-12 text-primary mb-4" />
-                <h3 className="text-2xl font-bold mb-3">Our Approach</h3>
+              <Card className="p-8 md:p-10 bg-card/50 backdrop-blur-sm border-primary/10 hover:shadow-elegant transition-all group">
+                <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:scale-110 transition-transform">
+                  <Users className="w-10 h-10 text-primary" />
+                </div>
+                <h3 className="text-2xl font-heading font-bold mb-3">Our Approach</h3>
                 <p className="text-muted-foreground">
                   Four integrated pillars: Streaming, Competitions, BAKCoins Economy, and AI Tools. Everything works together to create multiple income streams and growth opportunities for artists.
                 </p>
