@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   userRole: string | null;
+  userRoles: string[];
 }
 
 interface SignUpData {
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,13 +51,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select("role")
             .eq("user_id", session.user.id)
             .then(({ data: roles }) => {
-              const role = roles?.some((r: any) => r.role === 'admin')
+              const allRoles = roles?.map((r: any) => r.role) ?? [];
+              setUserRoles(allRoles);
+              const role = allRoles.includes('admin')
                 ? 'admin'
-                : roles?.[0]?.role ?? null;
+                : allRoles[0] ?? null;
               setUserRole(role);
             });
         } else {
           setUserRole(null);
+          setUserRoles([]);
         }
       }
     );
@@ -71,9 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select("role")
           .eq("user_id", session.user.id)
           .then(({ data: roles }) => {
-            const role = roles?.some((r: any) => r.role === 'admin')
+            const allRoles = roles?.map((r: any) => r.role) ?? [];
+            setUserRoles(allRoles);
+            const role = allRoles.includes('admin')
               ? 'admin'
-              : roles?.[0]?.role ?? null;
+              : allRoles[0] ?? null;
             setUserRole(role);
             setLoading(false);
           });
@@ -144,7 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select("role")
         .eq("user_id", data.user.id);
 
-      const role = roles?.some((r: any) => r.role === 'admin') ? 'admin' : roles?.[0]?.role ?? null;
+      const allRoles = roles?.map((r: any) => r.role) ?? [];
+      const role = allRoles.includes('admin') ? 'admin' : allRoles[0] ?? null;
 
       toast.success("Logged in successfully!");
       
@@ -166,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, userRole }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, userRole, userRoles }}>
       {children}
     </AuthContext.Provider>
   );

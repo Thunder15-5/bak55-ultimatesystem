@@ -131,26 +131,27 @@ const getEmailRouting = (template: string) => {
     case 'competition_winner':
       return {
         from: 'noreply@bak55talent.co.ke',
-        cc: template === 'competition_submission' || template === 'competition_winner' 
-          ? ['support@bak55talent.co.ke'] 
-          : undefined,
-        bcc: ['admin@bak55talent.co.ke']
+        cc: [] as string[],
+        bcc: [] as string[]
       };
     case 'withdrawal_request':
     case 'withdrawal_complete':
       return {
         from: 'finance@bak55talent.co.ke',
-        cc: ['finance@bak55talent.co.ke']
+        cc: [] as string[],
+        bcc: ['finance@bak55talent.co.ke']
       };
     case 'contact_form':
       return {
-        from: 'support@bak55talent.co.ke',
-        cc: ['admin@bak55talent.co.ke']
+        from: 'noreply@bak55talent.co.ke',
+        cc: [] as string[],
+        bcc: [] as string[]
       };
     default:
       return {
         from: 'noreply@bak55talent.co.ke',
-        bcc: ['admin@bak55talent.co.ke']
+        cc: [] as string[],
+        bcc: [] as string[]
       };
   }
 };
@@ -239,11 +240,11 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string, templ
     
     console.log("Email sent successfully via SMTP");
     return { success: true, id: `smtp-${Date.now()}` };
-  } catch (error) {
+  } catch (error: any) {
     console.error("SMTP error details:", {
-      message: error.message,
-      name: error.name,
-      code: error.code,
+      message: error?.message,
+      name: error?.name,
+      code: error?.code,
       host: SMTP_HOST,
       port: SMTP_PORT
     });
@@ -256,7 +257,7 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string, templ
       }
     }
     
-    throw new Error(`Failed to send email via SMTP: ${error.message}. Please verify SMTP server is accessible and credentials are correct.`);
+    throw new Error(`Failed to send email via SMTP: ${error?.message || 'Unknown error'}. Please verify SMTP server is accessible and credentials are correct.`);
   }
 }
 

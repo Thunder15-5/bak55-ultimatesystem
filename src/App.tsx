@@ -88,11 +88,11 @@ const App = () => (
                 <Route path="/competitions" element={<Competitions />} />
                 <Route path="/competitions/active" element={<CompetitionsActive />} />
                 <Route path="/competition/:id" element={<CompetitionDetails />} />
-                <Route path="/admin/create-competition" element={
-                  <ProtectedRoute requiredRole="brand">
-                    <CreateCompetition />
-                  </ProtectedRoute>
-                } />
+          <Route path="/admin/create-competition" element={
+            <ProtectedRoute requiredRoles={['admin', 'brand']}>
+              <CreateCompetition />
+            </ProtectedRoute>
+          } />
                 <Route path="/admin/edit-competition/:id" element={
                   <ProtectedRoute requiredRole="admin">
                     <EditCompetition />

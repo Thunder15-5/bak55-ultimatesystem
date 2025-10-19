@@ -18,18 +18,21 @@ const getNotificationRouting = (type?: string) => {
   switch (type) {
     case 'support':
       return {
-        from: 'support@bak55talent.co.ke',
-        cc: ['admin@bak55talent.co.ke']
+        from: 'notifications@bak55talent.co.ke',
+        cc: [] as string[],
+        bcc: [] as string[]
       };
     case 'withdrawal':
       return {
-        from: 'finance@bak55talent.co.ke',
-        cc: ['finance@bak55talent.co.ke']
+        from: 'notifications@bak55talent.co.ke',
+        cc: [] as string[],
+        bcc: ['finance@bak55talent.co.ke']
       };
     default:
       return {
-        from: 'noreply@bak55talent.co.ke',
-        bcc: ['admin@bak55talent.co.ke']
+        from: 'notifications@bak55talent.co.ke',
+        cc: [] as string[],
+        bcc: [] as string[]
       };
   }
 };
@@ -123,11 +126,11 @@ const sendEmailViaSMTP = async (
     
     console.log("Notification email sent successfully via SMTP");
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("SMTP error details:", {
-      message: error.message,
-      name: error.name,
-      code: error.code,
+      message: error?.message,
+      name: error?.name,
+      code: error?.code,
       host: SMTP_HOST,
       port: SMTP_PORT
     });
@@ -140,7 +143,7 @@ const sendEmailViaSMTP = async (
       }
     }
     
-    throw new Error(`Failed to send email via SMTP: ${error.message}. Please verify SMTP server is accessible and credentials are correct.`);
+    throw new Error(`Failed to send email via SMTP: ${error?.message || 'Unknown error'}. Please verify SMTP server is accessible and credentials are correct.`);
   }
 };
 

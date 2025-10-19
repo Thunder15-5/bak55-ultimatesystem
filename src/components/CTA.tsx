@@ -44,14 +44,14 @@ export const CTA = () => {
       // Send notification email to admin
       await supabase.functions.invoke('send-email', {
         body: {
-          to: 'info@bak55talent.co.ke',
+          to: 'admin@bak55talent.co.ke',
           subject: '🎯 New Early Access Signup',
-          template: 'contact',
+          template: 'contact_form',
           data: {
             name: 'Early Access User',
             email,
-            message: `New early access signup from homepage CTA at ${new Date().toLocaleString()}`,
-            type: 'Early Access'
+            subject: 'New Early Access Signup',
+            message: `New early access signup from homepage CTA at ${new Date().toLocaleString()}`
           }
         }
       });
