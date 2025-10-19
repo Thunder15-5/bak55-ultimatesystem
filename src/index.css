@@ -10,64 +10,57 @@ All colors MUST be HSL.
   :root {
     --background: 260 30% 6%;
     --foreground: 0 0% 98%;
-
     --card: 260 25% 10%;
     --card-foreground: 0 0% 98%;
-
     --popover: 260 30% 8%;
     --popover-foreground: 0 0% 98%;
-
     --primary: 270 60% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 270 80% 65%;
-
     --secondary: 25 95% 55%;
     --secondary-foreground: 0 0% 100%;
     --secondary-glow: 25 100% 65%;
-
     --muted: 260 20% 20%;
     --muted-foreground: 0 0% 65%;
-
     --accent: 180 80% 50%;
     --accent-foreground: 0 0% 100%;
-
+    --accent-glow: 180 90% 60%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
     --border: 260 20% 18%;
     --input: 260 20% 18%;
     --ring: 270 60% 55%;
-
     --radius: 1rem;
-    
     --gradient-hero: linear-gradient(135deg, hsl(270 60% 55%), hsl(25 95% 55%), hsl(180 80% 50%));
     --gradient-primary: linear-gradient(135deg, hsl(270 60% 55%), hsl(270 80% 65%));
     --gradient-secondary: linear-gradient(135deg, hsl(25 95% 55%), hsl(25 100% 65%));
+    --gradient-accent: linear-gradient(135deg, hsl(180 80% 50%), hsl(180 90% 60%));
     --gradient-card: linear-gradient(180deg, hsl(260 25% 12%), hsl(260 25% 8%));
-    
+    --gradient-subtle: linear-gradient(180deg, hsl(260 30% 6%), hsl(260 30% 8%));
+    --shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     --shadow-glow-primary: 0 0 60px hsl(270 60% 55% / 0.4);
     --shadow-glow-secondary: 0 0 60px hsl(25 95% 55% / 0.4);
+    --shadow-glow-accent: 0 0 40px hsl(180 80% 50% / 0.4);
     --shadow-elegant: 0 20px 60px -20px hsl(270 60% 55% / 0.5);
-    
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-    --radius: 1rem;
-
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +89,8 @@ All colors MUST be HSL.
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-hero);
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
   }
   
   .text-gradient-primary {
@@ -108,6 +103,12 @@ All colors MUST be HSL.
     background-image: var(--gradient-secondary);
   }
   
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+  
   .glow-primary {
     filter: drop-shadow(var(--shadow-glow-primary));
   }
@@ -116,8 +117,48 @@ All colors MUST be HSL.
     filter: drop-shadow(var(--shadow-glow-secondary));
   }
   
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
   
   @keyframes float {
@@ -125,7 +166,28 @@ All colors MUST be HSL.
     50% { transform: translateY(-20px); }
   }
   
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+    animation-fill-mode: both;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
   .animate-pulse-slow {
     animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-gradient-shift {
+    animation: gradient-shift 8s ease infinite;
   }
 }
