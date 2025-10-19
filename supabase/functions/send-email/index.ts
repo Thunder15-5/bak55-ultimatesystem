@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -121,33 +122,115 @@ const templates = {
   `,
 };
 
-async function sendEmailViaResend(to: string, subject: string, html: string) {
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-  
-  if (!RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY not configured");
+// Determine sender and routing based on email template
+const getEmailRouting = (template: string) => {
+  switch (template) {
+    case 'welcome':
+    case 'verification':
+    case 'competition_submission':
+    case 'competition_winner':
+      return {
+        from: 'noreply@bak55talent.co.ke',
+        cc: template === 'competition_submission' || template === 'competition_winner' 
+          ? ['support@bak55talent.co.ke'] 
+          : undefined,
+        bcc: ['admin@bak55talent.co.ke']
+      };
+    case 'withdrawal_request':
+    case 'withdrawal_complete':
+      return {
+        from: 'finance@bak55talent.co.ke',
+        cc: ['finance@bak55talent.co.ke']
+      };
+    case 'contact_form':
+      return {
+        from: 'support@bak55talent.co.ke',
+        cc: ['admin@bak55talent.co.ke']
+      };
+    default:
+      return {
+        from: 'noreply@bak55talent.co.ke',
+        bcc: ['admin@bak55talent.co.ke']
+      };
+  }
+};
+
+async function sendEmailViaSMTP(to: string, subject: string, html: string, template: string) {
+  const SMTP_HOST = Deno.env.get("SMTP_HOST");
+  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+  const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME");
+  const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
+
+  if (!SMTP_HOST || !SMTP_USERNAME || !SMTP_PASSWORD) {
+    throw new Error("SMTP credentials not configured");
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: "BAK55 Talent <notifications@bak55talent.co.ke>",
-      to: [to],
-      subject,
-      html,
-    }),
+  const routing = getEmailRouting(template);
+  
+  console.log('Sending email via SMTP:', {
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    from: routing.from,
+    to,
+    cc: routing.cc,
+    bcc: routing.bcc,
+    subject
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Resend API error: ${error}`);
-  }
+  const client = new SmtpClient();
 
-  return await response.json();
+  try {
+    await client.connectTLS({
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
+      username: SMTP_USERNAME,
+      password: SMTP_PASSWORD,
+    });
+
+    // Send to primary recipient
+    await client.send({
+      from: routing.from,
+      to: to,
+      subject: subject,
+      content: html,
+      html: html,
+    });
+
+    // Send copies to CC recipients
+    if (routing.cc && routing.cc.length > 0) {
+      for (const ccEmail of routing.cc) {
+        await client.send({
+          from: routing.from,
+          to: ccEmail,
+          subject: `[CC] ${subject}`,
+          content: html,
+          html: html,
+        });
+      }
+    }
+
+    // Send copies to BCC recipients
+    if (routing.bcc && routing.bcc.length > 0) {
+      for (const bccEmail of routing.bcc) {
+        await client.send({
+          from: routing.from,
+          to: bccEmail,
+          subject: `[BCC] ${subject}`,
+          content: html,
+          html: html,
+        });
+      }
+    }
+
+    await client.close();
+    
+    console.log("Email sent successfully via SMTP");
+    return { success: true, id: `smtp-${Date.now()}` };
+  } catch (error) {
+    console.error("SMTP error:", error);
+    await client.close();
+    throw error;
+  }
 }
 
 serve(async (req) => {
@@ -167,7 +250,7 @@ serve(async (req) => {
     }
 
     const html = templates[template](data || {});
-    const emailResponse = await sendEmailViaResend(to, subject, html);
+    const emailResponse = await sendEmailViaSMTP(to, subject, html, template);
 
     console.log("Email sent successfully:", emailResponse);
 
