@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
       amount: body.amount,
       currency: body.currency || 'KES',
       reference: transactionId,
+      payment_reference: orderData.order_tracking_id,
       status: 'pending',
       payment_provider: 'pesapal',
       metadata: {
