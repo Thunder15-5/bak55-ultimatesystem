@@ -124,7 +124,7 @@ export default function UploadTrack() {
             .from('transactions')
             .insert([{
               wallet_id: wallet.id,
-              type: 'purchase',
+              type: 'spending',
               amount: -competition.entry_fee, // Negative for deduction
               description: `Entry fee for ${competition.title}`,
             }]);

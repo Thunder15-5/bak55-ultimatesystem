@@ -6,8 +6,34 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Map Pesapal status strings to internal status
+function normalizePaymentStatus(pesapalStatus: string | undefined): 'success' | 'failed' | 'pending' {
+  if (!pesapalStatus) return 'pending';
+  
+  const status = pesapalStatus.toLowerCase();
+  
+  // Success states
+  if (status.includes('completed') || status.includes('paid') || status === 'success') {
+    return 'success';
+  }
+  
+  // Failed states
+  if (status.includes('failed') || status.includes('cancel') || status === 'cancelled') {
+    return 'failed';
+  }
+  
+  // Pending/processing states
+  if (status.includes('pending') || status.includes('processing') || status.includes('incomplete')) {
+    return 'pending';
+  }
+  
+  // Default to pending for unknown states
+  return 'pending';
+}
+
 /**
  * This function is called by Pesapal once payment status changes.
+ * Accepts both query parameters (IPN) and JSON body (manual verification).
  * It checks the transaction status via Pesapal API and updates Supabase.
  */
 Deno.serve(async (req) => {
@@ -16,9 +42,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { OrderTrackingId, OrderMerchantReference } = Object.fromEntries(
-      new URL(req.url).searchParams
-    );
+    // Accept both query parameters (IPN callback) and JSON body (manual verification)
+    const queryParams = Object.fromEntries(new URL(req.url).searchParams);
+    let bodyParams: any = {};
+    
+    if (req.method === 'POST') {
+      try {
+        bodyParams = await req.json();
+      } catch {
+        // Not JSON body, use query params only
+      }
+    }
+    
+    // Merge both sources, body takes precedence
+    const params: any = { ...queryParams, ...bodyParams };
+    const { OrderTrackingId, OrderMerchantReference } = params;
 
     console.log("=== Pesapal IPN Received ===");
     console.log("OrderTrackingId:", OrderTrackingId);
@@ -113,13 +151,8 @@ Deno.serve(async (req) => {
 
     console.log("Transaction found:", txRecord.id);
 
-    // Map status to internal format
-    let internalStatus = "pending";
-    if (paymentStatus?.toLowerCase() === "completed") {
-      internalStatus = "success"; // Changed from "completed" to match other parts
-    } else if (paymentStatus?.toLowerCase() === "failed") {
-      internalStatus = "failed";
-    }
+    // Map status to internal format using our normalization function
+    const internalStatus = normalizePaymentStatus(paymentStatus);
 
     // --- 4️⃣ Update transaction status ---
     const { error: updateError } = await supabase
@@ -145,7 +178,7 @@ Deno.serve(async (req) => {
     console.log("Transaction status updated to:", internalStatus);
 
     // --- 5️⃣ If payment successful, credit BAKCoins ---
-    if (paymentStatus?.toLowerCase() === "completed") {
+    if (internalStatus === "success") {
       // Get metadata safely
       const metadata = txRecord.metadata as any;
       const bakAmount = metadata?.bak_amount || (parseFloat(amount) / 20);
@@ -248,7 +281,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        status: paymentStatus,
+        status: internalStatus, // Return normalized status
+        pesapal_status: paymentStatus, // Include original for reference
         order_tracking_id: trackingId,
         message: "Payment processed successfully",
       }),

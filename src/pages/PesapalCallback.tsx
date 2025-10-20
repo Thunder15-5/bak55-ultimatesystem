@@ -93,7 +93,7 @@ export default function PesapalCallback() {
                 <p className="text-muted-foreground mt-2">{message}</p>
               </div>
               <div className="space-y-2">
-                <Button onClick={() => navigate("/buy-coins")} variant="gradient" className="w-full">
+                <Button onClick={() => navigate("/wallet/buy-coins")} variant="gradient" className="w-full">
                   Try Again
                 </Button>
                 <Button onClick={() => navigate("/wallet")} variant="outline" className="w-full">

@@ -1157,6 +1157,7 @@ export type Database = {
           created_at: string | null
           id: string | null
           location: string | null
+          updated_at: string | null
           username: string | null
         }
         Insert: {
@@ -1165,6 +1166,7 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           location?: string | null
+          updated_at?: string | null
           username?: string | null
         }
         Update: {
@@ -1173,6 +1175,7 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           location?: string | null
+          updated_at?: string | null
           username?: string | null
         }
         Relationships: []
@@ -1216,7 +1219,15 @@ export type Database = {
         | "completed"
         | "cancelled"
       submission_status: "pending" | "approved" | "rejected"
-      transaction_type: "purchase" | "earning" | "vote" | "prize" | "refund"
+      transaction_type:
+        | "purchase"
+        | "earning"
+        | "vote"
+        | "prize"
+        | "refund"
+        | "spending"
+        | "withdrawal"
+        | "income"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1353,7 +1364,16 @@ export const Constants = {
         "cancelled",
       ],
       submission_status: ["pending", "approved", "rejected"],
-      transaction_type: ["purchase", "earning", "vote", "prize", "refund"],
+      transaction_type: [
+        "purchase",
+        "earning",
+        "vote",
+        "prize",
+        "refund",
+        "spending",
+        "withdrawal",
+        "income",
+      ],
     },
   },
 } as const

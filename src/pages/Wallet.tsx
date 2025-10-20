@@ -121,69 +121,43 @@ export default function Wallet() {
       return;
     }
 
-    // Calculate 15% withdrawal fee
-    const withdrawalFee = amount * 0.15;
+    // Minimum withdrawal check
+    const MIN_WITHDRAWAL = 100; // 100 BAK
+    if (amount < MIN_WITHDRAWAL) {
+      toast.error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
+      return;
+    }
+
+    // Calculate 2% withdrawal fee (moved server-side, but show preview)
+    const withdrawalFee = amount * 0.02;
     const netAmount = amount - withdrawalFee;
 
     setWithdrawing(true);
 
     try {
-      // Get wallet ID
-      const { data: walletData } = await supabase
-        .from("wallets")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!walletData) throw new Error("Wallet not found");
-
-      // Create withdrawal transaction
-      const { error: txError } = await supabase
-        .from("transactions")
-        .insert({
-          wallet_id: walletData.id,
-          amount: -amount,
-          type: "purchase",
-          description: "Withdrawal request",
-          withdrawal_fee: withdrawalFee,
-          metadata: {
-            status: "pending",
-            account_name: accountDetails.accountName,
-            account_number: accountDetails.accountNumber,
-            bank_name: accountDetails.bankName,
-            gross_amount: amount,
-            fee_amount: withdrawalFee,
-            net_amount: netAmount,
-          },
-        });
-
-      if (txError) throw txError;
-
-      // Update wallet balance
-      const { error: updateError } = await supabase
-        .from("wallets")
-        .update({ balance: balance - amount })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
-
-      // Create admin task for approval
-      await supabase.from("admin_tasks").insert({
-        task_type: "withdrawal_approval",
-        related_id: walletData.id,
-        metadata: {
-          user_id: user.id,
+      // Call process-withdrawal edge function instead of direct DB operations
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: {
           amount,
-          fee: withdrawalFee,
-          net_amount: netAmount,
-          account_details: accountDetails,
+          phone_number: accountDetails.accountNumber || "254700000000", // Fallback for now
+          bank_details: accountDetails, // Include bank details in metadata
         },
       });
 
-      toast.success(`Withdrawal request submitted! You'll receive ${netAmount.toFixed(2)} BAK after 15% fee.`);
-      setWithdrawAmount("");
-      setAccountDetails({ accountName: "", accountNumber: "", bankName: "" });
-      fetchWalletData();
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(
+          data.status === "pending_manual"
+            ? "Withdrawal request submitted for admin review"
+            : `Withdrawal of ${netAmount.toFixed(2)} BAK is being processed`
+        );
+        setWithdrawAmount("");
+        setAccountDetails({ accountName: "", accountNumber: "", bankName: "" });
+        fetchWalletData();
+      } else {
+        throw new Error(data.error || "Withdrawal failed");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to process withdrawal");
     } finally {

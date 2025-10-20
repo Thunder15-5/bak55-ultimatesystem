@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     const transactionRecords = [
       {
         wallet_id: senderWallet.id,
-        type: 'expense',
+        type: 'spending',
         amount: normalizedAmount,
         description: `Tip sent${tipRequest.message ? `: ${tipRequest.message.substring(0, 50)}` : ''}`,
         reference_id: tipRequest.track_id || null,

@@ -5,6 +5,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validate that PESAPAL_NOTIFICATION_ID is a UUID, not a URL
+function validatePesapalNotificationId(notificationId: string | undefined): string {
+  if (!notificationId) {
+    throw new Error('PESAPAL_NOTIFICATION_ID is missing. Please register your IPN with Pesapal and set the secret to the IPN UUID.');
+  }
+  
+  // UUID v4 regex validation
+  const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  
+  if (!uuidV4Regex.test(notificationId)) {
+    throw new Error(
+      `PESAPAL_NOTIFICATION_ID does not look like a UUID. It may be set to a URL. Please register your IPN with Pesapal and set the secret to the IPN UUID (not the URL). Current value starts with: ${notificationId.substring(0, 50)}...`
+    );
+  }
+  
+  return notificationId;
+}
+
 interface PaymentRequest {
   amount: number;
   currency: string;
@@ -40,6 +58,9 @@ Deno.serve(async (req) => {
       throw new Error('Missing Pesapal credentials');
     }
 
+    // Validate PESAPAL_NOTIFICATION_ID is a UUID, not a URL
+    const notificationId = validatePesapalNotificationId(Deno.env.get('PESAPAL_NOTIFICATION_ID'));
+
     const tokenRes = await fetch(`${PESAPAL_BASE_URL}/api/Auth/RequestToken`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,7 +85,7 @@ Deno.serve(async (req) => {
       amount: body.amount,
       description: body.description || 'BAK55 Token Purchase',
       callback_url: callbackUrl,
-      notification_id: Deno.env.get('PESAPAL_NOTIFICATION_ID'),
+      notification_id: notificationId,
       billing_address: {
         email_address: body.email,
         first_name: body.email.split('@')[0] || 'User',
