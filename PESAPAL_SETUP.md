@@ -28,18 +28,28 @@ curl --location 'https://pay.pesapal.com/v3/api/Auth/RequestToken' \
 
 ### Step 2: Register IPN URL with Pesapal
 
-⚠️ **IMPORTANT - Domain Matching:**
-- Pesapal requires the IPN URL domain to match your merchant account domain
-- If registered with `www.bak55talent.co.ke`, IPN must use `www.bak55talent.co.ke`
-- **DO NOT** use `app.bak55talent.co.ke` if merchant is `www.bak55talent.co.ke`
-- **Recommended:** Use the Supabase edge function URL directly (no domain restrictions):
+⚠️ **CRITICAL - DOMAIN RESTRICTION FOUND:**
+
+Pesapal **REQUIRES** the IPN URL domain to match your merchant account domain exactly.
+
+**If your merchant account is registered as `www.bak55talent.co.ke`:**
+- ❌ You CANNOT use: `qtdxzgeeomgukkxfkwmh.supabase.co`
+- ❌ You CANNOT use: `app.bak55talent.co.ke`
+- ✅ You MUST use: `www.bak55talent.co.ke`
+
+**Solution Required:**
+You need to set up a simple proxy on your domain that forwards to Supabase.
+
+👉 **See `PESAPAL_PROXY_SETUP.md` for complete setup instructions (15 minutes)**
+
+After setting up the proxy, register your IPN URL:
 
 ```bash
 curl --location 'https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN_FROM_STEP_1' \
 --header 'Content-Type: application/json' \
 --data '{
-  "url": "https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/pesapal-callback",
+  "url": "https://www.bak55talent.co.ke/api/pesapal/callback",
   "ipn_notification_type": "POST"
 }'
 ```
@@ -48,7 +58,7 @@ curl --location 'https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN' \
 ```json
 {
   "ipn_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "url": "https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/pesapal-callback",
+  "url": "https://www.bak55talent.co.ke/api/pesapal/callback",
   "created_date": "2025-10-19T..."
 }
 ```
@@ -75,20 +85,26 @@ The Pesapal payment integration is fully implemented in code. However, to make i
 
 ## Required Setup Steps
 
-### 1. Register IPN (Instant Payment Notification) URL
-You need to register your callback URL with Pesapal so they can notify your system when payment status changes.
+### 1. Set Up Proxy & Register IPN URL
 
-**IPN URL to register:**
+Due to Pesapal's domain restriction, you need to:
+1. **Set up a proxy** on your domain - See `PESAPAL_PROXY_SETUP.md` (15 min)
+2. **Register your domain's IPN URL** with Pesapal (not the Supabase URL directly)
+
+**IPN URL to register (after proxy setup):**
+```
+https://www.bak55talent.co.ke/api/pesapal/callback
+```
+
+This proxy will forward requests to:
 ```
 https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/pesapal-callback
 ```
 
-**How to register:**
-1. Log in to your Pesapal dashboard: https://www.pesapal.com
-2. Navigate to Settings > IPN Settings
-3. Add the IPN URL above
-4. Save the IPN ID that Pesapal generates
-5. Add the IPN ID to your Lovable secrets as `PESAPAL_NOTIFICATION_ID`
+**Steps:**
+1. Complete proxy setup from `PESAPAL_PROXY_SETUP.md`
+2. Register the proxy URL with Pesapal (get IPN ID)
+3. Add the IPN ID to your Lovable secrets as `PESAPAL_NOTIFICATION_ID`
 
 ### 2. Verify Your Pesapal Credentials
 Ensure these secrets are correctly set in your Lovable Cloud:
@@ -130,7 +146,9 @@ Redirect to Pesapal Gateway
   ↓
 User Completes Payment
   ↓
-Pesapal Callback (IPN) → pesapal-callback function
+Pesapal IPN → www.bak55talent.co.ke/api/pesapal/callback (Proxy)
+  ↓
+Proxy forwards to → Supabase Edge Function (pesapal-callback)
   ↓
 Update Transaction Status
   ↓
