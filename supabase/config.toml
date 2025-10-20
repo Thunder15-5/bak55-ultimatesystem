@@ -44,3 +44,12 @@ verify_jwt = true
 
 [functions.ai-judge-submission]
 verify_jwt = false
+
+[functions.pesapal-initiate]
+verify_jwt = true
+
+[functions.pesapal-callback]
+verify_jwt = false
+
+[functions.pesapal-verify]
+verify_jwt = true

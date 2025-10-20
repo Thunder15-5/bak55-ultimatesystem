@@ -14,6 +14,7 @@ import {
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Share2, Wallet
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
 interface WithdrawalRequest {
@@ -34,6 +35,7 @@ interface CoinPurchase {
   email: string;
   status: string;
   reference: string;
+  payment_reference?: string;
   created_at: string;
   metadata: any;
   profiles?: any;
@@ -676,10 +678,77 @@ export default function Admin() {
               <CardHeader>
                 <CardTitle>Pending Coin Purchase Requests</CardTitle>
                 <CardDescription>
-                  Review and approve manual BAKCoin purchase requests
+                  Pesapal payments are processed automatically. Use manual verification only if needed.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                {/* Manual Verification Section */}
+                <Card className="border-warning/50 bg-warning/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-warning" />
+                      Manual Payment Verification
+                    </CardTitle>
+                    <CardDescription>
+                      Verify stuck or pending payments manually using Transaction ID or OrderTrackingId
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter Transaction ID or OrderTrackingId"
+                        id="verify-payment-id"
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={async () => {
+                          const input = document.getElementById('verify-payment-id') as HTMLInputElement;
+                          const id = input?.value?.trim();
+                          if (!id) {
+                            toast.error('Please enter a Transaction ID or OrderTrackingId');
+                            return;
+                          }
+                          
+                          setProcessing(id);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('pesapal-verify', {
+                              body: { 
+                                transaction_id: id.length === 36 ? id : undefined,
+                                order_tracking_id: id.length !== 36 ? id : undefined,
+                              }
+                            });
+
+                            if (error) throw error;
+
+                            if (data?.success) {
+                              toast.success(data.message || 'Payment verified successfully');
+                              fetchAllData();
+                              if (input) input.value = '';
+                            } else {
+                              toast.error(data?.error || 'Verification failed');
+                            }
+                          } catch (error: any) {
+                            toast.error(error.message || 'Failed to verify payment');
+                          } finally {
+                            setProcessing(null);
+                          }
+                        }}
+                        disabled={!!processing}
+                      >
+                        {processing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="mr-2 h-4 w-4" />
+                            Verify Payment
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Pending Payments List */}
                 {coinPurchases.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No pending coin purchase requests
@@ -694,7 +763,7 @@ export default function Admin() {
                               <div className="flex items-center gap-2">
                                 <Coins className="h-5 w-5 text-primary" />
                                 <h3 className="text-xl font-bold">
-                                  {purchase.metadata.bak_amount} BAK
+                                  {(purchase.amount / 20).toFixed(2)} BAK
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground">
@@ -706,15 +775,40 @@ export default function Admin() {
                               <p className="text-sm text-muted-foreground">
                                 <strong>Reference:</strong> {purchase.reference}
                               </p>
+                              {purchase.payment_reference && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>OrderTrackingId:</strong> {purchase.payment_reference}
+                                </p>
+                              )}
                               <p className="text-xs text-muted-foreground">
                                 Requested: {new Date(purchase.created_at).toLocaleString()}
                               </p>
                             </div>
                             <div className="flex flex-col gap-2">
                               <Button
-                                variant="default"
+                                variant="outline"
                                 size="sm"
-                                onClick={() => handleApproveCoinPurchase(purchase)}
+                                onClick={async () => {
+                                  setProcessing(purchase.id);
+                                  try {
+                                    const { data, error } = await supabase.functions.invoke('pesapal-verify', {
+                                      body: { transaction_id: purchase.id }
+                                    });
+
+                                    if (error) throw error;
+
+                                    if (data?.success) {
+                                      toast.success(data.message || 'Payment verified successfully');
+                                      fetchAllData();
+                                    } else {
+                                      toast.error(data?.error || 'Verification failed');
+                                    }
+                                  } catch (error: any) {
+                                    toast.error(error.message || 'Failed to verify payment');
+                                  } finally {
+                                    setProcessing(null);
+                                  }
+                                }}
                                 disabled={processing === purchase.id}
                                 className="w-full"
                               >
@@ -723,23 +817,7 @@ export default function Admin() {
                                 ) : (
                                   <>
                                     <Check className="mr-2 h-4 w-4" />
-                                    Manual Approve
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleRejectCoinPurchase(purchase)}
-                                disabled={processing === purchase.id}
-                                className="w-full"
-                              >
-                                {processing === purchase.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <X className="mr-2 h-4 w-4" />
-                                    Reject
+                                    Verify
                                   </>
                                 )}
                               </Button>

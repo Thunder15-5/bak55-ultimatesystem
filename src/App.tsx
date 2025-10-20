@@ -37,6 +37,10 @@ import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
+import PaymentCallback from "./pages/PaymentCallback";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentPending from "./pages/PaymentPending";
+import PaymentFailed from "./pages/PaymentFailed";
 import VerifyEmail from "./pages/VerifyEmail";
 import EditCompetition from "./pages/admin/EditCompetition";
 import CashReserve from "./pages/admin/CashReserve";
@@ -68,7 +72,11 @@ const App = () => (
                 <Route path="/track/:id" element={<TrackDetails />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />
                 <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-                <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
+              <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
+              <Route path="/payment/callback" element={<PaymentCallback />} />
+              <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+              <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
+              <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/playlists" element={<ProtectedRoute><Playlists /></ProtectedRoute>} />
                 <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />
