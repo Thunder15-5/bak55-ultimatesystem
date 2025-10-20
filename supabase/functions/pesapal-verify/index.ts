@@ -18,21 +18,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify admin access
+    // Verify admin access if authorization header is present
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabaseClient.auth.getUser(token);
-      
-      if (!user) {
-        throw new Error('Unauthorized');
-      }
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabaseClient.auth.getUser(token);
+        
+        if (user) {
+          const { data: hasRole } = await supabaseClient
+            .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-      const { data: hasRole } = await supabaseClient
-        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
-
-      if (!hasRole) {
-        throw new Error('Admin access required');
+          if (!hasRole) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Admin access required' }),
+              { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+      } catch (authError) {
+        console.error('Auth verification error:', authError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 
@@ -41,7 +50,10 @@ serve(async (req) => {
     console.log('Manual verification requested:', { transaction_id, order_tracking_id });
 
     if (!transaction_id && !order_tracking_id) {
-      throw new Error('Either transaction_id or order_tracking_id is required');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Either transaction_id or order_tracking_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Get Pesapal credentials
@@ -50,7 +62,10 @@ serve(async (req) => {
     const environment = Deno.env.get('PESAPAL_ENVIRONMENT') || 'sandbox';
 
     if (!consumerKey || !consumerSecret) {
-      throw new Error('Pesapal credentials not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Pesapal credentials not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const baseUrl = environment === 'live' 
@@ -58,30 +73,47 @@ serve(async (req) => {
       : 'https://cybqa.pesapal.com/pesapalv3';
 
     // Step 1: Get transaction from database
-    let transaction;
+    let transaction = null;
+    
     if (transaction_id) {
-      const { data } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('payment_transactions')
         .select('*')
         .eq('id', transaction_id)
-        .single();
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error('Failed to fetch transaction');
+      }
       transaction = data;
     } else {
-      const { data } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('payment_transactions')
         .select('*')
         .eq('payment_reference', order_tracking_id)
-        .single();
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error('Failed to fetch transaction');
+      }
       transaction = data;
     }
 
     if (!transaction) {
-      throw new Error('Transaction not found in database');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Transaction not found in database' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const trackingId = transaction.payment_reference || order_tracking_id;
     if (!trackingId) {
-      throw new Error('No OrderTrackingId available for this transaction');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No OrderTrackingId available for this transaction' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Step 2: Get OAuth token
@@ -99,6 +131,8 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Token request failed:', errorText);
       throw new Error('Failed to get Pesapal authentication token');
     }
 
@@ -120,7 +154,8 @@ serve(async (req) => {
 
     if (!statusResponse.ok) {
       const errorText = await statusResponse.text();
-      throw new Error(`Failed to get transaction status: ${errorText}`);
+      console.error('Status request failed:', errorText);
+      throw new Error(`Failed to get transaction status from Pesapal`);
     }
 
     const statusData = await statusResponse.json();
@@ -154,7 +189,8 @@ serve(async (req) => {
       .eq('id', transaction.id);
 
     if (updateError) {
-      throw updateError;
+      console.error('Update error:', updateError);
+      throw new Error('Failed to update transaction');
     }
 
     // Step 5: If successful and not yet credited, credit the wallet
@@ -163,14 +199,16 @@ serve(async (req) => {
       
       const bakAmount = transaction.amount / 20;
 
-      const { data: wallet } = await supabaseClient
+      const { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
         .select('*')
         .eq('user_id', transaction.user_id)
-        .single();
+        .maybeSingle();
 
-      if (wallet) {
-        await supabaseClient
+      if (walletError) {
+        console.error('Wallet fetch error:', walletError);
+      } else if (wallet) {
+        const { error: balanceError } = await supabaseClient
           .from('wallets')
           .update({ 
             balance: wallet.balance + bakAmount,
@@ -178,7 +216,11 @@ serve(async (req) => {
           })
           .eq('id', wallet.id);
 
-        await supabaseClient
+        if (balanceError) {
+          console.error('Balance update error:', balanceError);
+        }
+
+        const { error: txError } = await supabaseClient
           .from('transactions')
           .insert({
             wallet_id: wallet.id,
@@ -194,7 +236,11 @@ serve(async (req) => {
             }
           });
 
-        console.log('Wallet credited:', bakAmount, 'BAK');
+        if (txError) {
+          console.error('Transaction insert error:', txError);
+        } else {
+          console.log('Wallet credited:', bakAmount, 'BAK');
+        }
       }
     }
 
@@ -223,7 +269,7 @@ serve(async (req) => {
         error: error.message || 'Failed to verify payment' 
       }),
       { 
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
