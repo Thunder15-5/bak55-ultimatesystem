@@ -28,6 +28,12 @@ curl --location 'https://pay.pesapal.com/v3/api/Auth/RequestToken' \
 
 ### Step 2: Register IPN URL with Pesapal
 
+⚠️ **IMPORTANT - Domain Matching:**
+- Pesapal requires the IPN URL domain to match your merchant account domain
+- If registered with `www.bak55talent.co.ke`, IPN must use `www.bak55talent.co.ke`
+- **DO NOT** use `app.bak55talent.co.ke` if merchant is `www.bak55talent.co.ke`
+- **Recommended:** Use the Supabase edge function URL directly (no domain restrictions):
+
 ```bash
 curl --location 'https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN_FROM_STEP_1' \
