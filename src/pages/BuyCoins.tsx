@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Info, AlertCircle, Coins as CoinsIcon, DollarSign } from "lucide-react";
+import { ArrowLeft, Info, Coins as CoinsIcon, DollarSign } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -15,11 +14,10 @@ const BuyCoins = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const kshAmount = parseFloat(amount) || 0;
   const bakAmount = kshAmount / 20; // 20 KSh = 1 BAK
-  const MIN_AMOUNT = 100; // Minimum 20 KSh
+  const MIN_AMOUNT = 100;
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,52 +41,12 @@ const BuyCoins = () => {
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      // Get user profile for email
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile) {
-        throw new Error("Profile not found");
-      }
-
-      // Initiate Pesapal payment (will create transaction record)
-      const { data, error } = await supabase.functions.invoke("pesapal-initiate", {
-        body: {
-          user_id: user.id,
-          amount: kshAmount,
-          currency: "KES",
-          description: `Purchase ${bakAmount} BAKCoins`,
-          callback_url: `${window.location.origin}/payment/success`,
-          email: profile.email,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.redirect_url) {
-        // Redirect to Pesapal payment page
-        window.location.href = data.redirect_url;
-      } else if (!data?.success) {
-        navigate("/payment/failed?error=" + encodeURIComponent(data?.error || "Payment initiation failed"));
-      } else {
-        throw new Error("Failed to initiate payment");
-      }
-    } catch (error: any) {
-      console.error("Purchase error:", error);
-      toast({
-        title: "Purchase Failed",
-        description: error.message || "Failed to initiate payment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Payment integration removed - ready for new implementation
+    toast({
+      title: "Payment System",
+      description: "Payment gateway integration is being updated. Please check back soon.",
+      variant: "default",
+    });
   };
 
   return (
@@ -161,37 +119,30 @@ const BuyCoins = () => {
               <div className="bg-muted/50 p-4 rounded-lg flex gap-3">
                 <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div className="text-sm space-y-1">
-                  <p className="font-medium">Payment Information:</p>
+                  <p className="font-medium">Coming Soon:</p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>Secure payment powered by Pesapal</li>
-                    <li>Supports M-Pesa, Airtel Money, Visa, Mastercard</li>
-                    <li>BAKCoins added instantly after successful payment</li>
-                    <li>All transactions are encrypted and secure</li>
+                    <li>Multiple payment methods</li>
+                    <li>Instant BAKCoin delivery</li>
+                    <li>Secure encrypted transactions</li>
+                    <li>Email confirmations</li>
                   </ul>
                 </div>
               </div>
               
               <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Available Payment Methods</AlertTitle>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Payment Gateway Integration</AlertTitle>
                 <AlertDescription>
-                  Pay securely using M-Pesa, Airtel Money, Credit/Debit Cards (Visa, Mastercard), and more through Pesapal's secure gateway.
+                  We're setting up a new payment system to provide you with the best experience. Check back soon for secure payments via M-Pesa, cards, and more.
                 </AlertDescription>
               </Alert>
 
               <Button
                 type="submit"
                 className="w-full h-12 md:h-14 text-base touch-manipulation"
-                disabled={isLoading || kshAmount < MIN_AMOUNT}
+                disabled
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Proceed to Payment"
-                )}
+                Coming Soon
               </Button>
             </form>
           </CardContent>

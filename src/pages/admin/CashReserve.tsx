@@ -188,7 +188,7 @@ export default function CashReserve() {
         description: `Purchased ${bakAmount} BAKCoins (Admin Approved)`,
         reference_id: transactionId,
         metadata: {
-          payment_method: "pesapal",
+          payment_method: "manual",
           amount_paid_ksh: payment.amount,
           admin_approved: true,
           approved_by: user?.id,
