@@ -8,7 +8,8 @@ import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { contactSchema, mapDatabaseError } from "@/lib/validation";
+import { contactSchema, mapDatabaseError, sanitizeText } from "@/lib/validation";
+import { rateLimiter } from "@/lib/rateLimiter";
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -19,15 +20,25 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Rate limiting: 3 contact submissions per hour
+    const rateLimitKey = `contact_${email.toLowerCase()}`;
+    if (!rateLimiter.check(rateLimitKey, { maxRequests: 3, windowMs: 3600000 })) {
+      toast.error('Too many submissions', {
+        description: 'Please wait an hour before submitting again',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Validate input
+      // Validate and sanitize input
       const validated = contactSchema.parse({
-        name: name.trim(),
+        name: sanitizeText(name.trim()),
         email: email.trim(),
-        subject: subject.trim(),
-        message: message.trim(),
+        subject: sanitizeText(subject.trim()),
+        message: sanitizeText(message.trim()),
       });
 
       // Store in database

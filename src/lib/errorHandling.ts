@@ -48,6 +48,11 @@ export const handleSupabaseError = (error: any): string => {
     return 'Cannot perform this action due to related data.';
   }
   
+  // In production, never expose internal error details
+  if (!import.meta.env.DEV) {
+    return 'An error occurred. Please try again or contact support if the issue persists.';
+  }
+  
   return error?.message || 'An unexpected error occurred. Please try again.';
 };
 

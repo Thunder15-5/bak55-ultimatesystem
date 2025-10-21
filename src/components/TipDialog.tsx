@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { tipSchema, mapDatabaseError } from "@/lib/validation";
+import { tipSchema, mapDatabaseError, sanitizeText } from "@/lib/validation";
+import { rateLimiter, RATE_LIMITS } from "@/lib/rateLimiter";
 
 interface TipDialogProps {
   open: boolean;
@@ -24,14 +25,22 @@ export function TipDialog({ open, onOpenChange, artistId, artistName, trackId, o
   const [loading, setLoading] = useState(false);
 
   const handleSendTip = async () => {
+    // Rate limiting: 5 tips per minute
+    if (!rateLimiter.check(`tip_${artistId}`, RATE_LIMITS.TIP)) {
+      toast.error('Slow down!', {
+        description: 'You can only send 5 tips per minute',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Validate input
+      // Validate and sanitize input
       const tipAmount = parseFloat(amount);
       const validated = tipSchema.parse({
         amount: tipAmount,
-        message: message.trim() || undefined,
+        message: message.trim() ? sanitizeText(message.trim()) : undefined,
       });
 
       // Round to 2 decimal places to avoid floating point issues

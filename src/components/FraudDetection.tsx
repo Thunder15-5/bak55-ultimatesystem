@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShieldAlert, Loader2, AlertTriangle } from "lucide-react";
+import { rateLimiter, RATE_LIMITS } from "@/lib/rateLimiter";
 
 interface FraudDetectionProps {
   competitionId: string;
@@ -23,6 +24,15 @@ export function FraudDetection({ competitionId, competitionTitle }: FraudDetecti
   const [analysis, setAnalysis] = useState<FraudAnalysis | null>(null);
 
   const runFraudDetection = async () => {
+    // Rate limiting: 2 fraud checks per hour per competition
+    const rateLimitKey = `fraud_detection_${competitionId}`;
+    if (!rateLimiter.check(rateLimitKey, { maxRequests: 2, windowMs: 3600000 })) {
+      toast.error('Rate limit exceeded', {
+        description: 'You can only run fraud detection twice per hour',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
