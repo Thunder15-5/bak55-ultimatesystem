@@ -26,10 +26,13 @@ export default function UploadTrack() {
   const [submitToCompetition, setSubmitToCompetition] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState('');
   const [competitions, setCompetitions] = useState<any[]>([]);
+  const [canUpload, setCanUpload] = useState(true);
+  const [uploadMessage, setUploadMessage] = useState("");
 
   useEffect(() => {
     fetchActiveCompetitions();
-  }, []);
+    checkUploadEligibility();
+  }, [user]);
 
   const fetchActiveCompetitions = async () => {
     try {
@@ -43,6 +46,38 @@ export default function UploadTrack() {
       setCompetitions(data || []);
     } catch (error) {
       console.error('Error fetching competitions:', error);
+    }
+  };
+
+  const checkUploadEligibility = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('can_user_upload_track', {
+        user_id_param: user.id
+      });
+
+      if (error) throw error;
+
+      setCanUpload(data);
+      
+      if (!data) {
+        // Check pending tracks
+        const { data: tracks } = await supabase
+          .from('tracks')
+          .select('title, moderation_status')
+          .eq('artist_id', user.id)
+          .eq('moderation_status', 'pending')
+          .single();
+
+        if (tracks) {
+          setUploadMessage(`Your track "${tracks.title}" is pending approval. Once approved by admin, you can upload unlimited tracks!`);
+        } else {
+          setUploadMessage("New users can upload 1 track. Once approved by admin, unlimited uploads available!");
+        }
+      }
+    } catch (error) {
+      console.error('Error checking upload eligibility:', error);
     }
   };
 
@@ -81,7 +116,7 @@ export default function UploadTrack() {
         coverUrl = publicUrl;
       }
 
-      // Create track record
+      // Create track record with pending moderation status
       const { data: trackData, error: dbError } = await supabase
         .from("tracks")
         .insert({
@@ -90,11 +125,30 @@ export default function UploadTrack() {
           genre: formData.genre,
           audio_url: audioUrl,
           cover_image: coverUrl,
+          moderation_status: 'pending',
         })
         .select()
         .single();
 
       if (dbError) throw dbError;
+
+      // Send notification email to company
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'info@bak55talent.co.ke',
+          subject: 'New Track Upload - Pending Approval',
+          html: `
+            <h2>New Track Uploaded</h2>
+            <p><strong>Artist:</strong> ${user.email}</p>
+            <p><strong>Track Title:</strong> ${formData.title}</p>
+            <p><strong>Genre:</strong> ${formData.genre || 'Not specified'}</p>
+            <p><strong>Status:</strong> Pending Approval</p>
+            <p><strong>Uploaded:</strong> ${new Date().toLocaleString()}</p>
+            <p><a href="${window.location.origin}/admin">Review in Admin Panel</a></p>
+          `,
+          type: 'upload',
+        },
+      });
 
       // Handle competition submission
       if (submitToCompetition && selectedCompetition) {
@@ -146,12 +200,20 @@ export default function UploadTrack() {
 
         if (submissionError) throw submissionError;
 
-        toast.success("Track uploaded and submitted to competition!");
+        toast.success("Track uploaded and submitted to competition! Pending admin approval.");
       } else {
-        toast.success("Track uploaded successfully!");
+        toast.success("Track uploaded successfully! Pending admin approval.");
       }
 
-      navigate("/catalog");
+      // Refresh upload eligibility
+      await checkUploadEligibility();
+
+      // Reset form
+      setFormData({ title: "", genre: "", description: "" });
+      setAudioFile(null);
+      setCoverFile(null);
+      setSubmitToCompetition(false);
+      setSelectedCompetition("");
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
@@ -206,18 +268,39 @@ export default function UploadTrack() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Upload your track and reach thousands of listeners across the platform
           </p>
+          
+          {!canUpload && uploadMessage && (
+            <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">{uploadMessage}</p>
+            </div>
+          )}
         </div>
       </section>
       
       <div className="container mx-auto px-4 pb-12">
-        <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-2xl">Track Details</CardTitle>
-            <CardDescription>
-              Fill in the information about your music
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {!canUpload ? (
+          <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur-sm border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-2xl">Upload Limit Reached</CardTitle>
+              <CardDescription>
+                {uploadMessage || "Please wait for admin approval before uploading more tracks."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/catalog')} variant="outline" className="w-full">
+                View Music Catalog
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur-sm border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-2xl">Track Details</CardTitle>
+              <CardDescription>
+                Fill in the information about your music
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="title">Track Title *</Label>
@@ -348,6 +431,7 @@ export default function UploadTrack() {
             </form>
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );

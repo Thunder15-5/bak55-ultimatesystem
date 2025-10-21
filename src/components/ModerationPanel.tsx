@@ -114,16 +114,17 @@ export function ModerationPanel() {
 
       if (error) throw error;
 
-      // Send notification to artist
+      // Get artist ID and email
       const item = items.find((i) => i.id === itemId);
       if (item) {
         const { data: artistData } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, email")
           .eq("username", item.artist_username)
           .single();
 
         if (artistData) {
+          // Send notification to artist
           await supabase.from("notifications").insert({
             user_id: artistData.id,
             type: "moderation",
@@ -132,6 +133,25 @@ export function ModerationPanel() {
               action === "approve" ? "approved" : "rejected"
             }${notes[itemId] ? `: ${notes[itemId]}` : ""}`,
             link: itemType === "track" ? `/track/${itemId}` : `/competition/${itemId}`,
+          });
+
+          // Send email notification to artist
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: artistData.email,
+              subject: `Your Track "${item.title}" has been ${action === "approve" ? "Approved" : "Rejected"}`,
+              html: `
+                <h2>Track ${action === "approve" ? "Approval" : "Rejection"} Notification</h2>
+                <p>Hello ${item.artist_username},</p>
+                <p>Your ${itemType} "<strong>${item.title}</strong>" has been <strong>${
+                  action === "approve" ? "approved" : "rejected"
+                }</strong>.</p>
+                ${notes[itemId] ? `<p><strong>Notes:</strong> ${notes[itemId]}</p>` : ""}
+                ${action === "approve" ? "<p>Your track is now live on the platform! Fans can now discover and listen to your music.</p>" : "<p>Please review the feedback and feel free to upload a revised version.</p>"}
+                <p>Best regards,<br>BAK55 Team</p>
+              `,
+              type: 'moderation',
+            },
           });
         }
       }

@@ -340,18 +340,21 @@ export type Database = {
           email: string
           id: string
           source: string | null
+          user_type: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
           source?: string | null
+          user_type?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
           source?: string | null
+          user_type?: string | null
         }
         Relationships: []
       }
@@ -1189,6 +1192,10 @@ export type Database = {
       calculate_submission_final_scores: {
         Args: { competition_uuid: string }
         Returns: undefined
+      }
+      can_user_upload_track: {
+        Args: { user_id_param: string }
+        Returns: boolean
       }
       has_role: {
         Args: {

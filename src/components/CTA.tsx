@@ -41,11 +41,11 @@ export const CTA = () => {
         throw dbError;
       }
 
-      // Send notification email to admin
-      await supabase.functions.invoke('send-email', {
+      // Send notification email to company
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
-          to: 'admin@bak55talent.co.ke',
-          subject: '🎯 New Early Access Signup',
+          to: 'info@bak55talent.co.ke',
+          subject: 'New Early Access Signup - CTA',
           template: 'contact_form',
           data: {
             name: 'Early Access User',

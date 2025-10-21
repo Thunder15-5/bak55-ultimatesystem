@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
+import { MessagesPanel } from "@/components/MessagesPanel";
 import { FraudDetection } from "@/components/FraudDetection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -476,7 +477,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Metrics
@@ -506,6 +507,9 @@ export default function Admin() {
             <TabsTrigger value="moderation">
               <ShieldAlert className="h-4 w-4 mr-2" />
               Moderation
+            </TabsTrigger>
+            <TabsTrigger value="messages">
+              Messages
             </TabsTrigger>
           </TabsList>
 
@@ -993,6 +997,11 @@ export default function Admin() {
           {/* Content Moderation Tab */}
           <TabsContent value="moderation">
             <ModerationPanel />
+          </TabsContent>
+
+          {/* Messages Tab */}
+          <TabsContent value="messages">
+            <MessagesPanel />
           </TabsContent>
         </Tabs>
       </div>

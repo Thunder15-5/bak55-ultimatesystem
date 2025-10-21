@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle2, Music, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const artistBenefits = [
   "Upload unlimited music and videos",
@@ -29,14 +30,55 @@ const Join = () => {
   const [email, setEmail] = useState("");
   const [userType, setUserType] = useState<"artist" | "fan">("artist");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast.error("Please enter your email");
       return;
     }
-    toast.success(`Thanks for your interest! We'll contact you soon about joining as ${userType === "artist" ? "an artist" : "a fan"}.`);
-    setEmail("");
+
+    try {
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('early_access_signups')
+        .insert({
+          email: email.trim().toLowerCase(),
+          source: 'join_page',
+          user_type: userType,
+        });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        toast.error("Failed to save your signup. Please try again.");
+        return;
+      }
+
+      // Send notification email to company
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'info@bak55talent.co.ke',
+          subject: `New ${userType === 'artist' ? 'Artist' : 'Fan'} Signup - Join Page`,
+          html: `
+            <h2>New ${userType === 'artist' ? 'Artist' : 'Fan'} Signup</h2>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>User Type:</strong> ${userType === 'artist' ? 'Artist' : 'Fan'}</p>
+            <p><strong>Source:</strong> Join Page (100 Artist Alliance)</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+          `,
+          type: 'signup',
+        },
+      });
+
+      if (emailError) {
+        console.error('Email error:', emailError);
+      }
+
+      toast.success(`Thanks for your interest! We'll contact you soon about joining as ${userType === "artist" ? "an artist" : "a fan"}.`);
+      setEmail("");
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   return (
