@@ -452,6 +452,9 @@ export type Database = {
           payment_provider: string | null
           payment_reference: string | null
           reference: string
+          selar_customer_id: string | null
+          selar_payment_link: string | null
+          selar_transaction_id: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -466,6 +469,9 @@ export type Database = {
           payment_provider?: string | null
           payment_reference?: string | null
           reference: string
+          selar_customer_id?: string | null
+          selar_payment_link?: string | null
+          selar_transaction_id?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -480,6 +486,9 @@ export type Database = {
           payment_provider?: string | null
           payment_reference?: string | null
           reference?: string
+          selar_customer_id?: string | null
+          selar_payment_link?: string | null
+          selar_transaction_id?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string

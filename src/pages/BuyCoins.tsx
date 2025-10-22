@@ -43,19 +43,20 @@ const BuyCoins = () => {
     setProcessing(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('pesapal-initiate', {
+      const { data, error } = await supabase.functions.invoke('selar-initiate', {
         body: {
           amount: kshAmount,
           email: user.email || '',
-          phone_number: '',
+          product_type: 'bakcoins',
+          description: `Purchase ${bakAmount.toFixed(1)} BAKCoins`
         }
       });
 
       if (error) throw error;
 
-      if (data?.success && data?.redirect_url) {
-        // Redirect to Pesapal payment page
-        window.location.href = data.redirect_url;
+      if (data?.success && data?.payment_url) {
+        // Redirect to Selar payment page
+        window.location.href = data.payment_url;
       } else {
         throw new Error('Failed to generate payment URL');
       }
@@ -94,9 +95,9 @@ const BuyCoins = () => {
           <CardContent className="space-y-6">
             <Alert className="bg-primary/5 border-primary/20">
               <AlertCircle className="h-4 w-4 text-primary" />
-              <AlertTitle>Pesapal Payment</AlertTitle>
+              <AlertTitle>Selar Payment</AlertTitle>
               <AlertDescription>
-                Pay securely using M-Pesa, Airtel Money, or Card via Pesapal
+                Pay securely using M-Pesa, Card, or Bank Transfer via Selar
               </AlertDescription>
             </Alert>
 
