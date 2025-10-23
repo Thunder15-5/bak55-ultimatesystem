@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,9 +13,13 @@ interface ContentItem {
   title: string;
   type: "track" | "submission";
   artist_username: string;
+  artist_email: string;
   moderation_status: string;
   moderation_notes?: string;
   created_at: string;
+  audio_url?: string;
+  cover_image?: string;
+  genre?: string;
 }
 
 export function ModerationPanel() {
@@ -37,10 +42,13 @@ export function ModerationPanel() {
         .select(`
           id,
           title,
+          genre,
+          audio_url,
+          cover_image,
           moderation_status,
           moderation_notes,
           created_at,
-          profiles:artist_id (username)
+          profiles:artist_id (username, email)
         `)
         .in("moderation_status", ["pending", "flagged"]);
 
@@ -50,10 +58,12 @@ export function ModerationPanel() {
         .select(`
           id,
           title,
+          audio_url,
+          cover_image,
           moderation_status,
           moderation_notes,
           created_at,
-          profiles:artist_id (username)
+          profiles:artist_id (username, email)
         `)
         .in("moderation_status", ["pending", "flagged"]);
 
@@ -65,9 +75,13 @@ export function ModerationPanel() {
         title: t.title,
         type: "track" as const,
         artist_username: t.profiles?.username || "Unknown",
+        artist_email: t.profiles?.email || "",
         moderation_status: t.moderation_status,
         moderation_notes: t.moderation_notes,
         created_at: t.created_at,
+        audio_url: t.audio_url,
+        cover_image: t.cover_image,
+        genre: t.genre,
       }));
 
       const submissionsFormatted: ContentItem[] = (submissions || []).map((s: any) => ({
@@ -75,9 +89,12 @@ export function ModerationPanel() {
         title: s.title,
         type: "submission" as const,
         artist_username: s.profiles?.username || "Unknown",
+        artist_email: s.profiles?.email || "",
         moderation_status: s.moderation_status,
         moderation_notes: s.moderation_notes,
         created_at: s.created_at,
+        audio_url: s.audio_url,
+        cover_image: s.cover_image,
       }));
 
       setItems([...tracksFormatted, ...submissionsFormatted]);
@@ -114,47 +131,7 @@ export function ModerationPanel() {
 
       if (error) throw error;
 
-      // Get artist ID and email
-      const item = items.find((i) => i.id === itemId);
-      if (item) {
-        const { data: artistData } = await supabase
-          .from("profiles")
-          .select("id, email")
-          .eq("username", item.artist_username)
-          .single();
-
-        if (artistData) {
-          // Send notification to artist
-          await supabase.from("notifications").insert({
-            user_id: artistData.id,
-            type: "moderation",
-            title: `Content ${action === "approve" ? "Approved" : "Rejected"}`,
-            message: `Your ${itemType} "${item.title}" has been ${
-              action === "approve" ? "approved" : "rejected"
-            }${notes[itemId] ? `: ${notes[itemId]}` : ""}`,
-            link: itemType === "track" ? `/track/${itemId}` : `/competition/${itemId}`,
-          });
-
-          // Send email notification to artist
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: artistData.email,
-              subject: `Your Track "${item.title}" has been ${action === "approve" ? "Approved" : "Rejected"}`,
-              html: `
-                <h2>Track ${action === "approve" ? "Approval" : "Rejection"} Notification</h2>
-                <p>Hello ${item.artist_username},</p>
-                <p>Your ${itemType} "<strong>${item.title}</strong>" has been <strong>${
-                  action === "approve" ? "approved" : "rejected"
-                }</strong>.</p>
-                ${notes[itemId] ? `<p><strong>Notes:</strong> ${notes[itemId]}</p>` : ""}
-                ${action === "approve" ? "<p>Your track is now live on the platform! Fans can now discover and listen to your music.</p>" : "<p>Please review the feedback and feel free to upload a revised version.</p>"}
-                <p>Best regards,<br>BAK55 Team</p>
-              `,
-              type: 'moderation',
-            },
-          });
-        }
-      }
+      // Note: Notifications are automatically sent via database triggers
 
       toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"}`);
       fetchPendingContent();
@@ -189,11 +166,26 @@ export function ModerationPanel() {
         <Card key={item.id}>
           <CardHeader>
             <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg">{item.title}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  By {item.artist_username} • {new Date(item.created_at).toLocaleDateString()}
-                </p>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  {item.cover_image && (
+                    <img 
+                      src={item.cover_image} 
+                      alt={item.title}
+                      className="w-16 h-16 rounded object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{item.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      By {item.artist_username} ({item.artist_email})
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleString()}
+                      {item.genre && ` • ${item.genre}`}
+                    </p>
+                  </div>
+                </div>
               </div>
               <Badge variant={item.moderation_status === "flagged" ? "destructive" : "secondary"}>
                 {item.type}
@@ -201,22 +193,42 @@ export function ModerationPanel() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Audio Preview */}
+            {item.audio_url && (
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm font-medium mb-2">Audio Preview:</p>
+                <audio controls className="w-full" preload="metadata">
+                  <source src={item.audio_url} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
+
             {item.moderation_notes && (
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Previous notes:</p>
                 <p className="text-sm">{item.moderation_notes}</p>
               </div>
             )}
-            <Textarea
-              placeholder="Add moderation notes (optional)..."
-              value={notes[item.id] || ""}
-              onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
-            />
+            
+            <div className="space-y-2">
+              <Label htmlFor={`notes-${item.id}`}>Moderation Notes (Optional)</Label>
+              <Textarea
+                id={`notes-${item.id}`}
+                placeholder="Add feedback for the artist..."
+                value={notes[item.id] || ""}
+                onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
+                rows={3}
+              />
+            </div>
+            
             <div className="flex gap-2">
               <Button
                 onClick={() => handleModerate(item.id, item.type, "approve")}
                 disabled={processing === item.id}
                 variant="default"
+                size="lg"
+                className="flex-1"
               >
                 {processing === item.id ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -229,6 +241,8 @@ export function ModerationPanel() {
                 onClick={() => handleModerate(item.id, item.type, "reject")}
                 disabled={processing === item.id}
                 variant="destructive"
+                size="lg"
+                className="flex-1"
               >
                 {processing === item.id ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
