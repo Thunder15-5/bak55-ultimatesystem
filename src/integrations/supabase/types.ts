@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          created_at: string | null
+          description: string
+          event_category: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          event_category: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          event_category?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_tasks: {
         Row: {
           completed_at: string | null
@@ -410,30 +455,42 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
+          category: string | null
           created_at: string
+          expires_at: string | null
           id: string
           link: string | null
           message: string
+          priority: string | null
           read: boolean
           title: string
           type: string
           user_id: string
         }
         Insert: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           link?: string | null
           message: string
+          priority?: string | null
           read?: boolean
           title: string
           type: string
           user_id: string
         }
         Update: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           link?: string | null
           message?: string
+          priority?: string | null
           read?: boolean
           title?: string
           type?: string
@@ -1194,10 +1251,7 @@ export type Database = {
       }
     }
     Functions: {
-      auto_select_competition_winners: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      auto_select_competition_winners: { Args: never; Returns: undefined }
       calculate_submission_final_scores: {
         Args: { competition_uuid: string }
         Returns: undefined

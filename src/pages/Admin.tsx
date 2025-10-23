@@ -3,6 +3,8 @@ import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
 import { MessagesPanel } from "@/components/MessagesPanel";
 import { FraudDetection } from "@/components/FraudDetection";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
+import { ActivityLogPanel } from "@/components/admin/ActivityLogPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +15,7 @@ import { toast } from "sonner";
 import { 
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins, Share2, Wallet
+  TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -477,7 +479,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-9 lg:w-auto">
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Metrics
@@ -510,6 +512,14 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="messages">
               Messages
+            </TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="h-4 w-4 mr-2" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="activity-log">
+              <FileText className="h-4 w-4 mr-2" />
+              Activity Log
             </TabsTrigger>
           </TabsList>
 
@@ -1002,6 +1012,16 @@ export default function Admin() {
           {/* Messages Tab */}
           <TabsContent value="messages">
             <MessagesPanel />
+          </TabsContent>
+
+          {/* Admin Notifications Tab */}
+          <TabsContent value="notifications">
+            <NotificationCenter />
+          </TabsContent>
+
+          {/* Activity Log Tab */}
+          <TabsContent value="activity-log">
+            <ActivityLogPanel />
           </TabsContent>
         </Tabs>
       </div>
