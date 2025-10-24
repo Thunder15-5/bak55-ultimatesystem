@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user roles and prefer admin if available
+          // Fetch user roles with proper priority: admin > artist > brand > fan
           supabase
             .from("user_roles")
             .select("role")
@@ -53,10 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .then(({ data: roles }) => {
               const allRoles = roles?.map((r: any) => r.role) ?? [];
               setUserRoles(allRoles);
-              const role = allRoles.includes('admin')
-                ? 'admin'
-                : allRoles[0] ?? null;
-              setUserRole(role);
+              
+              // Priority order: admin > artist > brand > fan
+              let primaryRole = null;
+              if (allRoles.includes('admin')) primaryRole = 'admin';
+              else if (allRoles.includes('artist')) primaryRole = 'artist';
+              else if (allRoles.includes('brand')) primaryRole = 'brand';
+              else if (allRoles.includes('fan')) primaryRole = 'fan';
+              
+              setUserRole(primaryRole);
             });
         } else {
           setUserRole(null);
@@ -78,10 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .then(({ data: roles }) => {
             const allRoles = roles?.map((r: any) => r.role) ?? [];
             setUserRoles(allRoles);
-            const role = allRoles.includes('admin')
-              ? 'admin'
-              : allRoles[0] ?? null;
-            setUserRole(role);
+            
+            // Priority order: admin > artist > brand > fan
+            let primaryRole = null;
+            if (allRoles.includes('admin')) primaryRole = 'admin';
+            else if (allRoles.includes('artist')) primaryRole = 'artist';
+            else if (allRoles.includes('brand')) primaryRole = 'brand';
+            else if (allRoles.includes('fan')) primaryRole = 'fan';
+            
+            setUserRole(primaryRole);
             setLoading(false);
           });
       } else {
@@ -152,7 +162,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("user_id", data.user.id);
 
       const allRoles = roles?.map((r: any) => r.role) ?? [];
-      const role = allRoles.includes('admin') ? 'admin' : allRoles[0] ?? null;
+      
+      // Priority order: admin > artist > brand > fan
+      let role = null;
+      if (allRoles.includes('admin')) role = 'admin';
+      else if (allRoles.includes('artist')) role = 'artist';
+      else if (allRoles.includes('brand')) role = 'brand';
+      else if (allRoles.includes('fan')) role = 'fan';
 
       toast.success("Logged in successfully!");
       
