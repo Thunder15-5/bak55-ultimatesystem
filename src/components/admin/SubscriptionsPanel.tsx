@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Crown, Sparkles, TrendingUp, DollarSign, Users, Calendar } from "lucide-react";
+import { Crown, Sparkles, TrendingUp, DollarSign, Users, Calendar, RotateCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -139,6 +139,23 @@ export function SubscriptionsPanel() {
     }
   };
 
+  const handleResetRevenue = async () => {
+    const confirmed = confirm('⚠️ WARNING: This will permanently delete ALL subscription transaction history and reset revenue to 0. This action cannot be undone. Continue?');
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('subscription_transactions')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+
+    if (error) {
+      toast.error('Failed to reset revenue');
+    } else {
+      toast.success('Revenue counter reset to 0');
+      fetchMetrics();
+    }
+  };
+
   const filteredSubscriptions = subscriptions.filter(sub =>
     sub.profiles.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sub.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -164,7 +181,17 @@ export function SubscriptionsPanel() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue (BAK)</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleResetRevenue}
+                className="h-6 w-6 p-0"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </Button>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.totalRevenue.toLocaleString()}</div>

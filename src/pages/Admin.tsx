@@ -7,6 +7,7 @@ import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { ActivityLogPanel } from "@/components/admin/ActivityLogPanel";
 import { SubscriptionsPanel } from "@/components/admin/SubscriptionsPanel";
 import { EarlyAccessPanel } from "@/components/admin/EarlyAccessPanel";
+import { UsersPanel } from "@/components/admin/UsersPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -858,64 +859,7 @@ export default function Admin() {
 
           {/* User Management Tab */}
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>View and manage all platform users</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {users.map((user) => (
-                    <Card key={user.id} className="border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold">{user.username}</h4>
-                              {user.user_roles.map((role) => (
-                                <Badge key={role.role} variant="secondary">
-                                  {role.role}
-                                </Badge>
-                              ))}
-                              {user.banned && (
-                                <Badge variant="destructive">
-                                  <ShieldAlert className="h-3 w-3 mr-1" />
-                                  Banned
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Joined: {new Date(user.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Button
-                            variant={user.banned ? "default" : "destructive"}
-                            size="sm"
-                            onClick={() => handleBanUser(user.id, user.banned)}
-                            disabled={processing === user.id}
-                          >
-                            {processing === user.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : user.banned ? (
-                              <>
-                                <ShieldCheck className="mr-2 h-4 w-4" />
-                                Unban
-                              </>
-                            ) : (
-                              <>
-                                <ShieldAlert className="mr-2 h-4 w-4" />
-                                Ban
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <UsersPanel />
           </TabsContent>
 
           {/* Competition Management Tab */}
