@@ -30,7 +30,7 @@ interface Track {
 export default function TrackDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
@@ -145,6 +145,11 @@ export default function TrackDetails() {
     if (!user) {
       toast.error("Please log in to like tracks");
       navigate("/login");
+      return;
+    }
+
+    if (userRole === 'fan') {
+      toast.error("Upgrade to Artist to like tracks");
       return;
     }
 
@@ -365,9 +370,10 @@ export default function TrackDetails() {
             {user && (
               <Button 
                 onClick={handleLike} 
-                disabled={liking}
+                disabled={liking || userRole === 'fan'}
                 size="lg"
                 variant={isLiked ? "default" : "outline"}
+                title={userRole === 'fan' ? "Upgrade to Artist to like tracks" : ""}
               >
                 {liking ? (
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />

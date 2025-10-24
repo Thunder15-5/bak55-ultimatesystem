@@ -28,7 +28,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ trackId }: CommentSectionProps) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -274,7 +274,7 @@ export function CommentSection({ trackId }: CommentSectionProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Add Comment Form */}
-        {user && (
+        {user && userRole !== 'fan' && (
           <form onSubmit={handleSubmitComment} className="space-y-4">
             <Textarea
               placeholder="Add a comment..."
@@ -292,6 +292,14 @@ export function CommentSection({ trackId }: CommentSectionProps) {
               Post Comment
             </Button>
           </form>
+        )}
+
+        {user && userRole === 'fan' && (
+          <div className="p-4 border rounded-lg bg-muted/50 text-center">
+            <p className="text-sm text-muted-foreground">
+              Upgrade to Artist to comment on tracks
+            </p>
+          </div>
         )}
 
         {!user && (

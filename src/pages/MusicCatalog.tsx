@@ -48,6 +48,14 @@ export default function MusicCatalog() {
     filterTracks();
   }, [tracks, searchQuery, selectedGenre, sortBy, minPlays]);
 
+  // Redirect fans to streaming page
+  useEffect(() => {
+    if (userRole === 'fan') {
+      navigate('/streaming');
+      toast.info('Discover music on the Streaming page');
+    }
+  }, [userRole, navigate]);
+
   const fetchTracks = async () => {
     try {
       const { data, error } = await supabase

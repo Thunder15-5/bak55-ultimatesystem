@@ -1279,6 +1279,7 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
       }
+      is_not_fan: { Args: { user_id_param: string }; Returns: boolean }
       transfer_funds: {
         Args: {
           recipient_id: string

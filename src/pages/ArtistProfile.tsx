@@ -11,7 +11,7 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { toast } from "sonner";
 import { 
   UserPlus, UserMinus, Music, Users, TrendingUp,
-  MapPin, Calendar, ExternalLink, Loader2, Play, Plus
+  MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock
 } from "lucide-react";
 
 interface ArtistData {
@@ -44,7 +44,7 @@ interface Track {
 
 export default function ArtistProfile() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { playTrack, addToQueue } = useMusicPlayer();
   const [artist, setArtist] = useState<ArtistData | null>(null);
@@ -143,6 +143,11 @@ export default function ArtistProfile() {
     if (!user) {
       toast.error("Please log in to follow artists");
       navigate("/login");
+      return;
+    }
+
+    if (userRole === 'fan') {
+      toast.error("Upgrade to Artist to follow artists");
       return;
     }
 
@@ -257,10 +262,20 @@ export default function ArtistProfile() {
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={artist.avatar_url} />
-                <AvatarFallback className="text-3xl">
-                  {artist.username.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
+                {userRole === 'fan' ? (
+                  <div className="w-full h-full bg-muted flex items-center justify-center relative">
+                    <div className="absolute inset-0 backdrop-blur-xl bg-background/50 flex items-center justify-center">
+                      <Lock className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <AvatarImage src={artist.avatar_url} />
+                    <AvatarFallback className="text-3xl">
+                      {artist.username.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </>
+                )}
               </Avatar>
 
               <div className="flex-1 space-y-4">
@@ -314,8 +329,9 @@ export default function ArtistProfile() {
                 <div className="flex gap-3">
                   <Button
                     onClick={handleFollow}
-                    disabled={following || user?.id === id}
+                    disabled={following || user?.id === id || userRole === 'fan'}
                     variant={isFollowing ? "outline" : "default"}
+                    title={userRole === 'fan' ? "Upgrade to Artist to follow artists" : ""}
                   >
                     {following ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
