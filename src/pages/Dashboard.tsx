@@ -3,6 +3,7 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { TrackRecommendations } from "@/components/TrackRecommendations";
+import { SubscriptionStatusCard } from "@/components/SubscriptionStatusCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,7 +176,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           {statCards.map((stat, index) => (
             <Link key={index} to={stat.link}>
               <Card className="group relative overflow-hidden border-primary/10 hover:border-primary/30 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer bg-card/60 backdrop-blur-xl shadow-lg hover:shadow-2xl">
@@ -199,8 +200,15 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+        ))}
         </div>
+
+        {/* Subscription Status - Artists Only */}
+        {userRole === "artist" && (
+          <div className="mb-8">
+            <SubscriptionStatusCard />
+          </div>
+        )}
 
         {/* Quick Actions & Recommendations */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>

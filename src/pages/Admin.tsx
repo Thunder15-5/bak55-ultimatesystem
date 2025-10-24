@@ -5,6 +5,8 @@ import { MessagesPanel } from "@/components/MessagesPanel";
 import { FraudDetection } from "@/components/FraudDetection";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { ActivityLogPanel } from "@/components/admin/ActivityLogPanel";
+import { SubscriptionsPanel } from "@/components/admin/SubscriptionsPanel";
+import { EarlyAccessPanel } from "@/components/admin/EarlyAccessPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +17,7 @@ import { toast } from "sonner";
 import { 
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText
+  TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -479,10 +481,18 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-11 lg:w-auto">
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Metrics
+            </TabsTrigger>
+            <TabsTrigger value="subscriptions">
+              <Users className="h-4 w-4 mr-2" />
+              Subscriptions
+            </TabsTrigger>
+            <TabsTrigger value="early-access">
+              <Mail className="h-4 w-4 mr-2" />
+              Leads
             </TabsTrigger>
             <TabsTrigger value="withdrawals">
               <DollarSign className="h-4 w-4 mr-2" />
@@ -1022,6 +1032,16 @@ export default function Admin() {
           {/* Activity Log Tab */}
           <TabsContent value="activity-log">
             <ActivityLogPanel />
+          </TabsContent>
+
+          {/* Subscriptions Tab */}
+          <TabsContent value="subscriptions">
+            <SubscriptionsPanel />
+          </TabsContent>
+
+          {/* Early Access Leads Tab */}
+          <TabsContent value="early-access">
+            <EarlyAccessPanel />
           </TabsContent>
         </Tabs>
       </div>

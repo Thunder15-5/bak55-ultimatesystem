@@ -284,8 +284,8 @@ export default function UploadTrack() {
           )}
           
           {!canUpload && (
-            <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <p className="text-sm text-yellow-600 dark:text-yellow-400">{uploadMessage}</p>
+            <div className="max-w-4xl mx-auto mt-6">
+              <UpgradePrompt />
             </div>
           )}
         </div>

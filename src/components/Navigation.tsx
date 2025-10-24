@@ -2,13 +2,38 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import logoImage from "@/assets/bak55-logo.png";
 
 export function Navigation() {
   const { user, signOut, userRole } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+
+  useEffect(() => {
+    if (user && userRole === 'artist') {
+      fetchSubscription();
+    }
+  }, [user, userRole]);
+
+  const fetchSubscription = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_subscriptions')
+      .select('*, subscription_plans(*)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (data) {
+      setSubscription(data);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-primary/10 shadow-sm">
@@ -63,6 +88,9 @@ export function Navigation() {
                   Wallet
                 </Link>
                 <NotificationBell />
+                {subscription && userRole === "artist" && (
+                  <SubscriptionBadge planName={subscription.subscription_plans.name} />
+                )}
                 {userRole === "admin" && (
                   <Link to="/admin">
                     <Button variant="hero" size="sm" className="shadow-lg">
