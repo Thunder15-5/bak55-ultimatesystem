@@ -59,7 +59,7 @@ export function UsersPanel() {
       .from('profiles')
       .select(`
         *,
-        user_roles!inner(role),
+        user_roles(role),
         artist_profiles(stage_name, total_earnings),
         wallets(balance),
         tracks(id)
