@@ -4,21 +4,21 @@ import { Quote, Star, Users, Music, DollarSign, TrendingUp } from "lucide-react"
 const testimonials = [
   {
     quote: "BAK55 gave me the platform to showcase my talent and actually earn from my music. The AI feedback helped me improve my craft!",
-    author: "DJ Kevo",
+    author: "Onefive",
     role: "Afrobeat Artist",
-    achievement: "Won 1st Prize in Hip Hop Challenge",
+    achievement: "Won 1st Position in Hip Hop No Way Out Rap Battle Challenge Nakuru Edition",
   },
   {
     quote: "Finally, a platform that values African artists. The transparent earnings and fair judging make all the difference.",
-    author: "Amina Juma",
-    role: "R&B Singer",
-    achievement: "200K+ Streams in 3 months",
+    author: "Sounds Likec Maina",
+    role: "R&B Singer and Producer",
+    achievement: "Music Producer at Rap Capital",
   },
   {
     quote: "As a brand, BAK55 connects us with emerging talent and gives us real engagement metrics. Perfect partnership platform.",
-    author: "SafariCom Music",
+    author: "OFE Studios",
     role: "Brand Partner",
-    achievement: "Sponsored 5 competitions",
+    achievement: "Sponsoring the first competitions",
   },
 ];
 
