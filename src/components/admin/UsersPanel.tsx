@@ -119,32 +119,21 @@ export function UsersPanel() {
     if (!deleteUserId) return;
 
     try {
-      // Delete all related data manually (cascading deletes)
-      // This is a simplified version - in production you'd want more comprehensive cleanup
-      
-      // Delete user's tracks
-      await supabase.from('tracks').delete().eq('artist_id', deleteUserId);
-      
-      // Delete user's submissions
-      await supabase.from('submissions').delete().eq('artist_id', deleteUserId);
-      
-      // Delete user's comments
-      await supabase.from('comments').delete().eq('user_id', deleteUserId);
-      
-      // Delete user's subscriptions
-      await supabase.from('user_subscriptions').delete().eq('user_id', deleteUserId);
-      
-      // Delete user's transactions
-      const { data: wallet } = await supabase.from('wallets').select('id').eq('user_id', deleteUserId).single();
-      if (wallet) {
-        await supabase.from('transactions').delete().eq('wallet_id', wallet.id);
-        await supabase.from('wallets').delete().eq('id', wallet.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Not authenticated');
+        return;
       }
-      
-      // Delete user's profile
-      const { error } = await supabase.from('profiles').delete().eq('id', deleteUserId);
-      
+
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: deleteUserId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       
       toast.success('User account deleted successfully');
       setDeleteUserId(null);
