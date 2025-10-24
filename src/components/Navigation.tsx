@@ -30,6 +30,11 @@ export function Navigation() {
                   <span>Dashboard</span>
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
                 </Link>
+                {userRole === "artist" && (
+                  <Link to="/subscribe" className="text-foreground hover:text-primary transition-colors">
+                    Subscription
+                  </Link>
+                )}
                 <Link to="/catalog" className="text-foreground hover:text-primary transition-all relative group">
                   <span>Music</span>
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>

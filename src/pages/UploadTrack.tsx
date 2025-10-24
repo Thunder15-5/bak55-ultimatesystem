@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Upload, Music, Sparkles } from "lucide-react";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 
 export default function UploadTrack() {
   const { user } = useAuth();
@@ -28,10 +30,12 @@ export default function UploadTrack() {
   const [competitions, setCompetitions] = useState<any[]>([]);
   const [canUpload, setCanUpload] = useState(true);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
     fetchActiveCompetitions();
     checkUploadEligibility();
+    fetchSubscription();
   }, [user]);
 
   const fetchActiveCompetitions = async () => {
@@ -49,6 +53,22 @@ export default function UploadTrack() {
     }
   };
 
+  const fetchSubscription = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_subscriptions')
+      .select('*, subscription_plans(*)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (data) {
+      setSubscription(data);
+    }
+  };
+
   const checkUploadEligibility = async () => {
     if (!user) return;
 
@@ -62,19 +82,7 @@ export default function UploadTrack() {
       setCanUpload(data);
       
       if (!data) {
-        // Check pending tracks
-        const { data: tracks } = await supabase
-          .from('tracks')
-          .select('title, moderation_status')
-          .eq('artist_id', user.id)
-          .eq('moderation_status', 'pending')
-          .single();
-
-        if (tracks) {
-          setUploadMessage(`Your track "${tracks.title}" is pending approval. Once approved by admin, you can upload unlimited tracks!`);
-        } else {
-          setUploadMessage("New users can upload 1 track. Once approved by admin, unlimited uploads available!");
-        }
+        setUploadMessage("Subscribe to Artist Pro or Premium for unlimited uploads!");
       }
     } catch (error) {
       console.error('Error checking upload eligibility:', error);
@@ -269,7 +277,13 @@ export default function UploadTrack() {
             Upload your track and reach thousands of listeners across the platform
           </p>
           
-          {!canUpload && uploadMessage && (
+          {subscription && (
+            <div className="flex justify-center">
+              <SubscriptionBadge planName={subscription.subscription_plans.name} />
+            </div>
+          )}
+          
+          {!canUpload && (
             <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
               <p className="text-sm text-yellow-600 dark:text-yellow-400">{uploadMessage}</p>
             </div>

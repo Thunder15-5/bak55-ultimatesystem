@@ -20,7 +20,7 @@ export const StatsBar = () => {
         const nowIso = new Date().toISOString();
         const [{ count: trackCount }, { count: artistCount }, { count: compCount }] = await Promise.all([
           supabase.from('tracks').select('*', { count: 'exact', head: true }),
-          supabase.from('public_artist_profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('artist_profiles').select('*', { count: 'exact', head: true }),
           supabase.from('competitions').select('*', { count: 'exact', head: true }).eq('status', 'active').gte('end_date', nowIso),
         ]);
         if (!isMounted) return;

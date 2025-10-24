@@ -13,6 +13,9 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import UploadTrack from "./pages/UploadTrack";
+import Subscribe from "./pages/Subscribe";
+import SubscriptionManage from "./pages/SubscriptionManage";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import MusicCatalog from "./pages/MusicCatalog";
 import Wallet from "./pages/Wallet";
 import TrackDetails from "./pages/TrackDetails";
@@ -68,6 +71,9 @@ const App = () => (
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
+                <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+                <Route path="/subscription/manage" element={<ProtectedRoute><SubscriptionManage /></ProtectedRoute>} />
+                <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
                 <Route path="/catalog" element={<MusicCatalog />} />
                 <Route path="/track/:id" element={<TrackDetails />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />
