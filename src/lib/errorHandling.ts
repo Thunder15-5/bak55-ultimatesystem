@@ -36,6 +36,10 @@ export const handleSupabaseError = (error: any): string => {
     return 'Cannot perform this action due to related data.';
   }
   
+  if (error?.message?.includes('null value in column')) {
+    return 'Required field is missing. Please fill in all required fields.';
+  }
+  
   if (error?.code === 'PGRST116') {
     return 'The requested item was not found.';
   }
@@ -46,6 +50,10 @@ export const handleSupabaseError = (error: any): string => {
   
   if (error?.code === '23503') {
     return 'Cannot perform this action due to related data.';
+  }
+
+  if (error?.code === '23502') {
+    return 'Required field is missing. Please fill in all required fields.';
   }
   
   // In production, never expose internal error details
