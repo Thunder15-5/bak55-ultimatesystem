@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Subscribe() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<any[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
@@ -29,6 +29,13 @@ export default function Subscribe() {
     fetchPlans();
     fetchCurrentSubscription();
   }, [user]);
+
+  useEffect(() => {
+    if (userRole && userRole !== 'artist' && userRole !== 'admin') {
+      navigate('/dashboard');
+      toast.error('Subscriptions are only for artist accounts. Upgrade to Artist to unlock Pro features!');
+    }
+  }, [userRole, navigate]);
 
   const fetchPlans = async () => {
     const { data, error } = await supabase

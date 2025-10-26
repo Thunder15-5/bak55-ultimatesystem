@@ -14,7 +14,7 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 
 export default function UploadTrack() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [classifyingGenre, setClassifyingGenre] = useState(false);
@@ -37,6 +37,13 @@ export default function UploadTrack() {
     checkUploadEligibility();
     fetchSubscription();
   }, [user]);
+
+  useEffect(() => {
+    if (userRole && userRole !== 'artist' && userRole !== 'admin') {
+      navigate('/streaming');
+      toast.error('Only artists can upload tracks. Upgrade to Artist to start sharing your music!');
+    }
+  }, [userRole, navigate]);
 
   const fetchActiveCompetitions = async () => {
     try {

@@ -1,0 +1,188 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigation } from '@/components/Navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play } from 'lucide-react';
+
+export default function FanDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    balance: 0,
+    votesCast: 0,
+    tracksLiked: 0,
+    artistsFollowing: 0,
+    playlistsCreated: 0,
+  });
+
+  useEffect(() => {
+    if (user) fetchStats();
+  }, [user]);
+
+  const fetchStats = async () => {
+    // Fetch wallet balance
+    const { data: wallet } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('user_id', user?.id)
+      .single();
+
+    // Fetch votes cast
+    const { count: votesCount } = await supabase
+      .from('votes')
+      .select('*', { count: 'exact', head: true })
+      .eq('voter_id', user?.id);
+
+    // Fetch tracks liked
+    const { count: likesCount } = await supabase
+      .from('track_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user?.id);
+
+    // Fetch artists following
+    const { count: followsCount } = await supabase
+      .from('followers')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_id', user?.id);
+
+    // Fetch playlists created
+    const { count: playlistsCount } = await supabase
+      .from('playlists')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user?.id);
+
+    setStats({
+      balance: wallet?.balance || 0,
+      votesCast: votesCount || 0,
+      tracksLiked: likesCount || 0,
+      artistsFollowing: followsCount || 0,
+      playlistsCreated: playlistsCount || 0,
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="container mx-auto px-4 pt-24 pb-12">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Header */}
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Welcome Back, Fan! 🎵</h1>
+            <p className="text-muted-foreground">
+              Discover, engage, and support your favorite artists
+            </p>
+          </div>
+
+          {/* Upgrade Banner */}
+          <Card className="border-primary/50 bg-gradient-to-r from-primary/10 to-secondary/10">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Become an Artist</h3>
+                  <p className="text-muted-foreground">
+                    Upload your own music, earn BAKCoins, and access analytics
+                  </p>
+                </div>
+                <Button onClick={() => navigate('/upgrade')} variant="hero" size="lg">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Upgrade Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stats Grid */}
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  BAKCoins
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.balance.toFixed(0)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  Votes Cast
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.votesCast}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  Tracks Liked
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.tracksLiked}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Following
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.artistsFollowing}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  Playlists
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.playlistsCreated}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-4">
+              <Button onClick={() => navigate('/streaming')} variant="outline" className="w-full">
+                <Play className="mr-2 h-4 w-4" />
+                Discover Music
+              </Button>
+              <Button onClick={() => navigate('/competitions/active')} variant="outline" className="w-full">
+                <Trophy className="mr-2 h-4 w-4" />
+                Vote in Competitions
+              </Button>
+              <Button onClick={() => navigate('/wallet/buy-coins')} variant="outline" className="w-full">
+                <Wallet className="mr-2 h-4 w-4" />
+                Buy BAKCoins
+              </Button>
+              <Button onClick={() => navigate('/playlists')} variant="outline" className="w-full">
+                <Music className="mr-2 h-4 w-4" />
+                My Playlists
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -148,11 +148,6 @@ export default function TrackDetails() {
       return;
     }
 
-    if (userRole === 'fan') {
-      toast.error("Upgrade to Artist to like tracks");
-      return;
-    }
-
     setLiking(true);
 
     try {
@@ -370,10 +365,9 @@ export default function TrackDetails() {
             {user && (
               <Button 
                 onClick={handleLike} 
-                disabled={liking || userRole === 'fan'}
+                disabled={liking}
                 size="lg"
                 variant={isLiked ? "default" : "outline"}
-                title={userRole === 'fan' ? "Upgrade to Artist to like tracks" : ""}
               >
                 {liking ? (
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />

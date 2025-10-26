@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ interface Insights {
 
 export default function Analytics() {
   const { user, userRole } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [loadingTrends, setLoadingTrends] = useState(false);
@@ -181,19 +183,15 @@ export default function Analytics() {
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--primary-glow))', 'hsl(var(--secondary-glow))'];
 
-  if (userRole !== 'artist') {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-24">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground">Analytics are only available for artists.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+  useEffect(() => {
+    if (userRole && userRole !== 'artist' && userRole !== 'admin') {
+      navigate('/dashboard');
+      toast.error('Analytics are only available for artists.');
+    }
+  }, [userRole, navigate]);
+
+  if (userRole !== 'artist' && userRole !== 'admin') {
+    return null;
   }
 
   return (

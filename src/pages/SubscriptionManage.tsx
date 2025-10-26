@@ -11,7 +11,7 @@ import { Crown, Calendar, CreditCard, ArrowRight, Loader2 } from "lucide-react";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 
 export default function SubscriptionManage() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -25,6 +25,13 @@ export default function SubscriptionManage() {
     fetchSubscription();
     fetchTransactions();
   }, [user]);
+
+  useEffect(() => {
+    if (userRole && userRole !== 'artist' && userRole !== 'admin') {
+      navigate('/dashboard');
+      toast.error('Subscription management is only for artist accounts.');
+    }
+  }, [userRole, navigate]);
 
   const fetchSubscription = async () => {
     if (!user) return;

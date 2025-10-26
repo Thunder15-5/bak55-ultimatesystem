@@ -52,6 +52,11 @@ import ArtistProfile from "./pages/ArtistProfile";
 import Playlists from "./pages/Playlists";
 import PlaylistDetails from "./pages/PlaylistDetails";
 import ListeningHistory from "./pages/ListeningHistory";
+import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
+import FanDashboard from "./pages/fan/FanDashboard";
+import ArtistDashboard from "./pages/artist/ArtistDashboard";
+import BrandDashboard from "./pages/brand/BrandDashboard";
+import Upgrade from "./pages/Upgrade";
 
 const queryClient = new QueryClient();
 
@@ -68,7 +73,21 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                
+                {/* Fan Routes */}
+                <Route path="/fan/dashboard" element={<ProtectedRoute><FanDashboard /></ProtectedRoute>} />
+                
+                {/* Artist Routes */}
+                <Route path="/artist/dashboard" element={<ProtectedRoute><ArtistDashboard /></ProtectedRoute>} />
+                
+                {/* Brand Routes */}
+                <Route path="/brand/dashboard" element={<ProtectedRoute><BrandDashboard /></ProtectedRoute>} />
+                
+                {/* Upgrade Route */}
+                <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
+                
+                {/* Legacy routes with role-based redirects */}
+                <Route path="/dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />

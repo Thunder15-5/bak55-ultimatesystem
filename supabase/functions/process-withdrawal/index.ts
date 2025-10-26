@@ -35,6 +35,23 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
+    // Verify user is an artist or admin
+    const { data: roles, error: rolesError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      throw new Error("Failed to verify user role");
+    }
+
+    const userRoles = roles?.map(r => r.role) || [];
+    const isArtist = userRoles.includes('artist') || userRoles.includes('admin');
+    
+    if (!isArtist) {
+      throw new Error("Only artists can withdraw funds");
+    }
+
     const { amount, phone_number }: WithdrawalRequest = await req.json();
 
     // Production validation
