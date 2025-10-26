@@ -4,11 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Bell, CheckCheck, Music, Users, Trophy, 
-  DollarSign, AlertTriangle, RefreshCw 
+  DollarSign, AlertTriangle, RefreshCw, Search,
+  Trash2, Archive, Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +31,10 @@ export function NotificationCenter() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -40,6 +45,24 @@ export function NotificationCenter() {
       if (unsubscribe) unsubscribe();
     };
   }, [user, filter]);
+
+  useEffect(() => {
+    // Apply search and priority filters
+    let filtered = notifications;
+    
+    if (searchQuery) {
+      filtered = filtered.filter(n => 
+        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.message.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter(n => n.priority === priorityFilter);
+    }
+    
+    setFilteredNotifications(filtered);
+  }, [notifications, searchQuery, priorityFilter]);
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -130,6 +153,31 @@ export function NotificationCenter() {
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    try {
+      await supabase.from("notifications").delete().eq("id", id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      toast.success("Notification deleted");
+    } catch (error: any) {
+      toast.error("Failed to delete notification");
+    }
+  };
+
+  const deleteAllRead = async () => {
+    try {
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", user?.id)
+        .eq("read", true);
+      
+      setNotifications(prev => prev.filter(n => !n.read));
+      toast.success("Read notifications deleted");
+    } catch (error: any) {
+      toast.error("Failed to delete notifications");
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent": return "destructive";
@@ -158,9 +206,9 @@ export function NotificationCenter() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Admin Notifications
+              Notification Center
               {unreadCount > 0 && (
-                <Badge variant="destructive">{unreadCount}</Badge>
+                <Badge variant="destructive" className="animate-pulse">{unreadCount}</Badge>
               )}
             </CardTitle>
             <CardDescription>Real-time platform activity updates</CardDescription>
@@ -184,7 +232,39 @@ export function NotificationCenter() {
                 Mark All Read
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={deleteAllRead}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Read
+            </Button>
           </div>
+        </div>
+        
+        {/* Search and Filters */}
+        <div className="flex gap-2 mt-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search notifications..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="all">All Priorities</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="normal">Normal</option>
+            <option value="low">Low</option>
+          </select>
         </div>
       </CardHeader>
       <CardContent>
@@ -202,37 +282,51 @@ export function NotificationCenter() {
             <ScrollArea className="h-[600px] pr-4">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
+                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
                   Loading notifications...
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : filteredNotifications.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No notifications found
+                  <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="font-medium">No notifications found</p>
+                  <p className="text-sm mt-1">Try adjusting your filters</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {notifications.map((notification) => (
+                  {filteredNotifications.map((notification) => (
                     <Card
                       key={notification.id}
-                      className={`cursor-pointer hover:border-primary transition-all ${
-                        !notification.read ? "border-l-4 border-l-primary bg-muted/30" : ""
+                      className={`group relative cursor-pointer hover:border-primary transition-all ${
+                        !notification.read ? "border-l-4 border-l-primary bg-muted/30 shadow-lg" : ""
                       }`}
-                      onClick={() => {
-                        markAsRead(notification.id);
-                        if (notification.link) navigate(notification.link);
-                      }}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="mt-1">
+                          <div 
+                            className="mt-1 cursor-pointer hover:scale-110 transition-transform"
+                            onClick={() => {
+                              markAsRead(notification.id);
+                              if (notification.link) navigate(notification.link);
+                            }}
+                          >
                             {getCategoryIcon(notification.category)}
                           </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
+                          <div 
+                            className="flex-1 space-y-1"
+                            onClick={() => {
+                              markAsRead(notification.id);
+                              if (notification.link) navigate(notification.link);
+                            }}
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-semibold text-sm">
                                 {notification.title}
                               </p>
                               <Badge variant={getPriorityColor(notification.priority)} className="text-xs">
                                 {notification.priority}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {notification.category}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
@@ -242,9 +336,22 @@ export function NotificationCenter() {
                               {new Date(notification.created_at).toLocaleString()}
                             </p>
                           </div>
-                          {!notification.read && (
-                            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                          )}
+                          <div className="flex items-center gap-2">
+                            {!notification.read && (
+                              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -252,6 +359,12 @@ export function NotificationCenter() {
                 </div>
               )}
             </ScrollArea>
+            
+            {/* Stats Footer */}
+            <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
+              <span>{filteredNotifications.length} notifications</span>
+              <span>{unreadCount} unread</span>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
