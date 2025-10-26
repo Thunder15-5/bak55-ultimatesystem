@@ -29,7 +29,7 @@ export default function FanDiscover() {
       .from("tracks")
       .select(`
         *,
-        artist_profiles (
+        artist_profiles!tracks_artist_id_fkey (
           stage_name,
           user_id
         )
@@ -62,7 +62,7 @@ export default function FanDiscover() {
         .from("tracks")
         .select(`
           *,
-          artist_profiles (
+          artist_profiles!tracks_artist_id_fkey (
             stage_name,
             user_id
           )
