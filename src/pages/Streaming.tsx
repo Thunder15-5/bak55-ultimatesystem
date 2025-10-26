@@ -3,9 +3,10 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, Radio, Users, TrendingUp, Globe, Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { StatsBar } from "@/components/StatsBar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const features = [
   {
@@ -31,6 +32,16 @@ const features = [
 ];
 
 const Streaming = () => {
+  const { user, userRole } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect logged-in users to their role-specific discover page
+  useEffect(() => {
+    if (user && userRole) {
+      navigate(`/${userRole}/discover`, { replace: true });
+    }
+  }, [user, userRole, navigate]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

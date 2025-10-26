@@ -54,8 +54,12 @@ import PlaylistDetails from "./pages/PlaylistDetails";
 import ListeningHistory from "./pages/ListeningHistory";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import FanDashboard from "./pages/fan/FanDashboard";
+import FanDiscover from "./pages/fan/FanDiscover";
 import ArtistDashboard from "./pages/artist/ArtistDashboard";
+import ArtistCatalog from "./pages/artist/ArtistCatalog";
+import ArtistDiscover from "./pages/artist/ArtistDiscover";
 import BrandDashboard from "./pages/brand/BrandDashboard";
+import BrandDiscover from "./pages/brand/BrandDiscover";
 import Upgrade from "./pages/Upgrade";
 
 const queryClient = new QueryClient();
@@ -96,7 +100,7 @@ const App = () => (
                 
                 {/* Fan Routes */}
                 <Route path="/fan/dashboard" element={<ProtectedRoute requiredRole="fan"><FanDashboard /></ProtectedRoute>} />
-                <Route path="/fan/discover" element={<ProtectedRoute requiredRole="fan"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/fan/discover" element={<ProtectedRoute requiredRole="fan"><FanDiscover /></ProtectedRoute>} />
                 <Route path="/fan/playlists" element={<ProtectedRoute requiredRole="fan"><Playlists /></ProtectedRoute>} />
                 <Route path="/fan/playlist/:id" element={<ProtectedRoute requiredRole="fan"><PlaylistDetails /></ProtectedRoute>} />
                 <Route path="/fan/history" element={<ProtectedRoute requiredRole="fan"><ListeningHistory /></ProtectedRoute>} />
@@ -112,8 +116,8 @@ const App = () => (
                 {/* Artist Routes */}
                 <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><ArtistDashboard /></ProtectedRoute>} />
                 <Route path="/artist/upload" element={<ProtectedRoute requiredRole="artist"><UploadTrack /></ProtectedRoute>} />
-                <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><MusicCatalog /></ProtectedRoute>} />
-                <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><ArtistCatalog /></ProtectedRoute>} />
+                <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><ArtistDiscover /></ProtectedRoute>} />
                 <Route path="/artist/track/:id" element={<ProtectedRoute requiredRole="artist"><TrackDetails /></ProtectedRoute>} />
                 <Route path="/artist/artist/:id" element={<ProtectedRoute requiredRole="artist"><ArtistProfile /></ProtectedRoute>} />
                 <Route path="/artist/analytics" element={<ProtectedRoute requiredRole="artist"><Analytics /></ProtectedRoute>} />
@@ -132,7 +136,7 @@ const App = () => (
 
                 {/* Brand Routes */}
                 <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><BrandDashboard /></ProtectedRoute>} />
-                <Route path="/brand/discover" element={<ProtectedRoute requiredRole="brand"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/brand/discover" element={<ProtectedRoute requiredRole="brand"><BrandDiscover /></ProtectedRoute>} />
                 <Route path="/brand/artist/:id" element={<ProtectedRoute requiredRole="brand"><ArtistProfile /></ProtectedRoute>} />
                 <Route path="/brand/competitions" element={<ProtectedRoute requiredRole="brand"><Competitions /></ProtectedRoute>} />
                 <Route path="/brand/competitions/create" element={<ProtectedRoute requiredRole="brand"><CreateCompetition /></ProtectedRoute>} />
