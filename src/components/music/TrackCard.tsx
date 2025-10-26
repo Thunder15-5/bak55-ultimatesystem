@@ -87,8 +87,7 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
 
   const handleLike = async () => {
     if (!user) {
-      toast.error("Please log in to like tracks");
-      return;
+      return; // User should already be authenticated on protected pages
     }
 
     if (isLiked) {

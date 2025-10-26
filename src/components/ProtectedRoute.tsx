@@ -15,13 +15,15 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
   const [hasShownToast, setHasShownToast] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user && !hasShownToast) {
+    // Only show toast if we're done loading AND user is definitely not authenticated
+    if (!loading && !user && !hasShownToast && location.pathname !== '/login' && location.pathname !== '/signup') {
       toast.error("Please log in to access this page");
       setHasShownToast(true);
     }
-  }, [loading, user, hasShownToast]);
+  }, [loading, user, hasShownToast, location.pathname]);
 
-  if (loading) {
+  // Show loading spinner only while checking auth, not if user exists
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

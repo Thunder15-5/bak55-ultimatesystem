@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -121,7 +121,7 @@ export default function ArtistCatalog() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8 mt-16">
         <div className="flex justify-between items-center mb-8">

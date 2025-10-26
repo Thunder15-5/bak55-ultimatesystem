@@ -16,16 +16,8 @@ const Index = () => {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user && userRole) {
-      // Redirect logged-in users to their dashboard
-      if (userRole === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate(`/${userRole}/dashboard`);
-      }
-    }
-  }, [user, userRole, loading, navigate]);
+  // Don't auto-redirect - let users view the landing page if they want
+  // They can manually navigate to their dashboard via the navigation menu
 
   if (loading) {
     return (

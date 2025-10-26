@@ -38,6 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Try to restore from session storage for instant UI
+    const cachedRole = sessionStorage.getItem('userRole');
+    if (cachedRole) {
+      setUserRole(cachedRole);
+    }
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -62,10 +68,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               else if (allRoles.includes('fan')) primaryRole = 'fan';
               
               setUserRole(primaryRole);
+              if (primaryRole) {
+                sessionStorage.setItem('userRole', primaryRole);
+              }
             });
         } else {
           setUserRole(null);
           setUserRoles([]);
+          sessionStorage.removeItem('userRole');
         }
       }
     );
@@ -92,6 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             else if (allRoles.includes('fan')) primaryRole = 'fan';
             
             setUserRole(primaryRole);
+            if (primaryRole) {
+              sessionStorage.setItem('userRole', primaryRole);
+            }
             setLoading(false);
           });
       } else {
@@ -187,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUserRole(null);
+    sessionStorage.clear(); // Clear all cached auth data
     toast.success("Logged out successfully!");
     navigate("/");
   };

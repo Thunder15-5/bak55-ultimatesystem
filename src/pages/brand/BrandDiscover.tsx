@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -80,7 +80,7 @@ export default function BrandDiscover() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8 mt-16">
         <div className="mb-8">

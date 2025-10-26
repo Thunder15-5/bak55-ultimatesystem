@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { TrackList } from "@/components/music/TrackList";
 import { TrackFilters } from "@/components/music/TrackFilters";
@@ -25,62 +25,101 @@ export default function FanDiscover() {
 
   const fetchTracks = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Fetch tracks
+    const { data: tracksData, error: tracksError } = await supabase
       .from("tracks")
-      .select(`
-        *,
-        artist_profiles!tracks_artist_id_fkey (
-          stage_name,
-          user_id
-        )
-      `)
+      .select("*")
       .eq("moderation_status", "approved")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching tracks:", error);
+    if (tracksError) {
+      console.error("Error fetching tracks:", tracksError);
+      setLoading(false);
+      return;
     }
-    
-    if (data) {
-      setTracks(data);
+
+    if (!tracksData || tracksData.length === 0) {
+      setTracks([]);
+      setLoading(false);
+      return;
     }
+
+    // Fetch artist profiles for these tracks
+    const artistIds = [...new Set(tracksData.map(t => t.artist_id))];
+    const { data: artistsData, error: artistsError } = await supabase
+      .from("artist_profiles")
+      .select("user_id, stage_name")
+      .in("user_id", artistIds);
+
+    if (artistsError) {
+      console.error("Error fetching artists:", artistsError);
+    }
+
+    // Merge data
+    const tracksWithArtists = tracksData.map(track => ({
+      ...track,
+      artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
+    }));
+
+    setTracks(tracksWithArtists);
     setLoading(false);
   };
 
   const fetchFollowingTracks = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     const { data: followedArtists } = await supabase
       .from("followers")
       .select("artist_id")
       .eq("follower_id", user.id);
 
-    if (followedArtists && followedArtists.length > 0) {
-      const artistIds = followedArtists.map((f) => f.artist_id);
-      const { data, error } = await supabase
-        .from("tracks")
-        .select(`
-          *,
-          artist_profiles!tracks_artist_id_fkey (
-            stage_name,
-            user_id
-          )
-        `)
-        .in("artist_id", artistIds)
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching following tracks:", error);
-      }
-      
-      if (data) {
-        setTracks(data);
-      }
-    } else {
+    if (!followedArtists || followedArtists.length === 0) {
       setTracks([]);
+      setLoading(false);
+      return;
     }
+
+    const artistIds = followedArtists.map((f) => f.artist_id);
+    
+    // Fetch tracks
+    const { data: tracksData, error: tracksError } = await supabase
+      .from("tracks")
+      .select("*")
+      .in("artist_id", artistIds)
+      .eq("moderation_status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (tracksError) {
+      console.error("Error fetching following tracks:", tracksError);
+      setLoading(false);
+      return;
+    }
+
+    if (!tracksData || tracksData.length === 0) {
+      setTracks([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch artist profiles
+    const { data: artistsData, error: artistsError } = await supabase
+      .from("artist_profiles")
+      .select("user_id, stage_name")
+      .in("user_id", artistIds);
+
+    if (artistsError) {
+      console.error("Error fetching artists:", artistsError);
+    }
+
+    // Merge data
+    const tracksWithArtists = tracksData.map(track => ({
+      ...track,
+      artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
+    }));
+
+    setTracks(tracksWithArtists);
     setLoading(false);
   };
 
@@ -106,7 +145,7 @@ export default function FanDiscover() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8 mt-16">
         <div className="mb-8">
