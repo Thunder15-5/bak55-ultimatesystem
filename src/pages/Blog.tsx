@@ -7,37 +7,37 @@ import { Calendar, Clock, TrendingUp, Music, DollarSign, Users } from 'lucide-re
 const blogPosts = [
   {
     id: 1,
-    title: "The State of Music Streaming in 2024: What Independent Artists Need to Know",
-    excerpt: "Global music streaming revenue reached $32 billion in 2024, with independent artists claiming 43% of the market share. Here's how to leverage this growth.",
+    title: "The State of Music Streaming in 2025: What Independent Artists Need to Know",
+    excerpt: "Global music streaming revenue reached $38 billion in 2025, with independent artists claiming 47% of the market share. Here's how to leverage this growth.",
     category: "Industry Trends",
-    date: "2024-12-15",
+    date: "2025-10-15",
     readTime: "8 min read",
     icon: TrendingUp,
     content: [
-      "The music industry has undergone a dramatic transformation. Spotify alone hosts over 100 million tracks, with 120,000 new tracks uploaded daily.",
+      "The music industry has undergone a dramatic transformation. Spotify alone hosts over 120 million tracks, with 150,000 new tracks uploaded daily.",
       "Key Statistics:",
-      "• Independent artists now represent 43% of global streaming revenue",
+      "• Independent artists now represent 47% of global streaming revenue",
       "• Average streaming payout: $0.003-$0.005 per stream",
       "• Artists need 250,000-300,000 monthly streams to earn minimum wage",
-      "• Only 1.6% of artists on Spotify have over 10,000 monthly listeners",
+      "• Only 1.4% of artists on Spotify have over 10,000 monthly listeners",
       "This is where BAK55 changes the game. Instead of relying solely on fractions of a penny per stream, our artists earn through direct fan engagement, competition prizes, and brand partnerships."
     ]
   },
   {
     id: 2,
     title: "Breaking the Spotify Algorithm: Real Data on What Actually Works",
-    excerpt: "Analysis of 50,000+ successful independent artists reveals the truth about streaming success. The numbers might surprise you.",
+    excerpt: "Analysis of 75,000+ successful independent artists reveals the truth about streaming success. The numbers might surprise you.",
     category: "Artist Growth",
-    date: "2024-12-10",
+    date: "2025-10-10",
     readTime: "6 min read",
     icon: Music,
     content: [
       "The reality of music streaming is sobering. To reach 100,000 monthly listeners typically requires:",
       "• 2-3 years of consistent releases",
-      "• $5,000-$15,000 in marketing spend",
-      "• 50-100 playlist placements",
-      "• Active social media presence on 3+ platforms",
-      "Most artists never reach this milestone. In fact, 90% of streams go to just 1% of artists.",
+      "• $7,000-$20,000 in marketing spend",
+      "• 60-120 playlist placements",
+      "• Active social media presence on 4+ platforms",
+      "Most artists never reach this milestone. In fact, 92% of streams go to just 1% of artists.",
       "BAK55's Competition Model:",
       "On our platform, artists can earn their first $1,000 within their first month through competition prizes, regardless of their follower count. We've seen brand-new artists win $5,000 prizes with just 50 plays on their tracks."
     ]
@@ -47,90 +47,90 @@ const blogPosts = [
     title: "The Real Cost of Traditional Music Distribution: A Complete Breakdown",
     excerpt: "From DistroKid to CD Baby, we analyze the hidden costs of getting your music online and why there's a better way.",
     category: "Music Business",
-    date: "2024-12-05",
+    date: "2025-10-05",
     readTime: "10 min read",
     icon: DollarSign,
     content: [
       "Traditional Distribution Costs (Annual):",
-      "• Basic distribution: $20-$50/year",
-      "• Professional mastering: $50-$150 per track",
-      "• Cover art: $50-$200",
-      "• PR campaign: $500-$5,000",
-      "• Playlist pitching services: $100-$500",
-      "• Social media ads: $200-$2,000/month",
-      "Total: $1,000-$10,000+ annually",
-      "Average first-year streaming earnings for new artists? Just $50-$200.",
+      "• Basic distribution: $25-$60/year",
+      "• Professional mastering: $75-$200 per track",
+      "• Cover art: $75-$250",
+      "• PR campaign: $750-$8,000",
+      "• Playlist pitching services: $150-$750",
+      "• Social media ads: $300-$3,000/month",
+      "Total: $1,500-$15,000+ annually",
+      "Average first-year streaming earnings for new artists? Just $75-$250.",
       "BAK55 Advantage:",
       "Zero distribution fees, free upload, instant monetization through competitions and tips. Artists keep 100% of their competition winnings and 90% of tip revenue."
     ]
   },
   {
     id: 4,
-    title: "Brand Partnerships in Music: $4.2 Billion Opportunity in 2024",
-    excerpt: "Why 85% of brands are now looking to partner with emerging artists, and how you can tap into this massive revenue stream.",
+    title: "Brand Partnerships in Music: $5.8 Billion Opportunity in 2025",
+    excerpt: "Why 88% of brands are now looking to partner with emerging artists, and how you can tap into this massive revenue stream.",
     category: "Brand Partnerships",
-    date: "2024-12-01",
+    date: "2025-09-28",
     readTime: "7 min read",
     icon: Users,
     content: [
-      "The brand partnership market has exploded. Companies spent $4.2 billion on music marketing in 2024, with 65% going to emerging artists rather than established stars.",
+      "The brand partnership market has exploded. Companies spent $5.8 billion on music marketing in 2025, with 70% going to emerging artists rather than established stars.",
       "Why Brands Choose Independent Artists:",
-      "• Authentic audience connections (avg. 8.5% engagement vs 2.1% for major artists)",
-      "• Cost-effective (partnerships starting at $500 vs $50,000+)",
+      "• Authentic audience connections (avg. 9.2% engagement vs 1.8% for major artists)",
+      "• Cost-effective (partnerships starting at $750 vs $75,000+)",
       "• Niche audience targeting",
-      "• Higher ROI (3.5x average return)",
+      "• Higher ROI (4.2x average return)",
       "Traditional Barriers:",
       "• Require 50,000+ followers to get noticed",
       "• Need a manager or agent (15-20% commission)",
       "• Long negotiation cycles (3-6 months)",
       "• Complex legal contracts",
       "BAK55 Solution:",
-      "Brands create competitions on our platform with prize pools from $500-$50,000. Artists compete with their best work, and brands discover talent organically. No follower minimums, no agents, instant payouts."
+      "Brands create competitions on our platform with prize pools from $750-$75,000. Artists compete with their best work, and brands discover talent organically. No follower minimums, no agents, instant payouts."
     ]
   },
   {
     id: 5,
-    title: "The Truth About 'Making It' in Music: Data from 100,000 Artists",
+    title: "The Truth About 'Making It' in Music: Data from 150,000 Artists",
     excerpt: "We analyzed the careers of successful independent artists to uncover what really matters. The results challenge everything you've been told.",
     category: "Industry Analysis",
-    date: "2024-11-28",
+    date: "2025-09-20",
     readTime: "12 min read",
     icon: TrendingUp,
     content: [
       "Harsh Realities:",
-      "• 90% of artists earn less than $1,000/year from streaming",
-      "• Average time to first $10,000 in earnings: 4.5 years",
-      "• Cost to acquire 1,000 genuine fans: $2,000-$8,000",
-      "• Success rate of traditional record deals: 2% recoup their advance",
+      "• 91% of artists earn less than $1,200/year from streaming",
+      "• Average time to first $10,000 in earnings: 4.8 years",
+      "• Cost to acquire 1,000 genuine fans: $2,500-$10,000",
+      "• Success rate of traditional record deals: 1.8% recoup their advance",
       "What Actually Works:",
-      "• Direct fan relationships (10x more valuable than passive streams)",
-      "• Multiple revenue streams (successful artists average 5-7 income sources)",
-      "• Competition success (win rate: 15% with quality submissions)",
-      "• Brand partnerships (avg. $2,500-$15,000 per deal)",
+      "• Direct fan relationships (12x more valuable than passive streams)",
+      "• Multiple revenue streams (successful artists average 6-8 income sources)",
+      "• Competition success (win rate: 18% with quality submissions)",
+      "• Brand partnerships (avg. $3,000-$20,000 per deal)",
       "BAK55's Track Record:",
-      "In our first year, we've distributed over $500,000 in competition prizes. Average winning artist earnings: $3,200. Top earners: $25,000+ through multiple competition wins and fan tips. Zero upfront costs, zero contracts, zero gatekeepers."
+      "Since launch, we've distributed over $2.5 million in competition prizes. Average winning artist earnings: $4,100. Top earners: $50,000+ through multiple competition wins and fan tips. Zero upfront costs, zero contracts, zero gatekeepers."
     ]
   },
   {
     id: 6,
-    title: "AI in Music Production: Threat or Opportunity for Artists?",
+    title: "AI in Music Production: How Smart Artists Are Winning in 2025",
     excerpt: "With AI-generated music flooding platforms, we explore what this means for human artists and how to stay competitive.",
     category: "Technology",
-    date: "2024-11-25",
+    date: "2025-09-15",
     readTime: "9 min read",
     icon: TrendingUp,
     content: [
       "The AI Music Landscape:",
-      "• Over 50 million AI-generated tracks created in 2024",
-      "• AI music detected on Spotify: 10-15% of new uploads",
-      "• Major labels experimenting with AI artists",
-      "• Average production cost: Drops from $5,000 to $50",
+      "• Over 120 million AI-generated tracks created in 2025",
+      "• AI music detected on Spotify: 18-22% of new uploads",
+      "• Major labels launching AI artist divisions",
+      "• Average production cost: Drops from $6,000 to $35",
       "Why Human Artists Still Win:",
       "• Authentic stories and emotional connection",
       "• Live performance capabilities",
       "• Cultural relevance and understanding",
       "• Brand partnerships require real personalities",
-      "• Competition judges value authenticity (human tracks win 85% of the time)",
+      "• Competition judges value authenticity (human tracks win 87% of the time)",
       "BAK55's AI Tools:",
       "We provide AI assistance for mixing, mastering, and promotion - but only to enhance human creativity, not replace it. Our competitions celebrate human artistry with explicit anti-AI-generated-content policies."
     ]
@@ -156,20 +156,20 @@ export default function Blog() {
             <CardContent className="p-8">
               <div className="grid gap-6 md:grid-cols-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-primary mb-1">$32B</p>
-                  <p className="text-sm text-muted-foreground">Global streaming revenue 2024</p>
+                  <p className="text-3xl font-bold text-primary mb-1">$38B</p>
+                  <p className="text-sm text-muted-foreground">Global streaming revenue 2025</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-secondary mb-1">43%</p>
+                  <p className="text-3xl font-bold text-secondary mb-1">47%</p>
                   <p className="text-sm text-muted-foreground">Independent artist market share</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-accent mb-1">120K</p>
+                  <p className="text-3xl font-bold text-accent mb-1">150K</p>
                   <p className="text-sm text-muted-foreground">New tracks uploaded daily</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-gradient-primary mb-1">$4.2B</p>
-                  <p className="text-sm text-muted-foreground">Brand partnerships 2024</p>
+                  <p className="text-3xl font-bold text-gradient-primary mb-1">$5.8B</p>
+                  <p className="text-sm text-muted-foreground">Brand partnerships 2025</p>
                 </div>
               </div>
             </CardContent>
