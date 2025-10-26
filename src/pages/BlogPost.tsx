@@ -93,7 +93,17 @@ export default function BlogPost() {
           </Button>
 
           {/* Article Header */}
-          <Card className="bg-gradient-card border-border/50 mb-6">
+          <Card className="bg-gradient-card border-border/50 mb-6 overflow-hidden">
+            {post.image && (
+              <div className="relative h-80 w-full overflow-hidden">
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/70 to-transparent" />
+              </div>
+            )}
             <CardContent className="p-8">
               <div className="flex items-start gap-4 mb-6">
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">

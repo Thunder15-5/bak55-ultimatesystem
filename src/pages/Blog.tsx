@@ -102,7 +102,17 @@ export default function Blog() {
             {blogPosts.map((post) => {
               const IconComponent = post.icon;
               return (
-                <Card key={post.id} className="bg-gradient-card border-border/50 hover:border-primary/30 transition-all duration-300">
+                <Card key={post.id} className="bg-gradient-card border-border/50 hover:border-primary/30 transition-all duration-300 overflow-hidden">
+                  {post.image && (
+                    <div className="relative h-64 w-full overflow-hidden">
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">

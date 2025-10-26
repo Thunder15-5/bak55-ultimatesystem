@@ -1,9 +1,16 @@
 import { TrendingUp, Music, DollarSign, Users } from 'lucide-react';
+import streamingStatsImage from '@/assets/blog-streaming-stats.jpg';
+import algorithmImage from '@/assets/blog-algorithm.jpg';
+import distributionImage from '@/assets/blog-distribution.jpg';
+import partnershipsImage from '@/assets/blog-partnerships.jpg';
+import makingItImage from '@/assets/blog-making-it.jpg';
+import aiMusicImage from '@/assets/blog-ai-music.jpg';
 
 export const blogPosts = [
   {
     id: 1,
     title: "The State of Music Streaming in 2025: What Independent Artists Need to Know",
+    image: streamingStatsImage,
     excerpt: "Global music streaming revenue reached $38 billion in 2025, with independent artists claiming 47% of the market share. Here's how to leverage this growth.",
     category: "Industry Trends",
     date: "2025-10-15",
@@ -59,6 +66,7 @@ export const blogPosts = [
   {
     id: 2,
     title: "Breaking the Spotify Algorithm: Real Data on What Actually Works",
+    image: algorithmImage,
     excerpt: "Analysis of 75,000+ successful independent artists reveals the truth about streaming success. The numbers might surprise you.",
     category: "Artist Growth",
     date: "2025-10-10",
@@ -152,6 +160,7 @@ export const blogPosts = [
   {
     id: 3,
     title: "The Real Cost of Traditional Music Distribution: A Complete Breakdown",
+    image: distributionImage,
     excerpt: "From DistroKid to CD Baby, we analyze the hidden costs of getting your music online and why there's a better way.",
     category: "Music Business",
     date: "2025-10-05",
@@ -303,6 +312,7 @@ export const blogPosts = [
   {
     id: 4,
     title: "Brand Partnerships in Music: $5.8 Billion Opportunity in 2025",
+    image: partnershipsImage,
     excerpt: "Why 88% of brands are now looking to partner with emerging artists, and how you can tap into this massive revenue stream.",
     category: "Brand Partnerships",
     date: "2025-09-28",
@@ -504,6 +514,7 @@ export const blogPosts = [
   {
     id: 5,
     title: "The Truth About 'Making It' in Music: Data from 150,000 Artists",
+    image: makingItImage,
     excerpt: "We analyzed the careers of successful independent artists to uncover what really matters. The results challenge everything you've been told.",
     category: "Industry Analysis",
     date: "2025-09-20",
@@ -760,6 +771,7 @@ export const blogPosts = [
   {
     id: 6,
     title: "AI in Music Production: How Smart Artists Are Winning in 2025",
+    image: aiMusicImage,
     excerpt: "With AI-generated music flooding platforms, we explore what this means for human artists and how to stay competitive.",
     category: "Technology",
     date: "2025-09-15",
