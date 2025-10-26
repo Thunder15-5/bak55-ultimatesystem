@@ -29,7 +29,7 @@ export default function FanDiscover() {
       .from("tracks")
       .select(`
         *,
-        artist_profiles!tracks_artist_id_fkey (
+        artist_profiles (
           stage_name,
           user_id
         )
@@ -37,7 +37,11 @@ export default function FanDiscover() {
       .eq("moderation_status", "approved")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      console.error("Error fetching tracks:", error);
+    }
+    
+    if (data) {
       setTracks(data);
     }
     setLoading(false);
@@ -58,7 +62,7 @@ export default function FanDiscover() {
         .from("tracks")
         .select(`
           *,
-          artist_profiles!tracks_artist_id_fkey (
+          artist_profiles (
             stage_name,
             user_id
           )
@@ -67,7 +71,11 @@ export default function FanDiscover() {
         .eq("moderation_status", "approved")
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
+      if (error) {
+        console.error("Error fetching following tracks:", error);
+      }
+      
+      if (data) {
         setTracks(data);
       }
     } else {
