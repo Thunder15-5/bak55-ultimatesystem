@@ -23,28 +23,14 @@ export default function Upgrade() {
     setUpgrading(true);
 
     try {
-      // Add artist role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: 'artist' });
+      const { data, error } = await supabase.functions.invoke('upgrade-to-artist', {
+        body: { stageName }
+      });
 
-      if (roleError) throw roleError;
-
-      // Create artist profile
-      const { error: profileError } = await supabase
-        .from('artist_profiles')
-        .insert({
-          user_id: user.id,
-          stage_name: stageName,
-          genres: [],
-        });
-
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       toast.success('Congratulations! You are now an artist!');
-      
-      // Redirect to artist dashboard
-      window.location.href = '/dashboard';
+      window.location.href = '/artist/dashboard';
     } catch (error: any) {
       console.error('Upgrade error:', error);
       toast.error(error.message || 'Failed to upgrade account');
@@ -65,7 +51,7 @@ export default function Upgrade() {
               <p className="text-muted-foreground mb-6">
                 You have full access to all artist features.
               </p>
-              <Button onClick={() => navigate('/dashboard')} variant="hero">
+              <Button onClick={() => navigate('/artist/dashboard')} variant="hero">
                 Go to Dashboard
               </Button>
             </CardContent>

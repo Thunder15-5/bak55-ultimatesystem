@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Music, Radio, Users, TrendingUp, Globe, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StatsBar } from "@/components/StatsBar";
+import { useAuth } from "@/contexts/AuthContext";
 
 const features = [
   {
@@ -160,9 +161,70 @@ const Streaming = () => {
         </div>
       </section>
 
+      {/* CTA Section */}
+      <section className="py-12 md:py-20 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <RoleCTA />
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
+};
+
+// Role-based CTA component
+const RoleCTA = () => {
+  const { user, userRole } = useAuth();
+
+  if (!user) {
+    return (
+      <Card className="p-8 text-center bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border-primary/20">
+        <h3 className="text-2xl md:text-3xl font-bold mb-4">Join BAK55 Talent Today</h3>
+        <p className="text-muted-foreground mb-6">Choose your path and start your journey</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/signup?role=fan">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              <Heart className="mr-2 h-4 w-4" />
+              Sign Up as Fan
+            </Button>
+          </Link>
+          <Link to="/signup?role=artist">
+            <Button variant="hero" size="lg" className="w-full sm:w-auto">
+              <Music className="mr-2 h-4 w-4" />
+              Sign Up as Artist
+            </Button>
+          </Link>
+          <Link to="/signup?role=brand">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Partner as Brand
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  if (userRole === 'fan') {
+    return (
+      <Card className="p-8 text-center border-primary/50 bg-gradient-to-br from-primary/10 to-secondary/10">
+        <Music className="h-12 w-12 mx-auto mb-4 text-primary" />
+        <h3 className="text-2xl md:text-3xl font-bold mb-4">Ready to Share Your Music?</h3>
+        <p className="text-muted-foreground mb-6">
+          Upgrade to an artist account and start earning from your talent
+        </p>
+        <Link to="/upgrade">
+          <Button variant="hero" size="lg">
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Upgrade to Artist
+          </Button>
+        </Link>
+      </Card>
+    );
+  }
+
+  return null;
 };
 
 export default Streaming;

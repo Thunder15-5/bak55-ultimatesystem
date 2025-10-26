@@ -74,45 +74,84 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 
-                {/* Fan Routes */}
-                <Route path="/fan/dashboard" element={<ProtectedRoute><FanDashboard /></ProtectedRoute>} />
-                
-                {/* Artist Routes */}
-                <Route path="/artist/dashboard" element={<ProtectedRoute><ArtistDashboard /></ProtectedRoute>} />
-                
-                {/* Brand Routes */}
-                <Route path="/brand/dashboard" element={<ProtectedRoute><BrandDashboard /></ProtectedRoute>} />
-                
-                {/* Upgrade Route */}
-                <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
-                
-                {/* Legacy routes with role-based redirects */}
-                <Route path="/dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                {/* Legacy routes - redirect to role-specific paths */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><RoleBasedRedirect to="profile" /></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><RoleBasedRedirect to="wallet" /></ProtectedRoute>} />
+                <Route path="/wallet/buy-coins" element={<ProtectedRoute><RoleBasedRedirect to="wallet/buy-coins" /></ProtectedRoute>} />
+                <Route path="/playlists" element={<ProtectedRoute><RoleBasedRedirect to="playlists" /></ProtectedRoute>} />
+                <Route path="/playlist/:id" element={<ProtectedRoute><RoleBasedRedirect to="playlist/:id" /></ProtectedRoute>} />
+                <Route path="/track/:id" element={<ProtectedRoute><RoleBasedRedirect to="track/:id" /></ProtectedRoute>} />
+                <Route path="/artist/:id" element={<ProtectedRoute><RoleBasedRedirect to="artist/:id" /></ProtectedRoute>} />
+                <Route path="/history" element={<ProtectedRoute><RoleBasedRedirect to="history" /></ProtectedRoute>} />
+                <Route path="/competitions" element={<RoleBasedRedirect to="competitions" />} />
+                <Route path="/competitions/active" element={<RoleBasedRedirect to="competitions/active" />} />
+                <Route path="/competition/:id" element={<RoleBasedRedirect to="competition/:id" />} />
                 <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
+                <Route path="/catalog" element={<MusicCatalog />} />
+                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
                 <Route path="/subscription/manage" element={<ProtectedRoute><SubscriptionManage /></ProtectedRoute>} />
                 <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
-                <Route path="/catalog" element={<MusicCatalog />} />
-                <Route path="/track/:id" element={<TrackDetails />} />
-                <Route path="/artist/:id" element={<ArtistProfile />} />
-                <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-              <Route path="/wallet/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
-              <Route path="/payment/callback" element={<PaymentCallback />} />
-              <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
-              <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
-              <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
+                
+                {/* Fan Routes */}
+                <Route path="/fan/dashboard" element={<ProtectedRoute requiredRole="fan"><FanDashboard /></ProtectedRoute>} />
+                <Route path="/fan/discover" element={<ProtectedRoute requiredRole="fan"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/fan/playlists" element={<ProtectedRoute requiredRole="fan"><Playlists /></ProtectedRoute>} />
+                <Route path="/fan/playlist/:id" element={<ProtectedRoute requiredRole="fan"><PlaylistDetails /></ProtectedRoute>} />
+                <Route path="/fan/history" element={<ProtectedRoute requiredRole="fan"><ListeningHistory /></ProtectedRoute>} />
+                <Route path="/fan/track/:id" element={<ProtectedRoute requiredRole="fan"><TrackDetails /></ProtectedRoute>} />
+                <Route path="/fan/artist/:id" element={<ProtectedRoute requiredRole="fan"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/fan/wallet" element={<ProtectedRoute requiredRole="fan"><Wallet /></ProtectedRoute>} />
+                <Route path="/fan/wallet/buy-coins" element={<ProtectedRoute requiredRole="fan"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/fan/profile" element={<ProtectedRoute requiredRole="fan"><Profile /></ProtectedRoute>} />
+                <Route path="/fan/competitions" element={<ProtectedRoute requiredRole="fan"><Competitions /></ProtectedRoute>} />
+                <Route path="/fan/competitions/active" element={<ProtectedRoute requiredRole="fan"><CompetitionsActive /></ProtectedRoute>} />
+                <Route path="/fan/competition/:id" element={<ProtectedRoute requiredRole="fan"><CompetitionDetails /></ProtectedRoute>} />
+
+                {/* Artist Routes */}
+                <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><ArtistDashboard /></ProtectedRoute>} />
+                <Route path="/artist/upload" element={<ProtectedRoute requiredRole="artist"><UploadTrack /></ProtectedRoute>} />
+                <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/artist/track/:id" element={<ProtectedRoute requiredRole="artist"><TrackDetails /></ProtectedRoute>} />
+                <Route path="/artist/artist/:id" element={<ProtectedRoute requiredRole="artist"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/artist/analytics" element={<ProtectedRoute requiredRole="artist"><Analytics /></ProtectedRoute>} />
+                <Route path="/artist/playlists" element={<ProtectedRoute requiredRole="artist"><Playlists /></ProtectedRoute>} />
+                <Route path="/artist/playlist/:id" element={<ProtectedRoute requiredRole="artist"><PlaylistDetails /></ProtectedRoute>} />
+                <Route path="/artist/history" element={<ProtectedRoute requiredRole="artist"><ListeningHistory /></ProtectedRoute>} />
+                <Route path="/artist/competitions" element={<ProtectedRoute requiredRole="artist"><Competitions /></ProtectedRoute>} />
+                <Route path="/artist/competitions/active" element={<ProtectedRoute requiredRole="artist"><CompetitionsActive /></ProtectedRoute>} />
+                <Route path="/artist/competition/:id" element={<ProtectedRoute requiredRole="artist"><CompetitionDetails /></ProtectedRoute>} />
+                <Route path="/artist/subscribe" element={<ProtectedRoute requiredRole="artist"><Subscribe /></ProtectedRoute>} />
+                <Route path="/artist/subscription/manage" element={<ProtectedRoute requiredRole="artist"><SubscriptionManage /></ProtectedRoute>} />
+                <Route path="/artist/subscription/success" element={<ProtectedRoute requiredRole="artist"><SubscriptionSuccess /></ProtectedRoute>} />
+                <Route path="/artist/wallet" element={<ProtectedRoute requiredRole="artist"><Wallet /></ProtectedRoute>} />
+                <Route path="/artist/wallet/buy-coins" element={<ProtectedRoute requiredRole="artist"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/artist/profile" element={<ProtectedRoute requiredRole="artist"><Profile /></ProtectedRoute>} />
+
+                {/* Brand Routes */}
+                <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><BrandDashboard /></ProtectedRoute>} />
+                <Route path="/brand/discover" element={<ProtectedRoute requiredRole="brand"><MusicCatalog /></ProtectedRoute>} />
+                <Route path="/brand/artist/:id" element={<ProtectedRoute requiredRole="brand"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/brand/competitions" element={<ProtectedRoute requiredRole="brand"><Competitions /></ProtectedRoute>} />
+                <Route path="/brand/competitions/create" element={<ProtectedRoute requiredRole="brand"><CreateCompetition /></ProtectedRoute>} />
+                <Route path="/brand/competitions/active" element={<ProtectedRoute requiredRole="brand"><CompetitionsActive /></ProtectedRoute>} />
+                <Route path="/brand/competition/:id" element={<ProtectedRoute requiredRole="brand"><CompetitionDetails /></ProtectedRoute>} />
+                <Route path="/brand/wallet" element={<ProtectedRoute requiredRole="brand"><Wallet /></ProtectedRoute>} />
+                <Route path="/brand/wallet/buy-coins" element={<ProtectedRoute requiredRole="brand"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/brand/profile" element={<ProtectedRoute requiredRole="brand"><Profile /></ProtectedRoute>} />
+
+                {/* Role upgrade route */}
+                <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
+                <Route path="/payment/callback" element={<PaymentCallback />} />
+                <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+                <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
+                <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/playlists" element={<ProtectedRoute><Playlists /></ProtectedRoute>} />
-                <Route path="/playlist/:id" element={<ProtectedRoute><PlaylistDetails /></ProtectedRoute>} />
-                <Route path="/history" element={<ProtectedRoute><ListeningHistory /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
                 <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
-                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/streaming" element={<Streaming />} />
-                <Route path="/competitions" element={<Competitions />} />
-                <Route path="/competitions/active" element={<CompetitionsActive />} />
-                <Route path="/competition/:id" element={<CompetitionDetails />} />
           <Route path="/admin/create-competition" element={
             <ProtectedRoute requiredRoles={['admin', 'brand']}>
               <CreateCompetition />

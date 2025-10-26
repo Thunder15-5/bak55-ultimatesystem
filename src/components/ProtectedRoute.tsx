@@ -1,5 +1,7 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,6 +11,15 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredRole, requiredRoles }: ProtectedRouteProps) {
   const { user, loading, userRole } = useAuth();
+  const location = useLocation();
+  const [hasShownToast, setHasShownToast] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user && !hasShownToast) {
+      toast.error("Please log in to access this page");
+      setHasShownToast(true);
+    }
+  }, [loading, user, hasShownToast]);
 
   if (loading) {
     return (
@@ -19,16 +30,27 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check if user has required role(s)
   if (requiredRoles && requiredRoles.length > 0) {
     if (!userRole || !requiredRoles.includes(userRole)) {
-      return <Navigate to="/dashboard" replace />;
+      if (!hasShownToast) {
+        toast.error("You don't have permission to access this page");
+        setHasShownToast(true);
+      }
+      
+      // Redirect to role-specific dashboard
+      return <Navigate to={userRole ? `/${userRole}/dashboard` : "/dashboard"} replace />;
     }
   } else if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+    if (!hasShownToast) {
+      toast.error("You don't have permission to access this page");
+      setHasShownToast(true);
+    }
+    
+    return <Navigate to={userRole ? `/${userRole}/dashboard` : "/dashboard"} replace />;
   }
 
   return <>{children}</>;

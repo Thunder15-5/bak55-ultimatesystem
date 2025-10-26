@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play } from 'lucide-react';
+import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle } from 'lucide-react';
 
 export default function FanDashboard() {
   const { user } = useAuth();
@@ -94,6 +94,40 @@ export default function FanDashboard() {
             </CardContent>
           </Card>
 
+          {/* What's New Card */}
+          <Card className="border-green-500/50 bg-green-500/10">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Music className="h-5 w-5 text-green-500" />
+                New Fan Features!
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-green-500" />
+                  <span>Like your favorite tracks</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-green-500" />
+                  <span>Vote in competitions</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-green-500" />
+                  <span>Follow artists</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Music className="h-4 w-4 text-green-500" />
+                  <span>Create playlists</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <span>Upgrade to artist anytime</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
           {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
             <Card>
@@ -163,19 +197,19 @@ export default function FanDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-4">
-              <Button onClick={() => navigate('/streaming')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/discover')} variant="outline" className="w-full">
                 <Play className="mr-2 h-4 w-4" />
                 Discover Music
               </Button>
-              <Button onClick={() => navigate('/competitions/active')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/competitions/active')} variant="outline" className="w-full">
                 <Trophy className="mr-2 h-4 w-4" />
                 Vote in Competitions
               </Button>
-              <Button onClick={() => navigate('/wallet/buy-coins')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/wallet/buy-coins')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />
                 Buy BAKCoins
               </Button>
-              <Button onClick={() => navigate('/playlists')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/playlists')} variant="outline" className="w-full">
                 <Music className="mr-2 h-4 w-4" />
                 My Playlists
               </Button>

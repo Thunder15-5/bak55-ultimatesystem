@@ -174,8 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (role === "admin") {
         navigate("/admin");
+      } else if (role) {
+        navigate(`/${role}/dashboard`);
       } else {
-        navigate("/dashboard");
+        navigate("/dashboard"); // Fallback
       }
     }
 

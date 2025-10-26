@@ -690,6 +690,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_upgrades: {
+        Row: {
+          from_role: Database["public"]["Enums"]["app_role"]
+          id: string
+          reason: string | null
+          to_role: Database["public"]["Enums"]["app_role"]
+          upgraded_at: string
+          user_id: string
+        }
+        Insert: {
+          from_role: Database["public"]["Enums"]["app_role"]
+          id?: string
+          reason?: string | null
+          to_role: Database["public"]["Enums"]["app_role"]
+          upgraded_at?: string
+          user_id: string
+        }
+        Update: {
+          from_role?: Database["public"]["Enums"]["app_role"]
+          id?: string
+          reason?: string | null
+          to_role?: Database["public"]["Enums"]["app_role"]
+          upgraded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       share_analytics: {
         Row: {
           id: string

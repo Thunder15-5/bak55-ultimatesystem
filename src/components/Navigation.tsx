@@ -48,73 +48,100 @@ export function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-1">
             {user ? (
               <>
-                <Link to="/dashboard" className="text-foreground hover:text-primary transition-all relative group">
-                  <span>Dashboard</span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-                </Link>
-                {userRole === "artist" && (
-                  <Link to="/subscribe" className="text-foreground hover:text-primary transition-colors">
-                    Subscription
-                  </Link>
+                {/* Fan Navigation */}
+                {userRole === 'fan' && (
+                  <>
+                    <Link to="/fan/dashboard">
+                      <Button variant="ghost" size="sm">Dashboard</Button>
+                    </Link>
+                    <Link to="/fan/discover">
+                      <Button variant="ghost" size="sm">Discover</Button>
+                    </Link>
+                    <Link to="/fan/competitions/active">
+                      <Button variant="ghost" size="sm">Competitions</Button>
+                    </Link>
+                    <Link to="/fan/playlists">
+                      <Button variant="ghost" size="sm">Playlists</Button>
+                    </Link>
+                    <Link to="/fan/wallet">
+                      <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                    <Link to="/upgrade">
+                      <Button variant="hero" size="sm" className="ml-2">
+                        <TrendingUp className="mr-1 h-3 w-3" />
+                        Upgrade to Artist
+                      </Button>
+                    </Link>
+                  </>
                 )}
-                <Link to={userRole === 'fan' ? '/streaming' : '/catalog'} className="text-foreground hover:text-primary transition-all relative group">
-                  <span>{userRole === 'fan' ? 'Discover Music' : 'Music'}</span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-                </Link>
-                {userRole === "artist" && (
-                  <Link to="/upload" className="text-foreground hover:text-primary transition-colors">
-                    Upload
-                  </Link>
+
+                {/* Artist Navigation */}
+                {userRole === 'artist' && (
+                  <>
+                    <Link to="/artist/dashboard">
+                      <Button variant="ghost" size="sm">Dashboard</Button>
+                    </Link>
+                    <Link to="/artist/upload">
+                      <Button variant="ghost" size="sm">Upload</Button>
+                    </Link>
+                    <Link to="/artist/catalog">
+                      <Button variant="ghost" size="sm">My Music</Button>
+                    </Link>
+                    <Link to="/artist/discover">
+                      <Button variant="ghost" size="sm">Browse</Button>
+                    </Link>
+                    <Link to="/artist/analytics">
+                      <Button variant="ghost" size="sm">Analytics</Button>
+                    </Link>
+                    <Link to="/artist/competitions">
+                      <Button variant="ghost" size="sm">Competitions</Button>
+                    </Link>
+                    <Link to="/artist/wallet">
+                      <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                    {subscription && <SubscriptionBadge planName={subscription.subscription_plans.name} />}
+                  </>
                 )}
-                <Link to="/competitions" className="text-foreground hover:text-primary transition-colors">
-                  About Competitions
-                </Link>
-                <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors">
-                  Active Competitions
-                </Link>
-                <Link to="/playlists" className="text-foreground hover:text-primary transition-colors">
-                  <ListMusic className="w-4 h-4 inline mr-1" />
-                  Playlists
-                </Link>
-                <Link to="/history" className="text-foreground hover:text-primary transition-colors">
-                  <History className="w-4 h-4 inline mr-1" />
-                  History
-                </Link>
-                <Link to="/wallet" className="text-foreground hover:text-primary transition-colors">
-                  <Wallet className="w-4 h-4 inline mr-1" />
-                  Wallet
-                </Link>
-                <NotificationBell />
-                {userRole === "fan" && (
-                  <Link to="/upgrade">
-                    <Button variant="hero" size="sm" className="shadow-lg">
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Upgrade to Artist
-                    </Button>
-                  </Link>
+
+                {/* Brand Navigation */}
+                {userRole === 'brand' && (
+                  <>
+                    <Link to="/brand/dashboard">
+                      <Button variant="ghost" size="sm">Dashboard</Button>
+                    </Link>
+                    <Link to="/brand/discover">
+                      <Button variant="ghost" size="sm">Discover Artists</Button>
+                    </Link>
+                    <Link to="/brand/competitions">
+                      <Button variant="ghost" size="sm">My Competitions</Button>
+                    </Link>
+                    <Link to="/brand/competitions/create">
+                      <Button variant="ghost" size="sm">Create Competition</Button>
+                    </Link>
+                    <Link to="/brand/wallet">
+                      <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                  </>
                 )}
-                {subscription && userRole === "artist" && (
-                  <SubscriptionBadge planName={subscription.subscription_plans.name} />
-                )}
-                {userRole === "admin" && (
+
+                {/* Admin Navigation */}
+                {userRole === 'admin' && (
                   <Link to="/admin">
-                    <Button variant="hero" size="sm" className="shadow-lg">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Admin Panel
-                    </Button>
+                    <Button variant="ghost" size="sm">Admin</Button>
                   </Link>
                 )}
-                <Link to="/profile">
+
+                {/* Common Actions */}
+                <NotificationBell />
+                <Link to={`/${userRole}/profile`}>
                   <Button variant="ghost" size="sm">
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
+                    <User className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Button variant="outline" size="sm" onClick={signOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
+                <Button variant="ghost" size="sm" onClick={signOut}>
                   Logout
                 </Button>
               </>
@@ -166,67 +193,92 @@ export function Navigation() {
           <div className="md:hidden mt-4 pb-4 space-y-3">
             {user ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to={userRole === 'fan' ? '/streaming' : '/catalog'}
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {userRole === 'fan' ? 'Discover Music' : 'Music'}
-                </Link>
-                {userRole === "artist" && (
-                  <Link
-                    to="/upload"
-                    className="block py-2 text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Upload
+                {/* Fan Mobile Navigation */}
+                {userRole === 'fan' && (
+                  <>
+                    <Link to="/fan/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    </Link>
+                    <Link to="/fan/discover" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Discover</Button>
+                    </Link>
+                    <Link to="/fan/competitions/active" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Competitions</Button>
+                    </Link>
+                    <Link to="/fan/playlists" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Playlists</Button>
+                    </Link>
+                    <Link to="/fan/wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    </Link>
+                    <Link to="/upgrade" onClick={() => setIsOpen(false)}>
+                      <Button variant="hero" className="w-full">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Upgrade to Artist
+                      </Button>
+                    </Link>
+                  </>
+                )}
+
+                {/* Artist Mobile Navigation */}
+                {userRole === 'artist' && (
+                  <>
+                    <Link to="/artist/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    </Link>
+                    <Link to="/artist/upload" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Upload</Button>
+                    </Link>
+                    <Link to="/artist/catalog" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">My Music</Button>
+                    </Link>
+                    <Link to="/artist/discover" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Browse</Button>
+                    </Link>
+                    <Link to="/artist/analytics" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Analytics</Button>
+                    </Link>
+                    <Link to="/artist/competitions" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Competitions</Button>
+                    </Link>
+                    <Link to="/artist/wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    </Link>
+                    {subscription && <SubscriptionBadge planName={subscription.subscription_plans.name} />}
+                  </>
+                )}
+
+                {/* Brand Mobile Navigation */}
+                {userRole === 'brand' && (
+                  <>
+                    <Link to="/brand/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    </Link>
+                    <Link to="/brand/discover" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Discover Artists</Button>
+                    </Link>
+                    <Link to="/brand/competitions" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">My Competitions</Button>
+                    </Link>
+                    <Link to="/brand/competitions/create" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Create Competition</Button>
+                    </Link>
+                    <Link to="/brand/wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    </Link>
+                  </>
+                )}
+
+                {/* Admin Mobile Navigation */}
+                {userRole === 'admin' && (
+                  <Link to="/admin" onClick={() => setIsOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start">Admin</Button>
                   </Link>
                 )}
-                <Link
-                  to="/competitions"
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  About Competitions
+
+                <Link to={`/${userRole}/profile`} onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">Profile</Button>
                 </Link>
-                <Link
-                  to="/competitions/active"
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Active Competitions
-                </Link>
-                <Link
-                  to="/wallet"
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Wallet
-                </Link>
-                <Link
-                  to="/profile"
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Profile
-                </Link>
-                {userRole === "admin" && (
-                  <Link
-                    to="/admin"
-                    className="block py-3 px-4 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <BarChart3 className="w-4 h-4 inline mr-2" />
-                    Admin Panel
-                  </Link>
-                )}
                 <Button
                   variant="outline"
                   className="w-full"
