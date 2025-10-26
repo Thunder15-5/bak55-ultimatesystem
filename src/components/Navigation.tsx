@@ -165,6 +165,9 @@ export function Navigation() {
                 <Link to="/about" className="text-foreground hover:text-primary transition-colors">
                   About
                 </Link>
+                <Link to="/blog" className="text-foreground hover:text-primary transition-colors">
+                  Blog
+                </Link>
                 <Link to="/login">
                   <Button variant="outline" size="sm">
                     Login
@@ -334,6 +337,13 @@ export function Navigation() {
                   onClick={() => setIsOpen(false)}
                 >
                   About
+                </Link>
+                <Link
+                  to="/blog"
+                  className="block py-2 text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Blog
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full mb-2">

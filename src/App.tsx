@@ -32,6 +32,7 @@ import HowToEarn from "./pages/HowToEarn";
 import SuccessStories from "./pages/SuccessStories";
 import Support from "./pages/Support";
 import About from "./pages/About";
+import Blog from "./pages/Blog";
 import Investors from "./pages/Investors";
 import PressKit from "./pages/PressKit";
 import Contact from "./pages/Contact";
@@ -169,6 +170,7 @@ const App = () => (
                 <Route path="/bakcoins" element={<BAKCoins />} />
                 <Route path="/ai-tools" element={<AITools />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<Blog />} />
                 <Route path="/how-to-earn" element={<HowToEarn />} />
                 <Route path="/join" element={<Join />} />
                 <Route path="/contact" element={<Contact />} />
