@@ -18,6 +18,7 @@ export default function EditCompetition() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    cover_image: "",
     prize_amount: "",
     entry_fee: "",
     max_submissions: "",
@@ -46,6 +47,7 @@ export default function EditCompetition() {
         setFormData({
           title: data.title,
           description: data.description || "",
+          cover_image: data.cover_image || "",
           prize_amount: data.prize_amount.toString(),
           entry_fee: data.entry_fee?.toString() || "0",
           max_submissions: data.max_submissions?.toString() || "",
@@ -80,6 +82,7 @@ export default function EditCompetition() {
         .update({
           title: formData.title,
           description: formData.description,
+          cover_image: formData.cover_image || null,
           prize_amount: parseFloat(formData.prize_amount),
           entry_fee: parseFloat(formData.entry_fee || "0"),
           max_submissions: formData.max_submissions ? parseInt(formData.max_submissions) : null,
@@ -143,6 +146,26 @@ export default function EditCompetition() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
                 />
+              </div>
+
+              {/* Cover Image URL */}
+              <div className="space-y-2">
+                <Label htmlFor="cover_image">Cover Image URL</Label>
+                <Input
+                  id="cover_image"
+                  value={formData.cover_image}
+                  onChange={(e) => setFormData({ ...formData, cover_image: e.target.value })}
+                  placeholder="/genesis-competition.png.jpeg or https://..."
+                />
+                {formData.cover_image && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.cover_image}
+                      alt="Cover preview"
+                      className="rounded-lg border h-48 w-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

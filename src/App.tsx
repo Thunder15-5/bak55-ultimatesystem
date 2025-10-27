@@ -154,6 +154,12 @@ const App = () => (
                 <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
                 <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
                 <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
+
+                {/* Admin Competition Routes */}
+                <Route path="/admin/competitions" element={<ProtectedRoute requiredRole="admin"><Competitions /></ProtectedRoute>} />
+                <Route path="/admin/competitions/active" element={<ProtectedRoute requiredRole="admin"><CompetitionsActive /></ProtectedRoute>} />
+                <Route path="/admin/competition/:id" element={<ProtectedRoute requiredRole="admin"><CompetitionDetails /></ProtectedRoute>} />
+
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
                 <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
