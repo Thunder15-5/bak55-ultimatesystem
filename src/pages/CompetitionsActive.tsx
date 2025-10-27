@@ -134,23 +134,21 @@ export default function CompetitionsActive() {
                     : 'border-primary/10 hover:border-primary/30'
                 }`}
               >
-                {competition.cover_image && (
-                  <div className="h-40 sm:h-48 overflow-hidden relative">
-                    {isFeatured && (
-                      <div className="absolute top-4 left-4 z-10">
-                        <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
-                          🎤 FEATURED - FOUNDING ARTISTS
-                        </Badge>
-                      </div>
-                    )}
-                    <img 
-                      src={competition.cover_image} 
-                      alt={competition.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className={`absolute inset-0 ${isFeatured ? 'bg-gradient-to-t from-primary/60 to-transparent' : 'bg-gradient-to-t from-black/60 to-transparent'}`} />
-                  </div>
-                )}
+                <div className="h-40 sm:h-48 overflow-hidden relative">
+                  {isFeatured && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
+                        🎤 FEATURED - FOUNDING ARTISTS
+                      </Badge>
+                    </div>
+                  )}
+                  <img 
+                    src={competition.cover_image || "/genesis-competition.png.jpeg"} 
+                    alt={competition.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className={`absolute inset-0 ${isFeatured ? 'bg-gradient-to-t from-primary/60 to-transparent' : 'bg-gradient-to-t from-black/60 to-transparent'}`} />
+                </div>
                 <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="line-clamp-2 text-lg sm:text-xl font-heading group-hover:text-primary transition-colors">

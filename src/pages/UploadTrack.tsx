@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 export default function UploadTrack() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [uploading, setUploading] = useState(false);
   const [classifyingGenre, setClassifyingGenre] = useState(false);
   const [formData, setFormData] = useState({
@@ -55,6 +56,13 @@ export default function UploadTrack() {
 
       if (error) throw error;
       setCompetitions(data || []);
+      
+      // Auto-select competition from query param
+      const competitionId = searchParams.get('competition');
+      if (competitionId && data?.some(c => c.id === competitionId)) {
+        setSubmitToCompetition(true);
+        setSelectedCompetition(competitionId);
+      }
     } catch (error) {
       console.error('Error fetching competitions:', error);
     }

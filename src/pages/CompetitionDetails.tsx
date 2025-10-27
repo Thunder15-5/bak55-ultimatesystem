@@ -277,18 +277,14 @@ export default function CompetitionDetails() {
       
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 px-4 overflow-hidden">
-        {competition.cover_image && (
-          <>
-            <div className="absolute inset-0 z-0">
-              <img 
-                src={competition.cover_image} 
-                alt={competition.title}
-                className="w-full h-full object-cover blur-3xl opacity-20"
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background z-0" />
-          </>
-        )}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={competition.cover_image || "/genesis-competition.png.jpeg"} 
+            alt={competition.title}
+            className="w-full h-full object-cover blur-3xl opacity-20"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background z-0" />
         
         <div className="container mx-auto max-w-6xl relative z-10">
           <Link to="/competitions/active">
@@ -362,7 +358,7 @@ export default function CompetitionDetails() {
               </div>
 
               {userRole === 'artist' && isSubmissionOpen() && (
-                <Link to="/upload">
+                <Link to={`/artist/upload?competition=${id}`}>
                   <Button variant="hero" className="w-full">
                     <Music className="mr-2 h-4 w-4" />
                     Submit Track

@@ -85,7 +85,7 @@ const Competitions = () => {
               maxSubmissions={featuredCompetition.max_submissions}
               currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
               ctaText="Enter Competition"
-              ctaLink={`/competitions/${featuredCompetition.id}`}
+              ctaLink={`/competition/${featuredCompetition.id}`}
             />
           </div>
         </section>

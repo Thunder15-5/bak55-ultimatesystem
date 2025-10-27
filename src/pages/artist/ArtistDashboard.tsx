@@ -155,7 +155,7 @@ export default function ArtistDashboard() {
               maxSubmissions={featuredCompetition.max_submissions}
               currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
               ctaText="Submit Your Track"
-              ctaLink={`/competitions/${featuredCompetition.id}`}
+              ctaLink={`/artist/upload?competition=${featuredCompetition.id}`}
             />
           </div>
         )}

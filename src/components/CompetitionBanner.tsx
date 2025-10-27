@@ -25,9 +25,10 @@ export const CompetitionBanner = ({
   maxSubmissions = 55,
   currentSubmissions = 0,
   ctaText = "Enter Now",
-  ctaLink = `/competitions/${competitionId}`,
+  ctaLink = `/competition/${competitionId}`,
 }: CompetitionBannerProps) => {
   const [timeRemaining, setTimeRemaining] = useState("");
+  const imgSrc = coverImage || "/genesis-competition.png.jpeg";
 
   useEffect(() => {
     const updateTimer = () => {
@@ -61,7 +62,7 @@ export const CompetitionBanner = ({
         {/* Cover Image */}
         <div className="relative rounded-lg overflow-hidden aspect-video md:aspect-square">
           <img
-            src={coverImage}
+            src={imgSrc}
             alt={title}
             className="w-full h-full object-cover"
           />
@@ -101,14 +102,14 @@ export const CompetitionBanner = ({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link to={ctaLink} className="flex-1">
               <Button size="lg" className="w-full">
                 {ctaText}
               </Button>
             </Link>
-            <Link to={`/competitions/${competitionId}`}>
-              <Button size="lg" variant="outline">
+            <Link to={`/competition/${competitionId}`}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 Learn More
               </Button>
             </Link>

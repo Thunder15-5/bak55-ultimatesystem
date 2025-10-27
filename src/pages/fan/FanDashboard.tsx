@@ -123,7 +123,7 @@ export default function FanDashboard() {
                 maxSubmissions={featuredCompetition.max_submissions}
                 currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
                 ctaText="Vote Now"
-                ctaLink={`/competitions/${featuredCompetition.id}`}
+                ctaLink={`/competition/${featuredCompetition.id}`}
               />
             </div>
           )}
