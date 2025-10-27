@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
+import { CompetitionBanner } from '@/components/CompetitionBanner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -17,10 +18,26 @@ export default function FanDashboard() {
     artistsFollowing: 0,
     playlistsCreated: 0,
   });
+  const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
   useEffect(() => {
-    if (user) fetchStats();
+    if (user) {
+      fetchStats();
+      fetchFeaturedCompetition();
+    }
   }, [user]);
+
+  const fetchFeaturedCompetition = async () => {
+    const { data } = await supabase
+      .from('competitions')
+      .select('*, submissions(count)')
+      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
+      .single();
+    
+    if (data) {
+      setFeaturedCompetition(data);
+    }
+  };
 
   const fetchStats = async () => {
     // Fetch wallet balance
@@ -93,6 +110,23 @@ export default function FanDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Featured Competition Banner */}
+          {featuredCompetition && (
+            <div className="animate-fade-in-up">
+              <CompetitionBanner
+                competitionId={featuredCompetition.id}
+                title={featuredCompetition.title}
+                coverImage={featuredCompetition.cover_image}
+                prizeAmount={featuredCompetition.prize_amount}
+                endDate={featuredCompetition.end_date}
+                maxSubmissions={featuredCompetition.max_submissions}
+                currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
+                ctaText="Vote Now"
+                ctaLink={`/competitions/${featuredCompetition.id}`}
+              />
+            </div>
+          )}
 
           {/* What's New Card */}
           <Card className="border-green-500/50 bg-green-500/10">

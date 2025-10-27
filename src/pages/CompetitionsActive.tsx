@@ -122,16 +122,33 @@ export default function CompetitionsActive() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {competitions.map((competition) => (
-              <Card key={competition.id} className="overflow-hidden hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] touch-manipulation border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm group">
+            {competitions.map((competition) => {
+              const isFeatured = competition.id === '627488d7-abe5-4469-bb7a-0863225fea34';
+              
+              return (
+              <Card 
+                key={competition.id} 
+                className={`overflow-hidden hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] touch-manipulation bg-card/50 backdrop-blur-sm group ${
+                  isFeatured 
+                    ? 'border-2 border-primary/50 shadow-glow ring-2 ring-primary/20' 
+                    : 'border-primary/10 hover:border-primary/30'
+                }`}
+              >
                 {competition.cover_image && (
                   <div className="h-40 sm:h-48 overflow-hidden relative">
+                    {isFeatured && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
+                          🎤 FEATURED - FOUNDING ARTISTS
+                        </Badge>
+                      </div>
+                    )}
                     <img 
                       src={competition.cover_image} 
                       alt={competition.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className={`absolute inset-0 ${isFeatured ? 'bg-gradient-to-t from-primary/60 to-transparent' : 'bg-gradient-to-t from-black/60 to-transparent'}`} />
                   </div>
                 )}
                 <CardHeader className="p-4 sm:p-6">
@@ -179,11 +196,19 @@ export default function CompetitionsActive() {
                   )}
 
                   <Link to={`/competition/${competition.id}`} className="block">
-                    <Button className="w-full mt-2 h-10 md:h-11 touch-manipulation">View Details</Button>
+                    <Button 
+                      className={`w-full mt-2 h-10 md:h-11 touch-manipulation ${
+                        isFeatured ? 'bg-gradient-to-r from-primary to-secondary hover:opacity-90' : ''
+                      }`}
+                      variant={isFeatured ? 'default' : 'default'}
+                    >
+                      {isFeatured ? 'Join The Genesis' : 'View Details'}
+                    </Button>
                   </Link>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

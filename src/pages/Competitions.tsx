@@ -4,8 +4,29 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, Clock, DollarSign, Star, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CompetitionBanner } from "@/components/CompetitionBanner";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Competitions = () => {
+  const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
+
+  useEffect(() => {
+    fetchFeaturedCompetition();
+  }, []);
+
+  const fetchFeaturedCompetition = async () => {
+    const { data } = await supabase
+      .from('competitions')
+      .select('*, submissions(count)')
+      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
+      .single();
+    
+    if (data) {
+      setFeaturedCompetition(data);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -42,6 +63,33 @@ const Competitions = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Competition */}
+      {featuredCompetition && (
+        <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-primary/5 to-background">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                <span className="text-gradient">Live Now:</span> BAK55 Genesis
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                The first 55 founding artists of the BAK55 movement
+              </p>
+            </div>
+            <CompetitionBanner
+              competitionId={featuredCompetition.id}
+              title={featuredCompetition.title}
+              coverImage={featuredCompetition.cover_image}
+              prizeAmount={featuredCompetition.prize_amount}
+              endDate={featuredCompetition.end_date}
+              maxSubmissions={featuredCompetition.max_submissions}
+              currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
+              ctaText="Enter Competition"
+              ctaLink={`/competitions/${featuredCompetition.id}`}
+            />
+          </div>
+        </section>
+      )}
 
       {/* How Competitions Work */}
       <section className="py-20 px-4">

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { TrackRecommendations } from "@/components/TrackRecommendations";
 import { SubscriptionStatusCard } from "@/components/SubscriptionStatusCard";
+import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,10 +30,12 @@ export default function ArtistDashboard() {
     monthlyGrowth: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
       fetchStats();
+      fetchFeaturedCompetition();
       
       // Subscribe to wallet changes
       const walletChannel = supabase
@@ -66,6 +69,18 @@ export default function ArtistDashboard() {
       };
     }
   }, [user]);
+
+  const fetchFeaturedCompetition = async () => {
+    const { data } = await supabase
+      .from('competitions')
+      .select('*, submissions(count)')
+      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
+      .single();
+    
+    if (data) {
+      setFeaturedCompetition(data);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -127,6 +142,23 @@ export default function ArtistDashboard() {
         </div>
 
         <EmailVerificationBanner />
+
+        {/* Featured Competition Banner */}
+        {featuredCompetition && (
+          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+            <CompetitionBanner
+              competitionId={featuredCompetition.id}
+              title={featuredCompetition.title}
+              coverImage={featuredCompetition.cover_image}
+              prizeAmount={featuredCompetition.prize_amount}
+              endDate={featuredCompetition.end_date}
+              maxSubmissions={featuredCompetition.max_submissions}
+              currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
+              ctaText="Submit Your Track"
+              ctaLink={`/competitions/${featuredCompetition.id}`}
+            />
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>

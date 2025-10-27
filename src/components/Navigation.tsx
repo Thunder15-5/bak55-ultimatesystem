@@ -61,7 +61,10 @@ export function Navigation() {
                       <Button variant="ghost" size="sm">Discover</Button>
                     </Link>
                     <Link to="/fan/competitions/active">
-                      <Button variant="ghost" size="sm">Competitions</Button>
+                      <Button variant="ghost" size="sm" className="relative">
+                        Competitions
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      </Button>
                     </Link>
                     <Link to="/fan/playlists">
                       <Button variant="ghost" size="sm">Playlists</Button>
@@ -97,7 +100,10 @@ export function Navigation() {
                       <Button variant="ghost" size="sm">Analytics</Button>
                     </Link>
                     <Link to="/artist/competitions">
-                      <Button variant="ghost" size="sm">Competitions</Button>
+                      <Button variant="ghost" size="sm" className="relative">
+                        Competitions
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      </Button>
                     </Link>
                     <Link to="/artist/wallet">
                       <Button variant="ghost" size="sm">Wallet</Button>
@@ -153,8 +159,9 @@ export function Navigation() {
                 <Link to="/competitions" className="text-foreground hover:text-primary transition-colors">
                   About Competitions
                 </Link>
-                <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/competitions/active" className="text-foreground hover:text-primary transition-colors relative inline-flex items-center gap-1">
                   Active Competitions
+                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 </Link>
                 <Link to="/bakcoins" className="text-foreground hover:text-primary transition-colors">
                   BAKCoins
