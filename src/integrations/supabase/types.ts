@@ -351,6 +351,66 @@ export type Database = {
         }
         Relationships: []
       }
+      deposit_requests: {
+        Row: {
+          amount_kes: number
+          created_at: string | null
+          expected_bak: number | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          receipt_code: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_url: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_kes: number
+          created_at?: string | null
+          expected_bak?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          receipt_code: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_kes?: number
+          created_at?: string | null
+          expected_bak?: number | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          receipt_code?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposit_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       early_access_signups: {
         Row: {
           converted: boolean | null
@@ -1240,6 +1300,70 @@ export type Database = {
           {
             foreignKeyName: "votes_voter_id_fkey"
             columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          bak_coins: number
+          code: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          issued_by: string
+          issued_to: string | null
+          metadata: Json | null
+          status: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          bak_coins: number
+          code: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_by: string
+          issued_to?: string | null
+          metadata?: Json | null
+          status?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          bak_coins?: number
+          code?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_by?: string
+          issued_to?: string | null
+          metadata?: Json | null
+          status?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_issued_to_fkey"
+            columns: ["issued_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_used_by_fkey"
+            columns: ["used_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
