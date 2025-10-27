@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ArrowLeft, Play, Trash2, Loader2, ListMusic } from "lucide-react";
-import { MusicPlayer } from "@/components/MusicPlayer";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { AddTracksDialog } from "@/components/AddTracksDialog";
 
 interface Playlist {
@@ -37,11 +37,11 @@ interface PlaylistTrack {
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { playTrack } = useMusicPlayer();
   const navigate = useNavigate();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -147,22 +147,17 @@ export default function PlaylistDetails() {
   };
 
   const handlePlayTrack = (track: PlaylistTrack) => {
-  setCurrentTrack({
-    id: track.tracks.id,
-    title: track.tracks.title,
-    audio_url: track.tracks.audio_url,
-    cover_image: track.tracks.cover_image,
-    profiles: {
-      username: track.tracks.artist_username || "Unknown Artist",
-    },
-  });
-
-    if (user) {
-      supabase.from("listening_history").insert({
-        user_id: user.id,
-        track_id: track.tracks.id,
-      });
-    }
+    playTrack({
+      id: track.tracks.id,
+      title: track.tracks.title,
+      artist_id: track.tracks.artist_id,
+      audio_url: track.tracks.audio_url,
+      cover_image: track.tracks.cover_image,
+      genre: track.tracks.genre,
+      profiles: {
+        username: track.tracks.artist_username || "Unknown Artist",
+      },
+    });
   };
 
   if (loading) {
@@ -292,13 +287,6 @@ export default function PlaylistDetails() {
           </div>
         )}
       </div>
-
-      {currentTrack && (
-        <MusicPlayer
-          track={currentTrack}
-          onClose={() => setCurrentTrack(null)}
-        />
-      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { History, Play, Loader2, Clock } from "lucide-react";
-import { MusicPlayer } from "@/components/MusicPlayer";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 
 interface HistoryEntry {
   id: string;
@@ -25,10 +25,10 @@ interface HistoryEntry {
 
 export default function ListeningHistory() {
   const { user } = useAuth();
+  const { playTrack } = useMusicPlayer();
   const navigate = useNavigate();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -100,20 +100,16 @@ export default function ListeningHistory() {
   };
 
   const handlePlayTrack = (entry: HistoryEntry) => {
-    setCurrentTrack({
+    playTrack({
       id: entry.tracks.id,
       title: entry.tracks.title,
+      artist_id: entry.tracks.artist_id,
       audio_url: entry.tracks.audio_url,
       cover_image: entry.tracks.cover_image,
+      genre: entry.tracks.genre,
       profiles: {
         username: entry.tracks.artist_username || "Unknown Artist",
       },
-    });
-
-    // Record new listening entry
-    supabase.from("listening_history").insert({
-      user_id: user?.id,
-      track_id: entry.tracks.id,
     });
   };
 
@@ -232,13 +228,6 @@ export default function ListeningHistory() {
           </div>
         )}
       </div>
-
-      {currentTrack && (
-        <MusicPlayer
-          track={currentTrack}
-          onClose={() => setCurrentTrack(null)}
-        />
-      )}
     </div>
   );
 }

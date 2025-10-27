@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2 } from "lucide-react";
-import { MusicPlayer } from "@/components/MusicPlayer";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,9 +31,9 @@ export default function TrackDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
+  const { playTrack } = useMusicPlayer();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
-  const [playing, setPlaying] = useState(false);
   const [tipDialogOpen, setTipDialogOpen] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState("");
@@ -216,34 +216,29 @@ export default function TrackDetails() {
 
   const handlePlay = async () => {
     if (!track) return;
-    setPlaying(true);
     
-    // Track play start time for 30-second rule
-    const playStartTime = Date.now();
-    
-    // Wait 30 seconds before counting as legitimate play
+    playTrack({
+      id: track.id,
+      title: track.title,
+      artist_id: track.artist_id,
+      audio_url: track.audio_url,
+      cover_image: track.cover_image,
+      genre: track.genre,
+      profiles: {
+        username: track.profiles.username,
+        avatar_url: track.profiles.avatar_url,
+      },
+    });
+
+    // Increment play count after 30 seconds
     setTimeout(async () => {
-      const playDuration = Date.now() - playStartTime;
+      await supabase
+        .from("tracks")
+        .update({ plays: track.plays + 1 })
+        .eq("id", track.id);
       
-      // Only count if played for at least 30 seconds
-      if (playDuration >= 30000) {
-        // Increment play count for analytics
-        await supabase
-          .from("tracks")
-          .update({ plays: track.plays + 1 })
-          .eq("id", track.id);
-
-        // Add to listening history
-        if (user) {
-          await supabase.from("listening_history").insert({
-            user_id: user.id,
-            track_id: track.id,
-          });
-        }
-
-        setTrack({ ...track, plays: track.plays + 1 });
-      }
-    }, 30000); // 30 seconds
+      setTrack({ ...track, plays: track.plays + 1 });
+    }, 30000);
   };
 
   const handleDeleteTrack = async () => {
@@ -503,13 +498,6 @@ export default function TrackDetails() {
           <CommentSection trackId={id!} />
         </div>
       </div>
-
-      {playing && track && (
-        <MusicPlayer
-          track={track}
-          onClose={() => setPlaying(false)}
-        />
-      )}
 
       {track && (
         <TipDialog
