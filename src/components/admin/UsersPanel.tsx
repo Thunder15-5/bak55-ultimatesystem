@@ -276,13 +276,14 @@ export function UsersPanel() {
                               {new Date(user.created_at).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <div className="flex gap-2">
+                              <div className="flex flex-wrap gap-1.5 min-w-[140px]">
                                 {!isAdmin && (
                                   <>
                                     <Button
                                       size="sm"
                                       variant={user.banned ? "outline" : "destructive"}
                                       onClick={() => handleToggleBan(user.id, user.banned)}
+                                      className="touch-manipulation min-h-[36px] flex-1 min-w-[70px]"
                                     >
                                       {user.banned ? 'Unban' : 'Ban'}
                                     </Button>
@@ -290,6 +291,7 @@ export function UsersPanel() {
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => setDeleteUserId(user.id)}
+                                      className="touch-manipulation min-h-[36px] min-w-[44px]"
                                     >
                                       <Trash2 className="w-3 h-3" />
                                     </Button>

@@ -287,13 +287,14 @@ export function SubscriptionsPanel() {
                         </TableCell>
                         <TableCell className="capitalize">{sub.payment_method}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-1.5 min-w-[160px]">
                             {isActive(sub) && (
                               <>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleExtendSubscription(sub.id)}
+                                  className="touch-manipulation min-h-[36px] flex-1 min-w-[80px]"
                                 >
                                   <Calendar className="w-3 h-3 mr-1" />
                                   Extend
@@ -302,6 +303,7 @@ export function SubscriptionsPanel() {
                                   size="sm"
                                   variant="destructive"
                                   onClick={() => handleCancelSubscription(sub.id)}
+                                  className="touch-manipulation min-h-[36px] flex-1 min-w-[70px]"
                                 >
                                   Cancel
                                 </Button>

@@ -199,4 +199,20 @@ All colors MUST be HSL.
   .animate-gradient-shift {
     animation: gradient-shift 8s ease infinite;
   }
+  
+  /* Mobile table and touch improvements */
+  @media (max-width: 768px) {
+    table {
+      min-width: 600px;
+    }
+    
+    button {
+      white-space: nowrap;
+    }
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
 }

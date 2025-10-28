@@ -631,36 +631,37 @@ export default function Admin() {
                     {withdrawalRequests.map((request) => (
                       <Card key={request.id} className="border-2">
                         <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <DollarSign className="h-5 w-5 text-primary" />
-                                <h3 className="text-xl font-bold">
+                                <DollarSign className="h-5 w-5 text-primary flex-shrink-0" />
+                                <h3 className="text-lg sm:text-xl font-bold">
                                   {Math.abs(request.amount).toFixed(2)} BAK
                                 </h3>
                               </div>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Artist:</strong> {request.wallets.profiles.username} ({request.wallets.profiles.email})
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Account Name:</strong> {request.metadata.account_name}
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Account Number:</strong> {request.metadata.account_number}
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Bank:</strong> {request.metadata.bank_name}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 Requested: {new Date(request.created_at).toLocaleString()}
                               </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                               <Button
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleApproveWithdrawal(request)}
                                 disabled={processing === request.id}
+                                className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[80px]"
                               >
                                 {processing === request.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -676,6 +677,7 @@ export default function Admin() {
                                 size="sm"
                                 onClick={() => handleRejectWithdrawal(request)}
                                 disabled={processing === request.id}
+                                className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[80px]"
                               >
                                 {processing === request.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -783,25 +785,25 @@ export default function Admin() {
                     {coinPurchases.map((purchase) => (
                       <Card key={purchase.id} className="border-2">
                         <CardContent className="p-6">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-2 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <Coins className="h-5 w-5 text-primary" />
-                                <h3 className="text-xl font-bold">
+                                <Coins className="h-5 w-5 text-primary flex-shrink-0" />
+                                <h3 className="text-lg sm:text-xl font-bold">
                                   {(purchase.amount / 20).toFixed(2)} BAK
                                 </h3>
                               </div>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>User:</strong> {purchase.profiles?.username} ({purchase.email})
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 <strong>Amount Paid:</strong> {purchase.amount} {purchase.currency}
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Reference:</strong> {purchase.reference}
                               </p>
                               {purchase.payment_reference && (
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground break-words">
                                   <strong>OrderTrackingId:</strong> {purchase.payment_reference}
                                 </p>
                               )}
@@ -809,7 +811,7 @@ export default function Admin() {
                                 Requested: {new Date(purchase.created_at).toLocaleString()}
                               </p>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 w-full sm:w-auto sm:min-w-[120px]">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -835,7 +837,7 @@ export default function Admin() {
                                   }
                                 }}
                                 disabled={processing === purchase.id}
-                                className="w-full"
+                                className="w-full touch-manipulation min-h-[36px]"
                               >
                                 {processing === purchase.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -875,35 +877,36 @@ export default function Admin() {
                     <div key={comp.id} className="space-y-4">
                       <Card className="border-2">
                         <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2 flex-1">
-                              <div className="flex items-center gap-2">
-                                <Trophy className="h-5 w-5 text-primary" />
-                                <h3 className="text-xl font-bold">{comp.title}</h3>
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
+                                <h3 className="text-lg sm:text-xl font-bold break-words leading-tight">{comp.title}</h3>
                                 <Badge variant={comp.status === "active" ? "default" : "secondary"}>
                                   {comp.status}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Prize:</strong> {comp.prize_amount} BAK
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 <strong>Submissions:</strong> {comp.submissions?.length || 0}
                               </p>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground break-words">
                                 <strong>Dates:</strong> {new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}
                               </p>
                               {comp.voting_start_date && (
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground break-words">
                                   <strong>Voting:</strong> {new Date(comp.voting_start_date).toLocaleDateString()} - {new Date(comp.voting_end_date).toLocaleDateString()}
                                 </p>
                               )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2 lg:flex-col xl:flex-row xl:flex-nowrap">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}
+                                className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[70px]"
                               >
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
@@ -912,6 +915,7 @@ export default function Admin() {
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => navigate(`/competition/${comp.id}`)}
+                                className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[70px]"
                               >
                                 View
                               </Button>
@@ -921,6 +925,7 @@ export default function Admin() {
                                   size="sm"
                                   onClick={() => handleEndCompetition(comp.id)}
                                   disabled={processing === comp.id}
+                                  className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[70px]"
                                 >
                                   {processing === comp.id ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -934,6 +939,7 @@ export default function Admin() {
                                 size="sm"
                                 onClick={() => handleDeleteCompetition(comp.id)}
                                 disabled={processing === comp.id}
+                                className="touch-manipulation min-h-[36px] flex-1 sm:flex-initial min-w-[70px]"
                               >
                                 {processing === comp.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
