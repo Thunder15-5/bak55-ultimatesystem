@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Loader2, Upload, Music, Sparkles } from "lucide-react";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function UploadTrack() {
   const { user, userRole } = useAuth();
@@ -32,11 +34,15 @@ export default function UploadTrack() {
   const [canUpload, setCanUpload] = useState(true);
   const [uploadMessage, setUploadMessage] = useState("");
   const [subscription, setSubscription] = useState<any>(null);
+  const [uploadMode, setUploadMode] = useState<'new' | 'existing'>('new');
+  const [existingTracks, setExistingTracks] = useState<any[]>([]);
+  const [selectedExistingTrack, setSelectedExistingTrack] = useState('');
 
   useEffect(() => {
     fetchActiveCompetitions();
     checkUploadEligibility();
     fetchSubscription();
+    fetchExistingTracks();
   }, [user]);
 
   useEffect(() => {
@@ -84,6 +90,21 @@ export default function UploadTrack() {
     }
   };
 
+  const fetchExistingTracks = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .eq('artist_id', user.id)
+      .eq('moderation_status', 'approved')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setExistingTracks(data);
+    }
+  };
+
   const checkUploadEligibility = async () => {
     if (!user) return;
 
@@ -106,72 +127,97 @@ export default function UploadTrack() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !audioFile) return;
+    if (!user) return;
+
+    // Validate based on mode
+    if (uploadMode === 'new' && !audioFile) {
+      toast.error("Please select an audio file");
+      return;
+    }
+    if (uploadMode === 'existing' && !selectedExistingTrack) {
+      toast.error("Please select a track");
+      return;
+    }
 
     setUploading(true);
 
     try {
-      // Upload audio file
-      const audioPath = `${user.id}/${Date.now()}-${audioFile.name}`;
-      const { error: audioError } = await supabase.storage
-        .from("tracks")
-        .upload(audioPath, audioFile);
+      let trackData;
 
-      if (audioError) throw audioError;
+      if (uploadMode === 'existing') {
+        // Use existing track
+        const { data: existingTrack } = await supabase
+          .from('tracks')
+          .select('*')
+          .eq('id', selectedExistingTrack)
+          .single();
 
-      const { data: { publicUrl: audioUrl } } = supabase.storage
-        .from("tracks")
-        .getPublicUrl(audioPath);
+        if (!existingTrack) throw new Error("Track not found");
+        trackData = existingTrack;
+      } else {
+        // Upload audio file
+        const audioPath = `${user.id}/${Date.now()}-${audioFile!.name}`;
+        const { error: audioError } = await supabase.storage
+          .from("tracks")
+          .upload(audioPath, audioFile!);
 
-      // Upload cover if provided
-      let coverUrl = null;
-      if (coverFile) {
-        const coverPath = `${user.id}/${Date.now()}-${coverFile.name}`;
-        const { error: coverError } = await supabase.storage
-          .from("covers")
-          .upload(coverPath, coverFile);
+        if (audioError) throw audioError;
 
-        if (coverError) throw coverError;
+        const { data: { publicUrl: audioUrl } } = supabase.storage
+          .from("tracks")
+          .getPublicUrl(audioPath);
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("covers")
-          .getPublicUrl(coverPath);
-        coverUrl = publicUrl;
+        // Upload cover if provided
+        let coverUrl = null;
+        if (coverFile) {
+          const coverPath = `${user.id}/${Date.now()}-${coverFile.name}`;
+          const { error: coverError } = await supabase.storage
+            .from("covers")
+            .upload(coverPath, coverFile);
+
+          if (coverError) throw coverError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("covers")
+            .getPublicUrl(coverPath);
+          coverUrl = publicUrl;
+        }
+
+        // Create track record with pending moderation status
+        const { data: newTrack, error: dbError } = await supabase
+          .from("tracks")
+          .insert({
+            artist_id: user.id,
+            title: formData.title,
+            genre: formData.genre,
+            audio_url: audioUrl,
+            cover_image: coverUrl,
+            moderation_status: 'pending',
+          })
+          .select()
+          .single();
+
+        if (dbError) throw dbError;
+        trackData = newTrack;
+
+        // Send notification email to company
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: 'info@bak55talent.co.ke',
+            subject: 'New Track Upload - Pending Approval',
+            html: `
+              <h2>New Track Uploaded</h2>
+              <p><strong>Artist:</strong> ${user.email}</p>
+              <p><strong>Track Title:</strong> ${formData.title}</p>
+              <p><strong>Genre:</strong> ${formData.genre || 'Not specified'}</p>
+              <p><strong>Status:</strong> Pending Approval</p>
+              <p><strong>Uploaded:</strong> ${new Date().toLocaleString()}</p>
+              <p><a href="${window.location.origin}/admin">Review in Admin Panel</a></p>
+            `,
+            type: 'upload',
+          },
+        });
       }
-
-      // Create track record with pending moderation status
-      const { data: trackData, error: dbError } = await supabase
-        .from("tracks")
-        .insert({
-          artist_id: user.id,
-          title: formData.title,
-          genre: formData.genre,
-          audio_url: audioUrl,
-          cover_image: coverUrl,
-          moderation_status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (dbError) throw dbError;
-
-      // Send notification email to company
-      await supabase.functions.invoke('send-email', {
-        body: {
-          to: 'info@bak55talent.co.ke',
-          subject: 'New Track Upload - Pending Approval',
-          html: `
-            <h2>New Track Uploaded</h2>
-            <p><strong>Artist:</strong> ${user.email}</p>
-            <p><strong>Track Title:</strong> ${formData.title}</p>
-            <p><strong>Genre:</strong> ${formData.genre || 'Not specified'}</p>
-            <p><strong>Status:</strong> Pending Approval</p>
-            <p><strong>Uploaded:</strong> ${new Date().toLocaleString()}</p>
-            <p><a href="${window.location.origin}/admin">Review in Admin Panel</a></p>
-          `,
-          type: 'upload',
-        },
-      });
 
       // Handle competition submission
       if (submitToCompetition && selectedCompetition) {
@@ -214,22 +260,33 @@ export default function UploadTrack() {
             competition_id: selectedCompetition,
             artist_id: user.id,
             track_id: trackData.id,
-            title: formData.title,
-            description: formData.description,
-            audio_url: audioUrl,
-            cover_image: coverUrl,
+            title: trackData.title,
+            description: formData.description || '',
+            audio_url: trackData.audio_url,
+            cover_image: trackData.cover_image,
             status: 'pending',
+            moderation_status: 'pending',
           });
 
         if (submissionError) throw submissionError;
 
-        toast.success("Track uploaded and submitted to competition! Pending admin approval.");
+        if (uploadMode === 'existing') {
+          toast.success("Track submitted to competition successfully!");
+        } else {
+          toast.success("Track uploaded and submitted to competition! Pending admin approval.");
+        }
       } else {
-        toast.success("Track uploaded successfully! Pending admin approval.");
+        if (uploadMode === 'existing') {
+          toast.success("Using existing track!");
+        } else {
+          toast.success("Track uploaded successfully! Pending admin approval.");
+        }
       }
 
       // Refresh upload eligibility
-      await checkUploadEligibility();
+      if (uploadMode === 'new') {
+        await checkUploadEligibility();
+      }
 
       // Reset form
       setFormData({ title: "", genre: "", description: "" });
@@ -237,6 +294,8 @@ export default function UploadTrack() {
       setCoverFile(null);
       setSubmitToCompetition(false);
       setSelectedCompetition("");
+      setSelectedExistingTrack("");
+      setUploadMode('new');
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
@@ -331,70 +390,126 @@ export default function UploadTrack() {
             </CardHeader>
             <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Track Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
+              <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as 'new' | 'existing')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="new">Upload New Track</TabsTrigger>
+                  <TabsTrigger value="existing">Use Existing Track</TabsTrigger>
+                </TabsList>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="genre">Genre</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAutoClassifyGenre}
-                    disabled={classifyingGenre || !formData.title}
-                  >
-                    {classifyingGenre ? (
-                      <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Classifying...
-                      </>
+                <TabsContent value="new" className="space-y-6 mt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Track Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required={uploadMode === 'new'}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="genre">Genre</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoClassifyGenre}
+                        disabled={classifyingGenre || !formData.title}
+                      >
+                        {classifyingGenre ? (
+                          <>
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            Classifying...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-3 w-3" />
+                            AI Classify
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <Input
+                      id="genre"
+                      value={formData.genre}
+                      onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                      placeholder="e.g., Hip Hop, Afrobeat, Pop"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="audio">Audio File * (MP3, WAV, M4A, FLAC)</Label>
+                    <Input
+                      id="audio"
+                      type="file"
+                      accept=".mp3,.wav,.m4a,.flac,.aac,.ogg,audio/mpeg,audio/wav,audio/x-m4a,audio/flac"
+                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                      required={uploadMode === 'new'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Only audio files are accepted (no videos)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cover">Cover Image</Label>
+                    <Input
+                      id="cover"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="existing" className="space-y-6 mt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="existingTrack">Select Track *</Label>
+                    {existingTracks.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4">
+                        You don't have any approved tracks yet. Upload a track first!
+                      </p>
                     ) : (
-                      <>
-                        <Sparkles className="mr-2 h-3 w-3" />
-                        AI Classify
-                      </>
+                      <Select value={selectedExistingTrack} onValueChange={setSelectedExistingTrack}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a track..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {existingTracks.map((track) => (
+                            <SelectItem key={track.id} value={track.id}>
+                              {track.title} {track.genre ? `(${track.genre})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
-                  </Button>
-                </div>
-                <Input
-                  id="genre"
-                  value={formData.genre}
-                  onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                  placeholder="e.g., Hip Hop, Afrobeat, Pop"
-                />
-              </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="audio">Audio File * (MP3, WAV, M4A, FLAC)</Label>
-                <Input
-                  id="audio"
-                  type="file"
-                  accept=".mp3,.wav,.m4a,.flac,.aac,.ogg,audio/mpeg,audio/wav,audio/x-m4a,audio/flac"
-                  onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Only audio files are accepted (no videos)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cover">Cover Image</Label>
-                <Input
-                  id="cover"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                />
-              </div>
+                  {selectedExistingTrack && (
+                    <div className="p-4 border rounded-lg bg-muted/30">
+                      {(() => {
+                        const track = existingTracks.find(t => t.id === selectedExistingTrack);
+                        return track ? (
+                          <div className="flex items-center gap-4">
+                            <img
+                              src={track.cover_image || "/placeholder.svg"}
+                              alt={track.title}
+                              className="w-20 h-20 rounded object-cover"
+                            />
+                            <div>
+                              <h4 className="font-semibold">{track.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {track.genre || 'No genre'} • {track.plays || 0} plays
+                              </p>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>

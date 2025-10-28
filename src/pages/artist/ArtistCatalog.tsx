@@ -6,8 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Upload, Play, Heart, MessageCircle, MoreVertical, Trash2, BarChart3 } from "lucide-react";
+import { Upload, Play, Heart, MessageCircle, MoreVertical, Trash2, BarChart3, Music } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
 import {
   Table,
   TableBody,
@@ -43,6 +44,8 @@ export default function ArtistCatalog() {
     totalPlays: 0,
     totalLikes: 0,
   });
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTracks();
@@ -96,6 +99,11 @@ export default function ArtistCatalog() {
       toast.success("Track deleted successfully");
       fetchTracks();
     }
+  };
+
+  const handleSubmitToCompetition = (trackId: string) => {
+    setSelectedTrackId(trackId);
+    setSubmitDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -236,6 +244,14 @@ export default function ArtistCatalog() {
                             <BarChart3 className="w-4 h-4 mr-2" />
                             View Analytics
                           </DropdownMenuItem>
+                          {track.moderation_status === 'approved' && (
+                            <DropdownMenuItem
+                              onClick={() => handleSubmitToCompetition(track.id)}
+                            >
+                              <Music className="w-4 h-4 mr-2" />
+                              Submit to Competition
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => handleDelete(track.id)}
                             className="text-destructive"
@@ -256,6 +272,14 @@ export default function ArtistCatalog() {
       </main>
 
       <Footer />
+
+      <SubmitExistingTrackDialog
+        mode="select-competition"
+        trackId={selectedTrackId || undefined}
+        open={submitDialogOpen}
+        onOpenChange={setSubmitDialogOpen}
+        onSuccess={fetchTracks}
+      />
     </div>
   );
 }

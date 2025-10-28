@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { JudgeCompetition } from "@/components/JudgeCompetition";
+import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
 
 interface Competition {
   id: string;
@@ -50,6 +51,7 @@ export default function CompetitionDetails() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -358,12 +360,22 @@ export default function CompetitionDetails() {
               </div>
 
               {userRole === 'artist' && isSubmissionOpen() && (
-                <Link to={`/artist/upload?competition=${id}`}>
-                  <Button variant="hero" className="w-full">
+                <div className="space-y-2">
+                  <Link to={`/artist/upload?competition=${id}`} className="block">
+                    <Button variant="hero" className="w-full">
+                      <Music className="mr-2 h-4 w-4" />
+                      Upload New Track
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setSubmitDialogOpen(true)}
+                  >
                     <Music className="mr-2 h-4 w-4" />
-                    Submit Track
+                    Submit Existing Track
                   </Button>
-                </Link>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -467,6 +479,14 @@ export default function CompetitionDetails() {
           )}
         </div>
       </div>
+
+      <SubmitExistingTrackDialog
+        mode="select-track"
+        competitionId={id}
+        open={submitDialogOpen}
+        onOpenChange={setSubmitDialogOpen}
+        onSuccess={fetchSubmissions}
+      />
     </div>
   );
 }
