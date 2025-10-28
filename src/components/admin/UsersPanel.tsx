@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, Crown, Music, Ban, Trash2, CheckCircle } from "lucide-react";
+import { Users, Crown, Music, Ban, Trash2, CheckCircle, Briefcase, Heart } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -47,6 +47,31 @@ export function UsersPanel() {
     totalArtists: 0,
     bannedUsers: 0,
   });
+
+  // Helper functions for role display
+  const formatRole = (role: string) => {
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  const getRoleVariant = (role: string): "default" | "secondary" | "outline" | "destructive" => {
+    switch(role) {
+      case 'admin': return 'default';
+      case 'artist': return 'secondary';
+      case 'brand': return 'outline';
+      case 'fan': return 'secondary';
+      default: return 'secondary';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch(role) {
+      case 'admin': return <Crown className="w-3 h-3 mr-1" />;
+      case 'artist': return <Music className="w-3 h-3 mr-1" />;
+      case 'brand': return <Briefcase className="w-3 h-3 mr-1" />;
+      case 'fan': return <Heart className="w-3 h-3 mr-1" />;
+      default: return null;
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -249,8 +274,9 @@ export function UsersPanel() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={isAdmin ? 'default' : 'secondary'}>
-                                {role}
+                              <Badge variant={getRoleVariant(role)} className="flex items-center gap-1 w-fit">
+                                {getRoleIcon(role)}
+                                {formatRole(role)}
                               </Badge>
                             </TableCell>
                             <TableCell>
