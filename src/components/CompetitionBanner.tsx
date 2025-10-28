@@ -58,9 +58,9 @@ export const CompetitionBanner = ({
 
   return (
     <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background shadow-lg">
-      <div className="grid md:grid-cols-2 gap-6 p-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6 p-4 sm:p-6">
         {/* Cover Image */}
-        <div className="relative rounded-lg overflow-hidden aspect-video md:aspect-square">
+        <div className="relative rounded-lg overflow-hidden aspect-[16/9] md:aspect-square">
           <img
             src={imgSrc}
             alt={title}
@@ -76,28 +76,28 @@ export const CompetitionBanner = ({
         {/* Competition Details */}
         <div className="flex flex-col justify-between">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight">
               {title}
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
               Be part of history. Join the first 55 founding artists of BAK55.
             </p>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="flex flex-col items-center p-3 bg-background/50 rounded-lg border">
-                <Trophy className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs text-muted-foreground">Prize</span>
-                <span className="font-bold">{prizeAmount.toLocaleString()} BAK</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <div className="flex flex-col items-center p-2 sm:p-3 bg-background/50 rounded-lg border">
+                <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-primary mb-1" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Prize</span>
+                <span className="font-bold text-xs sm:text-sm">{prizeAmount.toLocaleString()} BAK</span>
               </div>
-              <div className="flex flex-col items-center p-3 bg-background/50 rounded-lg border">
-                <Users className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs text-muted-foreground">Spots</span>
-                <span className="font-bold">{currentSubmissions}/{maxSubmissions}</span>
+              <div className="flex flex-col items-center p-2 sm:p-3 bg-background/50 rounded-lg border">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary mb-1" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Spots</span>
+                <span className="font-bold text-xs sm:text-sm">{currentSubmissions}/{maxSubmissions}</span>
               </div>
-              <div className="flex flex-col items-center p-3 bg-background/50 rounded-lg border">
-                <Clock className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs text-muted-foreground">Time</span>
-                <span className="font-bold text-xs">{timeRemaining}</span>
+              <div className="flex flex-col items-center p-2 sm:p-3 bg-background/50 rounded-lg border">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary mb-1" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Time</span>
+                <span className="font-bold text-[10px] sm:text-xs leading-tight text-center">{timeRemaining}</span>
               </div>
             </div>
           </div>

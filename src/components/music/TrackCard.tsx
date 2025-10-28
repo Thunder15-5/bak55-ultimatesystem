@@ -116,20 +116,19 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all">
-      <div className="relative aspect-square">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all touch-manipulation">
+      <div className="relative aspect-square cursor-pointer touch-manipulation" onClick={handlePlay}>
         <img
           src={track.cover_image || "/placeholder.svg"}
           alt={track.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center touch-manipulation">
           <Button
             size="lg"
-            onClick={handlePlay}
-            className="rounded-full w-16 h-16"
+            className="rounded-full w-12 h-12 sm:w-16 sm:h-16 touch-manipulation"
           >
-            <Play className="w-6 h-6 fill-current" />
+            <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
           </Button>
         </div>
       </div>

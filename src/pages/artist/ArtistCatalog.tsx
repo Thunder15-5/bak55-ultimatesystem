@@ -181,8 +181,9 @@ export default function ArtistCatalog() {
           </Card>
         ) : (
           <Card>
-            <Table>
-              <TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                 <TableRow>
                   <TableHead>Track</TableHead>
                   <TableHead>Genre</TableHead>
@@ -196,14 +197,14 @@ export default function ArtistCatalog() {
               </TableHeader>
               <TableBody>
                 {filteredTracks.map((track) => (
-                  <TableRow key={track.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={track.cover_image || "/placeholder.svg"}
-                          alt={track.title}
-                          className="w-12 h-12 rounded object-cover"
-                        />
+                <TableRow key={track.id}>
+                  <TableCell className="min-w-[200px]">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={track.cover_image || "/placeholder.svg"}
+                        alt={track.title}
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                      />
                         <div>
                           <p className="font-medium">{track.title}</p>
                         </div>
@@ -248,7 +249,8 @@ export default function ArtistCatalog() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           </Card>
         )}
       </main>
