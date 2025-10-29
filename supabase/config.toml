@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.pesapal-verify]
 verify_jwt = true
+
+[functions.progress-competition-stage]
+verify_jwt = false
+
+[functions.award-fan-badges]
+verify_jwt = false

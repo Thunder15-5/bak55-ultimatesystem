@@ -85,6 +85,83 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_competition_journey: {
+        Row: {
+          artist_id: string
+          competition_id: string
+          created_at: string | null
+          current_stage_id: string | null
+          elimination_stage_id: string | null
+          final_placement: number | null
+          highest_rank: number | null
+          id: string
+          is_eliminated: boolean | null
+          journey_data: Json | null
+          stages_participated: number | null
+          total_votes_received: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          artist_id: string
+          competition_id: string
+          created_at?: string | null
+          current_stage_id?: string | null
+          elimination_stage_id?: string | null
+          final_placement?: number | null
+          highest_rank?: number | null
+          id?: string
+          is_eliminated?: boolean | null
+          journey_data?: Json | null
+          stages_participated?: number | null
+          total_votes_received?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          artist_id?: string
+          competition_id?: string
+          created_at?: string | null
+          current_stage_id?: string | null
+          elimination_stage_id?: string | null
+          final_placement?: number | null
+          highest_rank?: number | null
+          id?: string
+          is_eliminated?: boolean | null
+          journey_data?: Json | null
+          stages_participated?: number | null
+          total_votes_received?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_competition_journey_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_competition_journey_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_competition_journey_current_stage_id_fkey"
+            columns: ["current_stage_id"]
+            isOneToOne: false
+            referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_competition_journey_elimination_stage_id_fkey"
+            columns: ["elimination_stage_id"]
+            isOneToOne: false
+            referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_profiles: {
         Row: {
           created_at: string
@@ -246,6 +323,145 @@ export type Database = {
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_prizes: {
+        Row: {
+          awarded_at: string | null
+          awarded_to: string | null
+          competition_id: string
+          created_at: string | null
+          id: string
+          is_awarded: boolean | null
+          placement: number
+          prize_description: string | null
+          prize_type: string
+          prize_value: number | null
+          sponsor_id: string | null
+          stage_id: string | null
+        }
+        Insert: {
+          awarded_at?: string | null
+          awarded_to?: string | null
+          competition_id: string
+          created_at?: string | null
+          id?: string
+          is_awarded?: boolean | null
+          placement: number
+          prize_description?: string | null
+          prize_type: string
+          prize_value?: number | null
+          sponsor_id?: string | null
+          stage_id?: string | null
+        }
+        Update: {
+          awarded_at?: string | null
+          awarded_to?: string | null
+          competition_id?: string
+          created_at?: string | null
+          id?: string
+          is_awarded?: boolean | null
+          placement?: number
+          prize_description?: string | null
+          prize_type?: string
+          prize_value?: number | null
+          sponsor_id?: string | null
+          stage_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_prizes_awarded_to_fkey"
+            columns: ["awarded_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_prizes_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_prizes_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_prizes_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_stages: {
+        Row: {
+          challenge_theme: string | null
+          competition_id: string
+          created_at: string | null
+          description: string | null
+          elimination_count: number | null
+          end_date: string
+          id: string
+          max_participants: number | null
+          stage_name: string
+          stage_number: number
+          stage_type: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+          voting_end_date: string | null
+          voting_start_date: string | null
+        }
+        Insert: {
+          challenge_theme?: string | null
+          competition_id: string
+          created_at?: string | null
+          description?: string | null
+          elimination_count?: number | null
+          end_date: string
+          id?: string
+          max_participants?: number | null
+          stage_name: string
+          stage_number: number
+          stage_type: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+          voting_end_date?: string | null
+          voting_start_date?: string | null
+        }
+        Update: {
+          challenge_theme?: string | null
+          competition_id?: string
+          created_at?: string | null
+          description?: string | null
+          elimination_count?: number | null
+          end_date?: string
+          id?: string
+          max_participants?: number | null
+          stage_name?: string
+          stage_number?: number
+          stage_type?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+          voting_end_date?: string | null
+          voting_start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_stages_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
             referencedColumns: ["id"]
           },
         ]
@@ -457,6 +673,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fan_badges: {
+        Row: {
+          badge_description: string | null
+          badge_icon: string | null
+          badge_name: string
+          badge_type: string
+          created_at: string | null
+          id: string
+          rarity: string | null
+          unlock_criteria: Json | null
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_name: string
+          badge_type: string
+          created_at?: string | null
+          id?: string
+          rarity?: string | null
+          unlock_criteria?: Json | null
+        }
+        Update: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_name?: string
+          badge_type?: string
+          created_at?: string | null
+          id?: string
+          rarity?: string | null
+          unlock_criteria?: Json | null
+        }
+        Relationships: []
       }
       followers: {
         Row: {
@@ -805,6 +1054,64 @@ export type Database = {
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_submissions: {
+        Row: {
+          artist_id: string
+          created_at: string | null
+          eliminated_at: string | null
+          elimination_round: number | null
+          id: string
+          stage_id: string
+          stage_rank: number | null
+          status: string | null
+          submission_id: string | null
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string | null
+          eliminated_at?: string | null
+          elimination_round?: number | null
+          id?: string
+          stage_id: string
+          stage_rank?: number | null
+          status?: string | null
+          submission_id?: string | null
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string | null
+          eliminated_at?: string | null
+          elimination_round?: number | null
+          id?: string
+          stage_id?: string
+          stage_rank?: number | null
+          status?: string | null
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_submissions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_submissions_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_submissions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -1187,6 +1494,62 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          artist_id: string | null
+          badge_id: string
+          competition_id: string | null
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          badge_id: string
+          competition_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          badge_id?: string
+          competition_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "fan_badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1274,22 +1637,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          stage_id: string | null
           submission_id: string
+          vote_weight: number | null
+          voted_at: string | null
           voter_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          stage_id?: string | null
           submission_id: string
+          vote_weight?: number | null
+          voted_at?: string | null
           voter_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          stage_id?: string | null
           submission_id?: string
+          vote_weight?: number | null
+          voted_at?: string | null
           voter_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "votes_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "votes_submission_id_fkey"
             columns: ["submission_id"]
