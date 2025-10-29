@@ -482,7 +482,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="flex flex-wrap lg:inline-flex lg:flex-nowrap w-full lg:w-auto gap-1">
+          <TabsList className="w-full">
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Metrics

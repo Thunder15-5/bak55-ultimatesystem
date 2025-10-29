@@ -210,7 +210,7 @@ export default function Analytics() {
         </div>
 
         <Tabs defaultValue="performance" className="space-y-6">
-          <TabsList className="flex flex-wrap lg:inline-flex lg:flex-nowrap w-full lg:w-auto gap-1">
+          <TabsList className="w-full">
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="insights">AI Insights</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>

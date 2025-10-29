@@ -269,7 +269,7 @@ export function NotificationCenter() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" value={filter} onValueChange={setFilter}>
-          <TabsList className="flex flex-wrap lg:inline-flex lg:flex-nowrap w-full lg:w-auto gap-1">
+          <TabsList className="w-full">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="artist">Artists</TabsTrigger>
             <TabsTrigger value="fan">Fans</TabsTrigger>

@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, Crown, Music, Ban, Trash2, CheckCircle, Briefcase, Heart } from "lucide-react";
+import { Users, Ban, Trash2, CheckCircle, Music, Crown } from "lucide-react";
+import { RoleBadge } from "@/components/ui/role-badge";
 import {
   Table,
   TableBody,
@@ -48,29 +49,15 @@ export function UsersPanel() {
     bannedUsers: 0,
   });
 
-  // Helper functions for role display
-  const formatRole = (role: string) => {
-    return role.charAt(0).toUpperCase() + role.slice(1);
-  };
-
-  const getRoleVariant = (role: string): "default" | "secondary" | "outline" | "destructive" => {
-    switch(role) {
-      case 'admin': return 'default';
-      case 'artist': return 'secondary';
-      case 'brand': return 'outline';
-      case 'fan': return 'secondary';
-      default: return 'secondary';
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch(role) {
-      case 'admin': return <Crown className="w-3 h-3 mr-1" />;
-      case 'artist': return <Music className="w-3 h-3 mr-1" />;
-      case 'brand': return <Briefcase className="w-3 h-3 mr-1" />;
-      case 'fan': return <Heart className="w-3 h-3 mr-1" />;
-      default: return null;
-    }
+  // Get primary role with priority: admin > artist > brand > fan
+  const getPrimaryRole = (roles: Array<{ role: string }> | undefined): "admin" | "artist" | "brand" | "fan" => {
+    if (!roles || roles.length === 0) return "fan";
+    
+    const roleNames = roles.map(r => r.role);
+    if (roleNames.includes("admin")) return "admin";
+    if (roleNames.includes("artist")) return "artist";
+    if (roleNames.includes("brand")) return "brand";
+    return "fan";
   };
 
   useEffect(() => {
@@ -274,10 +261,7 @@ export function UsersPanel() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getRoleVariant(role)} className="flex items-center gap-1 w-fit">
-                                {getRoleIcon(role)}
-                                {formatRole(role)}
-                              </Badge>
+                              <RoleBadge role={getPrimaryRole(user.user_roles)} />
                             </TableCell>
                             <TableCell>
                               {user.banned ? (
