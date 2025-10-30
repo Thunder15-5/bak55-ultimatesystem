@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Trophy } from "lucide-react";
+import { BadgeCollection } from "@/components/competition/BadgeCollection";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -288,6 +289,19 @@ export default function Profile() {
               </CardContent>
             </Card>
           )}
+
+          <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-primary" />
+                My Badges
+              </CardTitle>
+              <CardDescription>Your achievements and milestones</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BadgeCollection />
+            </CardContent>
+          </Card>
 
           <Button
             variant="hero"

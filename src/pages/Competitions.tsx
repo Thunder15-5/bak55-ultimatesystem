@@ -164,6 +164,68 @@ const Competitions = () => {
         </div>
       </section>
 
+      {/* Badge System Showcase */}
+      <section className="py-20 px-4 bg-gradient-to-b from-background to-card/30">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-4xl font-bold text-center mb-4">
+            Earn <span className="text-gradient">Fan Badges</span>
+          </h2>
+          <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Show your dedication and climb the supporter rankings with exclusive badges
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <Card className="p-6 text-center border-2 border-yellow-500/50 bg-gradient-to-br from-yellow-500/5 to-transparent">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-3xl shadow-lg">
+                🏆
+              </div>
+              <h3 className="font-bold mb-2">Legendary</h3>
+              <p className="text-sm text-muted-foreground">
+                For the most dedicated fans and talent scouts
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center border-2 border-purple-500/50 bg-gradient-to-br from-purple-500/5 to-transparent">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl shadow-lg">
+                💎
+              </div>
+              <h3 className="font-bold mb-2">Epic</h3>
+              <p className="text-sm text-muted-foreground">
+                Exclusive badges for super supporters
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center border-2 border-blue-500/50 bg-gradient-to-br from-blue-500/5 to-transparent">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-3xl shadow-lg">
+                ⭐
+              </div>
+              <h3 className="font-bold mb-2">Rare</h3>
+              <p className="text-sm text-muted-foreground">
+                Recognizing active community members
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center border-2 border-gray-400/50 bg-gradient-to-br from-gray-400/5 to-transparent">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-3xl shadow-lg">
+                🎖️
+              </div>
+              <h3 className="font-bold mb-2">Common</h3>
+              <p className="text-sm text-muted-foreground">
+                Milestone achievements for all fans
+              </p>
+            </Card>
+          </div>
+          
+          <div className="text-center">
+            <Link to="/competitions/active">
+              <Button variant="hero" size="lg">
+                Start Earning Badges
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* What You Get */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">

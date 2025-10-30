@@ -7,10 +7,11 @@ import { SubscriptionStatusCard } from "@/components/SubscriptionStatusCard";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play } from "lucide-react";
+import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ArtistDashboard() {

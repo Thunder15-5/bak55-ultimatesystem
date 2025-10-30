@@ -11,8 +11,9 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { toast } from "sonner";
 import { 
   UserPlus, UserMinus, Music, Users, TrendingUp,
-  MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock
+  MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock, Trophy
 } from "lucide-react";
+import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
 
 interface ArtistData {
   id: string;
@@ -363,6 +364,20 @@ export default function ArtistProfile() {
                 </Card>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Competition Journey */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Competition Journey
+            </CardTitle>
+            <CardDescription>Track record in BAK55 competitions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ArtistJourneyTimeline artistId={id!} />
           </CardContent>
         </Card>
 

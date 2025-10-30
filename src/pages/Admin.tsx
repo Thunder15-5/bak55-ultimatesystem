@@ -18,7 +18,8 @@ import { toast } from "sonner";
 import { 
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail
+  TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail,
+  Award, Target
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -513,10 +514,18 @@ export default function Admin() {
               <Users className="h-4 w-4 mr-2" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="competitions">
-              <Trophy className="h-4 w-4 mr-2" />
-              Competitions
-            </TabsTrigger>
+              <TabsTrigger value="competitions">
+                <Trophy className="h-4 w-4 mr-2" />
+                Competitions
+              </TabsTrigger>
+              <TabsTrigger value="stages">
+                <Target className="h-4 w-4 mr-2" />
+                Stages
+              </TabsTrigger>
+              <TabsTrigger value="badges">
+                <Award className="h-4 w-4 mr-2" />
+                Badges
+              </TabsTrigger>
             <TabsTrigger value="moderation">
               <ShieldAlert className="h-4 w-4 mr-2" />
               Moderation

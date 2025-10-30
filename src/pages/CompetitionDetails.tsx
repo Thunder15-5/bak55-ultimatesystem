@@ -5,11 +5,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { JudgeCompetition } from "@/components/JudgeCompetition";
 import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
+import { StageNavigator } from "@/components/competition/StageNavigator";
+import { ArtistProgressCard } from "@/components/competition/ArtistProgressCard";
+import { FanLeaderboard } from "@/components/competition/FanLeaderboard";
+import { BadgeCollection } from "@/components/competition/BadgeCollection";
+import { BadgeUnlockToast } from "@/components/BadgeUnlockToast";
 
 interface Competition {
   id: string;
@@ -52,6 +58,8 @@ export default function CompetitionDetails() {
   const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [unlockedBadge, setUnlockedBadge] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     if (id) {
