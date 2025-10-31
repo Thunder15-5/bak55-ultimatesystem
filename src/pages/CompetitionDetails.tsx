@@ -60,14 +60,27 @@ export default function CompetitionDetails() {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [unlockedBadge, setUnlockedBadge] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [stages, setStages] = useState<any[]>([]);
+  const [activeStage, setActiveStage] = useState<string | null>(null);
+  const [artistJourney, setArtistJourney] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
       fetchCompetitionDetails();
+      fetchStages();
       fetchSubmissions();
-      if (user) fetchUserVotes();
+      if (user) {
+        fetchUserVotes();
+        if (userRole === 'artist') fetchArtistJourney();
+      }
     }
-  }, [id, user]);
+  }, [id, user, userRole]);
+
+  useEffect(() => {
+    if (id && stages.length > 0) {
+      fetchSubmissions();
+    }
+  }, [activeStage]);
 
   const fetchCompetitionDetails = async () => {
     try {
@@ -84,16 +97,69 @@ export default function CompetitionDetails() {
     }
   };
 
-  const fetchSubmissions = async () => {
+  const fetchStages = async () => {
     try {
       const { data, error } = await supabase
+        .from('competition_stages')
+        .select('*')
+        .eq('competition_id', id)
+        .order('stage_number', { ascending: true });
+
+      if (error) throw error;
+      setStages(data || []);
+      
+      // Set active stage to current or first
+      const currentStage = data?.find(s => s.status === 'active') || data?.[0];
+      if (currentStage) setActiveStage(currentStage.id);
+    } catch (error) {
+      console.error('Error fetching stages:', error);
+    }
+  };
+
+  const fetchArtistJourney = async () => {
+    if (!user || !id) return;
+    try {
+      const { data, error } = await supabase
+        .from('artist_competition_journey')
+        .select('*')
+        .eq('artist_id', user.id)
+        .eq('competition_id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setArtistJourney(data);
+    } catch (error) {
+      console.error('Error fetching artist journey:', error);
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    try {
+      let query = supabase
         .from('submissions')
         .select(`
           *,
           profiles:artist_id (username)
         `)
-        .eq('competition_id', id)
-        .order('vote_count', { ascending: false });
+        .eq('competition_id', id);
+
+      // Filter by active stage if selected
+      if (activeStage && stages.length > 0) {
+        const stageSubmissions = await supabase
+          .from('stage_submissions')
+          .select('submission_id')
+          .eq('stage_id', activeStage)
+          .eq('status', 'active');
+
+        if (stageSubmissions.data) {
+          const submissionIds = stageSubmissions.data.map(s => s.submission_id).filter(Boolean);
+          if (submissionIds.length > 0) {
+            query = query.in('id', submissionIds);
+          }
+        }
+      }
+
+      const { data, error } = await query.order('vote_count', { ascending: false });
 
       if (error) throw error;
       setSubmissions(data || []);
@@ -395,8 +461,78 @@ export default function CompetitionDetails() {
           </div>
         )}
 
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Submissions ({submissions.length})</h2>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="submissions">Submissions</TabsTrigger>
+            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="badges">Badges</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-8">
+            {stages.length > 0 && (
+              <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+                <CardHeader>
+                  <CardTitle>Competition Stages</CardTitle>
+                  <CardDescription>Track the competition progress through each stage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StageNavigator competitionId={id!} />
+                </CardContent>
+              </Card>
+            )}
+
+            {userRole === 'artist' && artistJourney && (
+              <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+                <CardHeader>
+                  <CardTitle>Your Journey</CardTitle>
+                  <CardDescription>Your progress in this competition</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ArtistProgressCard competitionId={id!} limit={10} />
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+              <CardHeader>
+                <CardTitle>Competition Rules</CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-sm dark:prose-invert">
+                <ul className="space-y-2">
+                  <li>Submit your original track during the submission period</li>
+                  <li>Each vote costs 1 BAKCoin</li>
+                  <li>Artists advance based on votes and AI scores</li>
+                  <li>Follow community guidelines for submissions</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="submissions">
+            {stages.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                <Button
+                  variant={activeStage === null ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveStage(null)}
+                >
+                  All Stages
+                </Button>
+                {stages.map((stage) => (
+                  <Button
+                    key={stage.id}
+                    variant={activeStage === stage.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveStage(stage.id)}
+                  >
+                    {stage.stage_name}
+                  </Button>
+                ))}
+              </div>
+            )}
+            
+            <h2 className="text-2xl font-bold mb-6">Submissions ({submissions.length})</h2>
           
           {submissions.length === 0 ? (
             <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
@@ -485,7 +621,80 @@ export default function CompetitionDetails() {
               ))}
             </div>
           )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="leaderboard" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    Top Fans
+                  </CardTitle>
+                  <CardDescription>Most active supporters in this competition</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FanLeaderboard competitionId={id!} />
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Music className="h-5 w-5 text-primary" />
+                    Artist Rankings
+                  </CardTitle>
+                  <CardDescription>Current standings by votes and performance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {submissions.slice(0, 10).map((submission, index) => (
+                      <div key={submission.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                            index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                            index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                            index === 2 ? 'bg-orange-500/20 text-orange-500' :
+                            'bg-muted'
+                          }`}>
+                            <span className="font-bold">#{index + 1}</span>
+                          </div>
+                          <div>
+                            <p className="font-semibold">{submission.profiles?.username}</p>
+                            <p className="text-sm text-muted-foreground">{submission.title}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{submission.vote_count} votes</p>
+                          {submission.ai_score && (
+                            <p className="text-sm text-muted-foreground">AI: {submission.ai_score.toFixed(1)}/100</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="badges">
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Fan Badges
+                </CardTitle>
+                <CardDescription>
+                  Earn badges by voting and supporting artists in this competition
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BadgeCollection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <SubmitExistingTrackDialog
