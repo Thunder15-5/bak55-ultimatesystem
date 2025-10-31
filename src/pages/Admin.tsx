@@ -611,14 +611,22 @@ export default function Admin() {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Button onClick={() => navigate('/admin/cash-reserve')} variant="outline">
                 <Wallet className="mr-2 h-4 w-4" />
-                View Cash Reserve Dashboard
+                Cash Reserve
+              </Button>
+              <Button onClick={() => navigate('/admin/vouchers')} variant="outline">
+                <Coins className="mr-2 h-4 w-4" />
+                Vouchers
+              </Button>
+              <Button onClick={() => navigate('/admin/deposits')} variant="outline">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Deposits
               </Button>
               <Button onClick={() => navigate('/admin/create-competition')} variant="outline">
                 <Trophy className="mr-2 h-4 w-4" />
-                Create Competition
+                New Competition
               </Button>
             </div>
           </TabsContent>
