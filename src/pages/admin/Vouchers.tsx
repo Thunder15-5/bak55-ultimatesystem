@@ -96,6 +96,15 @@ const Vouchers = () => {
       if (error) throw error;
 
       if (data?.success) {
+        // Log activity
+        await supabase.from('admin_activity_log').insert({
+          user_id: user?.id,
+          event_type: 'voucher_created',
+          event_category: 'payment',
+          description: `Created ${data.count} vouchers worth ${amount} BAK each`,
+          metadata: { count: data.count, bak_coins: amount, total_value: data.count * amount }
+        });
+
         toast({
           title: "Vouchers Generated!",
           description: `Created ${data.count} voucher codes`,

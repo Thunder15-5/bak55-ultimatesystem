@@ -104,6 +104,21 @@ const Deposits = () => {
       if (error) throw error;
 
       if (data?.success) {
+        // Log activity
+        await supabase.from('admin_activity_log').insert({
+          user_id: user?.id,
+          event_type: reviewDialog.action === 'approve' ? 'deposit_approved' : 'deposit_rejected',
+          event_category: 'payment',
+          description: `${reviewDialog.action === 'approve' ? 'Approved' : 'Rejected'} deposit: ${reviewDialog.deposit.amount_kes} KSh → ${reviewDialog.deposit.expected_bak} BAK`,
+          metadata: { 
+            deposit_id: reviewDialog.deposit.id, 
+            amount_kes: reviewDialog.deposit.amount_kes,
+            expected_bak: reviewDialog.deposit.expected_bak,
+            receipt_code: reviewDialog.deposit.receipt_code,
+            notes: reviewNotes || null
+          }
+        });
+
         toast({
           title: `Deposit ${reviewDialog.action === 'approve' ? 'Approved' : 'Rejected'}`,
           description: data.message,
