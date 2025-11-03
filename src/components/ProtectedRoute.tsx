@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole, requiredRoles }: ProtectedRouteProps) {
-  const { user, loading, userRole } = useAuth();
+  const { user, loading, userRole, isActivated } = useAuth();
   const location = useLocation();
   const [hasShownToast, setHasShownToast] = useState(false);
 
@@ -33,6 +33,11 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Check if account is activated (skip for verify-account page)
+  if (!isActivated && !location.pathname.includes('/verify-account')) {
+    return <Navigate to="/verify-account" replace />;
   }
 
   // Check if user has required role(s)

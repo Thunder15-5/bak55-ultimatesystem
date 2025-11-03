@@ -483,6 +483,7 @@ export type Database = {
           status: Database["public"]["Enums"]["competition_status"] | null
           title: string
           updated_at: string
+          visibility: string | null
           voting_end_date: string | null
           voting_start_date: string | null
         }
@@ -502,6 +503,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["competition_status"] | null
           title: string
           updated_at?: string
+          visibility?: string | null
           voting_end_date?: string | null
           voting_start_date?: string | null
         }
@@ -521,6 +523,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["competition_status"] | null
           title?: string
           updated_at?: string
+          visibility?: string | null
           voting_end_date?: string | null
           voting_start_date?: string | null
         }
@@ -938,35 +941,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activation_code: string | null
+          activation_code_sent_at: string | null
           avatar_url: string | null
           banned: boolean | null
           bio: string | null
           created_at: string
           email: string
           id: string
+          is_activated: boolean | null
           location: string | null
+          phone_number: string | null
           updated_at: string
           username: string
         }
         Insert: {
+          activation_code?: string | null
+          activation_code_sent_at?: string | null
           avatar_url?: string | null
           banned?: boolean | null
           bio?: string | null
           created_at?: string
           email: string
           id: string
+          is_activated?: boolean | null
           location?: string | null
+          phone_number?: string | null
           updated_at?: string
           username: string
         }
         Update: {
+          activation_code?: string | null
+          activation_code_sent_at?: string | null
           avatar_url?: string | null
           banned?: boolean | null
           bio?: string | null
           created_at?: string
           email?: string
           id?: string
+          is_activated?: boolean | null
           location?: string | null
+          phone_number?: string | null
           updated_at?: string
           username?: string
         }
@@ -1794,10 +1809,15 @@ export type Database = {
         Args: { competition_uuid: string }
         Returns: undefined
       }
+      can_enter_competition: {
+        Args: { competition_id_param: string; user_id_param: string }
+        Returns: boolean
+      }
       can_user_upload_track: {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      get_primary_role: { Args: { user_id_param: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

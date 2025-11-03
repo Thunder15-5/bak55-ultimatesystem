@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isActivated: boolean;
   signUp: (email: string, password: string, userData: SignUpData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isActivated, setIsActivated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -51,6 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Fetch activation status and user roles
+          supabase
+            .from("profiles")
+            .select("is_activated")
+            .eq("id", session.user.id)
+            .single()
+            .then(({ data: profile }) => {
+              setIsActivated(profile?.is_activated || false);
+            });
+
           // Fetch user roles with proper priority: admin > artist > brand > fan
           supabase
             .from("user_roles")
@@ -75,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUserRole(null);
           setUserRoles([]);
+          setIsActivated(false);
           sessionStorage.removeItem('userRole');
         }
       }
@@ -86,6 +99,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // Fetch activation status
+        supabase
+          .from("profiles")
+          .select("is_activated")
+          .eq("id", session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            setIsActivated(profile?.is_activated || false);
+          });
+
         supabase
           .from("user_roles")
           .select("role")
@@ -138,24 +161,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!error && data.user) {
-      // Send welcome email
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            to: email,
-            subject: "Welcome to BAK55 Talent!",
-            template: "welcome",
-            data: {
-              username: userData.username || email.split('@')[0],
-            },
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError);
-      }
-
-      toast.success("Account created! Please check your email to verify your account.");
-      navigate("/verify-email");
+      toast.success("Account created! Please check your email for your activation code.");
+      navigate("/verify-account");
     }
 
     return { error };
@@ -206,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, userRole, userRoles }}>
+    <AuthContext.Provider value={{ user, session, loading, isActivated, signUp, signIn, signOut, userRole, userRoles }}>
       {children}
     </AuthContext.Provider>
   );

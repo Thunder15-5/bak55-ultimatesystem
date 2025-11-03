@@ -47,6 +47,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentPending from "./pages/PaymentPending";
 import PaymentFailed from "./pages/PaymentFailed";
 import VerifyEmail from "./pages/VerifyEmail";
+import VerifyAccount from "./pages/VerifyAccount";
 import EditCompetition from "./pages/admin/EditCompetition";
 import CashReserve from "./pages/admin/CashReserve";
 import Vouchers from "./pages/admin/Vouchers";
@@ -162,7 +163,8 @@ const App = () => (
                 <Route path="/admin/competitions/active" element={<ProtectedRoute requiredRole="admin"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/admin/competition/:id" element={<ProtectedRoute requiredRole="admin"><CompetitionDetails /></ProtectedRoute>} />
 
-                <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
                 <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
                 <Route path="/admin/vouchers" element={<ProtectedRoute requiredRole="admin"><Vouchers /></ProtectedRoute>} />

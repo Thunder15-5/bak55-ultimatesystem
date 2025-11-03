@@ -95,6 +95,33 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Mobile responsiveness utilities */
+  .text-wrap-balance {
+    text-wrap: balance;
+  }
+  
+  .break-words-all {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  @media (max-width: 640px) {
+    .mobile-truncate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem;
+    }
+    
+    .mobile-p-3 {
+      padding: 0.75rem;
+    }
+  }
+  
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-hero);

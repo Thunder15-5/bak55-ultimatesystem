@@ -59,3 +59,15 @@ verify_jwt = false
 
 [functions.award-fan-badges]
 verify_jwt = false
+
+[functions.verify-activation-code]
+verify_jwt = true
+
+[functions.selar-initiate]
+verify_jwt = true
+
+[functions.selar-callback]
+verify_jwt = false
+
+[functions.selar-verify]
+verify_jwt = true
