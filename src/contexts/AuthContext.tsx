@@ -56,11 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch activation status and user roles
           supabase
             .from("profiles")
-            .select("is_activated")
+            .select("is_activated, activation_code")
             .eq("id", session.user.id)
             .single()
             .then(({ data: profile }) => {
-              setIsActivated(profile?.is_activated || false);
+              // If no activation_code exists, user is an existing user - consider them activated
+              // If activation_code exists, check is_activated status
+              const activated = !profile?.activation_code || profile?.is_activated || false;
+              setIsActivated(activated);
             });
 
           // Fetch user roles with proper priority: admin > artist > brand > fan
@@ -102,11 +105,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch activation status
         supabase
           .from("profiles")
-          .select("is_activated")
+          .select("is_activated, activation_code")
           .eq("id", session.user.id)
           .single()
           .then(({ data: profile }) => {
-            setIsActivated(profile?.is_activated || false);
+            // If no activation_code exists, user is an existing user - consider them activated
+            // If activation_code exists, check is_activated status
+            const activated = !profile?.activation_code || profile?.is_activated || false;
+            setIsActivated(activated);
           });
 
         supabase
