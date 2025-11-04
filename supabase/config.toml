@@ -63,6 +63,9 @@ verify_jwt = false
 [functions.verify-activation-code]
 verify_jwt = true
 
+[functions.resend-activation-code]
+verify_jwt = true
+
 [functions.selar-initiate]
 verify_jwt = true
 

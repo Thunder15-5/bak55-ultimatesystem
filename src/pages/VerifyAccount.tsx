@@ -54,32 +54,20 @@ export default function VerifyAccount() {
     setResending(true);
 
     try {
-      // Trigger resend by calling the send-email function
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: user.email,
-          subject: 'Your BAK55 Activation Code',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #D946EF;">Activate Your BAK55 Account</h1>
-              <p>Please use the following code to activate your account:</p>
-              <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
-                [CODE_WILL_BE_GENERATED]
-              </div>
-              <p>This code will expire in 24 hours.</p>
-              <p>If you didn't sign up for BAK55, please ignore this email.</p>
-            </div>
-          `,
-          type: 'activation',
-        },
+      const { data, error } = await supabase.functions.invoke('resend-activation-code', {
+        body: {}
       });
 
       if (error) throw error;
 
-      toast.success("Activation code resent! Check your email.");
+      if (data.success) {
+        toast.success("Activation code resent! Check your email.");
+      } else {
+        toast.error(data.error || "Failed to resend code");
+      }
     } catch (error: any) {
       console.error('Resend error:', error);
-      toast.error("Failed to resend code");
+      toast.error(error.message || "Failed to resend code");
     } finally {
       setResending(false);
     }

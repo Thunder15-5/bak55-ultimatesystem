@@ -9,7 +9,7 @@ const corsHeaders = {
 interface EmailRequest {
   to: string;
   subject: string;
-  template: 'welcome' | 'verification' | 'competition_submission' | 'competition_winner' | 'withdrawal_request' | 'withdrawal_complete' | 'tip_received' | 'contact_form';
+  template: 'welcome' | 'verification' | 'activation' | 'competition_submission' | 'competition_winner' | 'withdrawal_request' | 'withdrawal_complete' | 'tip_received' | 'contact_form';
   data?: Record<string, any>;
 }
 
@@ -37,6 +37,45 @@ const templates = {
     <p>${data.verification_url}</p>
     <p>This link will expire in 24 hours.</p>
     <p>Best regards,<br>The BAK55 Team</p>
+  `,
+  
+  activation: (data: any) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #D946EF; margin: 0;">🎵 BAK55 Talent</h1>
+      </div>
+      <h2 style="color: #333; font-size: 24px;">Activate Your Account</h2>
+      <p style="font-size: 16px; color: #555;">Hi ${data.username || 'there'},</p>
+      <p style="font-size: 16px; color: #555;">Welcome to BAK55 Talent! Please use the following activation code to complete your registration:</p>
+      
+      <div style="background: linear-gradient(135deg, #D946EF 0%, #9333EA 100%); padding: 30px; text-align: center; border-radius: 12px; margin: 30px 0;">
+        <div style="background: white; padding: 20px; border-radius: 8px; display: inline-block;">
+          <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Your Activation Code</p>
+          <p style="margin: 0; font-size: 48px; font-weight: bold; letter-spacing: 12px; color: #D946EF; font-family: 'Courier New', monospace;">${data.activation_code}</p>
+        </div>
+      </div>
+      
+      <p style="font-size: 16px; color: #555; margin-top: 20px;">This code will expire in 24 hours.</p>
+      
+      <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Once activated, you can:</p>
+        <ul style="margin: 0; padding-left: 20px; color: #555;">
+          <li>Stream exclusive African music</li>
+          <li>Join exciting competitions</li>
+          <li>Earn and spend BAKCoins</li>
+          <li>Connect with artists and fans</li>
+        </ul>
+      </div>
+      
+      <p style="font-size: 14px; color: #999; margin-top: 30px;">If you didn't sign up for BAK55 Talent, please ignore this email.</p>
+      
+      <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
+      
+      <p style="font-size: 14px; color: #999; text-align: center;">
+        Best regards,<br>
+        <strong style="color: #D946EF;">The BAK55 Talent Team</strong>
+      </p>
+    </div>
   `,
   
   competition_submission: (data: any) => `
@@ -127,6 +166,7 @@ const getEmailRouting = (template: string) => {
   switch (template) {
     case 'welcome':
     case 'verification':
+    case 'activation':
     case 'competition_submission':
     case 'competition_winner':
       return {
