@@ -135,9 +135,17 @@ export function Navigation() {
 
                 {/* Admin Navigation */}
                 {userRole === 'admin' && (
-                  <Link to="/admin">
-                    <Button variant="ghost" size="sm">Admin</Button>
-                  </Link>
+                  <>
+                    <Link to="/admin">
+                      <Button variant="ghost" size="sm">Dashboard</Button>
+                    </Link>
+                    <Link to="/admin/streaming">
+                      <Button variant="ghost" size="sm">Streaming</Button>
+                    </Link>
+                    <Link to="/admin/wallet">
+                      <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                  </>
                 )}
 
                 {/* Common Actions */}
@@ -281,9 +289,17 @@ export function Navigation() {
 
                 {/* Admin Mobile Navigation */}
                 {userRole === 'admin' && (
-                  <Link to="/admin" onClick={() => setIsOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">Admin</Button>
-                  </Link>
+                  <>
+                    <Link to="/admin" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    </Link>
+                    <Link to="/admin/streaming" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Streaming</Button>
+                    </Link>
+                    <Link to="/admin/wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    </Link>
+                  </>
                 )}
 
                 <Link to={`/${userRole}/profile`} onClick={() => setIsOpen(false)}>

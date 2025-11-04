@@ -158,17 +158,23 @@ const App = () => (
                 <Route path="/payment/pending" element={<ProtectedRoute><PaymentPending /></ProtectedRoute>} />
                 <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
 
-                {/* Admin Competition Routes */}
+                {/* Admin Routes */}
+                <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+                <Route path="/admin/streaming" element={<ProtectedRoute requiredRole="admin"><Streaming /></ProtectedRoute>} />
+                <Route path="/admin/profile" element={<ProtectedRoute requiredRole="admin"><Profile /></ProtectedRoute>} />
+                <Route path="/admin/wallet" element={<ProtectedRoute requiredRole="admin"><Wallet /></ProtectedRoute>} />
+                <Route path="/admin/wallet/buy-coins" element={<ProtectedRoute requiredRole="admin"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/admin/track/:id" element={<ProtectedRoute requiredRole="admin"><TrackDetails /></ProtectedRoute>} />
+                <Route path="/admin/artist/:id" element={<ProtectedRoute requiredRole="admin"><ArtistProfile /></ProtectedRoute>} />
                 <Route path="/admin/competitions" element={<ProtectedRoute requiredRole="admin"><Competitions /></ProtectedRoute>} />
                 <Route path="/admin/competitions/active" element={<ProtectedRoute requiredRole="admin"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/admin/competition/:id" element={<ProtectedRoute requiredRole="admin"><CompetitionDetails /></ProtectedRoute>} />
-
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
                 <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
                 <Route path="/admin/vouchers" element={<ProtectedRoute requiredRole="admin"><Vouchers /></ProtectedRoute>} />
                 <Route path="/admin/deposits" element={<ProtectedRoute requiredRole="admin"><Deposits /></ProtectedRoute>} />
+
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
                 <Route path="/streaming" element={<Streaming />} />
           <Route path="/admin/create-competition" element={
             <ProtectedRoute requiredRoles={['admin', 'brand']}>

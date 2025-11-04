@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,64 +163,65 @@ export function UsersPanel() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Use getPrimaryRole function instead
   const getUserRole = (user: UserProfile) => {
-    return user.user_roles?.[0]?.role || 'fan';
+    return getPrimaryRole(user.user_roles);
   };
 
   return (
     <>
       <div className="space-y-6">
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.totalUsers}</div>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="text-xl sm:text-2xl font-bold truncate">{metrics.totalUsers}</div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Artists</CardTitle>
-              <Music className="h-4 w-4 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Artists</CardTitle>
+              <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.totalArtists}</div>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="text-xl sm:text-2xl font-bold truncate">{metrics.totalArtists}</div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Banned Users</CardTitle>
-              <Ban className="h-4 w-4 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Banned Users</CardTitle>
+              <Ban className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.bannedUsers}</div>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="text-xl sm:text-2xl font-bold truncate">{metrics.bannedUsers}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Users</CardTitle>
-            <CardDescription>Manage user accounts and permissions</CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg break-words">All Users</CardTitle>
+            <CardDescription className="text-xs sm:text-sm break-words">Manage user accounts and permissions</CardDescription>
             <Input
               placeholder="Search by username or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
+              className="max-w-sm w-full text-sm sm:text-base"
             />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {loading ? (
-              <div className="text-center py-8">Loading users...</div>
+              <div className="text-center py-8 text-sm sm:text-base">Loading users...</div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
+              <ScrollArea className="w-full overflow-x-auto">
+                <Table className="min-w-[800px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>User</TableHead>
@@ -315,7 +317,7 @@ export function UsersPanel() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>

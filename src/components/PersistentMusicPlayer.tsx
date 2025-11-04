@@ -200,20 +200,20 @@ export function PersistentMusicPlayer() {
                       variant="ghost"
                       size="icon"
                       onClick={playPrevious}
-                      className="h-12 w-12"
+                      className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
                     >
-                      <SkipBack className="h-6 w-6" />
+                      <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                     <Button
                       variant="default"
                       size="icon"
                       onClick={togglePlay}
-                      className="h-16 w-16 rounded-full"
+                      className="h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-xl hover:scale-110 transition-all touch-manipulation"
                     >
                       {isPlaying ? (
-                        <Pause className="h-8 w-8" />
+                        <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />
                       ) : (
-                        <Play className="h-8 w-8 ml-1" />
+                        <Play className="h-7 w-7 sm:h-8 sm:w-8 ml-0.5 fill-current" />
                       )}
                     </Button>
                     <Button
@@ -221,9 +221,9 @@ export function PersistentMusicPlayer() {
                       size="icon"
                       onClick={playNext}
                       disabled={queue.length === 0}
-                      className="h-12 w-12"
+                      className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
                     >
-                      <SkipForward className="h-6 w-6" />
+                      <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                   </div>
                 </div>
@@ -319,15 +319,25 @@ export function PersistentMusicPlayer() {
 
             {/* Controls - Center */}
             <div className="flex flex-col items-center gap-2 flex-[2] max-w-2xl">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={playPrevious}>
-                  <SkipBack className="h-5 w-5" />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={playPrevious}
+                  className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                >
+                  <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={togglePlay}>
+                <Button 
+                  variant="default" 
+                  size="icon" 
+                  onClick={togglePlay}
+                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:scale-110 transition-all touch-manipulation"
+                >
                   {isPlaying ? (
-                    <Pause className="h-6 w-6" />
+                    <Pause className="h-6 w-6 sm:h-7 sm:w-7 fill-current" />
                   ) : (
-                    <Play className="h-6 w-6" />
+                    <Play className="h-6 w-6 sm:h-7 sm:w-7 ml-0.5 fill-current" />
                   )}
                 </Button>
                 <Button
@@ -335,8 +345,9 @@ export function PersistentMusicPlayer() {
                   size="icon"
                   onClick={playNext}
                   disabled={queue.length === 0}
+                  className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
                 >
-                  <SkipForward className="h-5 w-5" />
+                  <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
               {isMinimized && (
@@ -359,39 +370,68 @@ export function PersistentMusicPlayer() {
             </div>
 
             {/* Volume & Actions */}
-            <div className="flex items-center gap-2 flex-1 justify-end">
+            <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowQueue(!showQueue)}
-                className="relative"
+                className="relative h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
               >
-                <ListMusic className="h-5 w-5" />
+                <ListMusic className="h-4 w-4 sm:h-5 sm:w-5" />
                 {queue.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
                     {queue.length}
                   </span>
                 )}
               </Button>
-              <Button variant="ghost" size="icon" onClick={toggleMuteHandler}>
+              
+              {/* Desktop Volume Controls */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleMuteHandler}
+                  className="h-10 w-10 touch-manipulation"
+                >
+                  {isMuted || volume === 0 ? (
+                    <VolumeX className="h-5 w-5" />
+                  ) : (
+                    <Volume2 className="h-5 w-5" />
+                  )}
+                </Button>
+                <Slider
+                  value={[volume]}
+                  max={1}
+                  step={0.01}
+                  onValueChange={handleVolumeChange}
+                  className="w-20 lg:w-24"
+                />
+              </div>
+              
+              {/* Mobile Volume Toggle (tap to mute/unmute) */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleMuteHandler}
+                className="md:hidden h-9 w-9 touch-manipulation"
+              >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="h-5 w-5" />
                 ) : (
                   <Volume2 className="h-5 w-5" />
                 )}
               </Button>
-              <Slider
-                value={[volume]}
-                max={1}
-                step={0.01}
-                onValueChange={handleVolumeChange}
-                className="w-24 hidden lg:block"
-              />
-              <Button variant="ghost" size="icon" onClick={toggleMinimized}>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleMinimized}
+                className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+              >
                 {isMinimized ? (
-                  <ChevronUp className="h-5 w-5" />
+                  <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
                 ) : (
-                  <ChevronDown className="h-5 w-5" />
+                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </Button>
             </div>

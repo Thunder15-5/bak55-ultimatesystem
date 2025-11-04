@@ -208,7 +208,8 @@ export default function Admin() {
       const [
         usersCount, 
         artistsCount, 
-        brandsCount, 
+        brandsCount,
+        fansCount,
         tracksCount, 
         compsCount, 
         activeCompsCount, 
@@ -219,6 +220,7 @@ export default function Admin() {
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "artist"),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "brand"),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "fan"),
         supabase.from("tracks").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }).eq("status", "active"),

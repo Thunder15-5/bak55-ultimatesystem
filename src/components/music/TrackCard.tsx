@@ -116,7 +116,7 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all touch-manipulation">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all touch-manipulation w-full max-w-full">
       <div className="relative aspect-square cursor-pointer touch-manipulation" onClick={handlePlay}>
         <img
           src={track.cover_image || "/placeholder.svg"}
@@ -126,25 +126,25 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center touch-manipulation">
           <Button
             size="lg"
-            className="rounded-full w-12 h-12 sm:w-16 sm:h-16 touch-manipulation"
+            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 shadow-xl hover:scale-110 transition-all touch-manipulation"
           >
-            <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+            <Play className="w-6 h-6 sm:w-7 sm:w-7 fill-current ml-0.5" />
           </Button>
         </div>
       </div>
       
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <h3 
-          className="font-semibold text-lg truncate cursor-pointer hover:text-primary transition-colors"
+          className="font-semibold text-sm sm:text-base md:text-lg truncate cursor-pointer hover:text-primary transition-colors break-words"
           onClick={handleViewDetails}
         >
           {track.title}
         </h3>
-        <p className="text-sm text-muted-foreground truncate">
+        <p className="text-xs sm:text-sm text-muted-foreground truncate break-words">
           {track.artist_profiles?.stage_name || "Unknown Artist"}
         </p>
         {track.genre && (
-          <span className="inline-block mt-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+          <span className="inline-block mt-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full truncate max-w-full">
             {track.genre}
           </span>
         )}
