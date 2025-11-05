@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -248,8 +249,33 @@ export default function ArtistProfile() {
   }
 
   const socialLinks = artist.artist_profiles?.social_links || {};
+  const shareUrl = `${window.location.origin}/artist/${id}`;
+  const shareTitle = `${artist.artist_profiles?.stage_name || artist.username} on BAK55 Talent`;
+  const shareDescription = `🎤 ${artist.bio || `Follow ${artist.username} on BAK55 Talent`} • ${followerCount.toLocaleString()} followers • ${tracks.length} tracks`;
 
   return (
+    <>
+      <Helmet>
+        <title>{artist.artist_profiles?.stage_name || artist.username} | BAK55 Talent</title>
+        <meta name="description" content={shareDescription} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
+        <meta property="og:image" content={artist.avatar_url || `${window.location.origin}/bak55-logo.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={shareUrl} />
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareDescription} />
+        <meta name="twitter:image" content={artist.avatar_url || `${window.location.origin}/bak55-logo.png`} />
+      </Helmet>
+      
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
@@ -313,25 +339,37 @@ export default function ArtistProfile() {
                 )}
 
                 <div className="flex gap-3">
-                  <Button
-                    onClick={handleFollow}
-                    disabled={following || user?.id === id}
-                    variant={isFollowing ? "outline" : "default"}
-                  >
-                    {following ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : isFollowing ? (
-                      <>
-                        <UserMinus className="mr-2 h-4 w-4" />
-                        Unfollow
-                      </>
-                    ) : (
-                      <>
+                  {user ? (
+                    <Button
+                      onClick={handleFollow}
+                      disabled={following || user.id === id}
+                      variant={isFollowing ? "outline" : "default"}
+                    >
+                      {following ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : isFollowing ? (
+                        <>
+                          <UserMinus className="mr-2 h-4 w-4" />
+                          Unfollow
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Follow
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button onClick={() => navigate('/login')} variant="default">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Follow
-                      </>
-                    )}
-                  </Button>
+                        Login to Follow
+                      </Button>
+                      <Button onClick={() => navigate('/signup')} variant="outline">
+                        Sign Up
+                      </Button>
+                    </>
+                  )}
 
                   {socialLinks.twitter && (
                     <Button variant="outline" size="icon" asChild>
@@ -459,5 +497,6 @@ export default function ArtistProfile() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

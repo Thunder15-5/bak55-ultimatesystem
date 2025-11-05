@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -276,7 +277,36 @@ export default function TrackDetails() {
 
   if (!track) return null;
 
+  const shareUrl = `${window.location.origin}/track/${id}`;
+  const shareTitle = `${track.title} by ${track.profiles.username}`;
+  const shareDescription = `🎵 Stream ${track.title} now on BAK55 Talent • ${track.plays} plays • ${likeCount} likes • ${track.genre || 'Music'}`;
+
   return (
+    <>
+      <Helmet>
+        <title>{track.title} by {track.profiles.username} | BAK55 Talent</title>
+        <meta name="description" content={shareDescription} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="music.song" />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
+        <meta property="og:image" content={track.cover_image || `${window.location.origin}/bak55-logo.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={shareUrl} />
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareDescription} />
+        <meta name="twitter:image" content={track.cover_image || `${window.location.origin}/bak55-logo.png`} />
+        
+        {/* Music-specific meta */}
+        <meta property="music:musician" content={`${window.location.origin}/artist/${track.artist_id}`} />
+      </Helmet>
+      
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
       
@@ -352,136 +382,166 @@ export default function TrackDetails() {
                </div>
 
               <div className="flex gap-3 flex-wrap">
-                <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1 h-14 text-lg">
+                <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1 min-w-[140px] h-14 text-lg">
                   <Play className="mr-2 h-5 w-5 fill-current" />
                   Play Track
                 </Button>
 
-            {user && (
-              <Button 
-                onClick={handleLike} 
-                disabled={liking}
-                size="lg"
-                variant={isLiked ? "default" : "outline"}
-              >
-                {liking ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <Heart className={`mr-2 h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-                )}
-                {isLiked ? 'Liked' : 'Like'}
-              </Button>
-            )}
-
-            {user && user.id === track.artist_id && (
-              <Button 
-                size="lg" 
-                variant="destructive"
-                onClick={handleDeleteTrack}
-              >
-                <Trash2 className="mr-2 h-5 w-5" />
-                Delete Track
-              </Button>
-            )}
-
-            {user && user.id !== track.artist_id && (
+            {user ? (
               <>
                 <Button 
-                  size="lg" 
-                  variant="outline"
-                  onClick={() => setTipDialogOpen(true)}
+                  onClick={handleLike} 
+                  disabled={liking}
+                  size="lg"
+                  variant={isLiked ? "default" : "outline"}
                 >
-                  <Heart className="mr-2 h-5 w-5" />
-                  Tip Artist
+                  {liking ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <Heart className={`mr-2 h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                  )}
+                  {isLiked ? 'Liked' : 'Like'}
                 </Button>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" variant="outline">
-                      <ListPlus className="mr-2 h-5 w-5" />
-                      Add to Playlist
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add to Playlist</DialogTitle>
-                      <DialogDescription>
-                        Choose a playlist to add this track to
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      {playlists.length === 0 ? (
-                        <div className="text-center py-4">
-                          <p className="text-muted-foreground mb-4">
-                            You don't have any playlists yet
-                          </p>
-                          <Button onClick={() => navigate("/playlists")}>
-                            Create Playlist
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a playlist" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {playlists.map((playlist) => (
-                                <SelectItem key={playlist.id} value={playlist.id}>
-                                  {playlist.title}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            onClick={handleAddToPlaylist} 
-                            className="w-full" 
-                            disabled={addingToPlaylist || !selectedPlaylist}
-                          >
-                            {addingToPlaylist ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Adding...
-                              </>
-                            ) : (
-                              "Add to Playlist"
-                            )}
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </DialogContent>
-              </Dialog>
-            </>
-          )}
+                {user.id === track.artist_id && (
+                  <Button 
+                    size="lg" 
+                    variant="destructive"
+                    onClick={handleDeleteTrack}
+                  >
+                    <Trash2 className="mr-2 h-5 w-5" />
+                    Delete Track
+                  </Button>
+                )}
 
-          {/* Social Sharing */}
+                {user.id !== track.artist_id && (
+                  <>
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      onClick={() => setTipDialogOpen(true)}
+                    >
+                      <Heart className="mr-2 h-5 w-5" />
+                      Tip Artist
+                    </Button>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="lg" variant="outline">
+                          <ListPlus className="mr-2 h-5 w-5" />
+                          Add to Playlist
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add to Playlist</DialogTitle>
+                          <DialogDescription>
+                            Choose a playlist to add this track to
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          {playlists.length === 0 ? (
+                            <div className="text-center py-4">
+                              <p className="text-muted-foreground mb-4">
+                                You don't have any playlists yet
+                              </p>
+                              <Button onClick={() => navigate("/playlists")}>
+                                Create Playlist
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a playlist" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {playlists.map((playlist) => (
+                                    <SelectItem key={playlist.id} value={playlist.id}>
+                                      {playlist.title}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                onClick={handleAddToPlaylist} 
+                                className="w-full" 
+                                disabled={addingToPlaylist || !selectedPlaylist}
+                              >
+                                {addingToPlaylist ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Adding...
+                                  </>
+                                ) : (
+                                  "Add to Playlist"
+                                )}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Button onClick={() => navigate('/login')} size="lg" variant="outline">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Login to Like
+                </Button>
+                <Button onClick={() => navigate('/signup')} size="lg" variant="outline">
+                  Sign Up to Follow
+                </Button>
+              </>
+            )}
+
+          {/* Social Sharing - Always visible */}
           <Button 
             size="lg" 
             variant="outline"
             onClick={async () => {
-                const url = window.location.href;
-                const text = `Check out "${track.title}" by ${track.profiles.username} on BAK55!`;
+                const shareData = {
+                  title: shareTitle,
+                  text: shareDescription,
+                  url: shareUrl,
+                };
                 
                 // Track share analytics
                 if (user) {
-                  await supabase.from('share_analytics').insert({
-                    track_id: id,
-                    user_id: user.id,
-                    platform: navigator.share ? 'native_share' : 'clipboard',
-                  });
+                  try {
+                    await supabase.from('share_analytics').insert({
+                      track_id: id,
+                      user_id: user.id,
+                      platform: navigator.share ? 'native_share' : 'clipboard',
+                    });
+                  } catch (error) {
+                    console.error('Failed to log share analytics:', error);
+                  }
                 }
                 
-                if (navigator.share) {
-                  try {
-                    await navigator.share({ title: track.title, text, url });
-                    toast.success("Shared successfully!");
-                  } catch (err) {
-                    // User cancelled share
+                try {
+                  if (navigator.share && navigator.canShare?.(shareData)) {
+                    await navigator.share(shareData);
+                    toast.success("Shared successfully! 🎉");
+                  } else {
+                    // Fallback to clipboard
+                    await navigator.clipboard.writeText(shareUrl);
+                    toast.success("Link copied to clipboard! 📋");
                   }
-                } else {
-                  navigator.clipboard.writeText(url);
-                  toast.success("Link copied to clipboard!");
+                } catch (error: any) {
+                  // User cancelled or error occurred
+                  if (error.name !== 'AbortError') {
+                    // Try clipboard as final fallback
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success("Link copied to clipboard! 📋");
+                    } catch (clipboardError) {
+                      toast.error("Failed to share. Please copy the URL manually.");
+                      console.error('Share failed:', error, clipboardError);
+                    }
+                  }
                 }
               }}
             >
@@ -509,5 +569,6 @@ export default function TrackDetails() {
         />
       )}
     </div>
+    </>
   );
 }

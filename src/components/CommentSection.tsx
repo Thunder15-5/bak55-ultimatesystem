@@ -282,6 +282,7 @@ export function CommentSection({ trackId }: CommentSectionProps) {
               onChange={(e) => setNewComment(e.target.value)}
               rows={3}
               disabled={submitting}
+              className="text-sm sm:text-base resize-none"
             />
             <Button type="submit" disabled={submitting || !newComment.trim()}>
               {submitting ? (
@@ -313,21 +314,21 @@ export function CommentSection({ trackId }: CommentSectionProps) {
           <div className="space-y-6">
             {topLevelComments.map((comment) => (
               <div key={comment.id} className="space-y-4">
-                <div className="flex gap-4">
-                  <Avatar>
+                <div className="flex gap-3 sm:gap-4">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <AvatarImage src={comment.profiles?.avatar_url} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">
                       {comment.profiles?.username.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-semibold">
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-semibold text-sm sm:text-base break-words">
                           {comment.profiles?.username}
                         </span>
-                        <span className="text-xs text-muted-foreground ml-2">
+                        <span className="text-xs text-muted-foreground ml-2 block sm:inline">
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -342,22 +343,23 @@ export function CommentSection({ trackId }: CommentSectionProps) {
                       )}
                     </div>
 
-                    <p className="text-sm">{comment.content}</p>
+                    <p className="text-xs sm:text-sm break-words whitespace-pre-wrap">{comment.content}</p>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleLikeComment(comment.id, comment.user_has_liked || false)}
-                        className={comment.user_has_liked ? "text-primary" : ""}
+                        className={`h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${comment.user_has_liked ? "text-primary" : ""}`}
                       >
-                        <Heart className={`h-4 w-4 mr-1 ${comment.user_has_liked ? "fill-current" : ""}`} />
+                        <Heart className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${comment.user_has_liked ? "fill-current" : ""}`} />
                         {comment.like_count || 0}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setReplyingTo(comment.id)}
+                        className="h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
                       >
                         Reply
                       </Button>
@@ -372,6 +374,7 @@ export function CommentSection({ trackId }: CommentSectionProps) {
                           onChange={(e) => setReplyContent(e.target.value)}
                           rows={2}
                           disabled={submitting}
+                          className="text-sm sm:text-base resize-none"
                         />
                         <div className="flex gap-2">
                           <Button
@@ -402,23 +405,23 @@ export function CommentSection({ trackId }: CommentSectionProps) {
 
                     {/* Replies */}
                     {getReplies(comment.id).length > 0 && (
-                      <div className="ml-8 space-y-4 mt-4 border-l-2 pl-4">
+                      <div className="ml-4 sm:ml-8 space-y-4 mt-4 border-l-2 pl-2 sm:pl-4">
                         {getReplies(comment.id).map((reply) => (
-                          <div key={reply.id} className="flex gap-4">
-                            <Avatar className="h-8 w-8">
+                          <div key={reply.id} className="flex gap-2 sm:gap-4">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0">
                               <AvatarImage src={reply.profiles?.avatar_url} />
-                              <AvatarFallback>
+                              <AvatarFallback className="text-xs">
                                 {reply.profiles?.username.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
 
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <span className="font-semibold text-sm">
+                            <div className="flex-1 space-y-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-semibold text-xs sm:text-sm break-words">
                                     {reply.profiles?.username}
                                   </span>
-                                  <span className="text-xs text-muted-foreground ml-2">
+                                  <span className="text-xs text-muted-foreground ml-2 block sm:inline">
                                     {new Date(reply.created_at).toLocaleDateString()}
                                   </span>
                                 </div>
@@ -432,13 +435,13 @@ export function CommentSection({ trackId }: CommentSectionProps) {
                                   </Button>
                                 )}
                               </div>
-                              <p className="text-sm">{reply.content}</p>
+                              <p className="text-xs sm:text-sm break-words whitespace-pre-wrap">{reply.content}</p>
                               
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleLikeComment(reply.id, reply.user_has_liked || false)}
-                                className={reply.user_has_liked ? "text-primary" : ""}
+                                className={`h-6 sm:h-8 text-xs px-2 ${reply.user_has_liked ? "text-primary" : ""}`}
                               >
                                 <Heart className={`h-3 w-3 mr-1 ${reply.user_has_liked ? "fill-current" : ""}`} />
                                 {reply.like_count || 0}

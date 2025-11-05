@@ -83,6 +83,15 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 
+                {/* PUBLIC SHAREABLE ROUTES - No auth required */}
+                <Route path="/track/:id" element={<TrackDetails />} />
+                <Route path="/artist/:id" element={<ArtistProfile />} />
+                <Route path="/catalog" element={<MusicCatalog />} />
+                <Route path="/streaming" element={<Streaming />} />
+                <Route path="/competitions" element={<Competitions />} />
+                <Route path="/competitions/active" element={<CompetitionsActive />} />
+                <Route path="/competition/:id" element={<CompetitionDetails />} />
+                
                 {/* Legacy routes - redirect to role-specific paths */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><RoleBasedRedirect to="profile" /></ProtectedRoute>} />
@@ -90,14 +99,8 @@ const App = () => (
                 <Route path="/wallet/buy-coins" element={<ProtectedRoute><RoleBasedRedirect to="wallet/buy-coins" /></ProtectedRoute>} />
                 <Route path="/playlists" element={<ProtectedRoute><RoleBasedRedirect to="playlists" /></ProtectedRoute>} />
                 <Route path="/playlist/:id" element={<ProtectedRoute><RoleBasedRedirect to="playlist/:id" /></ProtectedRoute>} />
-                <Route path="/track/:id" element={<ProtectedRoute><RoleBasedRedirect to="track/:id" /></ProtectedRoute>} />
-                <Route path="/artist/:id" element={<ProtectedRoute><RoleBasedRedirect to="artist/:id" /></ProtectedRoute>} />
                 <Route path="/history" element={<ProtectedRoute><RoleBasedRedirect to="history" /></ProtectedRoute>} />
-                <Route path="/competitions" element={<RoleBasedRedirect to="competitions" />} />
-                <Route path="/competitions/active" element={<RoleBasedRedirect to="competitions/active" />} />
-                <Route path="/competition/:id" element={<RoleBasedRedirect to="competition/:id" />} />
                 <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
-                <Route path="/catalog" element={<MusicCatalog />} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
                 <Route path="/subscription/manage" element={<ProtectedRoute><SubscriptionManage /></ProtectedRoute>} />
@@ -175,7 +178,6 @@ const App = () => (
 
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
-                <Route path="/streaming" element={<Streaming />} />
           <Route path="/admin/create-competition" element={
             <ProtectedRoute requiredRoles={['admin', 'brand']}>
               <CreateCompetition />
