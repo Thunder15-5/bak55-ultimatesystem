@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import logoImage from "@/assets/bak55-logo.png";
 
 export default function Signup() {
   const { signUp } = useAuth();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -25,6 +27,14 @@ export default function Signup() {
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [loading, setLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setReferralCode(ref);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +60,43 @@ export default function Signup() {
 
     if (error) {
       toast.error(error.message || "Failed to create account");
+      setLoading(false);
+      return;
+    }
+
+    // Process referral after successful signup
+    if (referralCode) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Find referrer by code
+          const { data: codeData } = await supabase
+            .from("referral_codes")
+            .select("user_id")
+            .eq("code", referralCode)
+            .single();
+
+          if (codeData) {
+            // Create referral record
+            await supabase.from("referrals").insert({
+              referrer_id: codeData.user_id,
+              referred_id: user.id,
+              referral_code: referralCode,
+            });
+
+            // Update uses count
+            await supabase.rpc("transfer_funds", {
+              sender_id: '00000000-0000-0000-0000-000000000000',
+              recipient_id: codeData.user_id,
+              transfer_amount: 50
+            });
+
+            toast.success("Welcome! Your referrer earned 50 BAKCoins! 🎉");
+          }
+        }
+      } catch (err) {
+        console.error('Failed to process referral:', err);
+      }
     }
 
     setLoading(false);

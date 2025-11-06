@@ -66,6 +66,7 @@ import ArtistDiscover from "./pages/artist/ArtistDiscover";
 import BrandDashboard from "./pages/brand/BrandDashboard";
 import BrandDiscover from "./pages/brand/BrandDiscover";
 import Upgrade from "./pages/Upgrade";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => (
                 <Route path="/competitions" element={<Competitions />} />
                 <Route path="/competitions/active" element={<CompetitionsActive />} />
                 <Route path="/competition/:id" element={<CompetitionDetails />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
                 
                 {/* Legacy routes - redirect to role-specific paths */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Upload, Trophy } from "lucide-react";
 import { BadgeCollection } from "@/components/competition/BadgeCollection";
+import { ReferralSystem } from "@/components/ReferralSystem";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -302,6 +303,9 @@ export default function Profile() {
               <BadgeCollection />
             </CardContent>
           </Card>
+
+          {/* Referral System */}
+          <ReferralSystem />
 
           <Button
             variant="hero"

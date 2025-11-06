@@ -15,6 +15,7 @@ import {
   MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock, Trophy
 } from "lucide-react";
 import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
+import { ArtistBadges } from "@/components/ArtistBadges";
 
 interface ArtistData {
   id: string;
@@ -419,6 +420,16 @@ export default function ArtistProfile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Artist Badges */}
+        <div className="mb-8">
+          <ArtistBadges
+            artistId={id!}
+            followerCount={followerCount}
+            totalPlays={tracks.reduce((sum, track) => sum + (track.plays || 0), 0)}
+            trackCount={tracks.length}
+          />
+        </div>
 
         {/* Competition Journey */}
         <Card className="mb-8">

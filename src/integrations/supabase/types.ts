@@ -85,6 +85,36 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_badges: {
+        Row: {
+          badge_description: string | null
+          badge_icon: string | null
+          badge_name: string
+          badge_type: string
+          created_at: string
+          id: string
+          requirement_value: number
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_name: string
+          badge_type: string
+          created_at?: string
+          id?: string
+          requirement_value: number
+        }
+        Update: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_name?: string
+          badge_type?: string
+          created_at?: string
+          id?: string
+          requirement_value?: number
+        }
+        Relationships: []
+      }
       artist_competition_journey: {
         Row: {
           artist_id: string
@@ -158,6 +188,35 @@ export type Database = {
             columns: ["elimination_stage_id"]
             isOneToOne: false
             referencedRelation: "competition_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artist_earned_badges: {
+        Row: {
+          artist_id: string
+          badge_id: string
+          earned_at: string
+          id: string
+        }
+        Insert: {
+          artist_id: string
+          badge_id: string
+          earned_at?: string
+          id?: string
+        }
+        Update: {
+          artist_id?: string
+          badge_id?: string
+          earned_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_earned_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "artist_badges"
             referencedColumns: ["id"]
           },
         ]
@@ -1014,6 +1073,60 @@ export type Database = {
           request_count?: number
           user_id?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          uses_count?: number
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number
+          rewarded: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number
+          rewarded?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          rewarded?: boolean
         }
         Relationships: []
       }

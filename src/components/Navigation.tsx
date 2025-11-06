@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
-import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp } from "lucide-react";
+import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logoImage from "@/assets/bak55-logo.png";
@@ -72,6 +72,12 @@ export function Navigation() {
                     <Link to="/fan/wallet">
                       <Button variant="ghost" size="sm">Wallet</Button>
                     </Link>
+                    <Link to="/leaderboard">
+                      <Button variant="ghost" size="sm">
+                        <Trophy className="mr-1 h-3 w-3" />
+                        Leaderboard
+                      </Button>
+                    </Link>
                     <Link to="/upgrade">
                       <Button variant="hero" size="sm" className="ml-2">
                         <TrendingUp className="mr-1 h-3 w-3" />
@@ -107,6 +113,12 @@ export function Navigation() {
                     </Link>
                     <Link to="/artist/wallet">
                       <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                    <Link to="/leaderboard">
+                      <Button variant="ghost" size="sm">
+                        <Trophy className="mr-1 h-3 w-3" />
+                        Leaderboard
+                      </Button>
                     </Link>
                     {subscription && <SubscriptionBadge planName={subscription.subscription_plans.name} />}
                   </>
