@@ -30,6 +30,7 @@ interface ArtistData {
     verified: boolean;
     talent_score: number;
     total_earnings: number;
+    banner_url: string | null;
   };
 }
 
@@ -81,7 +82,8 @@ export default function ArtistProfile() {
             social_links,
             verified,
             talent_score,
-            total_earnings
+            total_earnings,
+            banner_url
           )
         `)
         .eq("id", id)
@@ -278,9 +280,22 @@ export default function ArtistProfile() {
       
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      
+      {/* Banner Section */}
+      {artist.artist_profiles?.banner_url && (
+        <div className="relative h-64 md:h-80 lg:h-96 w-full overflow-hidden">
+          <img 
+            src={artist.artist_profiles.banner_url} 
+            alt={`${artist.username} banner`}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+        </div>
+      )}
+      
+      <div className="container mx-auto px-4 py-8 pt-8">
         {/* Artist Header */}
-        <Card className="mb-8">
+        <Card className={`mb-8 ${artist.artist_profiles?.banner_url ? '-mt-24' : ''}`}>
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <Avatar className="h-32 w-32">

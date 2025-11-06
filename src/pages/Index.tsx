@@ -11,6 +11,7 @@ import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { StatsBar } from "@/components/StatsBar";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
+import { TrendingArtists } from "@/components/TrendingArtists";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,6 +74,7 @@ const Index = () => {
       )}
       <Features />
       <HowItWorks />
+      <TrendingArtists />
       <SocialProof />
       <Economy />
       <CTA />

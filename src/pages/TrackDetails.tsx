@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2 } from "lucide-react";
+import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -42,11 +42,16 @@ export default function TrackDetails() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [liking, setLiking] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchTrack();
       fetchLikeData();
+      if (user) {
+        fetchFollowStatus();
+      }
     }
     if (user) {
       fetchUserPlaylists();
@@ -139,6 +144,67 @@ export default function TrackDetails() {
       }
     } catch (error: any) {
       console.error("Failed to load like data:", error);
+    }
+  };
+
+  const fetchFollowStatus = async () => {
+    if (!user || !track?.artist_id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("followers")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("artist_id", track.artist_id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsFollowing(!!data);
+    } catch (error: any) {
+      console.error("Failed to load follow status:", error);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error("Please log in to follow artists");
+      navigate("/login");
+      return;
+    }
+
+    if (!track?.artist_id) return;
+
+    setFollowLoading(true);
+
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from("followers")
+          .delete()
+          .eq("follower_id", user.id)
+          .eq("artist_id", track.artist_id);
+
+        if (error) throw error;
+        setIsFollowing(false);
+        toast.success("Unfollowed artist");
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from("followers")
+          .insert({
+            follower_id: user.id,
+            artist_id: track.artist_id,
+          });
+
+        if (error) throw error;
+        setIsFollowing(true);
+        toast.success("Following artist!");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update follow status");
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -403,6 +469,22 @@ export default function TrackDetails() {
                   {isLiked ? 'Liked' : 'Like'}
                 </Button>
 
+                {user.id !== track.artist_id && (
+                  <Button 
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    size="lg"
+                    variant={isFollowing ? "default" : "outline"}
+                  >
+                    {followLoading ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <UserPlus className="mr-2 h-5 w-5" />
+                    )}
+                    {isFollowing ? 'Following' : 'Follow Artist'}
+                  </Button>
+                )}
+
                 {user.id === track.artist_id && (
                   <Button 
                     size="lg" 
@@ -508,7 +590,7 @@ export default function TrackDetails() {
                   url: shareUrl,
                 };
                 
-                // Track share analytics
+                // Track share analytics and give rewards
                 if (user) {
                   try {
                     await supabase.from('share_analytics').insert({
@@ -516,8 +598,41 @@ export default function TrackDetails() {
                       user_id: user.id,
                       platform: navigator.share ? 'native_share' : 'clipboard',
                     });
+
+                    // Give 5 BAKCoins reward for sharing
+                    const { data: walletData } = await supabase
+                      .from('wallets')
+                      .select('id')
+                      .eq('user_id', user.id)
+                      .single();
+
+                    if (walletData) {
+                      await supabase.from('share_rewards').insert({
+                        user_id: user.id,
+                        track_id: id,
+                        artist_id: track.artist_id,
+                        reward_amount: 5,
+                        share_platform: navigator.share ? 'native_share' : 'clipboard',
+                      });
+
+                      await supabase.from('transactions').insert({
+                        wallet_id: walletData.id,
+                        type: 'income',
+                        amount: 5,
+                        description: 'Share reward',
+                        reference_id: id,
+                      });
+
+                      await supabase.rpc('transfer_funds', {
+                        sender_id: '00000000-0000-0000-0000-000000000000',
+                        recipient_id: user.id,
+                        transfer_amount: 5
+                      }).then(() => {
+                        toast.success("You earned 5 BAKCoins for sharing! 💰");
+                      });
+                    }
                   } catch (error) {
-                    console.error('Failed to log share analytics:', error);
+                    console.error('Failed to process share reward:', error);
                   }
                 }
                 

@@ -164,6 +164,7 @@ export type Database = {
       }
       artist_profiles: {
         Row: {
+          banner_url: string | null
           created_at: string
           genres: string[] | null
           id: string
@@ -176,6 +177,7 @@ export type Database = {
           verified: boolean | null
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           genres?: string[] | null
           id?: string
@@ -188,6 +190,7 @@ export type Database = {
           verified?: boolean | null
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           genres?: string[] | null
           id?: string
@@ -1066,6 +1069,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "share_analytics_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_rewards: {
+        Row: {
+          artist_id: string | null
+          created_at: string
+          id: string
+          reward_amount: number
+          share_platform: string | null
+          track_id: string | null
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          created_at?: string
+          id?: string
+          reward_amount?: number
+          share_platform?: string | null
+          track_id?: string | null
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          created_at?: string
+          id?: string
+          reward_amount?: number
+          share_platform?: string | null
+          track_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_rewards_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "share_rewards_track_id_fkey"
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
