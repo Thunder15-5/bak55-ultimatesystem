@@ -57,6 +57,7 @@ import ArtistProfile from "./pages/ArtistProfile";
 import Playlists from "./pages/Playlists";
 import PlaylistDetails from "./pages/PlaylistDetails";
 import ListeningHistory from "./pages/ListeningHistory";
+import LiveStreams from "./pages/LiveStreams";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import FanDashboard from "./pages/fan/FanDashboard";
 import FanDiscover from "./pages/fan/FanDiscover";
@@ -87,11 +88,12 @@ const App = () => (
                 {/* PUBLIC SHAREABLE ROUTES - No auth required */}
                 <Route path="/track/:id" element={<TrackDetails />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />
-                <Route path="/catalog" element={<MusicCatalog />} />
-                <Route path="/streaming" element={<Streaming />} />
-                <Route path="/competitions" element={<Competitions />} />
-                <Route path="/competitions/active" element={<CompetitionsActive />} />
-                <Route path="/competition/:id" element={<CompetitionDetails />} />
+          <Route path="/catalog" element={<MusicCatalog />} />
+          <Route path="/streaming" element={<Streaming />} />
+          <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions/active" element={<CompetitionsActive />} />
+          <Route path="/competition/:id" element={<CompetitionDetails />} />
+          <Route path="/live-streams" element={<LiveStreams />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 
                 {/* Legacy routes - redirect to role-specific paths */}

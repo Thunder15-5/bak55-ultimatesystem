@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArtistCollaboration } from "@/components/ArtistCollaboration";
 
 export default function ArtistDashboard() {
   const { user } = useAuth();
@@ -195,6 +196,11 @@ export default function ArtistDashboard() {
         {/* Subscription Status */}
         <div className="mb-8">
           <SubscriptionStatusCard />
+        </div>
+
+        {/* Artist Collaboration */}
+        <div className="mb-8">
+          <ArtistCollaboration />
         </div>
 
         {/* Performance & Activity */}

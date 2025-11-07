@@ -315,6 +315,105 @@ export type Database = {
           },
         ]
       }
+      collaboration_requests: {
+        Row: {
+          created_at: string
+          from_artist_id: string
+          id: string
+          message: string | null
+          project_details: Json | null
+          status: string
+          to_artist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_artist_id: string
+          id?: string
+          message?: string | null
+          project_details?: Json | null
+          status?: string
+          to_artist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_artist_id?: string
+          id?: string
+          message?: string | null
+          project_details?: Json | null
+          status?: string
+          to_artist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_requests_from_artist_id_fkey"
+            columns: ["from_artist_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "collaboration_requests_to_artist_id_fkey"
+            columns: ["to_artist_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      collaborations: {
+        Row: {
+          artist_ids: string[]
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          request_id: string | null
+          status: string
+          title: string
+          track_id: string | null
+        }
+        Insert: {
+          artist_ids: string[]
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_id?: string | null
+          status?: string
+          title: string
+          track_id?: string | null
+        }
+        Update: {
+          artist_ids?: string[]
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_id?: string | null
+          status?: string
+          title?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborations_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborations_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -739,6 +838,33 @@ export type Database = {
           },
         ]
       }
+      fan_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          points_earned: number
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points_earned?: number
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points_earned?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       fan_badges: {
         Row: {
           badge_description: string | null
@@ -769,6 +895,33 @@ export type Database = {
           id?: string
           rarity?: string | null
           unlock_criteria?: Json | null
+        }
+        Relationships: []
+      }
+      fan_rewards_tiers: {
+        Row: {
+          badge_icon: string | null
+          created_at: string
+          id: string
+          min_points: number
+          reward_multiplier: number
+          tier_name: string
+        }
+        Insert: {
+          badge_icon?: string | null
+          created_at?: string
+          id?: string
+          min_points: number
+          reward_multiplier?: number
+          tier_name: string
+        }
+        Update: {
+          badge_icon?: string | null
+          created_at?: string
+          id?: string
+          min_points?: number
+          reward_multiplier?: number
+          tier_name?: string
         }
         Relationships: []
       }
@@ -819,6 +972,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tracks"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_streams: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          artist_id: string
+          created_at: string
+          description: string | null
+          id: string
+          max_viewers: number | null
+          scheduled_start: string
+          status: string
+          stream_url: string | null
+          thumbnail_url: string | null
+          title: string
+          viewer_count: number | null
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          artist_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_viewers?: number | null
+          scheduled_start: string
+          status?: string
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title: string
+          viewer_count?: number | null
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          artist_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_viewers?: number | null
+          scheduled_start?: string
+          status?: string
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          viewer_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_streams_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1288,6 +1497,38 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_viewers: {
+        Row: {
+          id: string
+          joined_at: string
+          left_at: string | null
+          stream_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          stream_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          stream_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_viewers_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
             referencedColumns: ["id"]
           },
         ]

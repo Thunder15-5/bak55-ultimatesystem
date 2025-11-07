@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { Loader2, Upload, Trophy } from "lucide-react";
 import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { ReferralSystem } from "@/components/ReferralSystem";
+import { FanRewards } from "@/components/FanRewards";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -161,6 +163,14 @@ export default function Profile() {
       
       <main className="container mx-auto px-4 pb-12">
         <div className="max-w-2xl mx-auto space-y-6">
+          <Tabs defaultValue="profile" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="rewards">Rewards</TabsTrigger>
+              <TabsTrigger value="referrals">Referrals</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="space-y-6">
           <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
@@ -323,6 +333,16 @@ export default function Profile() {
               "Save Changes"
             )}
           </Button>
+        </TabsContent>
+
+        <TabsContent value="rewards">
+          <FanRewards />
+        </TabsContent>
+
+        <TabsContent value="referrals">
+          <ReferralSystem />
+        </TabsContent>
+      </Tabs>
         </div>
       </main>
     </div>
