@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
+import { AnalyticsOverview } from "@/components/AnalyticsOverview";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,29 @@ export default function Analytics() {
   useEffect(() => {
     if (user && userRole === 'artist') {
       fetchAnalyticsData();
+
+      // Real-time updates for plays and earnings
+      const channel = supabase
+        .channel('analytics-updates')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'listening_history',
+        }, () => {
+          fetchAnalyticsData();
+        })
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+        }, () => {
+          fetchAnalyticsData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, userRole]);
 
@@ -117,16 +141,33 @@ export default function Analytics() {
   };
 
   const fetchAIInsights = async () => {
+    if (!analyticsData) {
+      toast.error("Please load analytics data first");
+      return;
+    }
+
     try {
       setLoadingInsights(true);
-      const { data, error } = await supabase.functions.invoke('artist-analytics', {
-        body: { artistId: user?.id }
+      
+      const { data, error } = await supabase.functions.invoke('analytics-insights', {
+        body: { 
+          artistId: user?.id,
+          analyticsData
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('Rate limit')) {
+          toast.error("Rate limit exceeded. Please try again later.");
+        } else if (error.message?.includes('Payment required')) {
+          toast.error("Credits required. Please add credits to continue.");
+        } else {
+          throw error;
+        }
+        return;
+      }
       
-      setAnalyticsData(data.data);
-      setInsights(data.insights);
+      setInsights(data);
       toast.success("AI insights generated!");
     } catch (error: any) {
       console.error('Error fetching AI insights:', error);
@@ -227,6 +268,16 @@ export default function Analytics() {
               </Card>
             ) : (
               <>
+                {analyticsData && (
+                  <AnalyticsOverview stats={{
+                    totalPlays: analyticsData.totalPlays,
+                    totalEarnings: analyticsData.totalEarnings,
+                    followers: analyticsData.followers,
+                    tracks: analyticsData.tracks,
+                    avgPlaysPerTrack: analyticsData.avgPlaysPerTrack
+                  }} />
+                )}
+                
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card>
                     <CardHeader>

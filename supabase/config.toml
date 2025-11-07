@@ -9,6 +9,12 @@ verify_jwt = false
 [functions.analyze-submission]
 verify_jwt = false
 
+[functions.analytics-insights]
+verify_jwt = false
+
+[functions.track-fan-activity]
+verify_jwt = true
+
 [functions.artist-analytics]
 verify_jwt = false
 

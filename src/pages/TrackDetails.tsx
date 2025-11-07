@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
 import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
@@ -33,6 +34,7 @@ export default function TrackDetails() {
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
   const { playTrack } = useMusicPlayer();
+  const { trackActivity } = useFanActivity();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [tipDialogOpen, setTipDialogOpen] = useState(false);
@@ -200,6 +202,9 @@ export default function TrackDetails() {
         if (error) throw error;
         setIsFollowing(true);
         toast.success("Following artist!");
+        
+        // Track fan activity for rewards
+        await trackActivity('artist_follow', { artist_id: track.artist_id });
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to update follow status");
@@ -243,6 +248,9 @@ export default function TrackDetails() {
         setIsLiked(true);
         setLikeCount(prev => prev + 1);
         toast.success("Added to liked tracks!");
+        
+        // Track fan activity for rewards
+        await trackActivity('track_like', { track_id: id });
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to update like status");
@@ -305,6 +313,11 @@ export default function TrackDetails() {
         .eq("id", track.id);
       
       setTrack({ ...track, plays: track.plays + 1 });
+      
+      // Track fan activity for rewards
+      if (user) {
+        await trackActivity('track_play', { track_id: track.id });
+      }
     }, 30000);
   };
 

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { NotificationBell } from "@/components/NotificationBell";
+import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -173,7 +173,7 @@ export function Navigation() {
                 )}
 
                 {/* Common Actions */}
-                <NotificationBell />
+                <RealtimeNotifications />
                 <Link to={`/${userRole}/profile`}>
                   <Button variant="ghost" size="sm">
                     <User className="h-4 w-4" />
