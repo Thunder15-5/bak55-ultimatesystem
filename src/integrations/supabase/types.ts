@@ -1218,6 +1218,7 @@ export type Database = {
           banned: boolean | null
           bio: string | null
           created_at: string
+          display_name: string | null
           email: string
           id: string
           is_activated: boolean | null
@@ -1233,6 +1234,7 @@ export type Database = {
           banned?: boolean | null
           bio?: string | null
           created_at?: string
+          display_name?: string | null
           email: string
           id: string
           is_activated?: boolean | null
@@ -1248,6 +1250,7 @@ export type Database = {
           banned?: boolean | null
           bio?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string
           id?: string
           is_activated?: boolean | null
@@ -1633,6 +1636,7 @@ export type Database = {
           name: string
           price_bak: number
           price_kes: number
+          price_usd: number | null
           upload_limit: number | null
         }
         Insert: {
@@ -1643,6 +1647,7 @@ export type Database = {
           name: string
           price_bak?: number
           price_kes?: number
+          price_usd?: number | null
           upload_limit?: number | null
         }
         Update: {
@@ -1653,6 +1658,7 @@ export type Database = {
           name?: string
           price_bak?: number
           price_kes?: number
+          price_usd?: number | null
           upload_limit?: number | null
         }
         Relationships: []

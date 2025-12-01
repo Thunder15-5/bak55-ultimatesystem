@@ -9,6 +9,7 @@ interface SubscriptionPlanCardProps {
     name: string;
     price_bak: number;
     price_kes: number;
+    price_usd?: number;
     features: string[];
     upload_limit: number | null;
   };
@@ -54,11 +55,11 @@ export function SubscriptionPlanCard({ plan, isCurrentPlan, onSubscribe, loading
       <CardContent className="space-y-4">
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold">{plan.price_bak}</span>
-            <span className="text-muted-foreground">BAK/month</span>
+            <span className="text-4xl font-bold">${plan.price_usd || (plan.price_bak * 0.20)}</span>
+            <span className="text-muted-foreground">/month</span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            or {plan.price_kes.toLocaleString()} KES/month
+            or {plan.price_bak} BAK/month
           </p>
         </div>
 
