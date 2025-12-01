@@ -157,7 +157,7 @@ export default function Subscribe() {
               <AccordionItem value="item-1">
                 <AccordionTrigger>How do BAKCoins work?</AccordionTrigger>
                 <AccordionContent>
-                  BAKCoins are our platform currency. You can buy them with M-Pesa (20 KES = 1 BAK) and use them for subscriptions, competition entries, and tipping artists. They're stored in your wallet and can be withdrawn anytime.
+                  BAKCoins are our platform currency. You can buy them via M-Pesa ($0.20 = 1 BAK) and use them for subscriptions, competition entries, and tipping artists. They're stored in your wallet and can be withdrawn anytime.
                 </AccordionContent>
               </AccordionItem>
 

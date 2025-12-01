@@ -24,8 +24,8 @@ const BuyCoins = () => {
   const [receiptCode, setReceiptCode] = useState("");
   const [submittingDeposit, setSubmittingDeposit] = useState(false);
 
-  const kshAmount = parseFloat(amount) || 0;
-  const bakAmount = kshAmount / 20; // 20 KSh = 1 BAK
+  const usdAmount = parseFloat(amount) || 0;
+  const bakAmount = usdAmount / 0.20; // $0.20 = 1 BAK
 
   const handleRedeemVoucher = async () => {
     if (!user) {
@@ -90,10 +90,10 @@ const BuyCoins = () => {
     }
 
     const amount = parseFloat(depositAmount);
-    if (!amount || amount < 100) {
+    if (!amount || amount < 5) {
       toast({
         title: "Invalid Amount",
-        description: "Minimum deposit is 100 KSh",
+        description: "Minimum deposit is $5",
         variant: "destructive",
       });
       return;
@@ -154,10 +154,10 @@ const BuyCoins = () => {
       return;
     }
 
-    if (kshAmount < 100) {
+    if (usdAmount < 5) {
       toast({
         title: "Invalid Amount",
-        description: "Minimum purchase amount is 100 KSh",
+        description: "Minimum purchase amount is $5",
         variant: "destructive",
       });
       return;
@@ -168,7 +168,7 @@ const BuyCoins = () => {
     try {
       const { data, error } = await supabase.functions.invoke('selar-initiate', {
         body: {
-          amount: kshAmount,
+          amount: usdAmount,
           email: user.email || '',
           product_type: 'bakcoins',
           description: `Purchase ${bakAmount.toFixed(1)} BAKCoins`
@@ -274,31 +274,41 @@ const BuyCoins = () => {
                 <AccordionContent className="space-y-4 pt-4">
                   <Alert className="bg-blue-500/5 border-blue-500/20">
                     <Info className="h-4 w-4 text-blue-500" />
-                    <AlertTitle>How it works</AlertTitle>
-                    <AlertDescription className="space-y-2 mt-2">
+                    <AlertTitle>How to Deposit</AlertTitle>
+                    <AlertDescription className="space-y-3 mt-2">
+                      <div className="space-y-1">
+                        <p className="font-semibold text-sm">M-Pesa Paybill</p>
+                        <ul className="list-none space-y-1 text-sm">
+                          <li>• Paybill Number: <strong>247247</strong></li>
+                          <li>• Account Number: <strong>1650184905841</strong></li>
+                        </ul>
+                      </div>
                       <ol className="list-decimal list-inside space-y-1 text-sm">
-                        <li>Send money via M-Pesa to: <strong>0712345678</strong></li>
-                        <li>Note the M-Pesa receipt code (e.g., SH12ABC3XY)</li>
-                        <li>Fill the form below with amount and receipt code</li>
-                        <li>We'll verify and credit your wallet within 24 hours</li>
+                        <li>Go to M-Pesa → Lipa na M-Pesa → Pay Bill</li>
+                        <li>Enter Business Number: <strong>247247</strong></li>
+                        <li>Enter Account Number: <strong>1650184905841</strong></li>
+                        <li>Enter amount in KES (will be converted to USD)</li>
+                        <li>Complete payment and note the receipt code</li>
+                        <li>Submit the form below for verification</li>
                       </ol>
+                      <p className="text-xs italic">Deposits are verified and credited within 24 hours</p>
                     </AlertDescription>
                   </Alert>
 
                   <div className="space-y-2">
-                    <Label htmlFor="deposit-amount">Amount (KSh)</Label>
+                    <Label htmlFor="deposit-amount">Amount (KES via M-Pesa)</Label>
                     <Input
                       id="deposit-amount"
                       type="number"
-                      placeholder="Enter amount sent via M-Pesa"
+                      placeholder="Enter amount sent via M-Pesa in KES"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      min={100}
-                      step="10"
+                      min={700}
+                      step="50"
                       disabled={submittingDeposit}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Minimum: 100 KSh • Rate: 20 KSh = 1 BAK
+                      Minimum: 700 KES (~$5 USD) • Rate: $0.20 = 1 BAK • Exchange: ~140 KES = $1
                     </p>
                   </div>
 
@@ -318,12 +328,20 @@ const BuyCoins = () => {
                     </p>
                   </div>
 
-                  {parseFloat(depositAmount) >= 100 && (
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center">
+                  {parseFloat(depositAmount) >= 700 && (
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">KES Amount:</span>
+                        <span className="font-semibold">{parseFloat(depositAmount).toFixed(2)} KES</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">USD Equivalent:</span>
+                        <span className="font-semibold">${(parseFloat(depositAmount) / 140).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-sm font-medium">You will receive:</span>
                         <span className="text-xl font-bold text-primary">
-                          {(parseFloat(depositAmount) / 20).toFixed(2)} BAK
+                          {((parseFloat(depositAmount) / 140) / 0.20).toFixed(2)} BAK
                         </span>
                       </div>
                     </div>
@@ -332,7 +350,7 @@ const BuyCoins = () => {
                   <Button 
                     className="w-full" 
                     onClick={handleSubmitDeposit}
-                    disabled={parseFloat(depositAmount) < 100 || !receiptCode.trim() || submittingDeposit}
+                    disabled={parseFloat(depositAmount) < 700 || !receiptCode.trim() || submittingDeposit}
                   >
                     {submittingDeposit ? (
                       <>
@@ -363,27 +381,27 @@ const BuyCoins = () => {
               </Alert>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (KSh)</Label>
+                <Label htmlFor="amount">Amount (USD)</Label>
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="Enter amount in KSh"
+                  placeholder="Enter amount in USD"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  min={100}
-                  step="10"
+                  min={5}
+                  step="1"
                   disabled={true}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Minimum: 100 KSh
+                  Minimum: $5
                 </p>
               </div>
 
-              {kshAmount >= 100 && (
+              {usdAmount >= 5 && (
                 <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">You pay:</span>
-                    <span className="text-xl font-bold">{kshAmount} KSh</span>
+                    <span className="text-xl font-bold">${usdAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center pb-3 border-b">
                     <span className="text-sm font-medium">You receive:</span>
@@ -393,7 +411,7 @@ const BuyCoins = () => {
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                     <DollarSign className="h-3 w-3" />
-                    Exchange rate: 20 KSh = 1 BAK
+                    Exchange rate: $0.20 = 1 BAK
                   </div>
                 </div>
               )}
