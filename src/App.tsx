@@ -68,6 +68,7 @@ import BrandDashboard from "./pages/brand/BrandDashboard";
 import BrandDiscover from "./pages/brand/BrandDiscover";
 import Upgrade from "./pages/Upgrade";
 import Leaderboard from "./pages/Leaderboard";
+import Apply from "./pages/Apply";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
           <Route path="/competitions" element={<Competitions />} />
           <Route path="/competitions/active" element={<CompetitionsActive />} />
           <Route path="/competition/:id" element={<CompetitionDetails />} />
+          <Route path="/apply" element={<Apply />} />
           <Route path="/live-streams" element={<LiveStreams />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 

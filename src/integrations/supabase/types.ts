@@ -85,6 +85,99 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_applications: {
+        Row: {
+          age: number
+          city: string
+          created_at: string
+          demo_track_url: string | null
+          email: string
+          full_name: string
+          id: string
+          instagram: string | null
+          phone_number: string
+          portfolio_link: string | null
+          primary_genres: string[]
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          stage_name: string
+          status: string
+          tiktok: string | null
+          updated_at: string
+          user_id: string
+          what_makes_unique: string
+          why_join: string
+          years_experience: number | null
+          youtube: string | null
+        }
+        Insert: {
+          age: number
+          city: string
+          created_at?: string
+          demo_track_url?: string | null
+          email: string
+          full_name: string
+          id?: string
+          instagram?: string | null
+          phone_number: string
+          portfolio_link?: string | null
+          primary_genres: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stage_name: string
+          status?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id: string
+          what_makes_unique: string
+          why_join: string
+          years_experience?: number | null
+          youtube?: string | null
+        }
+        Update: {
+          age?: number
+          city?: string
+          created_at?: string
+          demo_track_url?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          instagram?: string | null
+          phone_number?: string
+          portfolio_link?: string | null
+          primary_genres?: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stage_name?: string
+          status?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string
+          what_makes_unique?: string
+          why_join?: string
+          years_experience?: number | null
+          youtube?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_badges: {
         Row: {
           badge_description: string | null
