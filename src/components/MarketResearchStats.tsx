@@ -3,24 +3,24 @@ import { Music, TrendingUp, Award } from "lucide-react";
 const marketStats = [
   { 
     icon: Music, 
-    value: "$1.7B", 
-    label: "African Music Market", 
+    value: "$110M", 
+    label: "Sub-Saharan Africa", 
     color: "from-primary to-primary-glow",
-    context: "Industry Size (2024)"
+    context: "Recorded Music Revenue (2024)"
   },
   { 
     icon: TrendingUp, 
-    value: "5M+", 
-    label: "Aspiring Artists", 
+    value: "22.6%", 
+    label: "Year-on-Year Growth", 
     color: "from-secondary to-secondary-glow",
-    context: "Across Africa"
+    context: "Fastest Growing Region Globally"
   },
   { 
     icon: Award, 
-    value: "92%", 
-    label: "Earn Under $100/mo", 
+    value: "$59M", 
+    label: "Spotify Payouts", 
     color: "from-accent to-accent-glow",
-    context: "Market Gap"
+    context: "Nigeria & South Africa (2024)"
   },
 ];
 
@@ -35,7 +35,7 @@ export const MarketResearchStats = () => {
           </span>
         </div>
         <p className="text-sm text-muted-foreground mt-3 max-w-2xl mx-auto">
-          Industry research data showing the massive opportunity in African music
+          Verified IFPI Global Music Report 2025 data showing Africa's explosive music growth
         </p>
       </div>
 

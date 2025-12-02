@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Users, Clock, DollarSign, Star, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
+import { FoundersSeason } from "@/components/FoundersSeason";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -90,6 +91,9 @@ const Competitions = () => {
           </div>
         </section>
       )}
+
+      {/* Founders Season Timeline */}
+      <FoundersSeason />
 
       {/* How Competitions Work */}
       <section className="py-20 px-4">
