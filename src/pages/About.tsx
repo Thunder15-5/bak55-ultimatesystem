@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
-import { Music, Target, Eye, Users } from "lucide-react";
+import { Music, Target, Eye, Users, TrendingUp, DollarSign } from "lucide-react";
 
 const About = () => {
   return (
@@ -55,6 +55,31 @@ const About = () => {
               </div>
             </Card>
 
+            {/* Market Context - VERIFIED IFPI DATA */}
+            <Card className="p-8 md:p-10 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/10">
+              <h3 className="text-2xl font-heading font-bold mb-6 text-center">
+                The <span className="text-gradient">Market Opportunity</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-4">
+                  <DollarSign className="w-10 h-10 text-primary mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gradient mb-1">$110M</div>
+                  <p className="text-sm text-muted-foreground">Sub-Saharan Africa Recorded Music Revenue (2024)</p>
+                </div>
+                <div className="text-center p-4">
+                  <TrendingUp className="w-10 h-10 text-secondary mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gradient-secondary mb-1">22.6%</div>
+                  <p className="text-sm text-muted-foreground">Year-on-Year Growth (Fastest Globally)</p>
+                </div>
+                <div className="text-center p-4">
+                  <Music className="w-10 h-10 text-accent mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-accent mb-1">$59M</div>
+                  <p className="text-sm text-muted-foreground">Spotify Payouts Nigeria & SA (2024)</p>
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-4">Source: IFPI Global Music Report 2025</p>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="p-8 md:p-10 bg-card/50 backdrop-blur-sm border-accent/10 hover:shadow-elegant transition-all group">
                 <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:scale-110 transition-transform">
@@ -62,7 +87,7 @@ const About = () => {
                 </div>
                 <h3 className="text-2xl font-heading font-bold mb-3">The Problem We Solve</h3>
                 <p className="text-muted-foreground">
-                  92% of African artists earn under $100/month despite industry growth. Standard label contracts claim 50-80% of rights. We're changing that with fair compensation and artist ownership.
+                  African artists face systemic challenges: unfair label contracts claiming 50-80% of rights, limited access to professional tools, and lack of direct monetization options. We're changing that with fair compensation and artist ownership.
                 </p>
               </Card>
 

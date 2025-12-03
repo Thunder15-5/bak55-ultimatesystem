@@ -144,6 +144,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const sendActivationEmail = async (userId: string, email: string, username: string) => {
+    try {
+      // Get the activation code from the profile
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("activation_code")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile?.activation_code) {
+        console.error("Could not fetch activation code:", profileError);
+        return;
+      }
+
+      // Send activation email via edge function
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: email,
+          subject: 'Your BAK55 Activation Code',
+          template: 'activation',
+          data: {
+            username: username,
+            activation_code: profile.activation_code
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Failed to send activation email:", error);
+      }
+    } catch (err) {
+      console.error("Error sending activation email:", err);
+    }
+  };
+
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     const redirectUrl = `${window.location.origin}/verify-email`;
     
@@ -167,6 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!error && data.user) {
+      // Send activation email directly after signup
+      await sendActivationEmail(data.user.id, email, userData.username);
+      
       toast.success("Account created! Please check your email for your activation code.");
       navigate("/verify-account");
     }
