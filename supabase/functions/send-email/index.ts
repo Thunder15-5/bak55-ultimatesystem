@@ -16,7 +16,7 @@ interface EmailRequest {
 const templates = {
   welcome: (data: any) => `
     <h1>Welcome to BAK55 Talent Platform! 🎵</h1>
-    <p>Hi ${data.username},</p>
+    <p>Hi ${data.username || 'there'},</p>
     <p>We're excited to have you join our community of talented African artists and music lovers.</p>
     <p>Get started by:</p>
     <ul>
@@ -30,7 +30,7 @@ const templates = {
   
   verification: (data: any) => `
     <h1>Verify Your Email Address</h1>
-    <p>Hi ${data.username},</p>
+    <p>Hi ${data.username || 'there'},</p>
     <p>Please verify your email address by clicking the link below:</p>
     <p><a href="${data.verification_url}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Email</a></p>
     <p>Or copy and paste this link into your browser:</p>
@@ -51,7 +51,7 @@ const templates = {
       <div style="background: linear-gradient(135deg, #D946EF 0%, #9333EA 100%); padding: 30px; text-align: center; border-radius: 12px; margin: 30px 0;">
         <div style="background: white; padding: 20px; border-radius: 8px; display: inline-block;">
           <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Your Activation Code</p>
-          <p style="margin: 0; font-size: 48px; font-weight: bold; letter-spacing: 12px; color: #D946EF; font-family: 'Courier New', monospace;">${data.activation_code}</p>
+          <p style="margin: 0; font-size: 48px; font-weight: bold; letter-spacing: 12px; color: #D946EF; font-family: 'Courier New', monospace;">${data.activation_code || '------'}</p>
         </div>
       </div>
       
@@ -80,14 +80,14 @@ const templates = {
   
   competition_submission: (data: any) => `
     <h1>Competition Submission Received! 🎯</h1>
-    <p>Hi ${data.artist_name},</p>
-    <p>Your submission "<strong>${data.track_title}</strong>" has been successfully submitted to the competition:</p>
-    <h2>${data.competition_title}</h2>
+    <p>Hi ${data.artist_name || 'Artist'},</p>
+    <p>Your submission "<strong>${data.track_title || 'Your Track'}</strong>" has been successfully submitted to the competition:</p>
+    <h2>${data.competition_title || 'Competition'}</h2>
     <p><strong>What happens next:</strong></p>
     <ul>
       <li>AI analysis in progress (will be completed within 24 hours)</li>
-      <li>Voting opens: ${data.voting_start_date}</li>
-      <li>Voting closes: ${data.voting_end_date}</li>
+      <li>Voting opens: ${data.voting_start_date || 'TBA'}</li>
+      <li>Voting closes: ${data.voting_end_date || 'TBA'}</li>
       <li>Winners announced: Shortly after voting ends</li>
     </ul>
     <p>Good luck! 🍀</p>
@@ -96,29 +96,29 @@ const templates = {
   
   competition_winner: (data: any) => `
     <h1>🎉 Congratulations! You Won!</h1>
-    <p>Hi ${data.artist_name},</p>
-    <p>We're thrilled to announce that your submission "<strong>${data.track_title}</strong>" has won ${data.position} place in:</p>
-    <h2>${data.competition_title}</h2>
+    <p>Hi ${data.artist_name || 'Artist'},</p>
+    <p>We're thrilled to announce that your submission "<strong>${data.track_title || 'Your Track'}</strong>" has won ${data.position || ''} place in:</p>
+    <h2>${data.competition_title || 'Competition'}</h2>
     <p><strong>Prize Details:</strong></p>
     <ul>
-      <li>Position: ${data.position}</li>
-      <li>Prize: ${data.prize_amount} BAKCoins</li>
-      <li>Final Score: ${data.final_score}/100</li>
+      <li>Position: ${data.position || 'N/A'}</li>
+      <li>Prize: ${data.prize_amount || 0} BAKCoins</li>
+      <li>Final Score: ${data.final_score || 0}/100</li>
     </ul>
     <p>Your prize has been automatically credited to your wallet!</p>
-    <p><a href="${data.wallet_url}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Your Wallet</a></p>
+    <p><a href="${data.wallet_url || '#'}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Your Wallet</a></p>
     <p>Congratulations again! 🏆</p>
     <p>Best regards,<br>The BAK55 Team</p>
   `,
   
   withdrawal_request: (data: any) => `
     <h1>Withdrawal Request Received 💰</h1>
-    <p>Hi ${data.username},</p>
+    <p>Hi ${data.username || 'User'},</p>
     <p>We've received your withdrawal request:</p>
     <ul>
-      <li>Amount: ${data.amount} BAKCoins (${data.ksh_amount} KSh)</li>
-      <li>Phone Number: ${data.phone_number}</li>
-      <li>Reference: ${data.reference}</li>
+      <li>Amount: ${data.amount || 0} BAKCoins (${data.ksh_amount || 0} KSh)</li>
+      <li>Phone Number: ${data.phone_number || 'N/A'}</li>
+      <li>Reference: ${data.reference || 'N/A'}</li>
     </ul>
     <p><strong>Processing Time:</strong> Usually within 2 hours</p>
     <p>You'll receive another email once the withdrawal is processed.</p>
@@ -127,12 +127,12 @@ const templates = {
   
   withdrawal_complete: (data: any) => `
     <h1>Withdrawal Processed Successfully ✅</h1>
-    <p>Hi ${data.username},</p>
+    <p>Hi ${data.username || 'User'},</p>
     <p>Your withdrawal has been successfully processed!</p>
     <ul>
-      <li>Amount: ${data.amount} BAKCoins (${data.ksh_amount} KSh)</li>
-      <li>Phone Number: ${data.phone_number}</li>
-      <li>Transaction ID: ${data.transaction_id}</li>
+      <li>Amount: ${data.amount || 0} BAKCoins (${data.ksh_amount || 0} KSh)</li>
+      <li>Phone Number: ${data.phone_number || 'N/A'}</li>
+      <li>Transaction ID: ${data.transaction_id || 'N/A'}</li>
       <li>M-PESA Receipt: ${data.receipt_number || 'Pending'}</li>
     </ul>
     <p>The funds should appear in your mobile money account within a few minutes.</p>
@@ -141,51 +141,34 @@ const templates = {
   
   tip_received: (data: any) => `
     <h1>You Received a Tip! 💝</h1>
-    <p>Hi ${data.artist_name},</p>
-    <p>${data.tipper_name} sent you a tip of <strong>${data.amount} BAKCoins</strong>!</p>
+    <p>Hi ${data.artist_name || 'Artist'},</p>
+    <p>${data.tipper_name || 'A fan'} sent you a tip of <strong>${data.amount || 0} BAKCoins</strong>!</p>
     ${data.message ? `<p><em>"${data.message}"</em></p>` : ''}
     ${data.track_title ? `<p>For your track: <strong>${data.track_title}</strong></p>` : ''}
-    <p>Your new wallet balance: ${data.new_balance} BAKCoins</p>
-    <p><a href="${data.track_url}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Track</a></p>
+    <p>Your new wallet balance: ${data.new_balance || 0} BAKCoins</p>
+    <p><a href="${data.track_url || '#'}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Track</a></p>
     <p>Best regards,<br>The BAK55 Team</p>
   `,
   
   contact_form: (data: any) => `
     <h1>New Contact Form Submission 📧</h1>
-    <p><strong>From:</strong> ${data.name} (${data.email})</p>
-    <p><strong>Subject:</strong> ${data.subject}</p>
+    <p><strong>From:</strong> ${data.name || 'Unknown'} (${data.email || 'No email'})</p>
+    <p><strong>Subject:</strong> ${data.subject || 'No subject'}</p>
     <p><strong>Message:</strong></p>
-    <p>${data.message}</p>
+    <p>${data.message || 'No message'}</p>
     <hr />
     <p><small>This email was sent from the BAK55 Contact Form</small></p>
   `,
 };
 
-// Determine sender and routing based on email template
 const getEmailRouting = (template: string) => {
   switch (template) {
-    case 'welcome':
-    case 'verification':
-    case 'activation':
-    case 'competition_submission':
-    case 'competition_winner':
-      return {
-        from: 'noreply@bak55talent.co.ke',
-        cc: [] as string[],
-        bcc: [] as string[]
-      };
     case 'withdrawal_request':
     case 'withdrawal_complete':
       return {
         from: 'finance@bak55talent.co.ke',
         cc: [] as string[],
         bcc: ['finance@bak55talent.co.ke']
-      };
-    case 'contact_form':
-      return {
-        from: 'noreply@bak55talent.co.ke',
-        cc: [] as string[],
-        bcc: [] as string[]
       };
     default:
       return {
@@ -196,33 +179,46 @@ const getEmailRouting = (template: string) => {
   }
 };
 
-async function sendEmailViaSMTP(to: string, subject: string, html: string, template: string) {
+async function sendEmailViaSMTP(to: string, subject: string, html: string, template: string): Promise<{ success: boolean; id?: string; error?: string }> {
   const SMTP_HOST = Deno.env.get("SMTP_HOST");
   const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
   const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME");
   const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
 
+  console.log('SMTP Configuration check:', {
+    hasHost: !!SMTP_HOST,
+    port: SMTP_PORT,
+    hasUsername: !!SMTP_USERNAME,
+    hasPassword: !!SMTP_PASSWORD
+  });
+
   if (!SMTP_HOST || !SMTP_USERNAME || !SMTP_PASSWORD) {
-    throw new Error("SMTP credentials not configured");
+    const missing = [];
+    if (!SMTP_HOST) missing.push('SMTP_HOST');
+    if (!SMTP_USERNAME) missing.push('SMTP_USERNAME');
+    if (!SMTP_PASSWORD) missing.push('SMTP_PASSWORD');
+    return { 
+      success: false, 
+      error: `Missing SMTP credentials: ${missing.join(', ')}` 
+    };
   }
 
   const routing = getEmailRouting(template);
   
-  console.log('Sending email via SMTP:', {
+  console.log('Attempting to send email:', {
     host: SMTP_HOST,
     port: SMTP_PORT,
     from: routing.from,
     to,
-    cc: routing.cc,
-    bcc: routing.bcc,
-    subject
+    subject,
+    template
   });
 
   const client = new SmtpClient();
   let isConnected = false;
 
   try {
-    // Set a connection timeout
+    // Connect with timeout
     const connectPromise = client.connectTLS({
       hostname: SMTP_HOST,
       port: SMTP_PORT,
@@ -230,16 +226,15 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string, templ
       password: SMTP_PASSWORD,
     });
 
-    // Add 30-second timeout for connection
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('SMTP connection timeout after 30s')), 30000)
     );
 
     await Promise.race([connectPromise, timeoutPromise]);
     isConnected = true;
-    console.log('SMTP connection established successfully');
+    console.log('SMTP connection established');
 
-    // Send to primary recipient
+    // Send email
     await client.send({
       from: routing.from,
       to: to,
@@ -248,56 +243,37 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string, templ
       html: html,
     });
 
-    // Send copies to CC recipients
-    if (routing.cc && routing.cc.length > 0) {
-      for (const ccEmail of routing.cc) {
-        await client.send({
-          from: routing.from,
-          to: ccEmail,
-          subject: `[CC] ${subject}`,
-          content: html,
-          html: html,
-        });
-      }
-    }
+    console.log('Email sent successfully to:', to);
 
-    // Send copies to BCC recipients
-    if (routing.bcc && routing.bcc.length > 0) {
-      for (const bccEmail of routing.bcc) {
-        await client.send({
-          from: routing.from,
-          to: bccEmail,
-          subject: `[BCC] ${subject}`,
-          content: html,
-          html: html,
-        });
-      }
-    }
-
+    // Close connection
     if (isConnected) {
-      await client.close();
+      try {
+        await client.close();
+      } catch (closeErr) {
+        console.warn('Error closing SMTP connection:', closeErr);
+      }
     }
     
-    console.log("Email sent successfully via SMTP");
     return { success: true, id: `smtp-${Date.now()}` };
   } catch (error: any) {
-    console.error("SMTP error details:", {
+    console.error("SMTP error:", {
       message: error?.message,
       name: error?.name,
-      code: error?.code,
-      host: SMTP_HOST,
-      port: SMTP_PORT
+      code: error?.code
     });
     
     if (isConnected) {
       try {
         await client.close();
       } catch (closeError) {
-        console.error("Error closing SMTP connection:", closeError);
+        console.warn("Error closing SMTP connection:", closeError);
       }
     }
     
-    throw new Error(`Failed to send email via SMTP: ${error?.message || 'Unknown error'}. Please verify SMTP server is accessible and credentials are correct.`);
+    return { 
+      success: false, 
+      error: error?.message || 'Unknown SMTP error' 
+    };
   }
 }
 
@@ -307,36 +283,65 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, template, data }: EmailRequest = await req.json();
+    const body = await req.json();
+    const { to, subject, template, data }: EmailRequest = body;
 
-    if (!to || !subject || !template) {
-      throw new Error("Missing required fields: to, subject, template");
+    console.log('Email request received:', { to, subject, template, hasData: !!data });
+
+    // Validate required fields
+    if (!to) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing 'to' field" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!subject) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing 'subject' field" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!template) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing 'template' field" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (!templates[template]) {
-      throw new Error(`Invalid template: ${template}`);
+      return new Response(
+        JSON.stringify({ success: false, error: `Invalid template: ${template}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
+    // Generate HTML from template
     const html = templates[template](data || {});
-    const emailResponse = await sendEmailViaSMTP(to, subject, html, template);
+    
+    // Try to send email
+    const result = await sendEmailViaSMTP(to, subject, html, template);
 
-    console.log("Email sent successfully:", emailResponse);
-
-    return new Response(
-      JSON.stringify({ success: true, data: emailResponse }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    if (result.success) {
+      console.log("Email sent successfully:", result.id);
+      return new Response(
+        JSON.stringify({ success: true, data: { id: result.id } }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } else {
+      // Email failed but we return 200 with success: false to not break the signup flow
+      console.error("Email send failed:", result.error);
+      return new Response(
+        JSON.stringify({ success: false, error: result.error, recoverable: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
   } catch (error: any) {
-    console.error("Error sending email:", error);
+    console.error("Error in send-email function:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: false, error: error.message || "Unknown error", recoverable: true }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

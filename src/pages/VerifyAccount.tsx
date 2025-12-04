@@ -49,7 +49,10 @@ export default function VerifyAccount() {
   };
 
   const handleResendCode = async () => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      toast.error("Please log in first");
+      return;
+    }
 
     setResending(true);
 
@@ -58,16 +61,26 @@ export default function VerifyAccount() {
         body: {}
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Resend error:', error);
+        toast.error("Failed to resend code. Please try again.");
+        return;
+      }
 
       if (data.success) {
-        toast.success("Activation code resent! Check your email.");
+        if (data.code) {
+          // Email failed but we got the code directly
+          toast.success(`Your activation code is: ${data.code}`);
+          setCode(data.code);
+        } else {
+          toast.success(data.message || "Activation code sent! Check your email.");
+        }
       } else {
         toast.error(data.error || "Failed to resend code");
       }
     } catch (error: any) {
       console.error('Resend error:', error);
-      toast.error(error.message || "Failed to resend code");
+      toast.error("Failed to resend code. Please try again.");
     } finally {
       setResending(false);
     }
