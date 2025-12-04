@@ -36,70 +36,107 @@ export default function Signup() {
     }
   }, [searchParams]);
 
+  const getErrorMessage = (error: any): string => {
+    const msg = error?.message?.toLowerCase() || '';
+    
+    if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('duplicate')) {
+      return 'This email is already registered. Please login instead.';
+    }
+    if (msg.includes('password') && msg.includes('weak')) {
+      return 'Password is too weak. Please use at least 6 characters.';
+    }
+    if (msg.includes('invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (msg.includes('rate limit') || msg.includes('too many')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    if (msg.includes('database') || msg.includes('saving')) {
+      return 'We encountered a temporary issue. Please try again.';
+    }
+    
+    return error?.message || 'Failed to create account. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const userData = {
-      username,
-      role,
-      displayName: displayName || username,
-      bio,
-      location,
-      ...(role === "artist" && {
-        stageName: stageName || username,
-        genres: genres ? genres.split(",").map((g) => g.trim()) : [],
-      }),
-      ...(role === "brand" && {
-        companyName: companyName || username,
-        industry,
-      }),
-    };
-
-    const { error } = await signUp(email, password, userData);
-
-    if (error) {
-      toast.error(error.message || "Failed to create account");
+    // Validate inputs
+    if (!email || !password || !username) {
+      toast.error("Please fill in all required fields");
       setLoading(false);
       return;
     }
 
-    // Process referral after successful signup
-    if (referralCode) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Find referrer by code
-          const { data: codeData } = await supabase
-            .from("referral_codes")
-            .select("user_id")
-            .eq("code", referralCode)
-            .single();
-
-          if (codeData) {
-            // Create referral record
-            await supabase.from("referrals").insert({
-              referrer_id: codeData.user_id,
-              referred_id: user.id,
-              referral_code: referralCode,
-            });
-
-            // Update uses count
-            await supabase.rpc("transfer_funds", {
-              sender_id: '00000000-0000-0000-0000-000000000000',
-              recipient_id: codeData.user_id,
-              transfer_amount: 50
-            });
-
-            toast.success("Welcome! Your referrer earned 50 BAKCoins! 🎉");
-          }
-        }
-      } catch (err) {
-        console.error('Failed to process referral:', err);
-      }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    const userData = {
+      username: username.trim(),
+      role,
+      displayName: (displayName || username).trim(),
+      bio: bio.trim() || undefined,
+      location: location.trim() || undefined,
+      ...(role === "artist" && {
+        stageName: (stageName || username).trim(),
+        genres: genres ? genres.split(",").map((g) => g.trim()).filter(Boolean) : [],
+      }),
+      ...(role === "brand" && {
+        companyName: (companyName || username).trim(),
+        industry: industry.trim() || undefined,
+      }),
+    };
+
+    try {
+      const { error } = await signUp(email.trim(), password, userData);
+
+      if (error) {
+        toast.error(getErrorMessage(error));
+        setLoading(false);
+        return;
+      }
+
+      // Process referral after successful signup
+      if (referralCode) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: codeData } = await supabase
+              .from("referral_codes")
+              .select("user_id")
+              .eq("code", referralCode)
+              .single();
+
+            if (codeData) {
+              await supabase.from("referrals").insert({
+                referrer_id: codeData.user_id,
+                referred_id: user.id,
+                referral_code: referralCode,
+              });
+
+              await supabase.rpc("transfer_funds", {
+                sender_id: '00000000-0000-0000-0000-000000000000',
+                recipient_id: codeData.user_id,
+                transfer_amount: 50
+              });
+
+              toast.success("Welcome! Your referrer earned 50 BAKCoins! 🎉");
+            }
+          }
+        } catch (err) {
+          console.error('Failed to process referral:', err);
+        }
+      }
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const roleCards = [
