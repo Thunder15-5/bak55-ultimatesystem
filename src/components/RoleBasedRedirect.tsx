@@ -8,24 +8,37 @@ interface Props {
 }
 
 export function RoleBasedRedirect({ to = 'dashboard' }: Props) {
-  const { userRole, loading } = useAuth();
+  const { userRole, loading, user } = useAuth();
   const navigate = useNavigate();
   const params = useParams();
 
   useEffect(() => {
-    if (!loading && userRole) {
-      // Replace :id params if present
+    // Wait for auth to load
+    if (loading) return;
+    
+    // If not logged in, redirect to login
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    
+    // If role is loaded, redirect to role-specific path
+    if (userRole) {
       let path = to;
       Object.entries(params).forEach(([key, value]) => {
         path = path.replace(`:${key}`, value || '');
       });
       
-      navigate(`/${userRole}/${path}`, { replace: true });
+      if (userRole === 'admin' && to === 'dashboard') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(`/${userRole}/${path}`, { replace: true });
+      }
     }
-  }, [userRole, loading, to, navigate, params]);
+  }, [userRole, loading, user, to, navigate, params]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Loader2 className="h-12 w-12 animate-spin text-primary" />
     </div>
   );
