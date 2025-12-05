@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole, requiredRoles }: ProtectedRouteProps) {
-  const { user, loading, userRole, isActivated } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const location = useLocation();
   const [hasShownToast, setHasShownToast] = useState(false);
 
@@ -22,22 +23,27 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
     }
   }, [loading, user, hasShownToast, location.pathname]);
 
-  // Show loading spinner only while checking auth, not if user exists
-  if (loading && !user) {
+  // Show loading spinner while checking auth
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
+  // Not authenticated - redirect to login
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if account is activated (skip for verify-account page)
-  if (!isActivated && !location.pathname.includes('/verify-account')) {
-    return <Navigate to="/verify-account" replace />;
+  // User is authenticated but role not loaded yet - show loading
+  if (user && userRole === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
 
   // Check if user has required role(s)
@@ -49,7 +55,8 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
       }
       
       // Redirect to role-specific dashboard
-      return <Navigate to={userRole ? `/${userRole}/dashboard` : "/dashboard"} replace />;
+      const dashboardPath = userRole === 'admin' ? '/admin' : `/${userRole}/dashboard`;
+      return <Navigate to={dashboardPath} replace />;
     }
   } else if (requiredRole && userRole !== requiredRole) {
     if (!hasShownToast) {
@@ -57,7 +64,8 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
       setHasShownToast(true);
     }
     
-    return <Navigate to={userRole ? `/${userRole}/dashboard` : "/dashboard"} replace />;
+    const dashboardPath = userRole === 'admin' ? '/admin' : `/${userRole}/dashboard`;
+    return <Navigate to={dashboardPath} replace />;
   }
 
   return <>{children}</>;
