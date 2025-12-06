@@ -64,6 +64,7 @@ export default function MusicCatalog() {
           *,
           profiles:artist_id (username, avatar_url)
         `)
+        .eq("moderation_status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
