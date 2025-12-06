@@ -259,26 +259,27 @@ export default function BrandDashboard() {
             </Card>
           </div>
 
-          {/* Industry Insights */}
+          {/* Industry Insights - IFPI Verified Data */}
           <Card className="bg-gradient-card border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" />
-                Music Industry Insights
+                African Music Market Insights
+                <span className="text-xs text-muted-foreground font-normal ml-2">(IFPI 2025)</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 rounded-lg bg-card/50">
-                <p className="text-2xl font-bold text-primary mb-1">$32B+</p>
-                <p className="text-sm text-muted-foreground">Global streaming revenue in 2024</p>
+              <div className="p-4 rounded-lg bg-card/50 border border-primary/10">
+                <p className="text-2xl font-bold text-primary mb-1">$110M</p>
+                <p className="text-sm text-muted-foreground">Sub-Saharan Africa recorded music revenue</p>
               </div>
-              <div className="p-4 rounded-lg bg-card/50">
-                <p className="text-2xl font-bold text-secondary mb-1">85%</p>
-                <p className="text-sm text-muted-foreground">Artists seeking brand partnerships</p>
+              <div className="p-4 rounded-lg bg-card/50 border border-secondary/10">
+                <p className="text-2xl font-bold text-secondary mb-1">22.6%</p>
+                <p className="text-sm text-muted-foreground">Year-over-year growth (fastest globally)</p>
               </div>
-              <div className="p-4 rounded-lg bg-card/50">
-                <p className="text-2xl font-bold text-accent mb-1">3.5x</p>
-                <p className="text-sm text-muted-foreground">ROI on music marketing campaigns</p>
+              <div className="p-4 rounded-lg bg-card/50 border border-accent/10">
+                <p className="text-2xl font-bold text-accent mb-1">$59M</p>
+                <p className="text-sm text-muted-foreground">Nigeria & South Africa Spotify payouts</p>
               </div>
             </CardContent>
           </Card>

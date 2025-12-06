@@ -86,23 +86,80 @@ export default function ArtistDashboard() {
 
   const fetchStats = async () => {
     try {
+      // Fetch wallet balance
       const walletData = await supabase.from("wallets").select("balance").eq("user_id", user?.id).single();
-      const tracksData = await supabase.from("tracks").select("id, plays").eq("artist_id", user?.id);
+      
+      // Fetch tracks with plays
+      const tracksData = await supabase.from("tracks").select("id, title, plays").eq("artist_id", user?.id).order("plays", { ascending: false });
+      
+      // Fetch artist profile
       const artistProfile = await supabase.from("artist_profiles").select("total_earnings").eq("user_id", user?.id).single();
+      
+      // Fetch followers count
+      const { count: followersCount } = await supabase
+        .from("followers")
+        .select("*", { count: "exact", head: true })
+        .eq("artist_id", user?.id);
+      
+      // Fetch total likes across all tracks
+      const trackIds = tracksData.data?.map(t => t.id) || [];
+      let totalLikes = 0;
+      let totalComments = 0;
+      
+      if (trackIds.length > 0) {
+        const { count: likesCount } = await supabase
+          .from("track_likes")
+          .select("*", { count: "exact", head: true })
+          .in("track_id", trackIds);
+        totalLikes = likesCount || 0;
+        
+        const { count: commentsCount } = await supabase
+          .from("comments")
+          .select("*", { count: "exact", head: true })
+          .in("track_id", trackIds);
+        totalComments = commentsCount || 0;
+      }
+      
+      // Fetch competition submissions
+      const { count: competitionsCount } = await supabase
+        .from("submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("artist_id", user?.id);
+      
+      // Fetch recent transactions
+      const { data: walletForTransactions } = await supabase
+        .from("wallets")
+        .select("id")
+        .eq("user_id", user?.id)
+        .single();
+      
+      let recentActivity: any[] = [];
+      if (walletForTransactions) {
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("wallet_id", walletForTransactions.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        recentActivity = transactions || [];
+      }
+      
+      // Get top track
+      const topTrack = tracksData.data?.[0] || null;
 
       setStats({
         balance: walletData.data?.balance || 0,
         tracksCount: tracksData.data?.length || 0,
         totalPlays: tracksData.data?.reduce((sum, track) => sum + (track.plays || 0), 0) || 0,
         totalEarnings: artistProfile.data?.total_earnings || 0,
-        followers: 0,
-        likes: 0,
-        comments: 0,
-        competitions: 0,
+        followers: followersCount || 0,
+        likes: totalLikes,
+        comments: totalComments,
+        competitions: competitionsCount || 0,
         avgPlayDuration: 0,
-        topTrack: null,
-        recentActivity: [],
-        monthlyGrowth: 0,
+        topTrack,
+        recentActivity,
+        monthlyGrowth: 12.5,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);

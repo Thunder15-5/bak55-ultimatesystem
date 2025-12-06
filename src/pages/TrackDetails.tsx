@@ -95,6 +95,16 @@ export default function TrackDetails() {
         .single();
 
       if (error) throw error;
+      
+      // Only show approved tracks to non-owners and non-admins
+      if (data.moderation_status !== 'approved' && 
+          data.artist_id !== user?.id && 
+          userRole !== 'admin') {
+        toast.error("This track is not available");
+        navigate("/catalog");
+        return;
+      }
+      
       setTrack(data);
     } catch (error: any) {
       toast.error("Failed to load track");
