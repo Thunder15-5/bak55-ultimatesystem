@@ -3,8 +3,13 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, Image, Music } from "lucide-react";
+import { toast } from "sonner";
 
 const PressKit = () => {
+  const handleDownload = (assetName: string) => {
+    toast.info(`${assetName} download will be available soon. Contact press@bak55talent.co.ke for immediate access.`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -28,7 +33,7 @@ const PressKit = () => {
                 <strong className="text-foreground">BAK55</strong> is building the essential infrastructure for African music's digital future—an AI-powered talent ecosystem that discovers, develops, and monetizes artists through a proprietary digital economy.
               </p>
               <p>
-                We solve the fundamental brokenness in the $2 billion African music industry where artists create value but remain systematically exploited. Our platform combines streaming, competitions, live events, and AI tools in a circular economy powered by BAKCoins.
+                We solve the fundamental brokenness in the African music industry where artists create value but remain systematically exploited. Our platform combines streaming, competitions, live events, and AI tools in a circular economy powered by BAKCoins.
               </p>
               <p>
                 Starting with Kenya, we're scaling across East Africa using a hybrid digital-physical strategy, providing African artists with fair compensation, professional tools, and sustainable career pathways.
@@ -50,11 +55,11 @@ const PressKit = () => {
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Market Size</div>
-                <div className="text-xl font-bold">$2.1B African Music</div>
+                <div className="text-xl font-bold">$110M Sub-Saharan Africa</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Target Artists</div>
-                <div className="text-xl font-bold">5M+ Across Africa</div>
+                <div className="text-sm text-muted-foreground mb-1">Market Growth</div>
+                <div className="text-xl font-bold">22.6% YoY (Fastest Globally)</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Launch Date</div>
@@ -82,7 +87,7 @@ const PressKit = () => {
                     <p className="text-sm text-muted-foreground">PDF, 2 pages</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleDownload("Company Fact Sheet")}>
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
@@ -100,7 +105,7 @@ const PressKit = () => {
                     <p className="text-sm text-muted-foreground">PNG, SVG - Multiple variations</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleDownload("Logo Pack")}>
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
@@ -118,7 +123,7 @@ const PressKit = () => {
                     <p className="text-sm text-muted-foreground">High-resolution JPG</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleDownload("Founder Photos")}>
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
@@ -130,7 +135,7 @@ const PressKit = () => {
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10 mb-12">
             <h2 className="text-3xl font-bold mb-6">Boilerplate</h2>
             <p className="text-muted-foreground italic leading-relaxed">
-              BAK55 is an AI-powered talent economy for African music that combines streaming, competitions, and digital currency to create fair pathways for artist success. Founded in 2025 and launching in Kenya, BAK55 addresses the systematic exploitation in the $2.1 billion African music industry by providing transparent earnings, professional AI tools, and community-driven discovery. The platform's BAKCoins economy enables artists to earn through streaming, competitions, tips, and platform contributions—all convertible to cash. With a vision to scale across Africa, BAK55 is building the essential infrastructure for the next generation of African artists.
+              BAK55 is an AI-powered talent economy for African music that combines streaming, competitions, and digital currency to create fair pathways for artist success. Founded in 2025 and launching in Kenya, BAK55 addresses the systematic exploitation in the $110 million Sub-Saharan African recorded music industry—the fastest-growing market globally at 22.6% YoY. The platform provides transparent earnings, professional AI tools, and community-driven discovery. The BAKCoins economy enables artists to earn through streaming, competitions, tips, and platform contributions—all convertible to cash. With a vision to scale across Africa, BAK55 is building the essential infrastructure for the next generation of African artists.
             </p>
           </Card>
 

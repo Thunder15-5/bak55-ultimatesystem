@@ -40,6 +40,7 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Legal from "./pages/Legal";
+import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 import BuyCoins from "./pages/BuyCoins";
 import PaymentCallback from "./pages/PaymentCallback";
@@ -209,6 +210,8 @@ const App = () => (
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <PersistentMusicPlayer />

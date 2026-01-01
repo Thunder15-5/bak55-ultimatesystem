@@ -31,7 +31,7 @@ const BAKCoinsPage = () => {
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-primary/20">
             <span className="text-2xl font-bold">1 BAKCoin</span>
             <ArrowRightLeft className="w-5 h-5 text-muted-foreground" />
-            <span className="text-2xl font-bold text-gradient">KSh 20</span>
+            <span className="text-2xl font-bold text-gradient">$0.20 USD</span>
           </div>
         </div>
       </section>

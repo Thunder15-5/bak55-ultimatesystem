@@ -56,7 +56,7 @@ const Terms = () => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">BAKCoins Economy</h2>
                 <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                  <li>BAKCoins are utility tokens for platform services (1 BAKCoin = KSh 20)</li>
+                  <li>BAKCoins are utility tokens for platform services (1 BAKCoin = $0.20 USD)</li>
                   <li>They are not investments and have no promise of appreciation</li>
                   <li>Withdrawal fees (15% standard) apply when converting to cash</li>
                   <li>BAK55 reserves the right to adjust coin value with notice</li>

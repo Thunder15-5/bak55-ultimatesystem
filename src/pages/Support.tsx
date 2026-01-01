@@ -4,10 +4,46 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { HelpCircle, Mail, MessageSquare, Book } from "lucide-react";
+import { HelpCircle, Mail, MessageSquare, Book, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+const faqs = [
+  {
+    question: "How do I earn BAKCoins?",
+    answer: "You can earn BAKCoins through competition prizes, fan tips, platform contributions (creating playlists, referring users), and engagement rewards. Artists earn the most through competitions and direct fan support."
+  },
+  {
+    question: "How do I withdraw my earnings?",
+    answer: "Go to your Wallet, click 'Withdraw', and enter the amount you want to convert to cash. We process withdrawals to M-Pesa within 24 hours. A 15% fee applies (10% for high-volume earners)."
+  },
+  {
+    question: "What is the exchange rate for BAKCoins?",
+    answer: "1 BAKCoin = $0.20 USD. This rate is fixed and transparent across the platform."
+  },
+  {
+    question: "How do competitions work?",
+    answer: "Artists submit tracks to active competitions. During the voting phase, fans vote for their favorites. Winners are determined by 70% fan votes + 30% AI scoring. Prizes are awarded in BAKCoins or cash."
+  },
+  {
+    question: "How do I become an artist on BAK55?",
+    answer: "Click 'Join as Artist' and complete your profile with stage name, genres, and bio. You can then upload tracks (1 free, unlimited with subscription) and enter competitions."
+  },
+  {
+    question: "Is my music safe on BAK55?",
+    answer: "Yes! You retain full ownership of all content you upload. We only obtain a license to host, stream, and promote your music on our platform. You can remove your content at any time."
+  },
+  {
+    question: "What are the subscription benefits?",
+    answer: "Subscribed artists get unlimited track uploads, priority support, advanced analytics, and can enter unlimited competitions simultaneously. Free users are limited to 1 track and 1 active competition."
+  },
+  {
+    question: "How do fan tips work?",
+    answer: "Fans can send tips directly to artists they love. 90% goes to the artist, 10% platform fee. Tips are added to your BAKCoin balance and can be withdrawn anytime."
+  }
+];
 
 const Support = () => {
   const [name, setName] = useState("");
@@ -76,7 +112,9 @@ const Support = () => {
               <p className="text-muted-foreground text-sm mb-4">
                 Quick answers to common questions
               </p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
+              <Button variant="outline" size="sm" onClick={() => document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                View FAQ
+              </Button>
             </Card>
 
             <Card className="p-8 text-center bg-card/50 backdrop-blur-sm border-secondary/10 hover:border-secondary/30 transition-all">
@@ -87,7 +125,7 @@ const Support = () => {
               <p className="text-muted-foreground text-sm mb-4">
                 Detailed guides and tutorials
               </p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
+              <Button variant="outline" size="sm" disabled>Coming Soon</Button>
             </Card>
 
             <Card className="p-8 text-center bg-card/50 backdrop-blur-sm border-accent/10 hover:border-accent/30 transition-all">
@@ -98,9 +136,26 @@ const Support = () => {
               <p className="text-muted-foreground text-sm mb-4">
                 Real-time support during business hours
               </p>
-              <Button variant="outline" size="sm">Coming Soon</Button>
+              <Button variant="outline" size="sm" disabled>Coming Soon</Button>
             </Card>
           </div>
+
+          {/* FAQ Section */}
+          <Card id="faq-section" className="p-8 md:p-12 bg-card/50 backdrop-blur-sm border-primary/10 mb-16">
+            <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {faqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left font-semibold hover:text-primary">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Card>
 
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10">
             <div className="max-w-2xl mx-auto">

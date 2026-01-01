@@ -9,7 +9,7 @@ const earningMethods = [
   {
     icon: Trophy,
     title: "Competition Prizes",
-    amount: "Up to KSh 50K+",
+    amount: "Up to $385+",
     description: "Win cash and BAKCoins in bi-weekly micro competitions and quarterly championships.",
     color: "from-secondary to-secondary-glow",
   },
@@ -85,7 +85,7 @@ const HowToEarn = () => {
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-gradient-secondary">2</div>
                   <div className="text-sm font-semibold">Request Withdrawal</div>
-                  <p className="text-xs text-muted-foreground">Convert BAKCoins to cash (1 coin = KSh 20)</p>
+                  <p className="text-xs text-muted-foreground">Convert BAKCoins to cash (1 coin = $0.20 USD)</p>
                 </div>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-accent">3</div>
@@ -112,7 +112,7 @@ const HowToEarn = () => {
                 <DollarSign className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Emerging Artist</h3>
                 <p className="text-muted-foreground text-sm mb-4">1 competition/month, tips</p>
-                <div className="text-3xl font-bold text-gradient-primary">KSh 5-10K</div>
+                <div className="text-3xl font-bold text-gradient-primary">$40-80</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>
               
@@ -120,7 +120,7 @@ const HowToEarn = () => {
                 <DollarSign className="w-12 h-12 text-secondary mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Growing Artist</h3>
                 <p className="text-muted-foreground text-sm mb-4">Active fan base, regular wins</p>
-                <div className="text-3xl font-bold text-gradient-secondary">KSh 30-50K</div>
+                <div className="text-3xl font-bold text-gradient-secondary">$230-385</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>
               
@@ -128,7 +128,7 @@ const HowToEarn = () => {
                 <DollarSign className="w-12 h-12 text-accent mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Established Artist</h3>
                 <p className="text-muted-foreground text-sm mb-4">Multiple competitions, large fanbase</p>
-                <div className="text-3xl font-bold text-accent">KSh 100K+</div>
+                <div className="text-3xl font-bold text-accent">$770+</div>
                 <p className="text-xs text-muted-foreground mt-2">per month</p>
               </Card>
             </div>
