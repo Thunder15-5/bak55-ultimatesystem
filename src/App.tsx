@@ -61,6 +61,7 @@ import ListeningHistory from "./pages/ListeningHistory";
 import LiveStreams from "./pages/LiveStreams";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import FanDashboard from "./pages/fan/FanDashboard";
+import FanSubscribe from "./pages/fan/FanSubscribe";
 import FanDiscover from "./pages/fan/FanDiscover";
 import ArtistDashboard from "./pages/artist/ArtistDashboard";
 import ArtistCatalog from "./pages/artist/ArtistCatalog";
@@ -127,6 +128,7 @@ const App = () => (
                 <Route path="/fan/competitions" element={<ProtectedRoute requiredRole="fan"><Competitions /></ProtectedRoute>} />
                 <Route path="/fan/competitions/active" element={<ProtectedRoute requiredRole="fan"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/fan/competition/:id" element={<ProtectedRoute requiredRole="fan"><CompetitionDetails /></ProtectedRoute>} />
+                <Route path="/fan/subscribe" element={<ProtectedRoute requiredRole="fan"><FanSubscribe /></ProtectedRoute>} />
 
                 {/* Artist Routes */}
                 <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><ArtistDashboard /></ProtectedRoute>} />

@@ -59,6 +59,7 @@ export const Footer = () => {
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link to="/cookies" className="hover:text-primary transition-colors">Cookie Policy</Link>
             <Link to="/legal" className="hover:text-primary transition-colors">Legal</Link>
           </div>
         </div>

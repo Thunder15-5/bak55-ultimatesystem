@@ -1723,6 +1723,7 @@ export type Database = {
       subscription_plans: {
         Row: {
           created_at: string | null
+          duration_days: number | null
           features: Json | null
           id: string
           is_active: boolean | null
@@ -1730,10 +1731,12 @@ export type Database = {
           price_bak: number
           price_kes: number
           price_usd: number | null
+          target_role: string | null
           upload_limit: number | null
         }
         Insert: {
           created_at?: string | null
+          duration_days?: number | null
           features?: Json | null
           id?: string
           is_active?: boolean | null
@@ -1741,10 +1744,12 @@ export type Database = {
           price_bak?: number
           price_kes?: number
           price_usd?: number | null
+          target_role?: string | null
           upload_limit?: number | null
         }
         Update: {
           created_at?: string | null
+          duration_days?: number | null
           features?: Json | null
           id?: string
           is_active?: boolean | null
@@ -1752,6 +1757,7 @@ export type Database = {
           price_bak?: number
           price_kes?: number
           price_usd?: number | null
+          target_role?: string | null
           upload_limit?: number | null
         }
         Relationships: []
