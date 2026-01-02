@@ -94,7 +94,27 @@ export default function FanDashboard() {
             </p>
           </div>
 
-          {/* Upgrade Banner */}
+          {/* Premium Subscription Card */}
+          <Card className="border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-amber-500" />
+                    Fan Premium
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Get voting bonuses, ad-free streaming, and exclusive badges. From just 1 BAK/day!
+                  </p>
+                </div>
+                <Button onClick={() => navigate('/fan/subscribe')} variant="hero" size="lg">
+                  View Plans
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upgrade to Artist Banner */}
           <Card className="border-primary/50 bg-gradient-to-r from-primary/10 to-secondary/10">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -104,7 +124,7 @@ export default function FanDashboard() {
                     Upload your own music, earn BAKCoins, and access analytics
                   </p>
                 </div>
-                <Button onClick={() => navigate('/upgrade')} variant="hero" size="lg">
+                <Button onClick={() => navigate('/upgrade')} variant="outline" size="lg">
                   <TrendingUp className="mr-2 h-4 w-4" />
                   Upgrade Now
                 </Button>
@@ -236,15 +256,15 @@ export default function FanDashboard() {
                 <Play className="mr-2 h-4 w-4" />
                 Discover Music
               </Button>
-              <Button onClick={() => navigate('/fan/competitions/active')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/competitions/active')} variant="outline" className="w-full">
                 <Trophy className="mr-2 h-4 w-4" />
                 Vote in Competitions
               </Button>
-              <Button onClick={() => navigate('/fan/wallet/buy-coins')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/buy-coins')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />
                 Buy BAKCoins
               </Button>
-              <Button onClick={() => navigate('/fan/playlists')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/playlists')} variant="outline" className="w-full">
                 <Music className="mr-2 h-4 w-4" />
                 My Playlists
               </Button>

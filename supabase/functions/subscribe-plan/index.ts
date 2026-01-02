@@ -38,7 +38,7 @@ serve(async (req: Request) => {
 
     const { plan_id, payment_method, phone_number }: SubscribeRequest = await req.json();
 
-    // Fetch plan details
+    // Fetch plan details including duration_days
     const { data: plan, error: planError } = await supabase
       .from('subscription_plans')
       .select('*')
@@ -47,6 +47,7 @@ serve(async (req: Request) => {
       .single();
 
     if (planError || !plan) {
+      console.error('Plan fetch error:', planError);
       return new Response(
         JSON.stringify({ error: 'Plan not found or inactive' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -71,6 +72,45 @@ serve(async (req: Request) => {
 
     if (payment_method === 'bakcoins') {
       const amount = plan.price_bak;
+
+      // Handle free plans
+      if (amount === 0) {
+        // Create subscription for free plan (no expiry for free plans)
+        const { data: subscription, error: subError } = await supabase
+          .from('user_subscriptions')
+          .insert({
+            user_id: user.id,
+            plan_id: plan.id,
+            status: 'active',
+            started_at: new Date().toISOString(),
+            expires_at: new Date('2099-12-31').toISOString(), // Free plans don't expire
+            auto_renew: false,
+            payment_method: 'free',
+          })
+          .select()
+          .single();
+
+        if (subError) {
+          console.error('Free subscription creation error:', subError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create subscription' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`Free subscription created for user ${user.id}: ${plan.name}`);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            subscription_id: subscription.id,
+            expires_at: subscription.expires_at,
+            plan_name: plan.name,
+            message: `Free plan activated! Enjoy your ${plan.name} subscription.`,
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       // Check wallet balance
       const { data: wallet, error: walletError } = await supabase
@@ -107,9 +147,10 @@ serve(async (req: Request) => {
         );
       }
 
-      // Create subscription record
+      // Calculate expiry based on plan's duration_days
       const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      const durationDays = plan.duration_days || 30; // Default to 30 if not set
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
 
       const { data: subscription, error: subError } = await supabase
         .from('user_subscriptions')
@@ -167,7 +208,7 @@ serve(async (req: Request) => {
           .from('transactions')
           .insert({
             wallet_id: walletData.id,
-            type: 'subscription',
+            type: 'spending',
             amount: -amount,
             description: `Subscription: ${plan.name}`,
             reference_id: subscription.id,
@@ -181,11 +222,25 @@ serve(async (req: Request) => {
           user_id: user.id,
           type: 'subscription',
           title: '🎉 Subscription Activated!',
-          message: `Your ${plan.name} subscription is now active. Enjoy unlimited uploads!`,
+          message: `Your ${plan.name} subscription is now active until ${new Date(subscription.expires_at).toLocaleDateString()}.`,
           link: '/subscription/manage',
         });
 
-      console.log(`Subscription created for user ${user.id}: ${plan.name}`);
+      console.log(`Subscription created for user ${user.id}: ${plan.name} (${durationDays} days)`);
+
+      // Build appropriate message based on duration
+      let durationText = '';
+      if (durationDays === 1) {
+        durationText = 'for 24 hours';
+      } else if (durationDays === 30) {
+        durationText = 'for 1 month';
+      } else if (durationDays === 90) {
+        durationText = 'for 3 months';
+      } else if (durationDays === 365) {
+        durationText = 'for 1 year';
+      } else {
+        durationText = `for ${durationDays} days`;
+      }
 
       return new Response(
         JSON.stringify({
@@ -193,13 +248,12 @@ serve(async (req: Request) => {
           subscription_id: subscription.id,
           expires_at: subscription.expires_at,
           plan_name: plan.name,
-          message: `Subscription activated! You now have unlimited uploads until ${new Date(subscription.expires_at).toLocaleDateString()}.`,
+          message: `Subscription activated ${durationText}! Valid until ${new Date(subscription.expires_at).toLocaleDateString()}.`,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (payment_method === 'mpesa') {
       // M-Pesa integration placeholder
-      // Will be implemented with Daraja API when TILL is ready
       return new Response(
         JSON.stringify({ 
           error: 'M-Pesa payment is coming soon! Please use BAKCoins for now.',

@@ -42,6 +42,7 @@ export default function Subscribe() {
       .from('subscription_plans')
       .select('*')
       .eq('is_active', true)
+      .eq('target_role', 'artist')  // Only show artist plans
       .order('price_bak', { ascending: true });
 
     if (error) {
