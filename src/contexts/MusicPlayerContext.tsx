@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { FEATURES } from '@/lib/featureFlags';
 
 interface Track {
   id: string;
@@ -15,11 +16,15 @@ interface Track {
   };
 }
 
+type RepeatMode = 'off' | 'one' | 'all';
+
 interface MusicPlayerContextType {
   currentTrack: Track | null;
   queue: Track[];
   isPlaying: boolean;
   isMinimized: boolean;
+  shuffleEnabled: boolean;
+  repeatMode: RepeatMode;
   playTrack: (track: Track, newQueue?: Track[]) => void;
   addToQueue: (track: Track) => void;
   playNext: () => void;
@@ -29,27 +34,53 @@ interface MusicPlayerContextType {
   clearQueue: () => void;
   toggleMinimized: () => void;
   removeFromQueue: (trackId: string) => void;
+  toggleShuffle: () => void;
+  cycleRepeatMode: () => void;
+  history: Track[];
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
+
+// Shuffle array utility
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [queue, setQueue] = useState<Track[]>([]);
+  const [originalQueue, setOriginalQueue] = useState<Track[]>([]);
+  const [history, setHistory] = useState<Track[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
+  const [shuffleEnabled, setShuffleEnabled] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
 
-  const playTrack = (track: Track, newQueue?: Track[]) => {
+  const playTrack = useCallback((track: Track, newQueue?: Track[]) => {
+    // Add current track to history if exists
+    if (currentTrack) {
+      setHistory(prev => [currentTrack, ...prev.slice(0, 49)]); // Keep last 50 tracks
+    }
+    
     setCurrentTrack(track);
     setIsPlaying(true);
     
     if (newQueue) {
       const trackIndex = newQueue.findIndex(t => t.id === track.id);
-      if (trackIndex !== -1) {
-        setQueue(newQueue.slice(trackIndex + 1));
+      const remainingQueue = trackIndex !== -1 ? newQueue.slice(trackIndex + 1) : newQueue;
+      
+      setOriginalQueue(remainingQueue);
+      
+      if (shuffleEnabled && FEATURES.SHUFFLE_MODE) {
+        setQueue(shuffleArray(remainingQueue));
       } else {
-        setQueue(newQueue);
+        setQueue(remainingQueue);
       }
     }
 
@@ -60,15 +91,27 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         track_id: track.id,
       });
     }
-  };
+  }, [currentTrack, shuffleEnabled, user]);
 
-  const addToQueue = (track: Track) => {
+  const addToQueue = useCallback((track: Track) => {
     setQueue(prev => [...prev, track]);
-  };
+    setOriginalQueue(prev => [...prev, track]);
+  }, []);
 
-  const playNext = () => {
+  const playNext = useCallback(() => {
+    if (repeatMode === 'one' && currentTrack && FEATURES.REPEAT_MODE) {
+      // Replay current track
+      setIsPlaying(true);
+      return;
+    }
+
     if (queue.length > 0) {
       const [nextTrack, ...remainingQueue] = queue;
+      
+      if (currentTrack) {
+        setHistory(prev => [currentTrack, ...prev.slice(0, 49)]);
+      }
+      
       setCurrentTrack(nextTrack);
       setQueue(remainingQueue);
       setIsPlaying(true);
@@ -79,32 +122,92 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
           track_id: nextTrack.id,
         });
       }
+    } else if (repeatMode === 'all' && originalQueue.length > 0 && FEATURES.REPEAT_MODE) {
+      // Restart queue from beginning
+      const newQueue = shuffleEnabled && FEATURES.SHUFFLE_MODE 
+        ? shuffleArray(originalQueue) 
+        : [...originalQueue];
+      
+      if (newQueue.length > 0) {
+        const [firstTrack, ...rest] = newQueue;
+        if (currentTrack) {
+          setHistory(prev => [currentTrack, ...prev.slice(0, 49)]);
+        }
+        setCurrentTrack(firstTrack);
+        setQueue(rest);
+        setIsPlaying(true);
+      }
     } else {
       setIsPlaying(false);
     }
-  };
+  }, [queue, repeatMode, originalQueue, shuffleEnabled, currentTrack, user]);
 
-  const playPrevious = () => {
-    // In a full implementation, you'd keep a history stack
-    // For now, we'll just restart the current track
-    setIsPlaying(true);
-  };
+  const playPrevious = useCallback(() => {
+    if (history.length > 0) {
+      const [previousTrack, ...remainingHistory] = history;
+      
+      // Add current track back to queue front
+      if (currentTrack) {
+        setQueue(prev => [currentTrack, ...prev]);
+      }
+      
+      setCurrentTrack(previousTrack);
+      setHistory(remainingHistory);
+      setIsPlaying(true);
+    } else {
+      // Just restart current track
+      setIsPlaying(true);
+    }
+  }, [history, currentTrack]);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
 
-  const clearQueue = () => {
+  const clearQueue = useCallback(() => {
     setQueue([]);
-  };
+    setOriginalQueue([]);
+  }, []);
 
-  const toggleMinimized = () => {
-    setIsMinimized(!isMinimized);
-  };
+  const toggleMinimized = useCallback(() => {
+    setIsMinimized(prev => !prev);
+  }, []);
 
-  const removeFromQueue = (trackId: string) => {
+  const removeFromQueue = useCallback((trackId: string) => {
     setQueue(prev => prev.filter(t => t.id !== trackId));
-  };
+    setOriginalQueue(prev => prev.filter(t => t.id !== trackId));
+  }, []);
+
+  const toggleShuffle = useCallback(() => {
+    if (!FEATURES.SHUFFLE_MODE) return;
+    
+    setShuffleEnabled(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        // Shuffle the current queue
+        setQueue(prevQueue => shuffleArray(prevQueue));
+      } else {
+        // Restore original order (matching remaining tracks)
+        setQueue(prevQueue => {
+          const remainingIds = new Set(prevQueue.map(t => t.id));
+          return originalQueue.filter(t => remainingIds.has(t.id));
+        });
+      }
+      return newValue;
+    });
+  }, [originalQueue]);
+
+  const cycleRepeatMode = useCallback(() => {
+    if (!FEATURES.REPEAT_MODE) return;
+    
+    setRepeatMode(prev => {
+      switch (prev) {
+        case 'off': return 'one';
+        case 'one': return 'all';
+        case 'all': return 'off';
+      }
+    });
+  }, []);
 
   return (
     <MusicPlayerContext.Provider
@@ -113,6 +216,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         queue,
         isPlaying,
         isMinimized,
+        shuffleEnabled,
+        repeatMode,
         playTrack,
         addToQueue,
         playNext,
@@ -122,6 +227,9 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         clearQueue,
         toggleMinimized,
         removeFromQueue,
+        toggleShuffle,
+        cycleRepeatMode,
+        history,
       }}
     >
       {children}
