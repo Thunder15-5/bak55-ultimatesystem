@@ -8,12 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, Heart, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
+import { Music, Play, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { CommentSection } from "@/components/CommentSection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TipDialog } from "@/components/TipDialog";
+import { Heart } from "lucide-react";
 
 interface Track {
   id: string;
@@ -41,16 +41,12 @@ export default function TrackDetails() {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState("");
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [liking, setLiking] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchTrack();
-      fetchLikeData();
       if (user) {
         fetchFollowStatus();
       }
@@ -60,28 +56,6 @@ export default function TrackDetails() {
     }
   }, [id, user]);
 
-  useEffect(() => {
-    // Subscribe to realtime like updates
-    const channel = supabase
-      .channel('track_likes_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'track_likes',
-          filter: `track_id=eq.${id}`
-        },
-        () => {
-          fetchLikeData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id]);
 
   const fetchTrack = async () => {
     try {
@@ -129,35 +103,6 @@ export default function TrackDetails() {
     }
   };
 
-  const fetchLikeData = async () => {
-    if (!id) return;
-
-    try {
-      // Get like count
-      const { count, error: countError } = await supabase
-        .from("track_likes")
-        .select("*", { count: "exact", head: true })
-        .eq("track_id", id);
-
-      if (countError) throw countError;
-      setLikeCount(count || 0);
-
-      // Check if current user has liked
-      if (user) {
-        const { data, error: likeError } = await supabase
-          .from("track_likes")
-          .select("id")
-          .eq("track_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (likeError) throw likeError;
-        setIsLiked(!!data);
-      }
-    } catch (error: any) {
-      console.error("Failed to load like data:", error);
-    }
-  };
 
   const fetchFollowStatus = async () => {
     if (!user || !track?.artist_id) return;
@@ -223,51 +168,6 @@ export default function TrackDetails() {
     }
   };
 
-  const handleLike = async () => {
-    if (!user) {
-      toast.error("Please log in to like tracks");
-      navigate("/login");
-      return;
-    }
-
-    setLiking(true);
-
-    try {
-      if (isLiked) {
-        // Unlike
-        const { error } = await supabase
-          .from("track_likes")
-          .delete()
-          .eq("track_id", id)
-          .eq("user_id", user.id);
-
-        if (error) throw error;
-        setIsLiked(false);
-        setLikeCount(prev => prev - 1);
-        toast.success("Removed from liked tracks");
-      } else {
-        // Like
-        const { error } = await supabase
-          .from("track_likes")
-          .insert({
-            track_id: id,
-            user_id: user.id,
-          });
-
-        if (error) throw error;
-        setIsLiked(true);
-        setLikeCount(prev => prev + 1);
-        toast.success("Added to liked tracks!");
-        
-        // Track fan activity for rewards
-        await trackActivity('track_like', { track_id: id });
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update like status");
-    } finally {
-      setLiking(false);
-    }
-  };
 
   const handleAddToPlaylist = async () => {
     if (!selectedPlaylist) {
@@ -368,7 +268,7 @@ export default function TrackDetails() {
 
   const shareUrl = `${window.location.origin}/track/${id}`;
   const shareTitle = `${track.title} by ${track.profiles.username}`;
-  const shareDescription = `🎵 Stream ${track.title} now on BAK55 Talent • ${track.plays} plays • ${likeCount} likes • ${track.genre || 'Music'}`;
+  const shareDescription = `🎵 Stream ${track.title} now on BAK55 Talent • ${track.plays} plays • ${track.genre || 'Music'}`;
 
   return (
     <>
@@ -463,10 +363,6 @@ export default function TrackDetails() {
                     <Play className="h-4 w-4" />
                     <span className="font-medium">{track.plays} plays</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Heart className="h-4 w-4" />
-                    <span className="font-medium">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>
-                  </div>
                 </div>
                </div>
 
@@ -478,19 +374,6 @@ export default function TrackDetails() {
 
             {user ? (
               <>
-                <Button 
-                  onClick={handleLike} 
-                  disabled={liking}
-                  size="lg"
-                  variant={isLiked ? "default" : "outline"}
-                >
-                  {liking ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <Heart className={`mr-2 h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-                  )}
-                  {isLiked ? 'Liked' : 'Like'}
-                </Button>
 
                 {user.id !== track.artist_id && (
                   <Button 
@@ -591,15 +474,9 @@ export default function TrackDetails() {
                 )}
               </>
             ) : (
-              <>
-                <Button onClick={() => navigate('/login')} size="lg" variant="outline">
-                  <Heart className="mr-2 h-5 w-5" />
-                  Login to Like
-                </Button>
-                <Button onClick={() => navigate('/signup')} size="lg" variant="outline">
-                  Sign Up to Follow
-                </Button>
-              </>
+              <Button onClick={() => navigate('/signup')} size="lg" variant="outline">
+                Sign Up to Follow
+              </Button>
             )}
 
           {/* Social Sharing - Always visible */}
@@ -690,12 +567,7 @@ export default function TrackDetails() {
       </div>
     </div>
   </div>
-
-        {/* Comments Section */}
-        <div className="mt-8">
-          <CommentSection trackId={id!} />
-        </div>
-      </div>
+</div>
 
       {track && (
         <TipDialog

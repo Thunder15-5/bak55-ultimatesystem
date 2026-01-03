@@ -1,12 +1,9 @@
-import { Play, Heart, MessageCircle, MoreVertical } from "lucide-react";
+import { Play, MoreVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,41 +31,7 @@ interface TrackCardProps {
 export function TrackCard({ track, showActions = true, viewMode = "fan" }: TrackCardProps) {
   const { playTrack } = useMusicPlayer();
   const navigate = useNavigate();
-  const { user, userRole } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [commentCount, setCommentCount] = useState(0);
-
-  useEffect(() => {
-    fetchEngagement();
-  }, [track.id, user]);
-
-  const fetchEngagement = async () => {
-    // Fetch like count
-    const { count: likes } = await supabase
-      .from("track_likes")
-      .select("*", { count: "exact", head: true })
-      .eq("track_id", track.id);
-    setLikeCount(likes || 0);
-
-    // Fetch comment count
-    const { count: comments } = await supabase
-      .from("comments")
-      .select("*", { count: "exact", head: true })
-      .eq("track_id", track.id);
-    setCommentCount(comments || 0);
-
-    // Check if user liked
-    if (user) {
-      const { data } = await supabase
-        .from("track_likes")
-        .select("id")
-        .eq("track_id", track.id)
-        .eq("user_id", user.id)
-        .single();
-      setIsLiked(!!data);
-    }
-  };
+  const { userRole } = useAuth();
 
   const handlePlay = () => {
     playTrack({
@@ -83,28 +46,6 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
         avatar_url: null,
       },
     });
-  };
-
-  const handleLike = async () => {
-    if (!user) {
-      return; // User should already be authenticated on protected pages
-    }
-
-    if (isLiked) {
-      await supabase
-        .from("track_likes")
-        .delete()
-        .eq("track_id", track.id)
-        .eq("user_id", user.id);
-      setIsLiked(false);
-      setLikeCount((prev) => prev - 1);
-    } else {
-      await supabase
-        .from("track_likes")
-        .insert({ track_id: track.id, user_id: user.id });
-      setIsLiked(true);
-      setLikeCount((prev) => prev + 1);
-    }
   };
 
   const handleViewDetails = () => {
@@ -150,23 +91,7 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
         )}
 
         {showActions && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLike}
-                className={isLiked ? "text-red-500" : ""}
-              >
-                <Heart className={`w-4 h-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
-                {likeCount}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleViewDetails}>
-                <MessageCircle className="w-4 h-4 mr-1" />
-                {commentCount}
-              </Button>
-            </div>
-            
+          <div className="flex items-center justify-end mt-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">

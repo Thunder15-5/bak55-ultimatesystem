@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Mail, Lock, User, MapPin, Music2, Building2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Sparkles, Mail, Lock, User, MapPin, Music2, Building2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import logoImage from "@/assets/bak55-logo.png";
+import { FEATURES } from "@/lib/featureFlags";
 
 export default function Signup() {
   const { signUp } = useAuth();
@@ -28,6 +30,8 @@ export default function Signup() {
   const [industry, setIndustry] = useState("");
   const [loading, setLoading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const [country, setCountry] = useState("Kenya");
+  const [confirmedKenya, setConfirmedKenya] = useState(false);
 
   useEffect(() => {
     const ref = searchParams.get("ref");
@@ -71,6 +75,13 @@ export default function Signup() {
 
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
+    // Kenya-only restriction
+    if (FEATURES.KENYA_ONLY_SIGNUP && !confirmedKenya) {
+      toast.error("Please confirm you are based in Kenya to continue");
       setLoading(false);
       return;
     }
@@ -278,6 +289,32 @@ export default function Signup() {
                 className="h-11 bg-background/50 border-primary/20 focus:border-primary"
               />
             </div>
+
+            {/* Country Confirmation - Kenya Only */}
+            {FEATURES.KENYA_ONLY_SIGNUP && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" />
+                  <span className="font-medium text-sm">Country Availability</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  BAK55 Talent is currently available only in Kenya. We're expanding to more African countries soon!
+                </p>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="kenyaConfirm" 
+                    checked={confirmedKenya}
+                    onCheckedChange={(checked) => setConfirmedKenya(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="kenyaConfirm"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I confirm I am based in Kenya
+                  </label>
+                </div>
+              </div>
+            )}
 
             {/* Role-specific fields */}
             {role === "artist" && (

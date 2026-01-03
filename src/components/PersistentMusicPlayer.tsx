@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Play, Pause, Volume2, VolumeX, SkipBack, SkipForward,
-  ChevronUp, ChevronDown, Music, X, ListMusic
+  ChevronUp, ChevronDown, Music, X, ListMusic, Shuffle, Repeat, Repeat1
 } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { FEATURES } from "@/lib/featureFlags";
+import { cn } from "@/lib/utils";
 
 export function PersistentMusicPlayer() {
   const {
@@ -17,12 +18,16 @@ export function PersistentMusicPlayer() {
     queue,
     isPlaying,
     isMinimized,
+    shuffleEnabled,
+    repeatMode,
     playNext,
     playPrevious,
     togglePlay,
     setIsPlaying,
     toggleMinimized,
     removeFromQueue,
+    toggleShuffle,
+    cycleRepeatMode,
   } = useMusicPlayer();
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -33,12 +38,14 @@ export function PersistentMusicPlayer() {
   const [showQueue, setShowQueue] = useState(false);
   const hasIncrementedPlays = useRef(false);
 
+  // Volume sync
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
 
+  // Track change handler
   useEffect(() => {
     if (audioRef.current && currentTrack) {
       audioRef.current.load();
@@ -49,6 +56,7 @@ export function PersistentMusicPlayer() {
     }
   }, [currentTrack]);
 
+  // Play/pause sync
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -58,6 +66,62 @@ export function PersistentMusicPlayer() {
       }
     }
   }, [isPlaying]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!FEATURES.KEYBOARD_SHORTCUTS || !currentTrack) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowLeft':
+          if (audioRef.current) {
+            audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+          }
+          break;
+        case 'ArrowRight':
+          if (audioRef.current) {
+            audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setVolume(prev => Math.min(1, prev + 0.1));
+          setIsMuted(false);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setVolume(prev => Math.max(0, prev - 0.1));
+          break;
+        case 'KeyN':
+          playNext();
+          break;
+        case 'KeyP':
+          playPrevious();
+          break;
+        case 'KeyM':
+          toggleMuteHandler();
+          break;
+        case 'KeyS':
+          if (FEATURES.SHUFFLE_MODE) toggleShuffle();
+          break;
+        case 'KeyR':
+          if (FEATURES.REPEAT_MODE) cycleRepeatMode();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentTrack, duration, togglePlay, playNext, playPrevious, toggleShuffle, cycleRepeatMode]);
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -71,7 +135,6 @@ export function PersistentMusicPlayer() {
       ) {
         hasIncrementedPlays.current = true;
         
-        // Get current plays and increment
         const updatePlays = async () => {
           try {
             const { data } = await supabase
@@ -81,7 +144,6 @@ export function PersistentMusicPlayer() {
               .single();
             
             if (data) {
-              // Update play count for analytics
               await supabase
                 .from("tracks")
                 .update({ plays: (data.plays || 0) + 1 })
@@ -115,7 +177,7 @@ export function PersistentMusicPlayer() {
     setIsMuted(value[0] === 0);
   };
 
-  const toggleMuteHandler = () => {
+  const toggleMuteHandler = useCallback(() => {
     if (isMuted) {
       setVolume(1);
       setIsMuted(false);
@@ -123,11 +185,19 @@ export function PersistentMusicPlayer() {
       setVolume(0);
       setIsMuted(true);
     }
-  };
+  }, [isMuted]);
 
   const handleEnded = () => {
-    if (queue.length > 0) {
+    if (repeatMode === 'one' && FEATURES.REPEAT_MODE) {
+      // Restart current track
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+      }
+    } else if (queue.length > 0) {
       playNext();
+    } else if (repeatMode === 'all' && FEATURES.REPEAT_MODE) {
+      playNext(); // Will restart queue in context
     } else {
       setIsPlaying(false);
     }
@@ -138,6 +208,13 @@ export function PersistentMusicPlayer() {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const getRepeatIcon = () => {
+    if (repeatMode === 'one') {
+      return <Repeat1 className="h-4 w-4 sm:h-5 sm:w-5" />;
+    }
+    return <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />;
   };
 
   if (!currentTrack) return null;
@@ -151,7 +228,7 @@ export function PersistentMusicPlayer() {
             <div className="container mx-auto">
               <div className="flex items-start gap-6">
                 {/* Large Album Art */}
-                <div className="w-48 h-48 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                <div className="w-48 h-48 rounded-lg bg-muted flex-shrink-0 overflow-hidden shadow-lg">
                   {currentTrack.cover_image ? (
                     <img
                       src={currentTrack.cover_image}
@@ -159,7 +236,7 @@ export function PersistentMusicPlayer() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
                       <Music className="h-20 w-20 text-muted-foreground" />
                     </div>
                   )}
@@ -195,12 +272,29 @@ export function PersistentMusicPlayer() {
                   </div>
 
                   {/* Controls */}
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center justify-center gap-2 sm:gap-4">
+                    {/* Shuffle Button */}
+                    {FEATURES.SHUFFLE_MODE && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleShuffle}
+                        className={cn(
+                          "h-10 w-10 transition-colors",
+                          shuffleEnabled && "text-primary bg-primary/10"
+                        )}
+                        title="Shuffle (S)"
+                      >
+                        <Shuffle className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={playPrevious}
                       className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
+                      title="Previous (P)"
                     >
                       <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
@@ -209,6 +303,7 @@ export function PersistentMusicPlayer() {
                       size="icon"
                       onClick={togglePlay}
                       className="h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-xl hover:scale-110 transition-all touch-manipulation"
+                      title="Play/Pause (Space)"
                     >
                       {isPlaying ? (
                         <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />
@@ -220,11 +315,28 @@ export function PersistentMusicPlayer() {
                       variant="ghost"
                       size="icon"
                       onClick={playNext}
-                      disabled={queue.length === 0}
+                      disabled={queue.length === 0 && repeatMode === 'off'}
                       className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
+                      title="Next (N)"
                     >
                       <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
+
+                    {/* Repeat Button */}
+                    {FEATURES.REPEAT_MODE && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={cycleRepeatMode}
+                        className={cn(
+                          "h-10 w-10 transition-colors",
+                          repeatMode !== 'off' && "text-primary bg-primary/10"
+                        )}
+                        title="Repeat (R)"
+                      >
+                        {getRepeatIcon()}
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -296,7 +408,7 @@ export function PersistentMusicPlayer() {
           <div className="flex items-center gap-4">
             {/* Track Info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-14 h-14 rounded bg-muted flex-shrink-0 overflow-hidden">
+              <div className="w-14 h-14 rounded bg-muted flex-shrink-0 overflow-hidden shadow-md">
                 {currentTrack.cover_image ? (
                   <img
                     src={currentTrack.cover_image}
@@ -304,7 +416,7 @@ export function PersistentMusicPlayer() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
                     <Music className="h-6 w-6 text-muted-foreground" />
                   </div>
                 )}
@@ -319,7 +431,22 @@ export function PersistentMusicPlayer() {
 
             {/* Controls - Center */}
             <div className="flex flex-col items-center gap-2 flex-[2] max-w-2xl">
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-1 sm:gap-3">
+                {/* Shuffle - Mini */}
+                {FEATURES.SHUFFLE_MODE && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleShuffle}
+                    className={cn(
+                      "h-8 w-8 hidden sm:flex transition-colors",
+                      shuffleEnabled && "text-primary"
+                    )}
+                  >
+                    <Shuffle className="h-4 w-4" />
+                  </Button>
+                )}
+
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -344,11 +471,26 @@ export function PersistentMusicPlayer() {
                   variant="ghost"
                   size="icon"
                   onClick={playNext}
-                  disabled={queue.length === 0}
+                  disabled={queue.length === 0 && repeatMode === 'off'}
                   className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
                 >
                   <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
+
+                {/* Repeat - Mini */}
+                {FEATURES.REPEAT_MODE && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={cycleRepeatMode}
+                    className={cn(
+                      "h-8 w-8 hidden sm:flex transition-colors",
+                      repeatMode !== 'off' && "text-primary"
+                    )}
+                  >
+                    {getRepeatIcon()}
+                  </Button>
+                )}
               </div>
               {isMinimized && (
                 <div className="flex items-center gap-2 w-full">
@@ -392,6 +534,7 @@ export function PersistentMusicPlayer() {
                   size="icon" 
                   onClick={toggleMuteHandler}
                   className="h-10 w-10 touch-manipulation"
+                  title="Mute (M)"
                 >
                   {isMuted || volume === 0 ? (
                     <VolumeX className="h-5 w-5" />
@@ -437,6 +580,13 @@ export function PersistentMusicPlayer() {
             </div>
           </div>
         </div>
+
+        {/* Keyboard Shortcuts Hint */}
+        {FEATURES.KEYBOARD_SHORTCUTS && !isMinimized && (
+          <div className="text-center text-xs text-muted-foreground pb-2">
+            Keyboard: Space (play/pause) • ←→ (seek) • ↑↓ (volume) • N/P (next/prev) • M (mute) • S (shuffle) • R (repeat)
+          </div>
+        )}
       </Card>
 
       <audio
