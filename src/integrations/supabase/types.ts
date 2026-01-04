@@ -824,6 +824,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          reward_amount: number
+          target_count: number
+          title: string
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_amount?: number
+          target_count?: number
+          title: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_amount?: number
+          target_count?: number
+          title?: string
+        }
+        Relationships: []
+      }
       deposit_requests: {
         Row: {
           amount_kes: number
@@ -1017,6 +1050,51 @@ export type Database = {
           tier_name?: string
         }
         Relationships: []
+      }
+      featured_artists: {
+        Row: {
+          artist_id: string
+          created_at: string
+          created_by: string | null
+          featured_from: string
+          featured_until: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          created_by?: string | null
+          featured_from?: string
+          featured_until: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          created_by?: string | null
+          featured_from?: string
+          featured_until?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_artists_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_artists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       followers: {
         Row: {
@@ -1315,7 +1393,12 @@ export type Database = {
           email: string
           id: string
           is_activated: boolean | null
+          last_login_at: string | null
           location: string | null
+          login_streak: number | null
+          longest_streak: number | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           phone_number: string | null
           updated_at: string
           username: string
@@ -1331,7 +1414,12 @@ export type Database = {
           email: string
           id: string
           is_activated?: boolean | null
+          last_login_at?: string | null
           location?: string | null
+          login_streak?: number | null
+          longest_streak?: number | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone_number?: string | null
           updated_at?: string
           username: string
@@ -1347,7 +1435,12 @@ export type Database = {
           email?: string
           id?: string
           is_activated?: boolean | null
+          last_login_at?: string | null
           location?: string | null
+          login_streak?: number | null
+          longest_streak?: number | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone_number?: string | null
           updated_at?: string
           username?: string
@@ -2065,6 +2158,57 @@ export type Database = {
           },
           {
             foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_id: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          progress: number | null
+          reward_claimed: boolean | null
+          user_id: string
+        }
+        Insert: {
+          challenge_date?: string
+          challenge_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          reward_claimed?: boolean | null
+          user_id: string
+        }
+        Update: {
+          challenge_date?: string
+          challenge_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          reward_claimed?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_challenges_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
