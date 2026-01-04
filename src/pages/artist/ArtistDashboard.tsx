@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { DailyStreak } from "@/components/DailyStreak";
+import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -201,6 +204,16 @@ export default function ArtistDashboard() {
         </div>
 
         <EmailVerificationBanner />
+
+        {/* Daily Streak */}
+        <div className="mb-8">
+          <DailyStreak />
+        </div>
+
+        {/* Onboarding Checklist */}
+        <div className="mb-8">
+          <OnboardingChecklist />
+        </div>
 
         {/* Featured Competition Banner */}
         {featuredCompetition && (

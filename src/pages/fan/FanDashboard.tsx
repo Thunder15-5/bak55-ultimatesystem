@@ -5,6 +5,12 @@ import { CompetitionBanner } from '@/components/CompetitionBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BadgeCollection } from '@/components/competition/BadgeCollection';
+import { OnboardingChecklist } from '@/components/OnboardingChecklist';
+import { DailyStreak } from '@/components/DailyStreak';
+import { WeeklyChallenges } from '@/components/WeeklyChallenges';
+import { ActivityFeed } from '@/components/ActivityFeed';
+import { TrendingTracks } from '@/components/TrendingTracks';
+import { ForYouSection } from '@/components/ForYouSection';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle } from 'lucide-react';
@@ -93,6 +99,12 @@ export default function FanDashboard() {
               Discover, engage, and support your favorite artists
             </p>
           </div>
+
+          {/* Daily Streak */}
+          <DailyStreak />
+
+          {/* Onboarding Checklist */}
+          <OnboardingChecklist />
 
           {/* Premium Subscription Card */}
           <Card className="border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
@@ -270,6 +282,22 @@ export default function FanDashboard() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Gamification & Discovery Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ForYouSection />
+            </div>
+            <div className="space-y-6">
+              <WeeklyChallenges />
+            </div>
+          </div>
+
+          {/* Activity & Trending */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TrendingTracks limit={5} />
+            <ActivityFeed limit={5} />
+          </div>
         </div>
       </main>
     </div>

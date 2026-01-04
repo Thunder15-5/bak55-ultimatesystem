@@ -71,6 +71,8 @@ import BrandDiscover from "./pages/brand/BrandDiscover";
 import Upgrade from "./pages/Upgrade";
 import Leaderboard from "./pages/Leaderboard";
 import Apply from "./pages/Apply";
+import InstallApp from "./pages/InstallApp";
+import { InstallPrompt } from "./components/InstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +101,7 @@ const App = () => (
           <Route path="/apply" element={<Apply />} />
           <Route path="/live-streams" element={<LiveStreams />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/install" element={<InstallApp />} />
                 
                 {/* Legacy routes - redirect to role-specific paths */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -217,6 +220,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <PersistentMusicPlayer />
+              <InstallPrompt />
             </MusicPlayerProvider>
           </AuthProvider>
         </BrowserRouter>
