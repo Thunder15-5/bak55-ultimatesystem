@@ -37,7 +37,7 @@ export function FeaturedArtistsCarousel() {
 
   const fetchFeaturedArtists = async () => {
     try {
-      // Get verified artists
+      // Get all artists (remove verified filter since no artists are verified yet)
       const { data: artistsData, error } = await supabase
         .from("profiles")
         .select(`
@@ -51,10 +51,14 @@ export function FeaturedArtistsCarousel() {
             genres
           )
         `)
-        .eq("artist_profiles.verified", true)
         .limit(10);
 
       if (error) throw error;
+
+      if (!artistsData || artistsData.length === 0) {
+        setLoading(false);
+        return;
+      }
 
       // Fetch stats for each artist
       const artistsWithStats = await Promise.all(
@@ -82,7 +86,9 @@ export function FeaturedArtistsCarousel() {
         })
       );
 
-      setArtists(artistsWithStats.filter(a => a.follower_count > 0));
+      // Sort by follower count but don't filter out zero followers
+      const sorted = artistsWithStats.sort((a, b) => b.follower_count - a.follower_count);
+      setArtists(sorted);
     } catch (error) {
       console.error("Failed to fetch featured artists:", error);
     } finally {
@@ -98,7 +104,61 @@ export function FeaturedArtistsCarousel() {
     setCurrentIndex((prev) => (prev - 1 + artists.length) % Math.max(1, artists.length));
   };
 
-  if (loading || artists.length === 0) return null;
+  if (loading) {
+    return (
+      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Star className="h-8 w-8 text-primary fill-primary" />
+              <h2 className="text-3xl md:text-4xl font-heading font-bold">
+                Featured Artists
+              </h2>
+              <Star className="h-8 w-8 text-primary fill-primary" />
+            </div>
+            <p className="text-muted-foreground text-lg">
+              Discover talented artists on BAK55 Talent
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 px-14">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse h-64">
+                <CardContent className="p-6">
+                  <div className="h-48 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (artists.length === 0) {
+    return (
+      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Star className="h-8 w-8 text-primary fill-primary" />
+              <h2 className="text-3xl md:text-4xl font-heading font-bold">
+                Featured Artists
+              </h2>
+              <Star className="h-8 w-8 text-primary fill-primary" />
+            </div>
+            <p className="text-muted-foreground text-lg mb-6">
+              Be the first to join our community of talented artists
+            </p>
+            <Link to="/apply">
+              <Button size="lg">
+                Apply as an Artist
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const visibleArtists = [
     artists[currentIndex],
@@ -118,7 +178,7 @@ export function FeaturedArtistsCarousel() {
             <Star className="h-8 w-8 text-primary fill-primary" />
           </div>
           <p className="text-muted-foreground text-lg">
-            Verified artists making waves on BAK55 Talent
+            Discover talented artists on BAK55 Talent
           </p>
         </div>
 

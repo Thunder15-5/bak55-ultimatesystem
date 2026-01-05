@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, Ban, Trash2, CheckCircle, Music, Crown } from "lucide-react";
+import { Users, Ban, Trash2, CheckCircle, Music, Crown, ShieldCheck } from "lucide-react";
 import { RoleBadge } from "@/components/ui/role-badge";
 import {
   Table,
@@ -34,7 +34,7 @@ interface UserProfile {
   created_at: string;
   banned: boolean;
   user_roles: Array<{ role: string }>;
-  artist_profiles?: { stage_name: string; total_earnings: number };
+  artist_profiles?: { stage_name: string; total_earnings: number; verified: boolean };
   wallets?: { balance: number };
   tracks?: Array<{ id: string }>;
 }
@@ -73,7 +73,7 @@ export function UsersPanel() {
       .select(`
         *,
         user_roles(role),
-        artist_profiles(stage_name, total_earnings),
+        artist_profiles(stage_name, total_earnings, verified),
         wallets(balance),
         tracks(id)
       `)
@@ -125,6 +125,24 @@ export function UsersPanel() {
       toast.success(`User ${action}ned successfully`);
       fetchUsers();
       fetchMetrics();
+    }
+  };
+
+  const handleToggleVerification = async (userId: string, currentVerified: boolean) => {
+    const action = currentVerified ? 'unverify' : 'verify';
+    const confirmed = confirm(`${action.toUpperCase()} this artist?`);
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('artist_profiles')
+      .update({ verified: !currentVerified })
+      .eq('user_id', userId);
+
+    if (error) {
+      toast.error(`Failed to ${action} artist`);
+    } else {
+      toast.success(`Artist ${action === 'verify' ? 'verified' : 'unverified'} successfully`);
+      fetchUsers();
     }
   };
 
@@ -256,8 +274,11 @@ export function UsersPanel() {
                                 </div>
                                 <div className="text-sm text-muted-foreground">{user.email}</div>
                                 {isArtist && user.artist_profiles && (
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-muted-foreground flex items-center gap-1">
                                     Stage: {user.artist_profiles.stage_name}
+                                    {user.artist_profiles.verified && (
+                                      <Badge variant="default" className="h-4 px-1 text-[10px]">✓</Badge>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -288,14 +309,25 @@ export function UsersPanel() {
                               {new Date(user.created_at).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-wrap gap-1.5 min-w-[140px]">
+                              <div className="flex flex-wrap gap-1.5 min-w-[180px]">
                                 {!isAdmin && (
                                   <>
+                                    {isArtist && (
+                                      <Button
+                                        size="sm"
+                                        variant={user.artist_profiles?.verified ? "secondary" : "default"}
+                                        onClick={() => handleToggleVerification(user.id, user.artist_profiles?.verified || false)}
+                                        className="touch-manipulation min-h-[36px] min-w-[70px]"
+                                      >
+                                        <ShieldCheck className="w-3 h-3 mr-1" />
+                                        {user.artist_profiles?.verified ? 'Unverify' : 'Verify'}
+                                      </Button>
+                                    )}
                                     <Button
                                       size="sm"
                                       variant={user.banned ? "outline" : "destructive"}
                                       onClick={() => handleToggleBan(user.id, user.banned)}
-                                      className="touch-manipulation min-h-[36px] flex-1 min-w-[70px]"
+                                      className="touch-manipulation min-h-[36px] min-w-[70px]"
                                     >
                                       {user.banned ? 'Unban' : 'Ban'}
                                     </Button>
