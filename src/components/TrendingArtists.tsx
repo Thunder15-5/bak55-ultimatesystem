@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TrendingUp, Users, Music } from "lucide-react";
 
 interface TrendingArtist {
@@ -108,7 +109,28 @@ export function TrendingArtists() {
     );
   }
 
-  if (artists.length === 0) return null;
+  if (artists.length === 0) {
+    return (
+      <section className="py-16 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
+              <TrendingUp className="inline-block mr-3 h-8 w-8 text-primary" />
+              Trending Artists
+            </h2>
+            <p className="text-muted-foreground text-lg mb-6">
+              Be among the first artists to join our growing platform
+            </p>
+            <Link to="/apply">
+              <Button size="lg" variant="outline">
+                Start Your Journey
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 px-4 bg-muted/30">

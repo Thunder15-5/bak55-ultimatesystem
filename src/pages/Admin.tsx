@@ -8,6 +8,9 @@ import { ActivityLogPanel } from "@/components/admin/ActivityLogPanel";
 import { SubscriptionsPanel } from "@/components/admin/SubscriptionsPanel";
 import { EarlyAccessPanel } from "@/components/admin/EarlyAccessPanel";
 import { UsersPanel } from "@/components/admin/UsersPanel";
+import { CompetitionStageManager } from "@/components/admin/CompetitionStageManager";
+import { BadgeManagementPanel } from "@/components/admin/BadgeManagementPanel";
+import { FeaturedArtistsPanel } from "@/components/admin/FeaturedArtistsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +22,7 @@ import {
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail,
-  Award, Target
+  Award, Target, Star
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -528,6 +531,10 @@ export default function Admin() {
                 <Award className="h-4 w-4 mr-2" />
                 Badges
               </TabsTrigger>
+              <TabsTrigger value="featured">
+                <Star className="h-4 w-4 mr-2" />
+                Featured
+              </TabsTrigger>
             <TabsTrigger value="moderation">
               <ShieldAlert className="h-4 w-4 mr-2" />
               Moderation
@@ -983,6 +990,22 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Competition Stages Tab */}
+          <TabsContent value="stages">
+            <CompetitionStageManager />
+          </TabsContent>
+
+          {/* Badge Management Tab */}
+          <TabsContent value="badges">
+            <BadgeManagementPanel />
+          </TabsContent>
+
+          {/* Featured Artists Tab */}
+          <TabsContent value="featured">
+            <FeaturedArtistsPanel />
+          </TabsContent>
+
           {/* Content Moderation Tab */}
           <TabsContent value="moderation">
             <ModerationPanel />
