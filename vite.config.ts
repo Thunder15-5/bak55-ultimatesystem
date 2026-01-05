@@ -18,7 +18,9 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "icons/*.png"],
       manifest: false, // We use our own manifest.json
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB limit
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        globIgnores: ["**/covers/**", "**/tracks/**"], // Exclude large media files
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
