@@ -518,4 +518,51 @@
   .spotlight:hover::before {
     opacity: 1;
   }
+  
+  /* Safe area padding for notched phones (iPhone X+) */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  /* Music player spacing - accounts for fixed player */
+  .music-player-padding {
+    padding-bottom: 100px;
+  }
+  
+  @media (max-width: 640px) {
+    .music-player-padding {
+      padding-bottom: 90px;
+    }
+  }
+  
+  /* Touch-friendly minimum tap targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile-friendly tables - horizontal scroll */
+  .table-scroll {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent iOS zoom on input focus */
+  @media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }

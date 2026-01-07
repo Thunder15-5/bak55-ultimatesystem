@@ -106,25 +106,25 @@ export function FeaturedArtistsCarousel() {
 
   if (loading) {
     return (
-      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+      <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Star className="h-8 w-8 text-primary fill-primary" />
-              <h2 className="text-3xl md:text-4xl font-heading font-bold">
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">
                 Featured Artists
               </h2>
-              <Star className="h-8 w-8 text-primary fill-primary" />
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
             </div>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-base sm:text-lg">
               Discover talented artists on BAK55 Talent
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 px-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 px-4 sm:px-14">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse h-64">
-                <CardContent className="p-6">
-                  <div className="h-48 bg-muted rounded" />
+              <Card key={i} className="animate-pulse h-48 sm:h-64">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="h-full bg-muted rounded" />
                 </CardContent>
               </Card>
             ))}
@@ -136,21 +136,21 @@ export function FeaturedArtistsCarousel() {
 
   if (artists.length === 0) {
     return (
-      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+      <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Star className="h-8 w-8 text-primary fill-primary" />
-              <h2 className="text-3xl md:text-4xl font-heading font-bold">
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">
                 Featured Artists
               </h2>
-              <Star className="h-8 w-8 text-primary fill-primary" />
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
             </div>
-            <p className="text-muted-foreground text-lg mb-6">
+            <p className="text-muted-foreground text-base sm:text-lg mb-6">
               Be the first to join our community of talented artists
             </p>
             <Link to="/apply">
-              <Button size="lg">
+              <Button size="lg" className="w-full sm:w-auto">
                 Apply as an Artist
               </Button>
             </Link>
@@ -160,55 +160,66 @@ export function FeaturedArtistsCarousel() {
     );
   }
 
-  const visibleArtists = [
-    artists[currentIndex],
-    artists[(currentIndex + 1) % artists.length],
-    artists[(currentIndex + 2) % artists.length],
-  ];
+  // For mobile, show 1 artist; for tablet, show 2; for desktop, show 3
+  const getVisibleCount = () => {
+    if (typeof window === 'undefined') return 3;
+    if (window.innerWidth < 640) return 1;
+    if (window.innerWidth < 768) return 2;
+    return 3;
+  };
+
+  const visibleCount = Math.min(getVisibleCount(), artists.length);
+  const visibleArtists = Array.from({ length: visibleCount }, (_, i) => 
+    artists[(currentIndex + i) % artists.length]
+  );
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+    <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Star className="h-8 w-8 text-primary fill-primary" />
-            <h2 className="text-3xl md:text-4xl font-heading font-bold">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">
               Featured Artists
             </h2>
-            <Star className="h-8 w-8 text-primary fill-primary" />
+            <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary" />
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base sm:text-lg">
             Discover talented artists on BAK55 Talent
           </p>
         </div>
 
         <div className="relative">
           {/* Navigation Buttons */}
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full shadow-lg"
-            onClick={prevSlide}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full shadow-lg"
-            onClick={nextSlide}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
+          {artists.length > 1 && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-lg -ml-2 sm:ml-0"
+                onClick={prevSlide}
+              >
+                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-lg -mr-2 sm:mr-0"
+                onClick={nextSlide}
+              >
+                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
+            </>
+          )}
 
           {/* Carousel */}
-          <div className="grid md:grid-cols-3 gap-6 px-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 px-8 sm:px-14">
             {visibleArtists.map((artist, idx) => (
               <Link key={`${artist.id}-${idx}`} to={`/artist/${artist.id}`}>
                 <Card className="group hover:shadow-2xl hover:border-primary transition-all duration-300 overflow-hidden h-full">
                   {/* Artist Top Track Cover as Background */}
                   {artist.top_track?.cover_image && (
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-32 sm:h-48 overflow-hidden">
                       <img
                         src={artist.top_track.cover_image}
                         alt={artist.top_track.title}
@@ -218,33 +229,33 @@ export function FeaturedArtistsCarousel() {
                     </div>
                   )}
                   
-                  <CardContent className="p-6 relative">
+                  <CardContent className="p-4 sm:p-6 relative">
                     {/* Avatar */}
-                    <div className="flex justify-center -mt-14 mb-4">
-                      <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+                    <div className="flex justify-center -mt-10 sm:-mt-14 mb-3 sm:mb-4">
+                      <Avatar className="h-16 w-16 sm:h-24 sm:w-24 border-4 border-background shadow-xl">
                         <AvatarImage src={artist.avatar_url || undefined} />
-                        <AvatarFallback className="text-2xl font-bold">
+                        <AvatarFallback className="text-lg sm:text-2xl font-bold">
                           {(artist.artist_profiles?.stage_name || artist.username).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </div>
 
                     {/* Artist Info */}
-                    <div className="text-center space-y-3">
+                    <div className="text-center space-y-2 sm:space-y-3">
                       <div>
                         <div className="flex items-center justify-center gap-2 mb-1">
-                          <h3 className="font-bold text-xl">
+                          <h3 className="font-bold text-base sm:text-xl truncate max-w-[180px]">
                             {artist.artist_profiles?.stage_name || artist.username}
                           </h3>
                           {artist.artist_profiles?.verified && (
                             <Badge variant="default" className="h-5 px-1.5 text-xs">✓</Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">@{artist.username}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">@{artist.username}</p>
                       </div>
 
                       {artist.bio && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
                           {artist.bio}
                         </p>
                       )}
@@ -252,7 +263,7 @@ export function FeaturedArtistsCarousel() {
                       {/* Genres */}
                       {artist.artist_profiles?.genres && artist.artist_profiles.genres.length > 0 && (
                         <div className="flex flex-wrap gap-1 justify-center">
-                          {artist.artist_profiles.genres.slice(0, 3).map((genre) => (
+                          {artist.artist_profiles.genres.slice(0, 2).map((genre) => (
                             <Badge key={genre} variant="secondary" className="text-xs">
                               {genre}
                             </Badge>
@@ -261,13 +272,13 @@ export function FeaturedArtistsCarousel() {
                       )}
 
                       {/* Stats */}
-                      <div className="flex items-center justify-center gap-4 text-sm pt-2 border-t">
+                      <div className="flex items-center justify-center gap-4 text-xs sm:text-sm pt-2 border-t">
                         <div className="flex items-center gap-1 text-muted-foreground">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="font-medium">{artist.follower_count.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center gap-1 text-muted-foreground">
-                          <Music className="h-4 w-4" />
+                          <Music className="h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="font-medium">{artist.track_count}</span>
                         </div>
                       </div>
@@ -279,17 +290,19 @@ export function FeaturedArtistsCarousel() {
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-8">
-            {artists.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === currentIndex ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
-                }`}
-              />
-            ))}
-          </div>
+          {artists.length > 1 && (
+            <div className="flex justify-center gap-2 mt-6 sm:mt-8">
+              {artists.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 touch-target ${
+                    idx === currentIndex ? 'w-6 sm:w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

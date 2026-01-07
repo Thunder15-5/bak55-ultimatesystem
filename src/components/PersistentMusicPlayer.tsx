@@ -221,14 +221,15 @@ export function PersistentMusicPlayer() {
 
   return (
     <>
-      <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl">
+      <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
         {/* Expanded Player */}
         {!isMinimized && (
-          <div className="border-b border-border p-6">
+          <div className="border-b border-border p-4 sm:p-6">
             <div className="container mx-auto">
-              <div className="flex items-start gap-6">
-                {/* Large Album Art */}
-                <div className="w-48 h-48 rounded-lg bg-muted flex-shrink-0 overflow-hidden shadow-lg">
+              {/* Mobile: Stacked layout */}
+              <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
+                {/* Album Art - Smaller on mobile */}
+                <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-lg bg-muted flex-shrink-0 overflow-hidden shadow-lg mx-auto lg:mx-0">
                   {currentTrack.cover_image ? (
                     <img
                       src={currentTrack.cover_image}
@@ -237,20 +238,20 @@ export function PersistentMusicPlayer() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                      <Music className="h-20 w-20 text-muted-foreground" />
+                      <Music className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 text-muted-foreground" />
                     </div>
                   )}
                 </div>
 
                 {/* Track Details & Controls */}
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-3 sm:space-y-4 text-center lg:text-left">
                   <div>
-                    <h3 className="text-2xl font-bold">{currentTrack.title}</h3>
-                    <p className="text-lg text-muted-foreground">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{currentTrack.title}</h3>
+                    <p className="text-base sm:text-lg text-muted-foreground truncate">
                       {currentTrack.profiles.username}
                     </p>
                     {currentTrack.genre && (
-                      <span className="inline-block mt-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
+                      <span className="inline-block mt-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs sm:text-sm">
                         {currentTrack.genre}
                       </span>
                     )}
@@ -263,9 +264,9 @@ export function PersistentMusicPlayer() {
                       max={duration || 100}
                       step={0.1}
                       onValueChange={handleSeek}
-                      className="cursor-pointer"
+                      className="cursor-pointer [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 sm:[&_[role=slider]]:h-5 sm:[&_[role=slider]]:w-5"
                     />
-                    <div className="flex justify-between text-sm text-muted-foreground">
+                    <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
                       <span>{formatTime(currentTime)}</span>
                       <span>{formatTime(duration)}</span>
                     </div>
@@ -280,7 +281,7 @@ export function PersistentMusicPlayer() {
                         size="icon"
                         onClick={toggleShuffle}
                         className={cn(
-                          "h-10 w-10 transition-colors",
+                          "h-10 w-10 transition-colors touch-manipulation",
                           shuffleEnabled && "text-primary bg-primary/10"
                         )}
                         title="Shuffle (S)"
@@ -293,7 +294,7 @@ export function PersistentMusicPlayer() {
                       variant="ghost"
                       size="icon"
                       onClick={playPrevious}
-                      className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
+                      className="h-11 w-11 sm:h-12 sm:w-12 lg:h-14 lg:w-14 touch-manipulation"
                       title="Previous (P)"
                     >
                       <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -316,7 +317,7 @@ export function PersistentMusicPlayer() {
                       size="icon"
                       onClick={playNext}
                       disabled={queue.length === 0 && repeatMode === 'off'}
-                      className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation"
+                      className="h-11 w-11 sm:h-12 sm:w-12 lg:h-14 lg:w-14 touch-manipulation"
                       title="Next (N)"
                     >
                       <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -329,7 +330,7 @@ export function PersistentMusicPlayer() {
                         size="icon"
                         onClick={cycleRepeatMode}
                         className={cn(
-                          "h-10 w-10 transition-colors",
+                          "h-10 w-10 transition-colors touch-manipulation",
                           repeatMode !== 'off' && "text-primary bg-primary/10"
                         )}
                         title="Repeat (R)"
@@ -340,8 +341,8 @@ export function PersistentMusicPlayer() {
                   </div>
                 </div>
 
-                {/* Queue Panel */}
-                <div className="w-80 space-y-2">
+                {/* Queue Panel - Hidden on mobile */}
+                <div className="hidden lg:block w-80 space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold flex items-center gap-2">
                       <ListMusic className="h-4 w-4" />
