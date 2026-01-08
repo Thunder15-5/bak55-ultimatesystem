@@ -95,15 +95,11 @@ export default function Login() {
               />
             </div>
 
-            {/* <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-primary/20" />
-                <span className="text-muted-foreground">Remember me</span>
-              </label>
+            <div className="flex items-center justify-end text-sm">
               <Link to="/forgot-password" className="text-primary hover:underline font-medium">
                 Forgot password?
               </Link>
-            </div> */}
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 p-6 sm:p-8 pt-0">

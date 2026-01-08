@@ -7,72 +7,82 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
+import { CookieConsent } from "@/components/CookieConsent";
+import { lazy, Suspense } from "react";
+import { PageLoader } from "@/components/PageLoader";
+
+// Eagerly loaded pages (critical path)
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import UploadTrack from "./pages/UploadTrack";
-import Subscribe from "./pages/Subscribe";
-import SubscriptionManage from "./pages/SubscriptionManage";
-import SubscriptionSuccess from "./pages/SubscriptionSuccess";
-import MusicCatalog from "./pages/MusicCatalog";
-import Wallet from "./pages/Wallet";
-import TrackDetails from "./pages/TrackDetails";
-import Admin from "./pages/Admin";
-import Streaming from "./pages/Streaming";
-import Competitions from "./pages/Competitions";
-import CompetitionsActive from "./pages/CompetitionsActive";
-import CompetitionDetails from "./pages/CompetitionDetails";
-import CreateCompetition from "./pages/admin/CreateCompetition";
-import BAKCoins from "./pages/BAKCoins";
-import AITools from "./pages/AITools";
-import Join from "./pages/Join";
-import HowToEarn from "./pages/HowToEarn";
-import SuccessStories from "./pages/SuccessStories";
-import Support from "./pages/Support";
-import About from "./pages/About";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Investors from "./pages/Investors";
-import PressKit from "./pages/PressKit";
-import Contact from "./pages/Contact";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Legal from "./pages/Legal";
-import CookiePolicy from "./pages/CookiePolicy";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import BuyCoins from "./pages/BuyCoins";
-import PaymentCallback from "./pages/PaymentCallback";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentPending from "./pages/PaymentPending";
-import PaymentFailed from "./pages/PaymentFailed";
-import VerifyEmail from "./pages/VerifyEmail";
-import VerifyAccount from "./pages/VerifyAccount";
-import EditCompetition from "./pages/admin/EditCompetition";
-import CashReserve from "./pages/admin/CashReserve";
-import Vouchers from "./pages/admin/Vouchers";
-import Deposits from "./pages/admin/Deposits";
-import Analytics from "./pages/Analytics";
-import ArtistProfile from "./pages/ArtistProfile";
-import Playlists from "./pages/Playlists";
-import PlaylistDetails from "./pages/PlaylistDetails";
-import ListeningHistory from "./pages/ListeningHistory";
-import LiveStreams from "./pages/LiveStreams";
-import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
-import FanDashboard from "./pages/fan/FanDashboard";
-import FanSubscribe from "./pages/fan/FanSubscribe";
-import FanDiscover from "./pages/fan/FanDiscover";
-import ArtistDashboard from "./pages/artist/ArtistDashboard";
-import ArtistCatalog from "./pages/artist/ArtistCatalog";
-import ArtistDiscover from "./pages/artist/ArtistDiscover";
-import BrandDashboard from "./pages/brand/BrandDashboard";
-import BrandDiscover from "./pages/brand/BrandDiscover";
-import Upgrade from "./pages/Upgrade";
-import Leaderboard from "./pages/Leaderboard";
-import Apply from "./pages/Apply";
-import InstallApp from "./pages/InstallApp";
+
+// Lazy loaded pages (code splitting for performance)
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const UploadTrack = lazy(() => import("./pages/UploadTrack"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
+const SubscriptionManage = lazy(() => import("./pages/SubscriptionManage"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const MusicCatalog = lazy(() => import("./pages/MusicCatalog"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const TrackDetails = lazy(() => import("./pages/TrackDetails"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Streaming = lazy(() => import("./pages/Streaming"));
+const Competitions = lazy(() => import("./pages/Competitions"));
+const CompetitionsActive = lazy(() => import("./pages/CompetitionsActive"));
+const CompetitionDetails = lazy(() => import("./pages/CompetitionDetails"));
+const CreateCompetition = lazy(() => import("./pages/admin/CreateCompetition"));
+const BAKCoins = lazy(() => import("./pages/BAKCoins"));
+const AITools = lazy(() => import("./pages/AITools"));
+const Join = lazy(() => import("./pages/Join"));
+const HowToEarn = lazy(() => import("./pages/HowToEarn"));
+const SuccessStories = lazy(() => import("./pages/SuccessStories"));
+const Support = lazy(() => import("./pages/Support"));
+const About = lazy(() => import("./pages/About"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Investors = lazy(() => import("./pages/Investors"));
+const PressKit = lazy(() => import("./pages/PressKit"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Legal = lazy(() => import("./pages/Legal"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const BuyCoins = lazy(() => import("./pages/BuyCoins"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentPending = lazy(() => import("./pages/PaymentPending"));
+const PaymentFailed = lazy(() => import("./pages/PaymentFailed"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const VerifyAccount = lazy(() => import("./pages/VerifyAccount"));
+const EditCompetition = lazy(() => import("./pages/admin/EditCompetition"));
+const CashReserve = lazy(() => import("./pages/admin/CashReserve"));
+const Vouchers = lazy(() => import("./pages/admin/Vouchers"));
+const Deposits = lazy(() => import("./pages/admin/Deposits"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const ArtistProfile = lazy(() => import("./pages/ArtistProfile"));
+const Playlists = lazy(() => import("./pages/Playlists"));
+const PlaylistDetails = lazy(() => import("./pages/PlaylistDetails"));
+const ListeningHistory = lazy(() => import("./pages/ListeningHistory"));
+const LiveStreams = lazy(() => import("./pages/LiveStreams"));
+const FanDashboard = lazy(() => import("./pages/fan/FanDashboard"));
+const FanSubscribe = lazy(() => import("./pages/fan/FanSubscribe"));
+const FanDiscover = lazy(() => import("./pages/fan/FanDiscover"));
+const ArtistDashboard = lazy(() => import("./pages/artist/ArtistDashboard"));
+const ArtistCatalog = lazy(() => import("./pages/artist/ArtistCatalog"));
+const ArtistDiscover = lazy(() => import("./pages/artist/ArtistDiscover"));
+const BrandDashboard = lazy(() => import("./pages/brand/BrandDashboard"));
+const BrandDiscover = lazy(() => import("./pages/brand/BrandDiscover"));
+const Upgrade = lazy(() => import("./pages/Upgrade"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Apply = lazy(() => import("./pages/Apply"));
+const InstallApp = lazy(() => import("./pages/InstallApp"));
 import { InstallPrompt } from "./components/InstallPrompt";
+import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 
 const queryClient = new QueryClient();
 
@@ -85,10 +95,14 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <MusicPlayerProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/faq" element={<FAQ />} />
                 
                 {/* PUBLIC SHAREABLE ROUTES - No auth required */}
                 <Route path="/track/:id" element={<TrackDetails />} />
@@ -219,8 +233,10 @@ const App = () => (
                 <Route path="/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
               <PersistentMusicPlayer />
               <InstallPrompt />
+              <CookieConsent />
             </MusicPlayerProvider>
           </AuthProvider>
         </BrowserRouter>

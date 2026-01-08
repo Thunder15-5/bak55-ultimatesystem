@@ -32,6 +32,8 @@ export default function Signup() {
   const [referralCode, setReferralCode] = useState("");
   const [country, setCountry] = useState("Kenya");
   const [confirmedKenya, setConfirmedKenya] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
 
   useEffect(() => {
     const ref = searchParams.get("ref");
@@ -82,6 +84,19 @@ export default function Signup() {
     // Kenya-only restriction
     if (FEATURES.KENYA_ONLY_SIGNUP && !confirmedKenya) {
       toast.error("Please confirm you are based in Kenya to continue");
+      setLoading(false);
+      return;
+    }
+
+    // Terms and age verification
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy");
+      setLoading(false);
+      return;
+    }
+
+    if (!confirmedAge) {
+      toast.error("Please confirm you are at least 16 years old");
       setLoading(false);
       return;
     }
@@ -390,6 +405,46 @@ export default function Signup() {
                 className="resize-none bg-background/50 border-primary/20 focus:border-primary"
               />
             </div>
+
+            {/* Legal Compliance Checkboxes */}
+            <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-primary/10">
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="ageConfirm" 
+                  checked={confirmedAge}
+                  onCheckedChange={(checked) => setConfirmedAge(checked as boolean)}
+                  className="mt-0.5"
+                />
+                <label
+                  htmlFor="ageConfirm"
+                  className="text-sm leading-relaxed cursor-pointer"
+                >
+                  I confirm I am at least <strong>16 years old</strong>
+                </label>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="termsConfirm" 
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  className="mt-0.5"
+                />
+                <label
+                  htmlFor="termsConfirm"
+                  className="text-sm leading-relaxed cursor-pointer"
+                >
+                  I agree to the{" "}
+                  <Link to="/terms" className="text-primary hover:underline font-medium" target="_blank">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" className="text-primary hover:underline font-medium" target="_blank">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 p-6 sm:p-8">
@@ -397,7 +452,7 @@ export default function Signup() {
               type="submit"
               variant="hero"
               className="w-full h-12 text-base font-semibold"
-              disabled={loading}
+              disabled={loading || !agreedToTerms || !confirmedAge}
             >
               {loading ? (
                 <>
@@ -411,10 +466,6 @@ export default function Signup() {
                 </>
               )}
             </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              By creating an account, you agree to our Terms of Service and Privacy Policy
-            </p>
 
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
