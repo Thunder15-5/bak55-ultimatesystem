@@ -133,9 +133,35 @@ const Terms = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold mb-4">Governing Law</h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  These Terms shall be governed by and construed in accordance with the laws of Kenya, without regard to conflict of law principles.
+                <h2 className="text-2xl font-bold mb-4">Refund Policy</h2>
+                <p className="text-muted-foreground mb-4">
+                  Our refund policy ensures fair treatment for all platform users:
+                </p>
+                <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                  <li><strong>BAKCoin Purchases:</strong> Generally non-refundable once credited to your account. For billing errors or technical issues, contact support within 48 hours.</li>
+                  <li><strong>Competition Entry Fees:</strong> Non-refundable after submission is made. If a competition is cancelled by BAK55, entry fees will be refunded in full.</li>
+                  <li><strong>Subscription Fees:</strong> Prorated refunds may be available within 7 days of purchase if no premium features have been used.</li>
+                  <li><strong>Processing Time:</strong> Approved refunds are processed within 5-7 business days via M-Pesa.</li>
+                  <li><strong>Disputes:</strong> For payment disputes, email billing@bak55talent.co.ke with your transaction details.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-bold mb-4">Community Guidelines</h2>
+                <p className="text-muted-foreground mb-4">
+                  All users must adhere to the following community standards:
+                </p>
+                <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                  <li><strong>Respect Others:</strong> Treat all users with respect. Harassment, bullying, or discrimination of any kind is prohibited.</li>
+                  <li><strong>Original Content:</strong> Only upload content you own or have rights to. Do not plagiarize or steal others' work.</li>
+                  <li><strong>No Spam:</strong> Do not spam comments, messages, or votes. Automated activity is prohibited.</li>
+                  <li><strong>Fair Competition:</strong> Vote manipulation, fake accounts, or any form of fraud will result in permanent ban.</li>
+                  <li><strong>Appropriate Content:</strong> No explicit, violent, or illegal content. Keep interactions family-friendly.</li>
+                  <li><strong>Constructive Feedback:</strong> When providing feedback, be constructive and helpful, not destructive.</li>
+                  <li><strong>Report Violations:</strong> Help us maintain a safe community by reporting violations to support@bak55talent.co.ke.</li>
+                </ul>
+                <p className="text-muted-foreground mt-4">
+                  Violations may result in content removal, account suspension, or permanent ban depending on severity.
                 </p>
               </section>
 
