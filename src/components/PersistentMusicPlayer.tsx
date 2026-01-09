@@ -405,11 +405,11 @@ export function PersistentMusicPlayer() {
         )}
 
         {/* Mini Player */}
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-4">
-            {/* Track Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-14 h-14 rounded bg-muted flex-shrink-0 overflow-hidden shadow-md">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Track Info - Smaller on mobile */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-[40%] sm:max-w-none">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded bg-muted flex-shrink-0 overflow-hidden shadow-md">
                 {currentTrack.cover_image ? (
                   <img
                     src={currentTrack.cover_image}
@@ -418,20 +418,20 @@ export function PersistentMusicPlayer() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                    <Music className="h-6 w-6 text-muted-foreground" />
+                    <Music className="h-4 w-4 sm:h-6 sm:w-6 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{currentTrack.title}</p>
-                <p className="text-sm text-muted-foreground truncate">
+              <div className="min-w-0 flex-1 hidden xs:block sm:block">
+                <p className="font-semibold truncate text-sm sm:text-base">{currentTrack.title}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {currentTrack.profiles.username}
                 </p>
               </div>
             </div>
 
-            {/* Controls - Center */}
-            <div className="flex flex-col items-center gap-2 flex-[2] max-w-2xl">
+            {/* Controls - Center - More compact on mobile */}
+            <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 sm:flex-[2] sm:max-w-2xl">
               <div className="flex items-center gap-1 sm:gap-3">
                 {/* Shuffle - Mini */}
                 {FEATURES.SHUFFLE_MODE && (
@@ -452,7 +452,7 @@ export function PersistentMusicPlayer() {
                   variant="ghost" 
                   size="icon" 
                   onClick={playPrevious}
-                  className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                  className="h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
                 >
                   <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
@@ -460,12 +460,12 @@ export function PersistentMusicPlayer() {
                   variant="default" 
                   size="icon" 
                   onClick={togglePlay}
-                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:scale-110 transition-all touch-manipulation"
+                  className="h-10 w-10 sm:h-14 sm:w-14 rounded-full shadow-lg hover:scale-110 transition-all touch-manipulation"
                 >
                   {isPlaying ? (
-                    <Pause className="h-6 w-6 sm:h-7 sm:w-7 fill-current" />
+                    <Pause className="h-5 w-5 sm:h-7 sm:w-7 fill-current" />
                   ) : (
-                    <Play className="h-6 w-6 sm:h-7 sm:w-7 ml-0.5 fill-current" />
+                    <Play className="h-5 w-5 sm:h-7 sm:w-7 ml-0.5 fill-current" />
                   )}
                 </Button>
                 <Button
@@ -473,7 +473,7 @@ export function PersistentMusicPlayer() {
                   size="icon"
                   onClick={playNext}
                   disabled={queue.length === 0 && repeatMode === 'off'}
-                  className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                  className="h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
                 >
                   <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
@@ -512,17 +512,18 @@ export function PersistentMusicPlayer() {
               )}
             </div>
 
-            {/* Volume & Actions */}
-            <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
+            {/* Volume & Actions - Compact on mobile */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {/* Queue button - only on larger screens in mini mode */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowQueue(!showQueue)}
-                className="relative h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                className="relative h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
               >
                 <ListMusic className="h-4 w-4 sm:h-5 sm:w-5" />
                 {queue.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
                     {queue.length}
                   </span>
                 )}

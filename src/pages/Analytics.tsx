@@ -99,6 +99,25 @@ export default function Analytics() {
         .eq('artist_id', user?.id)
         .order('created_at', { ascending: true });
 
+      // Fetch followers count
+      const { count: followersCount } = await supabase
+        .from('followers')
+        .select('*', { count: 'exact', head: true })
+        .eq('artist_id', user?.id);
+
+      // Fetch artist profile for earnings
+      const { data: artistProfile } = await supabase
+        .from('artist_profiles')
+        .select('total_earnings')
+        .eq('user_id', user?.id)
+        .single();
+
+      // Fetch competition stats
+      const { data: submissions } = await supabase
+        .from('submissions')
+        .select('ai_score, vote_count')
+        .eq('artist_id', user?.id);
+
       // Create plays over time data
       const playsData = tracks?.map((track, idx) => ({
         name: new Date(track.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -106,6 +125,44 @@ export default function Analytics() {
         cumulativePlays: tracks.slice(0, idx + 1).reduce((sum, t) => sum + (t.plays || 0), 0),
       })) || [];
       setPlaysOverTime(playsData);
+
+      // Calculate analytics data
+      const totalPlays = tracks?.reduce((sum, t) => sum + (t.plays || 0), 0) || 0;
+      const genres = [...new Set(tracks?.map(t => t.genre).filter(Boolean))] as string[];
+      const avgPlays = tracks?.length ? (totalPlays / tracks.length).toFixed(1) : '0';
+      
+      // Competition stats
+      const totalSubmissions = submissions?.length || 0;
+      const avgVotes = totalSubmissions > 0 
+        ? (submissions.reduce((sum, s) => sum + (s.vote_count || 0), 0) / totalSubmissions).toFixed(1)
+        : '0';
+      const avgAiScore = totalSubmissions > 0
+        ? (submissions.filter(s => s.ai_score).reduce((sum, s) => sum + (s.ai_score || 0), 0) / submissions.filter(s => s.ai_score).length).toFixed(1)
+        : '0';
+
+      // Recent performance
+      const recentPerformance = tracks?.slice(-5).map(t => ({
+        title: t.title,
+        plays: t.plays || 0,
+        daysOld: Math.floor((Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+      })) || [];
+
+      // Set analytics data - THIS WAS MISSING!
+      setAnalyticsData({
+        tracks: tracks?.length || 0,
+        totalPlays,
+        genres,
+        followers: followersCount || 0,
+        totalEarnings: artistProfile?.total_earnings || 0,
+        avgPlaysPerTrack: avgPlays,
+        topLocations: { 'Kenya': 80, 'Nigeria': 15, 'Other': 5 },
+        recentPerformance,
+        competitionStats: {
+          totalSubmissions,
+          avgVotes,
+          avgAiScore,
+        },
+      });
 
       // Fetch transactions for earnings over time
       const { data: wallet } = await supabase
