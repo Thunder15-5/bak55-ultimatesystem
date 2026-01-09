@@ -37,8 +37,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (amount_kes < 100) {
-      return new Response(JSON.stringify({ error: 'Minimum deposit is 100 KSh' }), {
+    if (amount_kes < 28) {
+      return new Response(JSON.stringify({ error: 'Minimum deposit is 28 KSh (~1 BAK)' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

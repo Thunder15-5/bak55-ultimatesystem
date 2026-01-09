@@ -90,10 +90,10 @@ const BuyCoins = () => {
     }
 
     const amount = parseFloat(depositAmount);
-    if (!amount || amount < 5) {
+    if (!amount || amount < 28) {
       toast({
         title: "Invalid Amount",
-        description: "Minimum deposit is $5",
+        description: "Minimum deposit is 28 KES (~1 BAK)",
         variant: "destructive",
       });
       return;
@@ -303,12 +303,12 @@ const BuyCoins = () => {
                       placeholder="Enter amount sent via M-Pesa in KES"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      min={700}
-                      step="50"
+                      min={28}
+                      step="1"
                       disabled={submittingDeposit}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Minimum: 700 KES (~$5 USD) • Rate: $0.20 = 1 BAK • Exchange: ~140 KES = $1
+                      Minimum: 28 KES (~1 BAK) • Rate: $0.20 = 1 BAK • Exchange: ~140 KES = $1
                     </p>
                   </div>
 
@@ -328,7 +328,7 @@ const BuyCoins = () => {
                     </p>
                   </div>
 
-                  {parseFloat(depositAmount) >= 700 && (
+                  {parseFloat(depositAmount) >= 28 && (
                     <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                       <div className="flex justify-between items-center text-sm">
                         <span className="font-medium">KES Amount:</span>
@@ -350,7 +350,7 @@ const BuyCoins = () => {
                   <Button 
                     className="w-full" 
                     onClick={handleSubmitDeposit}
-                    disabled={parseFloat(depositAmount) < 700 || !receiptCode.trim() || submittingDeposit}
+                    disabled={parseFloat(depositAmount) < 28 || !receiptCode.trim() || submittingDeposit}
                   >
                     {submittingDeposit ? (
                       <>

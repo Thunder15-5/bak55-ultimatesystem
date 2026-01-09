@@ -37,25 +37,53 @@ export function FeaturedArtistsCarousel() {
 
   const fetchFeaturedArtists = async () => {
     try {
-      // Get all artists (remove verified filter since no artists are verified yet)
-      const { data: artistsData, error } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          username,
-          avatar_url,
-          bio,
-          artist_profiles!inner (
-            stage_name,
-            verified,
-            genres
-          )
-        `)
+      // First try to get artists from artist_profiles table
+      const { data: artistProfiles, error: profilesError } = await supabase
+        .from("artist_profiles")
+        .select("user_id, stage_name, verified, genres")
         .limit(10);
 
-      if (error) throw error;
+      if (profilesError) {
+        console.error("Error fetching artist profiles:", profilesError);
+        throw profilesError;
+      }
 
-      if (!artistsData || artistsData.length === 0) {
+      if (!artistProfiles || artistProfiles.length === 0) {
+        console.log("No artist profiles found");
+        setLoading(false);
+        return;
+      }
+
+      // Get profile details for each artist
+      const userIds = artistProfiles.map(ap => ap.user_id);
+      const { data: profilesData, error: usersError } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, bio")
+        .in("id", userIds);
+
+      if (usersError) {
+        console.error("Error fetching profiles:", usersError);
+        throw usersError;
+      }
+
+      // Merge the data
+      const artistsData = profilesData?.map(profile => {
+        const artistProfile = artistProfiles.find(ap => ap.user_id === profile.id);
+        return {
+          id: profile.id,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+          bio: profile.bio,
+          artist_profiles: artistProfile ? {
+            stage_name: artistProfile.stage_name,
+            verified: artistProfile.verified,
+            genres: artistProfile.genres || [],
+          } : null,
+        };
+      }) || [];
+
+      if (artistsData.length === 0) {
+        console.log("No merged artist data");
         setLoading(false);
         return;
       }
