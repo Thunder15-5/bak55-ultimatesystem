@@ -70,7 +70,8 @@ export function ReferralSystem() {
 
       if (refError) throw refError;
 
-      const totalEarned = (referrals?.filter(r => r.rewarded).length || 0) * 50;
+      // 2 BAK per premium referral (when referred user subscribes)
+      const totalEarned = (referrals?.filter(r => r.rewarded).length || 0) * 2;
 
       setReferralData({
         code: codeData.code,
@@ -108,7 +109,7 @@ export function ReferralSystem() {
     const referralLink = `${window.location.origin}/signup?ref=${referralData.code}`;
     const shareData = {
       title: "Join BAK55 Talent",
-      text: `Join me on BAK55 Talent and we both earn 50 BAKCoins! 🎵`,
+      text: `Join me on BAK55 Talent! When you subscribe to premium, we both benefit! 🎵`,
       url: referralLink,
     };
 
@@ -151,7 +152,7 @@ export function ReferralSystem() {
           Referral Program
         </CardTitle>
         <CardDescription>
-          Invite friends and earn 50 BAKCoins for each signup!
+          Invite friends! When they subscribe to premium, you earn 2 BAKCoins!
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -166,8 +167,8 @@ export function ReferralSystem() {
             <div className="text-xs text-muted-foreground">BAKCoins Earned</div>
           </div>
           <div className="text-center p-4 rounded-lg bg-primary/10">
-            <div className="text-2xl font-bold text-primary">50</div>
-            <div className="text-xs text-muted-foreground">Per Referral</div>
+            <div className="text-2xl font-bold text-primary">2</div>
+            <div className="text-xs text-muted-foreground">BAK Per Premium</div>
           </div>
         </div>
 
@@ -184,7 +185,7 @@ export function ReferralSystem() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Share this link with friends. When they sign up, you both earn 50 BAKCoins!
+            Share this link with friends. When they subscribe to premium, you earn 2 BAKCoins!
           </p>
         </div>
 

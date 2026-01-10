@@ -50,6 +50,8 @@ export const Footer = () => {
               <li><Link to="/investors" className="hover:text-primary transition-colors">Investors</Link></li>
               <li><Link to="/press-kit" className="hover:text-primary transition-colors">Press Kit</Link></li>
               <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+              <li><a href="https://instagram.com/bak55.talent" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a></li>
+              <li><a href="https://twitter.com/Bak55Official" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Twitter</a></li>
             </ul>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { TrendingTracks } from '@/components/TrendingTracks';
 import { ForYouSection } from '@/components/ForYouSection';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle } from 'lucide-react';
 
 export default function FanDashboard() {
@@ -161,20 +162,16 @@ export default function FanDashboard() {
             </div>
           )}
 
-          {/* What's New Card */}
+          {/* What's New Card - Only show enabled features */}
           <Card className="border-green-500/50 bg-green-500/10">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Music className="h-5 w-5 text-green-500" />
-                New Fan Features!
+                Fan Features
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-green-500" />
-                  <span>Like your favorite tracks</span>
-                </li>
                 <li className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-green-500" />
                   <span>Vote in competitions</span>
