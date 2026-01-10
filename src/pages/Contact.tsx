@@ -132,9 +132,9 @@ const Contact = () => {
                 </div>
                 <h3 className="font-bold mb-2">Location</h3>
                 <p className="text-sm text-muted-foreground">
-                  Nairobi, Kenya
+                  Zanzi Court, Riara Rd
                   <br />
-                  East Africa Hub
+                  Nairobi, Kenya
                 </p>
               </Card>
 
@@ -237,16 +237,16 @@ const Contact = () => {
               </p>
               <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <Button variant="outline" asChild>
-                  <a href="https://twitter.com/bak55talent" target="_blank" rel="noopener noreferrer">Twitter</a>
+                  <a href="https://twitter.com/Bak55Official" target="_blank" rel="noopener noreferrer">Twitter</a>
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href="https://instagram.com/bak55talent" target="_blank" rel="noopener noreferrer">Instagram</a>
+                  <a href="https://instagram.com/bak55.talent" target="_blank" rel="noopener noreferrer">Instagram</a>
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href="https://linkedin.com/company/bak55talent" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                  <a href="https://www.linkedin.com/me?trk=p_mwlite_feed-secondary_nav" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href="https://facebook.com/bak55talent" target="_blank" rel="noopener noreferrer">Facebook</a>
+                  <a href="https://www.facebook.com/share/1A4tcXYbcG/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">Facebook</a>
                 </Button>
               </div>
             </div>

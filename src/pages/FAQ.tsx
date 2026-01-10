@@ -170,17 +170,17 @@ const FAQ = () => {
                   <h2 className="text-xl font-bold">{category.title}</h2>
                 </div>
 
-                <Accordion type="single" collapsible className="space-y-2">
+                <Accordion type="single" collapsible className="space-y-3">
                   {category.items.map((item, itemIndex) => (
                     <AccordionItem 
                       key={itemIndex} 
                       value={`item-${index}-${itemIndex}`}
-                      className="border border-primary/10 rounded-lg px-4 data-[state=open]:bg-primary/5"
+                      className="border border-primary/10 rounded-lg px-4 data-[state=open]:bg-primary/5 transition-colors"
                     >
-                      <AccordionTrigger className="text-left hover:no-underline py-4">
-                        <span className="font-medium">{item.question}</span>
+                      <AccordionTrigger className="hover:no-underline py-4">
+                        <span className="font-medium text-left">{item.question}</span>
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
                         {item.answer}
                       </AccordionContent>
                     </AccordionItem>

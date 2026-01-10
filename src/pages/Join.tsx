@@ -3,10 +3,12 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Music, Users } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, Music, Users, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const artistBenefits = [
   "Upload unlimited music and videos",
@@ -26,14 +28,38 @@ const fanBenefits = [
   "Be part of artist success stories",
 ];
 
+const MAX_ARTISTS = 100;
+
 const Join = () => {
   const [email, setEmail] = useState("");
   const [userType, setUserType] = useState<"artist" | "fan">("artist");
+  const [artistCount, setArtistCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchArtistCount = async () => {
+      const { count } = await supabase
+        .from('early_access_signups')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_type', 'artist');
+      setArtistCount(count || 0);
+      setLoading(false);
+    };
+    fetchArtistCount();
+  }, []);
+
+  const isArtistSpotsClosed = artistCount >= MAX_ARTISTS;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast.error("Please enter your email");
+      return;
+    }
+
+    if (userType === 'artist' && isArtistSpotsClosed) {
+      toast.error("Artist spots are full! Join as a fan or check back later.");
       return;
     }
 
@@ -73,6 +99,16 @@ const Join = () => {
         console.error('Email error:', emailError);
       }
 
+      // Update count if artist
+      if (userType === 'artist') {
+        setArtistCount(prev => prev + 1);
+        if (artistCount + 1 >= MAX_ARTISTS) {
+          toast.success("🎉 You got the last spot! Redirecting...");
+          setTimeout(() => navigate('/'), 2000);
+          return;
+        }
+      }
+
       toast.success(`Thanks for your interest! We'll contact you soon about joining as ${userType === "artist" ? "an artist" : "a fan"}.`);
       setEmail("");
     } catch (error) {
@@ -97,6 +133,18 @@ const Join = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Be among the first to experience BAK55. Limited spots available for founding members with exclusive lifetime benefits.
           </p>
+          
+          {/* Artist Counter */}
+          {!loading && (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/10 border border-primary/20">
+                <span className="text-lg font-semibold text-primary">
+                  {MAX_ARTISTS - artistCount} / {MAX_ARTISTS}
+                </span>
+                <span className="text-sm text-muted-foreground">Artist spots remaining</span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

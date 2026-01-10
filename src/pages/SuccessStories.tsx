@@ -28,7 +28,7 @@ const SuccessStories = () => {
                 "We're just getting started, but our vision is clear: create pathways to success for African artists who've been locked out of opportunity."
               </p>
               <div className="pt-4">
-                <p className="font-bold text-lg">Isaac Bith A</p>
+                <p className="font-bold text-lg">Bith Agustine A.</p>
                 <p className="text-muted-foreground">Founder & CEO, BAK55</p>
               </div>
             </div>

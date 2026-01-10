@@ -107,13 +107,10 @@ const About = () => {
                 <h2 className="text-3xl font-bold">Our Journey</h2>
                 <div className="max-w-2xl mx-auto space-y-4 text-muted-foreground">
                   <p>
-                    Founded by Isaac Bith A., who spent 5 years managing artists and witnessing firsthand the exploitation in the industry. After helping 5 artists Record songs and organizing 10 live events, Isaac recognized the need for systemic change.
+                    Founded by Bith Agustine A., who spent 5 years managing artists and witnessing firsthand the exploitation in the industry. After helping 5 artists record songs and organizing 10 live events, Bith recognized the need for systemic change.
                   </p>
                   <p>
                     BAK55 launched in 2025 with a clear mission: use AI and blockchain economics to create a fairer music industry. Starting in Kenya, we're building the infrastructure that will scale across Africa.
-                  </p>
-                  <p className="font-semibold text-foreground">
-                    We're currently seeking $50,000 pre-seed funding to launch our MVP and demonstrate product-market fit for a larger seed round.
                   </p>
                 </div>
               </div>
