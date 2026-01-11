@@ -17,20 +17,24 @@ export const StatsBar = () => {
     let isMounted = true;
     const load = async () => {
       try {
-        const nowIso = new Date().toISOString();
-        const [{ count: trackCount }, { count: artistCount }, { count: compCount }] = await Promise.all([
-          supabase.from('tracks').select('*', { count: 'exact', head: true }),
-          supabase.from('artist_profiles').select('*', { count: 'exact', head: true }),
-          supabase.from('competitions').select('*', { count: 'exact', head: true }).eq('status', 'active').gte('end_date', nowIso),
-        ]);
+        // Use RPC function for public-safe stats (works for logged-out users too)
+        const { data, error } = await supabase.rpc('get_public_platform_stats');
+        
+        if (error) {
+          console.error('StatsBar RPC error:', error);
+          // Fallback to 0 values
+          return;
+        }
+        
         if (!isMounted) return;
+        
+        const statsData = data as { artists_count: number; tracks_count: number; competitions_count: number };
         setStats({
-          tracks: trackCount || 0,
-          artists: artistCount || 0,
-          activeCompetitions: compCount || 0,
+          tracks: statsData?.tracks_count || 0,
+          artists: statsData?.artists_count || 0,
+          activeCompetitions: statsData?.competitions_count || 0,
         });
       } catch (e) {
-        // Silent fail to avoid UX break; values remain 0
         console.error('StatsBar load error:', e);
       } finally {
         if (isMounted) setLoading(false);

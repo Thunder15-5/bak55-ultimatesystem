@@ -7,16 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Users, Music, ChevronLeft, ChevronRight } from "lucide-react";
 
-interface FeaturedArtist {
-  id: string;
-  username: string;
+interface PublicArtist {
+  user_id: string;
+  stage_name: string | null;
+  verified: boolean;
+  genres: string[] | null;
   avatar_url: string | null;
+  display_name: string | null;
   bio: string | null;
-  artist_profiles: {
-    stage_name: string | null;
-    verified: boolean;
-    genres: string[];
-  } | null;
+  username: string;
+}
+
+interface FeaturedArtist extends PublicArtist {
   follower_count: number;
   track_count: number;
   top_track?: {
@@ -37,70 +39,36 @@ export function FeaturedArtistsCarousel() {
 
   const fetchFeaturedArtists = async () => {
     try {
-      // First try to get artists from artist_profiles table
-      const { data: artistProfiles, error: profilesError } = await supabase
-        .from("artist_profiles")
-        .select("user_id, stage_name, verified, genres")
-        .limit(10);
+      // Use public RPC function that works for logged-out users
+      const { data: artistsData, error } = await supabase.rpc('get_public_artists', { limit_count: 10 });
 
-      if (profilesError) {
-        console.error("Error fetching artist profiles:", profilesError);
-        throw profilesError;
-      }
-
-      if (!artistProfiles || artistProfiles.length === 0) {
-        console.log("No artist profiles found");
+      if (error) {
+        console.error("Error fetching public artists:", error);
         setLoading(false);
         return;
       }
 
-      // Get profile details for each artist
-      const userIds = artistProfiles.map(ap => ap.user_id);
-      const { data: profilesData, error: usersError } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, bio")
-        .in("id", userIds);
-
-      if (usersError) {
-        console.error("Error fetching profiles:", usersError);
-        throw usersError;
-      }
-
-      // Merge the data
-      const artistsData = profilesData?.map(profile => {
-        const artistProfile = artistProfiles.find(ap => ap.user_id === profile.id);
-        return {
-          id: profile.id,
-          username: profile.username,
-          avatar_url: profile.avatar_url,
-          bio: profile.bio,
-          artist_profiles: artistProfile ? {
-            stage_name: artistProfile.stage_name,
-            verified: artistProfile.verified,
-            genres: artistProfile.genres || [],
-          } : null,
-        };
-      }) || [];
-
-      if (artistsData.length === 0) {
-        console.log("No merged artist data");
+      if (!artistsData || artistsData.length === 0) {
         setLoading(false);
         return;
       }
 
-      // Fetch stats for each artist
+      // Cast the response to our expected type
+      const publicArtists = artistsData as PublicArtist[];
+
+      // Fetch stats for each artist (followers and tracks are publicly readable)
       const artistsWithStats = await Promise.all(
-        artistsData.map(async (artist) => {
+        publicArtists.map(async (artist) => {
           const [followersResult, tracksData] = await Promise.all([
             supabase
               .from("followers")
               .select("id", { count: "exact", head: true })
-              .eq("artist_id", artist.id),
+              .eq("artist_id", artist.user_id),
             supabase
               .from("tracks")
               .select("id, title, cover_image, plays")
-              .eq("artist_id", artist.id)
-              .eq("moderation_status", "approved")
+              .eq("artist_id", artist.user_id)
+              .or("moderation_status.eq.approved,moderation_status.is.null")
               .order("plays", { ascending: false })
               .limit(1),
           ]);
@@ -114,7 +82,7 @@ export function FeaturedArtistsCarousel() {
         })
       );
 
-      // Sort by follower count but don't filter out zero followers
+      // Sort by follower count
       const sorted = artistsWithStats.sort((a, b) => b.follower_count - a.follower_count);
       setArtists(sorted);
     } catch (error) {
@@ -243,7 +211,7 @@ export function FeaturedArtistsCarousel() {
           {/* Carousel */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 px-8 sm:px-14">
             {visibleArtists.map((artist, idx) => (
-              <Link key={`${artist.id}-${idx}`} to={`/artist/${artist.id}`}>
+              <Link key={`${artist.user_id}-${idx}`} to={`/artist/${artist.user_id}`}>
                 <Card className="group hover:shadow-2xl hover:border-primary transition-all duration-300 overflow-hidden h-full">
                   {/* Artist Top Track Cover as Background */}
                   {artist.top_track?.cover_image && (
@@ -263,7 +231,7 @@ export function FeaturedArtistsCarousel() {
                       <Avatar className="h-16 w-16 sm:h-24 sm:w-24 border-4 border-background shadow-xl">
                         <AvatarImage src={artist.avatar_url || undefined} />
                         <AvatarFallback className="text-lg sm:text-2xl font-bold">
-                          {(artist.artist_profiles?.stage_name || artist.username).substring(0, 2).toUpperCase()}
+                          {(artist.stage_name || artist.username).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </div>
@@ -273,9 +241,9 @@ export function FeaturedArtistsCarousel() {
                       <div>
                         <div className="flex items-center justify-center gap-2 mb-1">
                           <h3 className="font-bold text-base sm:text-xl truncate max-w-[180px]">
-                            {artist.artist_profiles?.stage_name || artist.username}
+                            {artist.stage_name || artist.username}
                           </h3>
-                          {artist.artist_profiles?.verified && (
+                          {artist.verified && (
                             <Badge variant="default" className="h-5 px-1.5 text-xs">✓</Badge>
                           )}
                         </div>
@@ -289,9 +257,9 @@ export function FeaturedArtistsCarousel() {
                       )}
 
                       {/* Genres */}
-                      {artist.artist_profiles?.genres && artist.artist_profiles.genres.length > 0 && (
+                      {artist.genres && artist.genres.length > 0 && (
                         <div className="flex flex-wrap gap-1 justify-center">
-                          {artist.artist_profiles.genres.slice(0, 2).map((genre) => (
+                          {artist.genres.slice(0, 2).map((genre) => (
                             <Badge key={genre} variant="secondary" className="text-xs">
                               {genre}
                             </Badge>
