@@ -7,14 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Users, Music } from "lucide-react";
 
-interface TrendingArtist {
-  id: string;
-  username: string;
+interface PublicArtist {
+  user_id: string;
+  stage_name: string | null;
+  verified: boolean;
+  genres: string[] | null;
   avatar_url: string | null;
-  artist_profiles: {
-    stage_name: string | null;
-    verified: boolean;
-  } | null;
+  display_name: string | null;
+  bio: string | null;
+  username: string;
+}
+
+interface TrendingArtist extends PublicArtist {
   follower_count: number;
   track_count: number;
 }
@@ -29,35 +33,36 @@ export function TrendingArtists() {
 
   const fetchTrendingArtists = async () => {
     try {
-      const { data: artistsData, error } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          username,
-          avatar_url,
-          artist_profiles (
-            stage_name,
-            verified
-          )
-        `)
-        .not("artist_profiles", "is", null)
-        .limit(6);
+      // Use public RPC function that works for logged-out users
+      const { data: artistsData, error } = await supabase.rpc('get_public_artists', { limit_count: 6 });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching public artists:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (!artistsData || artistsData.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Cast the response to our expected type
+      const publicArtists = artistsData as PublicArtist[];
 
       // Fetch follower counts and track counts for each artist
       const artistsWithStats = await Promise.all(
-        artistsData.map(async (artist) => {
+        publicArtists.map(async (artist) => {
           const [followersResult, tracksResult] = await Promise.all([
             supabase
               .from("followers")
               .select("id", { count: "exact", head: true })
-              .eq("artist_id", artist.id),
+              .eq("artist_id", artist.user_id),
             supabase
               .from("tracks")
               .select("id", { count: "exact", head: true })
-              .eq("artist_id", artist.id)
-              .eq("moderation_status", "approved"),
+              .eq("artist_id", artist.user_id)
+              .or("moderation_status.eq.approved,moderation_status.is.null"),
           ]);
 
           return {
@@ -145,7 +150,7 @@ export function TrendingArtists() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {artists.map((artist, index) => (
-            <Link key={artist.id} to={`/artist/${artist.id}`}>
+            <Link key={artist.user_id} to={`/artist/${artist.user_id}`}>
               <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-300 hover:scale-105">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
@@ -153,7 +158,7 @@ export function TrendingArtists() {
                       <Avatar className="h-16 w-16 border-2 border-primary/20 group-hover:border-primary transition-colors">
                         <AvatarImage src={artist.avatar_url || undefined} />
                         <AvatarFallback className="text-lg font-bold">
-                          {(artist.artist_profiles?.stage_name || artist.username).substring(0, 2).toUpperCase()}
+                          {(artist.stage_name || artist.username).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       {index < 3 && (
@@ -165,9 +170,9 @@ export function TrendingArtists() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-lg truncate">
-                          {artist.artist_profiles?.stage_name || artist.username}
+                          {artist.stage_name || artist.username}
                         </h3>
-                        {artist.artist_profiles?.verified && (
+                        {artist.verified && (
                           <Badge variant="default" className="h-5 px-1.5 text-xs">✓</Badge>
                         )}
                       </div>

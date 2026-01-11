@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, Music2, Coins, Trophy, Shield, CreditCard } from "lucide-react";
+import { HelpCircle, Music2, Coins, Trophy, Shield, CreditCard, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -148,39 +148,44 @@ const FAQ = () => {
       
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-4xl">
+          {/* Header */}
           <div className="text-center space-y-4 mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <HelpCircle className="w-10 h-10 text-primary" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+              <HelpCircle className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Help Center</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold">
+            <h1 className="text-4xl md:text-5xl font-bold">
               Frequently Asked <span className="text-gradient">Questions</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
               Find answers to common questions about BAK55 Talent
             </p>
           </div>
 
+          {/* FAQ Categories */}
           <div className="space-y-8">
             {faqCategories.map((category, index) => (
-              <Card key={index} className="p-6 bg-card/50 backdrop-blur-sm border-primary/10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <category.icon className="w-5 h-5 text-primary" />
+              <Card key={index} className="overflow-hidden bg-card/50 backdrop-blur-sm border-primary/10">
+                {/* Category Header */}
+                <div className="flex items-center gap-3 p-5 border-b border-border/50 bg-muted/30">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center flex-shrink-0">
+                    <category.icon className="w-5 h-5 text-white" />
                   </div>
-                  <h2 className="text-xl font-bold">{category.title}</h2>
+                  <h2 className="text-xl font-semibold">{category.title}</h2>
                 </div>
 
-                <Accordion type="single" collapsible className="space-y-3">
+                {/* FAQ Items */}
+                <Accordion type="single" collapsible className="w-full">
                   {category.items.map((item, itemIndex) => (
                     <AccordionItem 
                       key={itemIndex} 
                       value={`item-${index}-${itemIndex}`}
-                      className="border border-primary/10 rounded-lg px-4 data-[state=open]:bg-primary/5 transition-colors"
+                      className="border-b border-border/30 last:border-b-0"
                     >
-                      <AccordionTrigger className="hover:no-underline py-4">
-                        <span className="font-medium text-left">{item.question}</span>
+                      <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-muted/20 transition-colors">
+                        {item.question}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
+                      <AccordionContent className="px-5 pb-5 pt-0">
                         {item.answer}
                       </AccordionContent>
                     </AccordionItem>
@@ -192,16 +197,21 @@ const FAQ = () => {
 
           {/* Still have questions CTA */}
           <Card className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 text-center">
+            <MessageSquare className="w-12 h-12 text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-3">Still have questions?</h3>
-            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto leading-relaxed">
               Can't find what you're looking for? Our support team is here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/support">
-                <Button variant="hero">Contact Support</Button>
+                <Button variant="hero" size="lg" className="w-full sm:w-auto">
+                  Contact Support
+                </Button>
               </Link>
               <Link to="/contact">
-                <Button variant="outline">Send Message</Button>
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  Send Message
+                </Button>
               </Link>
             </div>
           </Card>

@@ -2469,6 +2469,20 @@ export type Database = {
         Returns: boolean
       }
       get_primary_role: { Args: { user_id_param: string }; Returns: string }
+      get_public_artists: {
+        Args: { limit_count?: number }
+        Returns: {
+          avatar_url: string
+          bio: string
+          display_name: string
+          genres: string[]
+          stage_name: string
+          user_id: string
+          username: string
+          verified: boolean
+        }[]
+      }
+      get_public_platform_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

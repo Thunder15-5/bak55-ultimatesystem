@@ -45,8 +45,15 @@ export default function UploadTrack() {
     fetchExistingTracks();
   }, [user]);
 
+  // Only redirect after userRole has been determined (not during loading)
   useEffect(() => {
-    if (userRole && userRole !== 'artist' && userRole !== 'admin') {
+    // Wait for auth to fully load before making redirect decisions
+    if (userRole === null || userRole === undefined) {
+      // Still loading, don't redirect yet
+      return;
+    }
+    
+    if (userRole !== 'artist' && userRole !== 'admin') {
       navigate('/streaming');
       toast.error('Only artists can upload tracks. Upgrade to Artist to start sharing your music!');
     }
