@@ -1,15 +1,16 @@
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { FEATURES } from '@/lib/featureFlags';
 
-interface Track {
+export interface Track {
   id: string;
   title: string;
   artist_id: string;
   audio_url: string;
   cover_image: string | null;
   genre: string | null;
+  duration?: number;
   profiles: {
     username: string;
     avatar_url?: string | null;
@@ -25,6 +26,8 @@ interface MusicPlayerContextType {
   isMinimized: boolean;
   shuffleEnabled: boolean;
   repeatMode: RepeatMode;
+  history: Track[];
+  nextTrackUrl: string | null;
   playTrack: (track: Track, newQueue?: Track[]) => void;
   addToQueue: (track: Track) => void;
   playNext: () => void;
@@ -36,7 +39,6 @@ interface MusicPlayerContextType {
   removeFromQueue: (trackId: string) => void;
   toggleShuffle: () => void;
   cycleRepeatMode: () => void;
-  history: Track[];
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -62,6 +64,23 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
 
+  // Compute next track URL for preloading
+  const nextTrackUrl = queue.length > 0 ? queue[0].audio_url : null;
+
+  // Record listening history
+  const recordHistory = useCallback(async (trackId: string) => {
+    if (!user) return;
+    
+    try {
+      await supabase.from('listening_history').insert({
+        user_id: user.id,
+        track_id: trackId,
+      });
+    } catch (error) {
+      console.error('Failed to record listening history:', error);
+    }
+  }, [user]);
+
   const playTrack = useCallback((track: Track, newQueue?: Track[]) => {
     // Add current track to history if exists
     if (currentTrack) {
@@ -85,13 +104,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }
 
     // Record listening history
-    if (user) {
-      supabase.from('listening_history').insert({
-        user_id: user.id,
-        track_id: track.id,
-      });
-    }
-  }, [currentTrack, shuffleEnabled, user]);
+    recordHistory(track.id);
+  }, [currentTrack, shuffleEnabled, recordHistory]);
 
   const addToQueue = useCallback((track: Track) => {
     setQueue(prev => [...prev, track]);
@@ -100,7 +114,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   const playNext = useCallback(() => {
     if (repeatMode === 'one' && currentTrack && FEATURES.REPEAT_MODE) {
-      // Replay current track
+      // Replay current track (handled by audio engine)
       setIsPlaying(true);
       return;
     }
@@ -115,13 +129,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setCurrentTrack(nextTrack);
       setQueue(remainingQueue);
       setIsPlaying(true);
-
-      if (user) {
-        supabase.from('listening_history').insert({
-          user_id: user.id,
-          track_id: nextTrack.id,
-        });
-      }
+      
+      recordHistory(nextTrack.id);
     } else if (repeatMode === 'all' && originalQueue.length > 0 && FEATURES.REPEAT_MODE) {
       // Restart queue from beginning
       const newQueue = shuffleEnabled && FEATURES.SHUFFLE_MODE 
@@ -136,11 +145,13 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         setCurrentTrack(firstTrack);
         setQueue(rest);
         setIsPlaying(true);
+        
+        recordHistory(firstTrack.id);
       }
     } else {
       setIsPlaying(false);
     }
-  }, [queue, repeatMode, originalQueue, shuffleEnabled, currentTrack, user]);
+  }, [queue, repeatMode, originalQueue, shuffleEnabled, currentTrack, recordHistory]);
 
   const playPrevious = useCallback(() => {
     if (history.length > 0) {
@@ -155,7 +166,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setHistory(remainingHistory);
       setIsPlaying(true);
     } else {
-      // Just restart current track
+      // Just restart current track (handled by audio engine)
       setIsPlaying(true);
     }
   }, [history, currentTrack]);
@@ -218,6 +229,8 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         isMinimized,
         shuffleEnabled,
         repeatMode,
+        history,
+        nextTrackUrl,
         playTrack,
         addToQueue,
         playNext,
@@ -229,7 +242,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         removeFromQueue,
         toggleShuffle,
         cycleRepeatMode,
-        history,
       }}
     >
       {children}
