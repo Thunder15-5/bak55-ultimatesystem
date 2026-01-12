@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -24,7 +24,6 @@ export function PersistentMusicPlayer() {
     nextTrackUrl,
     playNext,
     playPrevious,
-    togglePlay: contextTogglePlay,
     setIsPlaying,
     toggleMinimized,
     removeFromQueue,
@@ -40,7 +39,6 @@ export function PersistentMusicPlayer() {
   const audio = useAudioEngine({
     onEnd: () => {
       if (repeatMode === 'one' && FEATURES.REPEAT_MODE) {
-        // Restart current track
         audio.seek(0);
         audio.play();
       } else if (queue.length > 0) {
@@ -54,7 +52,6 @@ export function PersistentMusicPlayer() {
     onPlay: () => setIsPlaying(true),
     onPause: () => setIsPlaying(false),
     onTimeUpdate: (time) => {
-      // Increment play count after 30 seconds
       if (!hasIncrementedPlays.current && time >= 30 && currentTrack) {
         hasIncrementedPlays.current = true;
         incrementPlayCount(currentTrack.id);
@@ -63,7 +60,6 @@ export function PersistentMusicPlayer() {
     preloadNext: nextTrackUrl,
   });
 
-  // Increment play count
   const incrementPlayCount = async (trackId: string) => {
     try {
       const { data } = await supabase
@@ -106,7 +102,6 @@ export function PersistentMusicPlayer() {
     if (!FEATURES.KEYBOARD_SHORTCUTS || !currentTrack) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -176,13 +171,12 @@ export function PersistentMusicPlayer() {
 
   if (!currentTrack) return null;
 
-  return (
-    <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
-      {/* Expanded Player */}
-      {!isMinimized && (
-        <div className="border-b border-border p-4 sm:p-6">
+  // EXPANDED PLAYER VIEW
+  if (!isMinimized) {
+    return (
+      <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
+        <div className="p-4 sm:p-6">
           <div className="container mx-auto">
-            {/* Mobile: Stacked layout */}
             <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
               {/* Album Art */}
               <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-lg bg-muted flex-shrink-0 overflow-hidden shadow-lg mx-auto lg:mx-0 relative">
@@ -197,7 +191,6 @@ export function PersistentMusicPlayer() {
                     <Music className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 text-muted-foreground" />
                   </div>
                 )}
-                {/* Buffering overlay */}
                 {audio.isBuffering && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -236,7 +229,6 @@ export function PersistentMusicPlayer() {
 
                 {/* Controls */}
                 <div className="flex items-center justify-center gap-2 sm:gap-4">
-                  {/* Shuffle Button */}
                   {FEATURES.SHUFFLE_MODE && (
                     <Button
                       variant="ghost"
@@ -291,7 +283,6 @@ export function PersistentMusicPlayer() {
                     <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
                   </Button>
 
-                  {/* Repeat Button */}
                   {FEATURES.REPEAT_MODE && (
                     <Button
                       variant="ghost"
@@ -308,7 +299,7 @@ export function PersistentMusicPlayer() {
                   )}
                 </div>
 
-                {/* Volume Control - Expanded */}
+                {/* Volume Control */}
                 <div className="flex items-center justify-center gap-4 pt-2">
                   <Button 
                     variant="ghost" 
@@ -329,15 +320,23 @@ export function PersistentMusicPlayer() {
                     onValueChange={handleVolumeChange}
                     className="w-32 lg:w-40"
                   />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={toggleMinimized}
+                    className="h-10 w-10 touch-manipulation"
+                    title="Minimize"
+                  >
+                    <ChevronDown className="h-5 w-5" />
+                  </Button>
                 </div>
 
-                {/* Error message */}
                 {audio.error && (
                   <p className="text-sm text-destructive text-center">{audio.error}</p>
                 )}
               </div>
 
-              {/* Queue Panel - Hidden on mobile */}
+              {/* Queue Panel - Desktop Only */}
               <div className="hidden lg:block w-80 space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold flex items-center gap-2">
@@ -374,9 +373,7 @@ export function PersistentMusicPlayer() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {track.title}
-                            </p>
+                            <p className="text-sm font-medium truncate">{track.title}</p>
                             <p className="text-xs text-muted-foreground truncate">
                               {track.profiles.username}
                             </p>
@@ -398,14 +395,24 @@ export function PersistentMusicPlayer() {
             </div>
           </div>
         </div>
-      )}
 
-      {/* Mini Player */}
+        {FEATURES.KEYBOARD_SHORTCUTS && (
+          <div className="text-center text-xs text-muted-foreground pb-2">
+            Keyboard: Space (play/pause) • ←→ (seek) • ↑↓ (volume) • N/P (next/prev) • M (mute) • S (shuffle) • R (repeat)
+          </div>
+        )}
+      </Card>
+    );
+  }
+
+  // MINIMIZED PLAYER VIEW
+  return (
+    <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Track Info */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-[40%] sm:max-w-none">
-            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded bg-muted flex-shrink-0 overflow-hidden shadow-md relative">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-[35%] sm:max-w-none">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex-shrink-0 overflow-hidden shadow-md relative">
               {currentTrack.cover_image ? (
                 <img
                   src={currentTrack.cover_image}
@@ -414,7 +421,7 @@ export function PersistentMusicPlayer() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                  <Music className="h-4 w-4 sm:h-6 sm:w-6 text-muted-foreground" />
+                  <Music className="h-4 w-4 text-muted-foreground" />
                 </div>
               )}
               {audio.isBuffering && (
@@ -423,18 +430,17 @@ export function PersistentMusicPlayer() {
                 </div>
               )}
             </div>
-            <div className="min-w-0 flex-1 hidden xs:block sm:block">
-              <p className="font-semibold truncate text-sm sm:text-base">{currentTrack.title}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+            <div className="min-w-0 flex-1 hidden sm:block">
+              <p className="font-semibold truncate text-sm">{currentTrack.title}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 {currentTrack.profiles.username}
               </p>
             </div>
           </div>
 
-          {/* Controls - Center */}
-          <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 sm:flex-[2] sm:max-w-2xl">
-            <div className="flex items-center gap-1 sm:gap-3">
-              {/* Shuffle - Mini */}
+          {/* Center Controls */}
+          <div className="flex flex-col items-center gap-1 flex-1 sm:flex-[2] sm:max-w-2xl">
+            <div className="flex items-center gap-1 sm:gap-2">
               {FEATURES.SHUFFLE_MODE && (
                 <Button
                   variant="ghost"
@@ -453,9 +459,9 @@ export function PersistentMusicPlayer() {
                 variant="ghost" 
                 size="icon" 
                 onClick={playPrevious}
-                className="h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
+                className="h-8 w-8 sm:h-9 sm:w-9 touch-manipulation"
               >
-                <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+                <SkipBack className="h-4 w-4" />
               </Button>
 
               <Button 
@@ -463,14 +469,14 @@ export function PersistentMusicPlayer() {
                 size="icon" 
                 onClick={() => audio.togglePlay()}
                 disabled={audio.isBuffering && !audio.isLoaded}
-                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:scale-110 transition-all touch-manipulation"
+                className="h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-lg hover:scale-105 transition-all touch-manipulation"
               >
                 {audio.isBuffering && !audio.isPlaying ? (
-                  <Loader2 className="h-5 w-5 sm:h-7 sm:w-7 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : audio.isPlaying ? (
-                  <Pause className="h-5 w-5 sm:h-7 sm:w-7 fill-current" />
+                  <Pause className="h-5 w-5 fill-current" />
                 ) : (
-                  <Play className="h-5 w-5 sm:h-7 sm:w-7 ml-0.5 fill-current" />
+                  <Play className="h-5 w-5 ml-0.5 fill-current" />
                 )}
               </Button>
 
@@ -479,12 +485,11 @@ export function PersistentMusicPlayer() {
                 size="icon" 
                 onClick={playNext}
                 disabled={queue.length === 0 && repeatMode === 'off'}
-                className="h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
+                className="h-8 w-8 sm:h-9 sm:w-9 touch-manipulation"
               >
-                <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+                <SkipForward className="h-4 w-4" />
               </Button>
 
-              {/* Repeat - Mini */}
               {FEATURES.REPEAT_MODE && (
                 <Button
                   variant="ghost"
@@ -500,36 +505,33 @@ export function PersistentMusicPlayer() {
               )}
             </div>
 
-            {/* Progress bar - mini mode */}
-            {isMinimized && (
-              <div className="flex items-center gap-2 w-full">
-                <span className="text-xs text-muted-foreground w-12 text-right">
-                  {formatTime(audio.currentTime)}
-                </span>
-                <Slider
-                  value={[audio.currentTime]}
-                  max={audio.duration || 100}
-                  step={0.1}
-                  onValueChange={handleSeek}
-                  className="flex-1"
-                />
-                <span className="text-xs text-muted-foreground w-12">
-                  {formatTime(audio.duration)}
-                </span>
-              </div>
-            )}
+            {/* Progress bar */}
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-xs text-muted-foreground w-10 text-right hidden sm:block">
+                {formatTime(audio.currentTime)}
+              </span>
+              <Slider
+                value={[audio.currentTime]}
+                max={audio.duration || 100}
+                step={0.1}
+                onValueChange={handleSeek}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-10 hidden sm:block">
+                {formatTime(audio.duration)}
+              </span>
+            </div>
           </div>
 
-          {/* Volume & Actions */}
+          {/* Right Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Queue button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowQueue(!showQueue)}
-              className="relative h-8 w-8 sm:h-10 sm:w-10 touch-manipulation hidden sm:flex"
+              className="relative h-8 w-8 touch-manipulation hidden sm:flex"
             >
-              <ListMusic className="h-4 w-4 sm:h-5 sm:w-5" />
+              <ListMusic className="h-4 w-4" />
               {queue.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
                   {queue.length}
@@ -537,19 +539,18 @@ export function PersistentMusicPlayer() {
               )}
             </Button>
             
-            {/* Desktop Volume Controls */}
-            <div className="hidden md:flex items-center gap-2">
+            {/* Desktop Volume */}
+            <div className="hidden md:flex items-center gap-1">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => audio.toggleMute()}
-                className="h-10 w-10 touch-manipulation"
-                title="Mute (M)"
+                className="h-8 w-8 touch-manipulation"
               >
                 {audio.isMuted || audio.volume === 0 ? (
-                  <VolumeX className="h-5 w-5" />
+                  <VolumeX className="h-4 w-4" />
                 ) : (
-                  <Volume2 className="h-5 w-5" />
+                  <Volume2 className="h-4 w-4" />
                 )}
               </Button>
               <Slider
@@ -557,7 +558,7 @@ export function PersistentMusicPlayer() {
                 max={1}
                 step={0.01}
                 onValueChange={handleVolumeChange}
-                className="w-20 lg:w-24"
+                className="w-20"
               />
             </div>
             
@@ -566,12 +567,12 @@ export function PersistentMusicPlayer() {
               variant="ghost" 
               size="icon" 
               onClick={() => audio.toggleMute()}
-              className="md:hidden h-9 w-9 touch-manipulation"
+              className="md:hidden h-8 w-8 touch-manipulation"
             >
               {audio.isMuted || audio.volume === 0 ? (
-                <VolumeX className="h-5 w-5" />
+                <VolumeX className="h-4 w-4" />
               ) : (
-                <Volume2 className="h-5 w-5" />
+                <Volume2 className="h-4 w-4" />
               )}
             </Button>
             
@@ -579,22 +580,46 @@ export function PersistentMusicPlayer() {
               variant="ghost" 
               size="icon" 
               onClick={toggleMinimized}
-              className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+              className="h-8 w-8 touch-manipulation"
+              title="Expand"
             >
-              {isMinimized ? (
-                <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
-              ) : (
-                <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
-              )}
+              <ChevronUp className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Keyboard Shortcuts Hint */}
-      {FEATURES.KEYBOARD_SHORTCUTS && !isMinimized && (
-        <div className="text-center text-xs text-muted-foreground pb-2">
-          Keyboard: Space (play/pause) • ←→ (seek) • ↑↓ (volume) • N/P (next/prev) • M (mute) • S (shuffle) • R (repeat)
+      {/* Mobile Queue Drawer */}
+      {showQueue && (
+        <div className="border-t bg-card p-4 sm:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold flex items-center gap-2">
+              <ListMusic className="h-4 w-4" />
+              Queue ({queue.length})
+            </h4>
+            <Button variant="ghost" size="icon" onClick={() => setShowQueue(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <ScrollArea className="h-48">
+            {queue.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Queue is empty</p>
+            ) : (
+              <div className="space-y-1">
+                {queue.map((track, index) => (
+                  <div key={track.id} className="flex items-center gap-2 p-2 rounded hover:bg-accent/50">
+                    <span className="text-xs text-muted-foreground w-5">{index + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{track.title}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeFromQueue(track.id)}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </div>
       )}
     </Card>
