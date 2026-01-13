@@ -53,10 +53,50 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/png" href="/favicon.png">
+    
+    <!-- Critical CSS for in-app browsers -->
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #0a0a0a; color: #fafafa; }
+      #root { min-height: 100vh; }
+      .loading-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; text-align: center; }
+      .loading-fallback img { width: 120px; height: 120px; margin-bottom: 20px; }
+      .loading-fallback h1 { font-size: 24px; margin-bottom: 10px; }
+      .loading-fallback p { color: #888; max-width: 300px; }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Fallback content for in-app browsers and slow JS loading -->
+      <noscript>
+        <div class="loading-fallback">
+          <img src="/favicon.png" alt="BAK55 Talent" />
+          <h1>BAK55 Talent</h1>
+          <p>Africa's #1 talent development platform. Stream music, compete for prizes, and earn with BAKCoins.</p>
+          <p style="margin-top: 20px;">Please enable JavaScript to use this application.</p>
+        </div>
+      </noscript>
+      <div class="loading-fallback" id="initial-loader">
+        <img src="/favicon.png" alt="BAK55 Talent" />
+        <h1>BAK55 Talent</h1>
+        <p>Loading your music experience...</p>
+      </div>
+    </div>
+    <script>
+      // Remove initial loader once React takes over
+      window.addEventListener('DOMContentLoaded', function() {
+        var loader = document.getElementById('initial-loader');
+        if (loader) {
+          setTimeout(function() {
+            if (loader && loader.parentNode) {
+              loader.style.opacity = '0';
+              loader.style.transition = 'opacity 0.3s';
+              setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 300);
+            }
+          }, 100);
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

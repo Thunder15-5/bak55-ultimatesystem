@@ -62,9 +62,10 @@ serve(async (req) => {
     console.log("Processing withdrawal:", { user_id: user.id, amount });
 
     // Validation
-    const MIN_WITHDRAWAL = 100; // 100 BAK = 2000 KSh
-    const MAX_WITHDRAWAL = 50000; // 50,000 BAK = 1,000,000 KSh
+    const MIN_WITHDRAWAL = 5; // 5 BAK minimum
+    const MAX_WITHDRAWAL = 50000; // 50,000 BAK
     const CONVERSION_RATE = 20; // 1 BAK = 20 KSh
+    const WITHDRAWAL_FEE_PERCENT = 0.15; // 15% fee
 
     if (amount < MIN_WITHDRAWAL) {
       throw new Error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
@@ -116,9 +117,9 @@ serve(async (req) => {
       throw new Error(`Daily withdrawal limit exceeded. Limit: ${DAILY_LIMIT} BAKCoins, Used today: ${dailyTotal} BAKCoins`);
     }
 
-    // Calculate KSh amount and withdrawal fee (2% fee)
+    // Calculate KSh amount and withdrawal fee (15% fee)
     const kshAmount = amount * CONVERSION_RATE;
-    const withdrawalFee = amount * 0.02; // 2% fee
+    const withdrawalFee = amount * WITHDRAWAL_FEE_PERCENT;
     const netAmount = amount - withdrawalFee;
     const netKshAmount = netAmount * CONVERSION_RATE;
 

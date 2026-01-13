@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
+import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,7 +33,7 @@ export default function TrackDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, currentTrack, isPlaying, togglePlay } = useMusicPlayer();
   const { trackActivity } = useFanActivity();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
@@ -199,36 +199,45 @@ export default function TrackDetails() {
     }
   };
 
-  const handlePlay = async () => {
+  const isCurrentTrack = currentTrack?.id === track?.id;
+  const isThisPlaying = isCurrentTrack && isPlaying;
+
+  const handlePlayPause = async () => {
     if (!track) return;
     
-    playTrack({
-      id: track.id,
-      title: track.title,
-      artist_id: track.artist_id,
-      audio_url: track.audio_url,
-      cover_image: track.cover_image,
-      genre: track.genre,
-      profiles: {
-        username: track.profiles.username,
-        avatar_url: track.profiles.avatar_url,
-      },
-    });
+    if (isCurrentTrack) {
+      // Toggle play/pause for current track
+      togglePlay();
+    } else {
+      // Start playing this track
+      playTrack({
+        id: track.id,
+        title: track.title,
+        artist_id: track.artist_id,
+        audio_url: track.audio_url,
+        cover_image: track.cover_image,
+        genre: track.genre,
+        profiles: {
+          username: track.profiles.username,
+          avatar_url: track.profiles.avatar_url,
+        },
+      });
 
-    // Increment play count after 30 seconds
-    setTimeout(async () => {
-      await supabase
-        .from("tracks")
-        .update({ plays: track.plays + 1 })
-        .eq("id", track.id);
-      
-      setTrack({ ...track, plays: track.plays + 1 });
-      
-      // Track fan activity for rewards
-      if (user) {
-        await trackActivity('track_play', { track_id: track.id });
-      }
-    }, 30000);
+      // Increment play count after 30 seconds
+      setTimeout(async () => {
+        await supabase
+          .from("tracks")
+          .update({ plays: track.plays + 1 })
+          .eq("id", track.id);
+        
+        setTrack({ ...track, plays: track.plays + 1 });
+        
+        // Track fan activity for rewards
+        if (user) {
+          await trackActivity('track_play', { track_id: track.id });
+        }
+      }, 30000);
+    }
   };
 
   const handleDeleteTrack = async () => {
@@ -367,9 +376,18 @@ export default function TrackDetails() {
                </div>
 
               <div className="flex gap-3 flex-wrap">
-                <Button onClick={handlePlay} size="lg" variant="hero" className="flex-1 min-w-[140px] h-14 text-lg">
-                  <Play className="mr-2 h-5 w-5 fill-current" />
-                  Play Track
+                <Button onClick={handlePlayPause} size="lg" variant="hero" className="flex-1 min-w-[140px] h-14 text-lg">
+                  {isThisPlaying ? (
+                    <>
+                      <Pause className="mr-2 h-5 w-5 fill-current" />
+                      Pause Track
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-5 w-5 fill-current" />
+                      Play Track
+                    </>
+                  )}
                 </Button>
 
             {user ? (

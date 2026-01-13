@@ -192,6 +192,22 @@ export function ModerationPanel() {
         }
       });
 
+      // Send notification to the artist
+      if (item?.artist_id) {
+        await supabase.from('notifications').insert({
+          user_id: item.artist_id,
+          type: action === 'approve' ? 'track_approved' : 'track_rejected',
+          title: action === 'approve' 
+            ? `Your ${itemType} "${item.title}" has been approved! 🎉` 
+            : `Your ${itemType} "${item.title}" was not approved`,
+          message: action === 'approve'
+            ? `Your ${itemType} is now live and visible to all listeners on BAK55 Talent.`
+            : `Reason: ${notes[itemId] || 'Please review our content guidelines and try again.'}`,
+          link: action === 'approve' ? `/track/${itemId}` : '/upload',
+          category: 'moderation',
+        });
+      }
+
       toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"}`);
       fetchPendingContent();
       setSelectedItems(prev => {

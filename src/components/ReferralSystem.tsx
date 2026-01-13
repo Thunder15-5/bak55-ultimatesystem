@@ -134,13 +134,34 @@ export function ReferralSystem() {
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-muted rounded w-3/4" />
             <div className="h-4 bg-muted rounded w-1/2" />
+            <div className="h-10 bg-muted rounded w-full" />
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (!referralData) return null;
+  // Show empty state if no referral data instead of returning null
+  if (!referralData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5 text-primary" />
+            Referral Program
+          </CardTitle>
+          <CardDescription>
+            Unable to load referral data. Please refresh the page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
+            Refresh Page
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const referralLink = `${window.location.origin}/signup?ref=${referralData.code}`;
 
@@ -211,12 +232,17 @@ export function ReferralSystem() {
         </div>
 
         {/* Recent Referrals */}
-        {referralData.referrals.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Recent Referrals
-            </label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Recent Referrals
+          </label>
+          {referralData.referrals.length === 0 ? (
+            <div className="p-4 rounded-lg bg-muted/50 text-center">
+              <p className="text-sm text-muted-foreground">No referrals yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Share your link to start earning!</p>
+            </div>
+          ) : (
             <div className="space-y-2">
               {referralData.referrals.slice(0, 5).map((ref, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -226,14 +252,16 @@ export function ReferralSystem() {
                       {new Date(ref.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  {ref.rewarded && (
+                  {ref.rewarded ? (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Pending</span>
                   )}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
