@@ -122,35 +122,59 @@ export default function Wallet() {
     }
 
     // Minimum withdrawal check
-    const MIN_WITHDRAWAL = 100; // 100 BAK
+    const MIN_WITHDRAWAL = 5; // 5 BAK minimum
     if (amount < MIN_WITHDRAWAL) {
       toast.error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
       return;
     }
 
-    // Calculate 2% withdrawal fee (moved server-side, but show preview)
-    const withdrawalFee = amount * 0.02;
+    // Validate required fields
+    if (!accountDetails.accountNumber.trim()) {
+      toast.error("Please enter your M-Pesa phone number or account number");
+      return;
+    }
+
+    if (!accountDetails.accountName.trim()) {
+      toast.error("Please enter your account name");
+      return;
+    }
+
+    // Calculate 15% withdrawal fee
+    const withdrawalFee = amount * 0.15;
     const netAmount = amount - withdrawalFee;
 
     setWithdrawing(true);
 
     try {
-      // Call process-withdrawal edge function instead of direct DB operations
+      // Call process-withdrawal edge function
       const { data, error } = await supabase.functions.invoke("process-withdrawal", {
         body: {
           amount,
-          phone_number: accountDetails.accountNumber || "254700000000", // Fallback for now
-          bank_details: accountDetails, // Include bank details in metadata
+          phone_number: accountDetails.accountNumber || "254700000000",
+          bank_details: accountDetails,
         },
       });
 
       if (error) throw error;
 
       if (data.success) {
+        // Create notification for user
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          type: 'withdrawal_submitted',
+          title: 'Withdrawal Request Submitted',
+          message: `Your withdrawal of ${netAmount.toFixed(2)} BAK has been submitted for processing. Reference: ${data.reference || 'Pending'}`,
+          link: '/wallet',
+          category: 'wallet',
+        });
+
         toast.success(
           data.status === "pending_manual"
-            ? "Withdrawal request submitted for admin review"
-            : `Withdrawal of ${netAmount.toFixed(2)} BAK is being processed`
+            ? `Withdrawal of ${netAmount.toFixed(2)} BAK submitted for admin review`
+            : `Withdrawal of ${netAmount.toFixed(2)} BAK is being processed`,
+          {
+            description: `Reference: ${data.reference || 'Processing'}. Expected: 24-72 hours.`,
+          }
         );
         setWithdrawAmount("");
         setAccountDetails({ accountName: "", accountNumber: "", bankName: "" });

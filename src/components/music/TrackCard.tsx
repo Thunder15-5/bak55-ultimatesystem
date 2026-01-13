@@ -1,4 +1,4 @@
-import { Play, MoreVertical } from "lucide-react";
+import { Play, Pause, MoreVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
@@ -29,23 +29,32 @@ interface TrackCardProps {
 }
 
 export function TrackCard({ track, showActions = true, viewMode = "fan" }: TrackCardProps) {
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, currentTrack, isPlaying, togglePlay } = useMusicPlayer();
   const navigate = useNavigate();
   const { userRole } = useAuth();
 
-  const handlePlay = () => {
-    playTrack({
-      id: track.id,
-      title: track.title,
-      artist_id: track.artist_id,
-      audio_url: track.audio_url,
-      cover_image: track.cover_image || "/placeholder.svg",
-      genre: track.genre,
-      profiles: {
-        username: track.artist_profiles?.stage_name || "Unknown Artist",
-        avatar_url: null,
-      },
-    });
+  const isCurrentTrack = currentTrack?.id === track.id;
+  const isThisPlaying = isCurrentTrack && isPlaying;
+
+  const handlePlayPause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (isCurrentTrack) {
+      togglePlay();
+    } else {
+      playTrack({
+        id: track.id,
+        title: track.title,
+        artist_id: track.artist_id,
+        audio_url: track.audio_url,
+        cover_image: track.cover_image || "/placeholder.svg",
+        genre: track.genre,
+        profiles: {
+          username: track.artist_profiles?.stage_name || "Unknown Artist",
+          avatar_url: null,
+        },
+      });
+    }
   };
 
   const handleViewDetails = () => {
@@ -58,18 +67,28 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-all touch-manipulation w-full max-w-full">
-      <div className="relative aspect-square cursor-pointer touch-manipulation" onClick={handlePlay}>
+      <div className="relative aspect-square cursor-pointer touch-manipulation" onClick={handleViewDetails}>
         <img
           src={track.cover_image || "/placeholder.svg"}
           alt={track.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center touch-manipulation">
+        {/* Play/Pause overlay - Spotify style */}
+        <div className={`absolute inset-0 bg-black/40 ${isThisPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity flex items-center justify-center touch-manipulation`}>
           <Button
             size="lg"
-            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 shadow-xl hover:scale-110 transition-all touch-manipulation"
+            onClick={handlePlayPause}
+            className={`rounded-full w-12 h-12 sm:w-14 sm:h-14 shadow-xl hover:scale-110 transition-all touch-manipulation ${
+              isThisPlaying 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-white/90 text-black hover:bg-white'
+            }`}
           >
-            <Play className="w-6 h-6 sm:w-7 sm:w-7 fill-current ml-0.5" />
+            {isThisPlaying ? (
+              <Pause className="w-5 h-5 sm:w-6 sm:h-6" />
+            ) : (
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5" />
+            )}
           </Button>
         </div>
       </div>

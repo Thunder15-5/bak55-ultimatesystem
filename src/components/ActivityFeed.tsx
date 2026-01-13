@@ -60,18 +60,20 @@ export function ActivityFeed({ limit = 5 }: { limit?: number }) {
     try {
       const activities: Activity[] = [];
 
-      // Fetch recent track uploads
+      // Fetch recent track uploads (only approved tracks)
       const { data: tracks } = await supabase
         .from('tracks')
         .select(`
           id,
           title,
           created_at,
+          moderation_status,
           profiles!tracks_artist_id_fkey (
             display_name,
             avatar_url
           )
         `)
+        .eq('moderation_status', 'approved')
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -117,13 +119,14 @@ export function ActivityFeed({ limit = 5 }: { limit?: number }) {
         });
       });
 
-      // Fetch recent competition submissions
+      // Fetch recent competition submissions (only approved)
       const { data: submissions } = await supabase
         .from('submissions')
         .select(`
           id,
           title,
           created_at,
+          moderation_status,
           profiles!submissions_artist_id_fkey (
             display_name,
             avatar_url
@@ -132,6 +135,7 @@ export function ActivityFeed({ limit = 5 }: { limit?: number }) {
             title
           )
         `)
+        .eq('moderation_status', 'approved')
         .order('created_at', { ascending: false })
         .limit(limit);
 

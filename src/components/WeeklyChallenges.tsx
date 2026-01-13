@@ -182,9 +182,11 @@ export function WeeklyChallenges() {
         .single();
 
       if (wallet) {
+        const newBalance = wallet.balance + challenge.reward_amount;
+        
         await supabase
           .from('wallets')
-          .update({ balance: wallet.balance + challenge.reward_amount })
+          .update({ balance: newBalance })
           .eq('id', wallet.id);
 
         await supabase
@@ -195,16 +197,20 @@ export function WeeklyChallenges() {
             type: 'earning',
             description: `Challenge reward: ${challenge.title}`,
           });
+          
+        // Show success with amount credited
+        toast.success(`+${challenge.reward_amount.toFixed(2)} BAK credited! 🎉`, {
+          description: `You completed "${challenge.title}". New balance: ${newBalance.toFixed(2)} BAK`,
+        });
+      } else {
+        toast.error('Wallet not found. Please contact support.');
+        return;
       }
-
-      toast.success(`🎉 +${challenge.reward_amount} BAKCoins claimed!`, {
-        description: `You completed "${challenge.title}"`,
-      });
 
       fetchChallenges();
     } catch (error) {
       console.error('Error claiming reward:', error);
-      toast.error('Failed to claim reward');
+      toast.error('Failed to claim reward. Please try again.');
     }
   };
 
