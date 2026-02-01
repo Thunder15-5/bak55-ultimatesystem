@@ -30,7 +30,7 @@ export function ModerationPanel() {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [processingAction, setProcessingAction] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [notes, setNotes] = useState<{ [key: string]: string }>({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -157,7 +157,7 @@ export function ModerationPanel() {
     itemType: "track" | "submission",
     action: "approve" | "reject"
   ) => {
-    setProcessing(itemId);
+    setProcessingAction({ id: itemId, action });
 
     try {
       const table = itemType === "track" ? "tracks" : "submissions";
@@ -166,7 +166,8 @@ export function ModerationPanel() {
       const { data: userData } = await supabase.auth.getUser();
       const item = items.find(i => i.id === itemId);
 
-      const { error } = await supabase
+      // Update the moderation status
+      const { data: updatedItem, error } = await supabase
         .from(table)
         .update({
           moderation_status: status,
@@ -174,9 +175,16 @@ export function ModerationPanel() {
           moderated_at: new Date().toISOString(),
           moderated_by: userData.user?.id,
         })
-        .eq("id", itemId);
+        .eq("id", itemId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Verify the update was successful
+      if (!updatedItem || updatedItem.moderation_status !== status) {
+        throw new Error("Status update was not saved correctly");
+      }
 
       // Log activity
       await supabase.from('admin_activity_log').insert({
@@ -208,17 +216,28 @@ export function ModerationPanel() {
         });
       }
 
-      toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"}`);
-      fetchPendingContent();
+      toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
+      
+      // Remove the item from the list immediately for better UX
+      setItems(prev => prev.filter(i => i.id !== itemId));
       setSelectedItems(prev => {
         const newSet = new Set(prev);
         newSet.delete(itemId);
         return newSet;
       });
+      
+      // Clear notes for this item
+      setNotes(prev => {
+        const newNotes = { ...prev };
+        delete newNotes[itemId];
+        return newNotes;
+      });
     } catch (error: any) {
       toast.error(error.message || "Failed to moderate content");
+      // Refresh the list on error to get the correct state
+      fetchPendingContent();
     } finally {
-      setProcessing(null);
+      setProcessingAction(null);
     }
   };
 
@@ -503,12 +522,12 @@ export function ModerationPanel() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => handleModerate(item.id, item.type, "approve")}
-                  disabled={processing === item.id}
+                  disabled={processingAction?.id === item.id}
                   variant="default"
                   size="lg"
                   className="flex-1"
                 >
-                  {processing === item.id ? (
+                  {processingAction?.id === item.id && processingAction?.action === 'approve' ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Check className="h-4 w-4 mr-2" />
@@ -517,12 +536,12 @@ export function ModerationPanel() {
                 </Button>
                 <Button
                   onClick={() => handleModerate(item.id, item.type, "reject")}
-                  disabled={processing === item.id}
+                  disabled={processingAction?.id === item.id}
                   variant="destructive"
                   size="lg"
                   className="flex-1"
                 >
-                  {processing === item.id ? (
+                  {processingAction?.id === item.id && processingAction?.action === 'reject' ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <X className="h-4 w-4 mr-2" />

@@ -2493,6 +2493,7 @@ export type Database = {
       has_sufficient_balance:
         | { Args: { _amount: number; _user_id: string }; Returns: boolean }
         | { Args: { _amount: number; _user_id: string }; Returns: boolean }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       is_not_fan: { Args: { user_id_param: string }; Returns: boolean }
       transfer_funds: {
         Args: {
