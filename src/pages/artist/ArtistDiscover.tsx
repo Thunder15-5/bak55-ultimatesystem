@@ -24,6 +24,7 @@ export default function ArtistDiscover() {
     setLoading(true);
     
     // Fetch tracks
+    // Fetch only approved tracks - RLS handles visibility but we also filter explicitly
     const { data: tracksData, error: tracksError } = await supabase
       .from("tracks")
       .select("*")
