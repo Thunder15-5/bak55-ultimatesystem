@@ -218,9 +218,11 @@ export function ModerationPanel() {
         return newSet;
       });
 
-      // CRITICAL: Invalidate all track-related queries to update discover pages
-      queryClient.invalidateQueries({ queryKey: trackKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'] });
+      // CRITICAL: Invalidate and refetch immediately to remove processed items from UI
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: trackKeys.all, refetchType: 'active' }),
+        queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'], refetchType: 'active' }),
+      ]);
       
     } catch (error: any) {
       toast.error(error.message || "Failed to moderate content");
@@ -294,9 +296,11 @@ export function ModerationPanel() {
       toast.success(`${selectedItems.size} items ${action === "approve" ? "approved" : "rejected"}`);
       setSelectedItems(new Set());
       
-      // CRITICAL: Invalidate all track-related queries
-      queryClient.invalidateQueries({ queryKey: trackKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'] });
+      // CRITICAL: Invalidate and refetch immediately to remove processed items from UI
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: trackKeys.all, refetchType: 'active' }),
+        queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'], refetchType: 'active' }),
+      ]);
       
     } catch (error: any) {
       toast.error(error.message || "Failed to process bulk action");
