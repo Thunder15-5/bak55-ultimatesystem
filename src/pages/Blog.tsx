@@ -1,3 +1,4 @@
+import { PageSEO } from '@/components/SEO';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,9 +62,11 @@ export default function Blog() {
   const isSaved = (postId: number) => savedPosts.includes(postId.toString());
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
+    <>
+      <PageSEO page="blog" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-12 text-center">
@@ -198,6 +201,7 @@ export default function Blog() {
           </Card>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { ArtistSEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -252,32 +252,23 @@ export default function ArtistProfile() {
   }
 
   const socialLinks = artist.artist_profiles?.social_links || {};
-  const shareUrl = `${window.location.origin}/artist/${id}`;
-  const shareTitle = `${artist.artist_profiles?.stage_name || artist.username} on BAK55 Talent`;
-  const shareDescription = `🎤 ${artist.bio || `Follow ${artist.username} on BAK55 Talent`} • ${followerCount.toLocaleString()} followers • ${tracks.length} tracks`;
 
   return (
     <>
-      <Helmet>
-        <title>{artist.artist_profiles?.stage_name || artist.username} | BAK55 Talent</title>
-        <meta name="description" content={shareDescription} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="profile" />
-        <meta property="og:url" content={shareUrl} />
-        <meta property="og:title" content={shareTitle} />
-        <meta property="og:description" content={shareDescription} />
-        <meta property="og:image" content={artist.avatar_url || `${window.location.origin}/bak55-logo.png`} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={shareUrl} />
-        <meta name="twitter:title" content={shareTitle} />
-        <meta name="twitter:description" content={shareDescription} />
-        <meta name="twitter:image" content={artist.avatar_url || `${window.location.origin}/bak55-logo.png`} />
-      </Helmet>
+      <ArtistSEO 
+        artist={{
+          id: id!,
+          stageName: artist.artist_profiles?.stage_name || artist.username,
+          username: artist.username,
+          bio: artist.bio || undefined,
+          avatarUrl: artist.avatar_url || undefined,
+          genres: artist.artist_profiles?.genres || undefined,
+          followerCount,
+          trackCount: tracks.length,
+          location: artist.location || undefined,
+          verified: artist.artist_profiles?.verified || false,
+        }} 
+      />
       
     <div className="min-h-screen bg-background pb-32">
       <Navigation />

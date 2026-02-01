@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageSEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -97,8 +98,10 @@ export default function MusicCatalog() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
+      <PageSEO page="catalog" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
       
       {/* Hero Section */}
       <div className="relative bg-gradient-radial from-primary/10 via-background to-background border-b border-primary/10">
@@ -280,6 +283,7 @@ export default function MusicCatalog() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

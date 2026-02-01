@@ -15,6 +15,7 @@ import { TrendingArtists } from "@/components/TrendingArtists";
 import { FeaturedArtistsCarousel } from "@/components/FeaturedArtistsCarousel";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PageSEO } from "@/components/SEO";
 
 const Index = () => {
   const { user, userRole, loading } = useAuth();
@@ -50,38 +51,43 @@ const Index = () => {
 
   // Only show landing page to non-authenticated users
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      <Navigation />
-      <Hero />
-      <StatsBar />
-      
-      {/* Featured Competition Banner */}
-      {featuredCompetition && (
-        <section className="py-12 md:py-16 px-4">
-          <div className="container mx-auto max-w-6xl">
-            <CompetitionBanner
-              competitionId={featuredCompetition.id}
-              title={featuredCompetition.title}
-              coverImage={featuredCompetition.cover_image}
-              prizeAmount={featuredCompetition.prize_amount}
-              endDate={featuredCompetition.end_date}
-              maxSubmissions={featuredCompetition.max_submissions}
-              currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
-              ctaText="Join Now"
-              ctaLink="/signup"
-            />
-          </div>
-        </section>
-      )}
-      <Features />
-      <HowItWorks />
-      <FeaturedArtistsCarousel />
-      <TrendingArtists />
-      <SocialProof />
-      <Economy />
-      <CTA />
-      <Footer />
-    </div>
+    <>
+      <PageSEO page="home" />
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <Navigation />
+        <main>
+          <Hero />
+          <StatsBar />
+          
+          {/* Featured Competition Banner */}
+          {featuredCompetition && (
+            <section className="py-12 md:py-16 px-4" aria-label="Featured Competition">
+              <div className="container mx-auto max-w-6xl">
+                <CompetitionBanner
+                  competitionId={featuredCompetition.id}
+                  title={featuredCompetition.title}
+                  coverImage={featuredCompetition.cover_image}
+                  prizeAmount={featuredCompetition.prize_amount}
+                  endDate={featuredCompetition.end_date}
+                  maxSubmissions={featuredCompetition.max_submissions}
+                  currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
+                  ctaText="Join Now"
+                  ctaLink="/signup"
+                />
+              </div>
+            </section>
+          )}
+          <Features />
+          <HowItWorks />
+          <FeaturedArtistsCarousel />
+          <TrendingArtists />
+          <SocialProof />
+          <Economy />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 };
 
