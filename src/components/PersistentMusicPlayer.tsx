@@ -84,18 +84,23 @@ export function PersistentMusicPlayer() {
     if (currentTrack && currentTrack.id !== lastTrackId.current) {
       lastTrackId.current = currentTrack.id;
       hasIncrementedPlays.current = false;
+      // Load and autoplay is handled by the audio engine - don't call play() separately
       audio.load(currentTrack.audio_url, isPlaying);
     }
-  }, [currentTrack, isPlaying, audio]);
+  }, [currentTrack, audio]); // Remove isPlaying from deps to prevent re-triggering
 
-  // Sync play/pause state from context
+  // Sync play/pause state from context (only for pause/resume, NOT for initial load)
   useEffect(() => {
-    if (isPlaying && !audio.isPlaying && audio.isLoaded) {
+    // Only sync if we have a loaded track and the track hasn't just changed
+    if (!audio.isLoaded || !currentTrack) return;
+    
+    // Avoid double-play: only call play() if audio is genuinely paused
+    if (isPlaying && !audio.isPlaying) {
       audio.play();
     } else if (!isPlaying && audio.isPlaying) {
       audio.pause();
     }
-  }, [isPlaying, audio]);
+  }, [isPlaying, audio.isLoaded, audio.isPlaying, currentTrack]);
 
   // Keyboard shortcuts
   useEffect(() => {
