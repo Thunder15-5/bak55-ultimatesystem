@@ -13,6 +13,9 @@ import { Check, X, Loader2, Filter, CheckSquare, Music } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trackKeys } from "@/hooks/useTracks";
 
+// Centralized query key for moderation list
+const MODERATION_KEY = ['moderation', 'pending'] as const;
+
 interface ContentItem {
   id: string;
   title: string;
@@ -42,7 +45,7 @@ export function ModerationPanel() {
 
   // Fetch pending content using React Query
   const { data: items = [], isLoading: loading, refetch } = useQuery({
-    queryKey: ['moderation', 'pending'],
+    queryKey: MODERATION_KEY,
     queryFn: async () => {
       // Fetch pending tracks
       const { data: tracks, error: tracksError } = await supabase
@@ -134,22 +137,42 @@ export function ModerationPanel() {
     return true;
   });
 
+  // Helper: Optimistically remove item from cache
+  const removeItemFromCache = (itemId: string, itemType: "track" | "submission") => {
+    queryClient.setQueryData<ContentItem[]>(MODERATION_KEY, (old) => 
+      old?.filter(i => !(i.id === itemId && i.type === itemType)) ?? []
+    );
+  };
+
+  // Helper: Optimistically remove multiple items from cache
+  const removeItemsFromCache = (itemIds: Set<string>) => {
+    queryClient.setQueryData<ContentItem[]>(MODERATION_KEY, (old) => 
+      old?.filter(i => !itemIds.has(i.id)) ?? []
+    );
+  };
+
   const handleModerate = async (
     itemId: string,
     itemType: "track" | "submission",
     action: "approve" | "reject"
   ) => {
+    const item = items.find(i => i.id === itemId && i.type === itemType);
+    if (!item) {
+      toast.error("Item not found in the current list");
+      return;
+    }
+
     setProcessingAction({ id: itemId, action });
 
     try {
       const table = itemType === "track" ? "tracks" : "submissions";
       const status = action === "approve" ? "approved" : "rejected";
+      const currentStatus = item.moderation_status;
 
       const { data: userData } = await supabase.auth.getUser();
-      const item = items.find(i => i.id === itemId);
 
-      // Update the moderation status - use maybeSingle() to avoid error when no row returned
-      const { data: updatedItems, error } = await supabase
+      // Concurrency-safe update: only update if status hasn't changed
+      const { error, count } = await supabase
         .from(table)
         .update({
           moderation_status: status,
@@ -158,51 +181,51 @@ export function ModerationPanel() {
           moderated_by: userData.user?.id,
         })
         .eq("id", itemId)
-        .select();
+        .eq("moderation_status", currentStatus); // Only update if still in expected status
 
       if (error) throw error;
 
-      // Verify the update was successful - check if any row was updated
-      const updatedItem = updatedItems?.[0];
-      if (!updatedItem) {
-        throw new Error("Item not found or already processed. Please refresh the list.");
-      }
-      
-      if (updatedItem.moderation_status !== status) {
-        throw new Error("Status update was not saved correctly");
-      }
+      // Remove item from cache immediately (optimistic removal)
+      // This works whether we updated it or someone else did
+      removeItemFromCache(itemId, itemType);
 
-      // Log activity
-      await supabase.from('admin_activity_log').insert({
-        user_id: userData.user?.id,
-        event_type: `${itemType}_${action === 'approve' ? 'approved' : 'rejected'}`,
-        event_category: 'content',
-        description: `${action === 'approve' ? 'Approved' : 'Rejected'} ${itemType}: "${item?.title}" by ${item?.artist_username}`,
-        metadata: { 
-          item_id: itemId, 
-          item_type: itemType,
-          artist_id: item?.artist_id,
-          notes: notes[itemId] || null 
-        }
-      });
-
-      // Send notification to the artist
-      if (item?.artist_id) {
-        await supabase.from('notifications').insert({
-          user_id: item.artist_id,
-          type: action === 'approve' ? 'track_approved' : 'track_rejected',
-          title: action === 'approve' 
-            ? `Your ${itemType} "${item.title}" has been approved! 🎉` 
-            : `Your ${itemType} "${item.title}" was not approved`,
-          message: action === 'approve'
-            ? `Your ${itemType} is now live and visible to all listeners on BAK55 Talent.`
-            : `Reason: ${notes[itemId] || 'Please review our content guidelines and try again.'}`,
-          link: action === 'approve' ? `/track/${itemId}` : '/upload',
-          category: 'moderation',
+      // Check if the update actually affected a row
+      if (count === 0) {
+        // Item was already processed by another admin
+        toast.info("Already processed by another moderator");
+      } else {
+        // Log activity
+        await supabase.from('admin_activity_log').insert({
+          user_id: userData.user?.id,
+          event_type: `${itemType}_${action === 'approve' ? 'approved' : 'rejected'}`,
+          event_category: 'content',
+          description: `${action === 'approve' ? 'Approved' : 'Rejected'} ${itemType}: "${item.title}" by ${item.artist_username}`,
+          metadata: { 
+            item_id: itemId, 
+            item_type: itemType,
+            artist_id: item.artist_id,
+            notes: notes[itemId] || null 
+          }
         });
-      }
 
-      toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
+        // Send notification to the artist
+        if (item.artist_id) {
+          await supabase.from('notifications').insert({
+            user_id: item.artist_id,
+            type: action === 'approve' ? 'track_approved' : 'track_rejected',
+            title: action === 'approve' 
+              ? `Your ${itemType} "${item.title}" has been approved! 🎉` 
+              : `Your ${itemType} "${item.title}" was not approved`,
+            message: action === 'approve'
+              ? `Your ${itemType} is now live and visible to all listeners on BAK55 Talent.`
+              : `Reason: ${notes[itemId] || 'Please review our content guidelines and try again.'}`,
+            link: action === 'approve' ? `/track/${itemId}` : '/upload',
+            category: 'moderation',
+          });
+        }
+
+        toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
+      }
       
       // Clear notes for this item
       setNotes(prev => {
@@ -218,16 +241,16 @@ export function ModerationPanel() {
         return newSet;
       });
 
-      // CRITICAL: Invalidate and refetch immediately to remove processed items from UI
+      // Invalidate related queries and refetch to sync with server
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: trackKeys.all, refetchType: 'active' }),
-        queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'], refetchType: 'active' }),
+        queryClient.refetchQueries({ queryKey: MODERATION_KEY }),
       ]);
       
     } catch (error: any) {
       toast.error(error.message || "Failed to moderate content");
-      // Refresh the list on error to get the correct state
-      refetch();
+      // Refetch to restore correct state on error
+      await refetch();
     } finally {
       setProcessingAction(null);
     }
@@ -251,7 +274,10 @@ export function ModerationPanel() {
       const trackIds = itemsToProcess.filter(i => i.type === "track").map(i => i.id);
       const submissionIds = itemsToProcess.filter(i => i.type === "submission").map(i => i.id);
 
-      // Update tracks
+      // Optimistically remove all selected items from cache immediately
+      removeItemsFromCache(selectedItems);
+
+      // Update tracks (only those still pending/flagged)
       if (trackIds.length > 0) {
         const { error: tracksError } = await supabase
           .from("tracks")
@@ -260,12 +286,13 @@ export function ModerationPanel() {
             moderated_at: new Date().toISOString(),
             moderated_by: userData.user?.id,
           })
-          .in("id", trackIds);
+          .in("id", trackIds)
+          .in("moderation_status", ["pending", "flagged"]); // Only update pending/flagged
 
         if (tracksError) throw tracksError;
       }
 
-      // Update submissions
+      // Update submissions (only those still pending/flagged)
       if (submissionIds.length > 0) {
         const { error: submissionsError } = await supabase
           .from("submissions")
@@ -274,7 +301,8 @@ export function ModerationPanel() {
             moderated_at: new Date().toISOString(),
             moderated_by: userData.user?.id,
           })
-          .in("id", submissionIds);
+          .in("id", submissionIds)
+          .in("moderation_status", ["pending", "flagged"]); // Only update pending/flagged
 
         if (submissionsError) throw submissionsError;
       }
@@ -296,14 +324,16 @@ export function ModerationPanel() {
       toast.success(`${selectedItems.size} items ${action === "approve" ? "approved" : "rejected"}`);
       setSelectedItems(new Set());
       
-      // CRITICAL: Invalidate and refetch immediately to remove processed items from UI
+      // Invalidate and refetch to sync with server
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: trackKeys.all, refetchType: 'active' }),
-        queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'], refetchType: 'active' }),
+        queryClient.refetchQueries({ queryKey: MODERATION_KEY }),
       ]);
       
     } catch (error: any) {
       toast.error(error.message || "Failed to process bulk action");
+      // Refetch to restore correct state on error
+      await refetch();
     } finally {
       setBulkProcessing(false);
     }
@@ -492,36 +522,23 @@ export function ModerationPanel() {
                 </div>
               )}
 
-              {item.moderation_notes && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Previous notes:</p>
-                  <p className="text-sm">{item.moderation_notes}</p>
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor={`notes-${item.id}`}>
-                  Moderation Notes 
-                  <span className="text-muted-foreground ml-1">
-                    (Optional • {(notes[item.id] || "").length}/500)
-                  </span>
-                </Label>
+              {/* Moderation Notes Input */}
+              <div>
+                <Label htmlFor={`notes-${item.id}`}>Moderation Notes (optional)</Label>
                 <Textarea
                   id={`notes-${item.id}`}
-                  placeholder="Add feedback for the artist (e.g., quality issues, content policy violations, suggestions)..."
+                  placeholder="Add notes for rejection reason or approval comments..."
                   value={notes[item.id] || ""}
-                  onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value.slice(0, 500) })}
-                  rows={3}
-                  className="resize-none"
+                  onChange={(e) => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))}
+                  className="mt-1"
                 />
               </div>
-              
-              <div className="flex gap-2">
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
                 <Button
                   onClick={() => handleModerate(item.id, item.type, "approve")}
                   disabled={processingAction !== null}
-                  variant="default"
-                  size="lg"
                   className="flex-1"
                 >
                   {processingAction?.id === item.id && processingAction?.action === 'approve' ? (
@@ -532,10 +549,9 @@ export function ModerationPanel() {
                   Approve
                 </Button>
                 <Button
+                  variant="destructive"
                   onClick={() => handleModerate(item.id, item.type, "reject")}
                   disabled={processingAction !== null}
-                  variant="destructive"
-                  size="lg"
                   className="flex-1"
                 >
                   {processingAction?.id === item.id && processingAction?.action === 'reject' ? (
