@@ -162,8 +162,20 @@ export default function UploadTrack() {
         if (!existingTrack) throw new Error("Track not found");
         trackData = existingTrack;
       } else {
-        // Upload audio file
-        const audioPath = `${user.id}/${Date.now()}-${audioFile!.name}`;
+        // Sanitize title for filename - only remove truly invalid characters
+        const sanitizeForFilename = (title: string): string => {
+          // Only remove characters that are invalid in filenames: / \ : * ? " < > |
+          return title.replace(/[\/\\:*?"<>|]/g, '').trim();
+        };
+
+        // Get file extension from original file
+        const fileExtension = audioFile!.name.split('.').pop()?.toLowerCase() || 'mp3';
+        const sanitizedTitle = sanitizeForFilename(formData.title);
+        
+        // Create filename with song title, preserving spaces and capitalization
+        const baseFilename = `${sanitizedTitle}.${fileExtension}`;
+        const audioPath = `${user.id}/${Date.now()}_${baseFilename}`;
+        
         const { error: audioError } = await supabase.storage
           .from("tracks")
           .upload(audioPath, audioFile!);
