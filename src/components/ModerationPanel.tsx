@@ -194,37 +194,45 @@ export function ModerationPanel() {
         // Item was already processed by another admin
         toast.info("Already processed by another moderator");
       } else {
-        // Log activity
-        await supabase.from('admin_activity_log').insert({
-          user_id: userData.user?.id,
-          event_type: `${itemType}_${action === 'approve' ? 'approved' : 'rejected'}`,
-          event_category: 'content',
-          description: `${action === 'approve' ? 'Approved' : 'Rejected'} ${itemType}: "${item.title}" by ${item.artist_username}`,
-          metadata: { 
-            item_id: itemId, 
-            item_type: itemType,
-            artist_id: item.artist_id,
-            notes: notes[itemId] || null 
-          }
-        });
-
-        // Send notification to the artist
-        if (item.artist_id) {
-          await supabase.from('notifications').insert({
-            user_id: item.artist_id,
-            type: action === 'approve' ? 'track_approved' : 'track_rejected',
-            title: action === 'approve' 
-              ? `Your ${itemType} "${item.title}" has been approved! 🎉` 
-              : `Your ${itemType} "${item.title}" was not approved`,
-            message: action === 'approve'
-              ? `Your ${itemType} is now live and visible to all listeners on BAK55 Talent.`
-              : `Reason: ${notes[itemId] || 'Please review our content guidelines and try again.'}`,
-            link: action === 'approve' ? `/track/${itemId}` : '/upload',
-            category: 'moderation',
+        toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
+        
+        // Log activity (non-blocking - don't fail the main action)
+        try {
+          await supabase.from('admin_activity_log').insert({
+            user_id: userData.user?.id,
+            event_type: `${itemType}_${action === 'approve' ? 'approved' : 'rejected'}`,
+            event_category: 'content',
+            description: `${action === 'approve' ? 'Approved' : 'Rejected'} ${itemType}: "${item.title}" by ${item.artist_username}`,
+            metadata: { 
+              item_id: itemId, 
+              item_type: itemType,
+              artist_id: item.artist_id,
+              notes: notes[itemId] || null 
+            }
           });
+        } catch (logError) {
+          console.warn('Failed to log activity:', logError);
         }
 
-        toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
+        // Send notification to the artist (non-blocking - don't fail the main action)
+        if (item.artist_id) {
+          try {
+            await supabase.from('notifications').insert({
+              user_id: item.artist_id,
+              type: action === 'approve' ? 'track_approved' : 'track_rejected',
+              title: action === 'approve' 
+                ? `Your ${itemType} "${item.title}" has been approved! 🎉` 
+                : `Your ${itemType} "${item.title}" was not approved`,
+              message: action === 'approve'
+                ? `Your ${itemType} is now live and visible to all listeners on BAK55 Talent.`
+                : `Reason: ${notes[itemId] || 'Please review our content guidelines and try again.'}`,
+              link: action === 'approve' ? `/track/${itemId}` : '/upload',
+              category: 'moderation',
+            });
+          } catch (notifyError) {
+            console.warn('Failed to send notification:', notifyError);
+          }
+        }
       }
       
       // Clear notes for this item
@@ -307,21 +315,25 @@ export function ModerationPanel() {
         if (submissionsError) throw submissionsError;
       }
 
-      // Log bulk activity
-      await supabase.from('admin_activity_log').insert({
-        user_id: userData.user?.id,
-        event_type: `bulk_moderation_${action === 'approve' ? 'approved' : 'rejected'}`,
-        event_category: 'content',
-        description: `Bulk ${action}: ${selectedItems.size} items (${trackIds.length} tracks, ${submissionIds.length} submissions)`,
-        metadata: { 
-          count: selectedItems.size,
-          track_count: trackIds.length,
-          submission_count: submissionIds.length,
-          action: action
-        }
-      });
-
       toast.success(`${selectedItems.size} items ${action === "approve" ? "approved" : "rejected"}`);
+      
+      // Log bulk activity (non-blocking - don't fail the main action)
+      try {
+        await supabase.from('admin_activity_log').insert({
+          user_id: userData.user?.id,
+          event_type: `bulk_moderation_${action === 'approve' ? 'approved' : 'rejected'}`,
+          event_category: 'content',
+          description: `Bulk ${action}: ${selectedItems.size} items (${trackIds.length} tracks, ${submissionIds.length} submissions)`,
+          metadata: { 
+            count: selectedItems.size,
+            track_count: trackIds.length,
+            submission_count: submissionIds.length,
+            action: action
+          }
+        });
+      } catch (logError) {
+        console.warn('Failed to log bulk activity:', logError);
+      }
       setSelectedItems(new Set());
       
       // Invalidate and refetch to sync with server
