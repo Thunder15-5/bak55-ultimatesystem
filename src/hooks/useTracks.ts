@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Centralized track data management with React Query for cache invalidation
 export interface Track {
   id: string;
   title: string;
