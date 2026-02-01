@@ -1,53 +1,181 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage - Highest Priority -->
   <url>
-    <loc>https://bak55talent.com/</loc>
+    <loc>https://bak55talent.co.ke/</loc>
     <priority>1.0</priority>
     <changefreq>daily</changefreq>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bak55talent.co.ke/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bak55talent.co.ke/"/>
   </url>
+  
+  <!-- Core Platform Pages -->
   <url>
-    <loc>https://bak55talent.com/streaming</loc>
+    <loc>https://bak55talent.co.ke/streaming</loc>
     <priority>0.9</priority>
     <changefreq>weekly</changefreq>
   </url>
+  
   <url>
-    <loc>https://bak55talent.com/competitions</loc>
+    <loc>https://bak55talent.co.ke/catalog</loc>
     <priority>0.9</priority>
     <changefreq>daily</changefreq>
   </url>
+  
   <url>
-    <loc>https://bak55talent.com/competitions/active</loc>
+    <loc>https://bak55talent.co.ke/competitions</loc>
     <priority>0.9</priority>
     <changefreq>daily</changefreq>
   </url>
+  
   <url>
-    <loc>https://bak55talent.com/bakcoins</loc>
+    <loc>https://bak55talent.co.ke/competitions/active</loc>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  
+  <!-- BAKCoins Economy -->
+  <url>
+    <loc>https://bak55talent.co.ke/bakcoins</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
+  
   <url>
-    <loc>https://bak55talent.com/ai-tools</loc>
+    <loc>https://bak55talent.co.ke/buy-coins</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/how-to-earn</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
+  
+  <!-- AI Tools -->
   <url>
-    <loc>https://bak55talent.com/about</loc>
+    <loc>https://bak55talent.co.ke/ai-tools</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- Information Pages -->
+  <url>
+    <loc>https://bak55talent.co.ke/about</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/blog</loc>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/faq</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/success-stories</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/press-kit</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <!-- Contact & Support -->
+  <url>
+    <loc>https://bak55talent.co.ke/contact</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
+  
   <url>
-    <loc>https://bak55talent.com/blog</loc>
-    <priority>0.8</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://bak55talent.com/join</loc>
-    <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
-    <loc>https://bak55talent.com/contact</loc>
+    <loc>https://bak55talent.co.ke/support</loc>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
+  
+  <!-- User Actions -->
+  <url>
+    <loc>https://bak55talent.co.ke/join</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/signup</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/login</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/apply</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- Subscription -->
+  <url>
+    <loc>https://bak55talent.co.ke/subscribe</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  
+  <!-- Live Features -->
+  <url>
+    <loc>https://bak55talent.co.ke/live</loc>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/leaderboard</loc>
+    <priority>0.7</priority>
+    <changefreq>hourly</changefreq>
+  </url>
+  
+  <!-- Investors -->
+  <url>
+    <loc>https://bak55talent.co.ke/investors</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  
+  <!-- Legal Pages (lower priority) -->
+  <url>
+    <loc>https://bak55talent.co.ke/terms</loc>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/privacy</loc>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  
+  <url>
+    <loc>https://bak55talent.co.ke/cookies</loc>
+    <priority>0.2</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  
 </urlset>

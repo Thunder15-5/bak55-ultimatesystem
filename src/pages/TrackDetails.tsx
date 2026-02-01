@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { TrackSEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus } from "lucide-react";
+import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TipDialog } from "@/components/TipDialog";
-import { Heart } from "lucide-react";
 
 interface Track {
   id: string;
@@ -281,29 +280,17 @@ export default function TrackDetails() {
 
   return (
     <>
-      <Helmet>
-        <title>{track.title} by {track.profiles.username} | BAK55 Talent</title>
-        <meta name="description" content={shareDescription} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="music.song" />
-        <meta property="og:url" content={shareUrl} />
-        <meta property="og:title" content={shareTitle} />
-        <meta property="og:description" content={shareDescription} />
-        <meta property="og:image" content={track.cover_image || `${window.location.origin}/bak55-logo.png`} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={shareUrl} />
-        <meta name="twitter:title" content={shareTitle} />
-        <meta name="twitter:description" content={shareDescription} />
-        <meta name="twitter:image" content={track.cover_image || `${window.location.origin}/bak55-logo.png`} />
-        
-        {/* Music-specific meta */}
-        <meta property="music:musician" content={`${window.location.origin}/artist/${track.artist_id}`} />
-      </Helmet>
+      <TrackSEO 
+        track={{
+          id: track.id,
+          title: track.title,
+          artistName: track.profiles.username,
+          artistId: track.artist_id,
+          genre: track.genre || undefined,
+          coverImage: track.cover_image || undefined,
+          plays: track.plays,
+        }} 
+      />
       
     <div className="min-h-screen bg-background pb-32">
       <Navigation />

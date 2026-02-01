@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { CompetitionSEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -348,32 +348,21 @@ export default function CompetitionDetails() {
     );
   }
 
-  const shareUrl = `${window.location.origin}/competition/${id}`;
-  const shareTitle = competition.title;
-  const shareDescription = `${competition.description?.substring(0, 150)}... • Prize: ${competition.prize_amount} BAK • BAK55 Talent Competition`;
-
   return (
     <>
-      <Helmet>
-        <title>{competition.title} | BAK55 Talent Competitions</title>
-        <meta name="description" content={shareDescription} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={shareUrl} />
-        <meta property="og:title" content={shareTitle} />
-        <meta property="og:description" content={shareDescription} />
-        <meta property="og:image" content={competition.cover_image || `${window.location.origin}/genesis-competition.png.jpeg`} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={shareUrl} />
-        <meta name="twitter:title" content={shareTitle} />
-        <meta name="twitter:description" content={shareDescription} />
-        <meta name="twitter:image" content={competition.cover_image || `${window.location.origin}/genesis-competition.png.jpeg`} />
-      </Helmet>
+      <CompetitionSEO 
+        competition={{
+          id: competition.id,
+          title: competition.title,
+          description: competition.description || undefined,
+          coverImage: competition.cover_image || undefined,
+          prizeAmount: competition.prize_amount,
+          startDate: competition.start_date,
+          endDate: competition.end_date,
+          genres: competition.genres || undefined,
+          status: competition.status,
+        }} 
+      />
       
     <div className="min-h-screen bg-background">
       <Navigation />
