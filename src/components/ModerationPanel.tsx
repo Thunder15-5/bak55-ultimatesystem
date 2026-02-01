@@ -148,8 +148,8 @@ export function ModerationPanel() {
       const { data: userData } = await supabase.auth.getUser();
       const item = items.find(i => i.id === itemId);
 
-      // Update the moderation status
-      const { data: updatedItem, error } = await supabase
+      // Update the moderation status - use maybeSingle() to avoid error when no row returned
+      const { data: updatedItems, error } = await supabase
         .from(table)
         .update({
           moderation_status: status,
@@ -158,13 +158,17 @@ export function ModerationPanel() {
           moderated_by: userData.user?.id,
         })
         .eq("id", itemId)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
-      // Verify the update was successful
-      if (!updatedItem || updatedItem.moderation_status !== status) {
+      // Verify the update was successful - check if any row was updated
+      const updatedItem = updatedItems?.[0];
+      if (!updatedItem) {
+        throw new Error("Item not found or already processed. Please refresh the list.");
+      }
+      
+      if (updatedItem.moderation_status !== status) {
         throw new Error("Status update was not saved correctly");
       }
 
