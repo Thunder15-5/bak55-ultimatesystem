@@ -1,154 +1,137 @@
 
-## What’s happening (root causes)
+# Moderation System - Comprehensive Fix Plan
 
-### A) Moderation list not updating + “Item not found or already processed”
-In `src/components/ModerationPanel.tsx`, the moderation list comes from a React Query cache (`useQuery` with key `['moderation','pending']`). After an approve/reject, the UI depends on refetching that query to remove the item.
+## Root Cause Analysis
 
-In practice, you’re seeing this sequence:
-1) You approve/reject.
-2) The DB row changes (or another admin changes it).
-3) The UI **still shows the old cached item**.
-4) Clicking again triggers “already processed”.
+After investigating the database logs, RLS policies, and code, I've identified **three critical issues** preventing the moderation system from working:
 
-This is a classic “server updated, UI cache still showing stale list” issue. The fix is to **update the cached list immediately (optimistic removal)** and then refetch in the background.
+### Issue 1: Missing Admin UPDATE Policy on `tracks` Table
+**Current state:** The tracks table only allows artists to update their own tracks:
+```sql
+-- Current policy: Artists can update own tracks
+qual: (auth.uid() = artist_id)
+```
 
-### B) Old deleted image still showing in link previews
-Two problems usually cause this:
-1) **Social platforms cache OG tags aggressively** (Facebook/WhatsApp/X can keep old `og:image` for days).
-2) Your hosting SPA rewrite rules can cause deleted images to still return **HTTP 200** (because the request is rewritten to `index.html`), which prevents scrapers from realizing the image is gone.
+**Problem:** Admins cannot update tracks because they're not the `artist_id`. When an admin tries to approve/reject, the RLS policy silently blocks the update (0 rows affected).
 
-Your repo currently has broad SPA rewrites:
-- `vercel.json`: rewrites **everything** to `/index.html`
-- `public/_redirects`: `/* /index.html 200`
+### Issue 2: Missing INSERT Policies on `admin_activity_log` Table
+**Current state:** The table only has a SELECT policy for admins - no INSERT policy exists.
 
-This can make a deleted image URL return a 200 HTML response instead of 404.
+**Database errors observed:**
+```
+ERROR: new row violates row-level security policy for table "admin_activity_log"
+```
 
----
+This causes the code to fail after attempting to log the moderation activity.
 
-## Implementation plan (exact fixes)
+### Issue 3: Missing INSERT Policy on `notifications` Table
+**Current state:** The table only has SELECT and UPDATE policies for `auth.uid() = user_id`. There's NO INSERT policy.
 
-### Part 1 — Fix moderation list so items disappear immediately (permanent)
+**Database errors observed:**
+```
+ERROR: new row violates row-level security policy for table "notifications"
+```
 
-#### 1) Make the UI remove the moderated item instantly (React Query cache update)
-In `src/components/ModerationPanel.tsx`:
-- Define a constant query key: `const MODERATION_KEY = ['moderation','pending'] as const;`
-- After a successful approve/reject, do:
-  - `queryClient.setQueryData(MODERATION_KEY, (old) => old?.filter(i => !(i.id===itemId && i.type===itemType)) ?? [])`
-This guarantees the item disappears immediately even if refetch is slow.
+Admins cannot insert notifications for artists, so the code fails when trying to notify the artist of approval/rejection.
 
-#### 2) Refetch after mutation (don’t rely on invalidate only)
-Still in `handleModerate` and `handleBulkModerate`:
-- Keep invalidation, but also explicitly refetch:
-  - `await queryClient.refetchQueries({ queryKey: MODERATION_KEY })`
-This makes the server the source of truth and fixes any “optimistic mismatch”.
-
-#### 3) Stop using “returned rows” as your success check
-Right now `handleModerate` does:
-- `.update(...).select()` and then throws if `updatedItems?.[0]` is missing.
-
-That can misfire (race conditions / policy differences / not returning updated row). Replace that approach with:
-- Perform the update **without relying on returned data**
-- Then run a verification query that checks whether the item is still pending/flagged:
-  - `select('id').eq('id', itemId).in('moderation_status',['pending','flagged']).maybeSingle()`
-  - If it still exists as pending/flagged => treat as failure
-  - If it’s gone from pending/flagged => treat as success (even if it’s now approved/rejected)
-
-This prevents false “already processed” errors.
-
-#### 4) Concurrency-safe update (avoid double-processing)
-When updating, include the current moderation status you fetched:
-- `.eq('id', itemId).eq('moderation_status', item.moderation_status)`
-If another admin already processed it, this update affects 0 rows. Then:
-- Remove it from the UI cache anyway (since it’s not actionable anymore)
-- Show an informational toast like: “Already processed by another moderator.”
-
-#### 5) Bulk action: remove all selected ids from cache immediately + refetch
-After bulk update succeeds:
-- `queryClient.setQueryData(MODERATION_KEY, old => old?.filter(i => !selectedItems.has(i.id)) ?? [])`
-- then `await queryClient.refetchQueries({ queryKey: MODERATION_KEY })`
-
-**Files to change (moderation):**
-- `src/components/ModerationPanel.tsx`
-
-**Acceptance test (moderation):**
-- Approve one track: it disappears instantly (no refresh).
-- Refresh page: it’s still gone, and track shows as approved in the database-backed lists.
-- Try approving the same track twice: second attempt shows “already processed” and the item is not left hanging in the list.
+### Issue 4: Missing Admin UPDATE Policy on `submissions` Table
+Same issue as tracks - only artists can update their own submissions.
 
 ---
 
-### Part 2 — Permanently fix the “old OG image still showing” problem
+## Implementation Plan
 
-#### 1) Centralize the “default share image” + add cache-busting version
-Use one source of truth (SEO config) and a version parameter:
-- In `src/lib/seo/seoConfig.ts`:
-  - set `SEO_CONFIG.site.ogImage` and `SEO_CONFIG.defaultMeta.image` to something like:
-    - `https://bak55talent.co.ke/genesis-competition.png.jpeg?v=2`
-(We’ll increment `v=` whenever you update branding assets.)
+### Step 1: Add Missing RLS Policies via Database Migration
 
-#### 2) Ensure all pages and structured data use the same versioned image
-Update:
-- `src/components/SEO/SEOHead.tsx` so it always uses the versioned default when `image` is missing.
-- `src/lib/seo/structuredData.ts` already falls back to `SEO_CONFIG.site.ogImage`, so once that’s versioned, schema image updates too.
+Create a new migration to add the following policies:
 
-#### 3) Remove any old image references (full sweep)
-Do a repo-wide sweep and replace any remaining default OG image references (especially in `index.html`) to the new versioned URL.
+**A) Tracks table - Admin UPDATE policy:**
+```sql
+CREATE POLICY "Admins can update any track"
+ON public.tracks FOR UPDATE
+USING (public.is_admin(auth.uid()));
+```
 
-Key files to update:
-- `index.html`:
-  - `<meta property="og:image" ...>`
-  - `<meta name="twitter:image" ...>`
-  - any structured data blocks referencing images
+**B) Submissions table - Admin UPDATE policy:**
+```sql
+CREATE POLICY "Admins can update any submission"
+ON public.submissions FOR UPDATE
+USING (public.is_admin(auth.uid()));
+```
 
-#### 4) Make deleted images return 404 (not SPA 200 HTML)
-This is the “permanent” server behavior fix.
+**C) Admin activity log - INSERT policy:**
+```sql
+CREATE POLICY "Admins can insert activity logs"
+ON public.admin_activity_log FOR INSERT
+WITH CHECK (public.is_admin(auth.uid()));
+```
 
-**Vercel-style config**
-In `vercel.json` change rewrites so they only apply to “app routes” (no file extensions):
-- Replace the current rewrite `"/(.*)"` with a pattern that excludes file extensions, e.g.:
-  - `"/((?!.*\\.).*)"` → `/index.html`
-Result:
-- `/track/123` still works (no dot)
-- `/some-deleted-image.png` returns **404** (has dot; no rewrite)
+**D) Notifications table - INSERT policies:**
+```sql
+-- Allow users to insert notifications for themselves
+CREATE POLICY "Users can create own notifications"
+ON public.notifications FOR INSERT
+WITH CHECK (auth.uid() = user_id);
 
-**Netlify-style config**
-In `public/_redirects`, add a rule before the SPA fallback:
-- `/*.* /:splat 404`
-Then keep:
-- `/* /index.html 200`
-Result: any missing asset with an extension returns 404.
+-- Allow admins to insert notifications for any user
+CREATE POLICY "Admins can create notifications for any user"
+ON public.notifications FOR INSERT
+WITH CHECK (public.is_admin(auth.uid()));
+```
 
-This satisfies the requirement “old image returns 404 or 410 (not 200)” in a future-proof way.
+### Step 2: Improve Code Resilience in ModerationPanel
 
-#### 5) Force social preview refresh (realistically)
-You can’t truly “clear” Facebook/WhatsApp/X caches from your server, but you can force refresh by:
-- Changing `og:image` URL (we do that via `?v=2`)
-- After deploy, run:
-  - Facebook Sharing Debugger → “Scrape Again”
-  - X Card Validator (or re-post after cache expiry)
-  - WhatsApp: re-send the link after the new OG image URL is live
+Even with RLS fixes, we should make the code more resilient:
 
-#### 6) Rebuild + redeploy
-Once the above code/config changes are merged:
-- Publish the updated build so all pages serve the new metadata immediately.
+**A) Wrap logging/notification calls in try-catch:**
+The main moderation action (update) should succeed even if logging/notifications fail. Currently, a notification failure rolls back the entire operation.
 
-**Files to change (SEO/image):**
-- `src/lib/seo/seoConfig.ts`
-- `index.html`
-- `vercel.json`
-- `public/_redirects`
-(Optionally: add a small helper in `SEOHead.tsx` to enforce `?v=` for default images only.)
+**B) Move logging/notifications to non-blocking operations:**
+- Log activity and send notifications in separate try-catch blocks
+- Don't let their failure prevent the main moderation action
 
-**Acceptance test (SEO/image):**
-- View page source and confirm:
-  - `og:image` and `twitter:image` are the new URL with `?v=2`
-- Hit the old deleted image URL directly:
-  - must return 404 (or 410 if we add a specific rule later)
-- Share the URL in WhatsApp/Twitter/Facebook after “Scrape Again”:
-  - preview shows the new image consistently
+**C) Improve error feedback:**
+- Distinguish between "update failed" vs "update succeeded but notification failed"
+- Provide better user feedback
+
+### Step 3: Verify Query Keys Alignment
+
+Ensure all components use the centralized `trackKeys` from `useTracks.ts`:
+- `ModerationPanel.tsx` uses `MODERATION_KEY = ['moderation', 'pending']`
+- This doesn't match `trackKeys.pending()` which returns `['tracks', 'pending']`
+- Need to ensure consistent invalidation patterns
 
 ---
 
-## One key clarification (only if needed)
-If you can paste the **exact old image URL** that’s still appearing in previews, I’ll add an explicit rule to return **410 Gone** for that specific URL as well (in addition to the generic 404 behavior). That gives you a belt-and-suspenders “never again” fix.
+## Files to Modify
 
+1. **New database migration** - Add missing RLS policies
+2. **src/components/ModerationPanel.tsx** - Improve error handling and resilience
+
+---
+
+## Expected Results After Fix
+
+1. Admin clicks "Approve" → Track status updates to "approved" in database
+2. Track immediately disappears from moderation list (optimistic UI)
+3. Track appears in streaming/discover pages (React Query invalidation)
+4. Activity logged and artist notified (non-blocking)
+5. No more "Item not found" or RLS policy errors
+
+---
+
+## Technical Details
+
+### Why the current code appears to work but doesn't:
+1. Admin clicks approve
+2. `UPDATE tracks SET moderation_status = 'approved' WHERE id = x` runs
+3. RLS policy `(auth.uid() = artist_id)` blocks the update silently
+4. 0 rows affected → code interprets as "already processed"
+5. Item removed from cache optimistically, but database still shows "pending"
+6. On refresh, item reappears because it was never actually updated
+
+### The fix ensures:
+1. RLS allows admins to update any track
+2. UPDATE actually changes the status
+3. Cache invalidation correctly refreshes all dependent queries
+4. Approved tracks show in streaming/discover, rejected ones don't
