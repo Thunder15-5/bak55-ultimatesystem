@@ -1,52 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Music, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
-
-interface Track {
-  id: string;
-  title: string;
-  artist_id: string;
-  audio_url: string;
-  cover_image: string | null;
-  genre: string | null;
-  plays: number;
-  created_at: string;
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  };
-}
+import { useApprovedTracks } from "@/hooks/useTracks";
 
 export default function MusicCatalog() {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const { playTrack } = useMusicPlayer();
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [minPlays, setMinPlays] = useState<string>("");
 
-  useEffect(() => {
-    fetchTracks();
-  }, []);
-
-  useEffect(() => {
-    filterTracks();
-  }, [tracks, searchQuery, selectedGenre, sortBy, minPlays]);
+  // Use React Query for approved tracks
+  const { data: tracks = [], isLoading: loading } = useApprovedTracks();
 
   // Redirect fans to streaming page
   useEffect(() => {
@@ -56,28 +33,8 @@ export default function MusicCatalog() {
     }
   }, [userRole, navigate]);
 
-  const fetchTracks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tracks")
-        .select(`
-          *,
-          profiles:artist_id (username, avatar_url)
-        `)
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setTracks(data || []);
-      setFilteredTracks(data || []);
-    } catch (error: any) {
-      toast.error("Failed to load tracks");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterTracks = () => {
+  // Filter and sort tracks
+  const filteredTracks = useMemo(() => {
     let filtered = [...tracks];
 
     // Search filter
@@ -85,7 +42,7 @@ export default function MusicCatalog() {
       filtered = filtered.filter(
         (track) =>
           track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          track.profiles.username.toLowerCase().includes(searchQuery.toLowerCase())
+          track.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -97,7 +54,7 @@ export default function MusicCatalog() {
     // Minimum plays filter
     const minPlaysNum = parseInt(minPlays) || 0;
     if (minPlaysNum > 0) {
-      filtered = filtered.filter((track) => track.plays >= minPlaysNum);
+      filtered = filtered.filter((track) => (track.plays || 0) >= minPlaysNum);
     }
 
     // Sorting
@@ -106,7 +63,7 @@ export default function MusicCatalog() {
         filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
       case "popular":
-        filtered.sort((a, b) => b.plays - a.plays);
+        filtered.sort((a, b) => (b.plays || 0) - (a.plays || 0));
         break;
       case "title":
         filtered.sort((a, b) => a.title.localeCompare(b.title));
@@ -115,8 +72,8 @@ export default function MusicCatalog() {
         break;
     }
 
-    setFilteredTracks(filtered);
-  };
+    return filtered;
+  }, [tracks, searchQuery, selectedGenre, sortBy, minPlays]);
 
   const genres = Array.from(new Set(tracks.map((t) => t.genre).filter(Boolean)));
 
@@ -267,7 +224,34 @@ export default function MusicCatalog() {
                       className="h-16 w-16 rounded-full scale-90 group-hover:scale-100 transition-transform"
                       onClick={(e) => {
                         e.stopPropagation();
-                        playTrack(track, filteredTracks.slice(index));
+                        // Convert to MusicPlayerContext Track format
+                        const playerTrack = {
+                          id: track.id,
+                          title: track.title,
+                          artist_id: track.artist_id,
+                          audio_url: track.audio_url,
+                          cover_image: track.cover_image,
+                          genre: track.genre,
+                          duration: track.duration ?? undefined,
+                          profiles: {
+                            username: track.profiles?.username || track.artist_profiles?.stage_name || 'Unknown Artist',
+                            avatar_url: track.profiles?.avatar_url || null,
+                          },
+                        };
+                        const playerQueue = filteredTracks.slice(index).map(t => ({
+                          id: t.id,
+                          title: t.title,
+                          artist_id: t.artist_id,
+                          audio_url: t.audio_url,
+                          cover_image: t.cover_image,
+                          genre: t.genre,
+                          duration: t.duration ?? undefined,
+                          profiles: {
+                            username: t.profiles?.username || t.artist_profiles?.stage_name || 'Unknown Artist',
+                            avatar_url: t.profiles?.avatar_url || null,
+                          },
+                        }));
+                        playTrack(playerTrack, playerQueue);
                       }}
                     >
                       <Play className="h-8 w-8 fill-white ml-1" />
@@ -277,7 +261,7 @@ export default function MusicCatalog() {
                 <CardHeader className="p-4">
                   <CardTitle className="line-clamp-1 text-lg font-heading">{track.title}</CardTitle>
                   <CardDescription className="line-clamp-1">
-                    by {track.profiles?.username || 'Unknown Artist'}
+                    by {track.profiles?.username || track.artist_profiles?.stage_name || 'Unknown Artist'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
@@ -287,7 +271,7 @@ export default function MusicCatalog() {
                     </span>
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Play className="h-3 w-3" />
-                      {track.plays}
+                      {track.plays || 0}
                     </span>
                   </div>
                 </CardContent>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, X, Loader2, Filter, CheckSquare, Music } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { trackKeys } from "@/hooks/useTracks";
 
 interface ContentItem {
   id: string;
@@ -27,9 +29,7 @@ interface ContentItem {
 }
 
 export function ModerationPanel() {
-  const [items, setItems] = useState<ContentItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<ContentItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [processingAction, setProcessingAction] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [notes, setNotes] = useState<{ [key: string]: string }>({});
@@ -40,44 +40,10 @@ export function ModerationPanel() {
   const [filterGenre, setFilterGenre] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  useEffect(() => {
-    fetchPendingContent();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [items, filterType, filterGenre, searchTerm]);
-
-  const applyFilters = () => {
-    let filtered = [...items];
-
-    // Type filter
-    if (filterType !== "all") {
-      filtered = filtered.filter(item => item.type === filterType);
-    }
-
-    // Genre filter
-    if (filterGenre !== "all") {
-      filtered = filtered.filter(item => item.genre === filterGenre);
-    }
-
-    // Search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.title.toLowerCase().includes(term) ||
-        item.artist_username.toLowerCase().includes(term) ||
-        item.artist_email.toLowerCase().includes(term)
-      );
-    }
-
-    setFilteredItems(filtered);
-  };
-
-  const fetchPendingContent = async () => {
-    setLoading(true);
-
-    try {
+  // Fetch pending content using React Query
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['moderation', 'pending'],
+    queryFn: async () => {
       // Fetch pending tracks
       const { data: tracks, error: tracksError } = await supabase
         .from("tracks")
@@ -143,14 +109,30 @@ export function ModerationPanel() {
         cover_image: s.cover_image,
       }));
 
-      setItems([...tracksFormatted, ...submissionsFormatted]);
-    } catch (error: any) {
-      toast.error("Failed to load content for moderation");
-      console.error(error);
-    } finally {
-      setLoading(false);
+      return [...tracksFormatted, ...submissionsFormatted];
+    },
+  });
+
+  // Apply filters
+  const filteredItems = items.filter(item => {
+    // Type filter
+    if (filterType !== "all" && item.type !== filterType) return false;
+    
+    // Genre filter
+    if (filterGenre !== "all" && item.genre !== filterGenre) return false;
+    
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      if (!item.title.toLowerCase().includes(term) &&
+          !item.artist_username.toLowerCase().includes(term) &&
+          !item.artist_email.toLowerCase().includes(term)) {
+        return false;
+      }
     }
-  };
+    
+    return true;
+  });
 
   const handleModerate = async (
     itemId: string,
@@ -218,24 +200,28 @@ export function ModerationPanel() {
 
       toast.success(`${itemType} ${action === "approve" ? "approved" : "rejected"} successfully!`);
       
-      // Remove the item from the list immediately for better UX
-      setItems(prev => prev.filter(i => i.id !== itemId));
-      setSelectedItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemId);
-        return newSet;
-      });
-      
       // Clear notes for this item
       setNotes(prev => {
         const newNotes = { ...prev };
         delete newNotes[itemId];
         return newNotes;
       });
+      
+      // Clear from selection
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
+
+      // CRITICAL: Invalidate all track-related queries to update discover pages
+      queryClient.invalidateQueries({ queryKey: trackKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'] });
+      
     } catch (error: any) {
       toast.error(error.message || "Failed to moderate content");
       // Refresh the list on error to get the correct state
-      fetchPendingContent();
+      refetch();
     } finally {
       setProcessingAction(null);
     }
@@ -253,7 +239,6 @@ export function ModerationPanel() {
       const { data: userData } = await supabase.auth.getUser();
       const status = action === "approve" ? "approved" : "rejected";
       
-      const selectedItemsArray = Array.from(selectedItems);
       const itemsToProcess = items.filter(item => selectedItems.has(item.id));
 
       // Group by type
@@ -304,7 +289,11 @@ export function ModerationPanel() {
 
       toast.success(`${selectedItems.size} items ${action === "approve" ? "approved" : "rejected"}`);
       setSelectedItems(new Set());
-      fetchPendingContent();
+      
+      // CRITICAL: Invalidate all track-related queries
+      queryClient.invalidateQueries({ queryKey: trackKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['moderation', 'pending'] });
+      
     } catch (error: any) {
       toast.error(error.message || "Failed to process bulk action");
     } finally {
@@ -413,7 +402,7 @@ export function ModerationPanel() {
                     onClick={() => handleBulkModerate("approve")}
                     disabled={bulkProcessing}
                   >
-                    <Check className="h-4 w-4 mr-2" />
+                    {bulkProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
                     Approve Selected
                   </Button>
                   <Button
@@ -422,7 +411,7 @@ export function ModerationPanel() {
                     onClick={() => handleBulkModerate("reject")}
                     disabled={bulkProcessing}
                   >
-                    <X className="h-4 w-4 mr-2" />
+                    {bulkProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <X className="h-4 w-4 mr-2" />}
                     Reject Selected
                   </Button>
                 </>
@@ -522,7 +511,7 @@ export function ModerationPanel() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => handleModerate(item.id, item.type, "approve")}
-                  disabled={processingAction?.id === item.id}
+                  disabled={processingAction !== null}
                   variant="default"
                   size="lg"
                   className="flex-1"
@@ -536,7 +525,7 @@ export function ModerationPanel() {
                 </Button>
                 <Button
                   onClick={() => handleModerate(item.id, item.type, "reject")}
-                  disabled={processingAction?.id === item.id}
+                  disabled={processingAction !== null}
                   variant="destructive"
                   size="lg"
                   className="flex-1"
