@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { TrendingUp, Play, Flame } from 'lucide-react';
+import { useTrendingTracks } from '@/hooks/useTracks';
 
 interface TrendingTrack {
   id: string;
@@ -22,60 +20,25 @@ interface TrendingTrack {
 export function TrendingTracks({ limit = 5 }: { limit?: number }) {
   const navigate = useNavigate();
   const { playTrack } = useMusicPlayer();
-  const [tracks, setTracks] = useState<TrendingTrack[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use React Query with automatic cache invalidation
+  const { data: rawTracks = [], isLoading: loading } = useTrendingTracks(limit);
 
-  useEffect(() => {
-    fetchTrendingTracks();
-  }, [limit]);
-
-  const fetchTrendingTracks = async () => {
-    try {
-      // Get tracks ordered by plays (trending = most plays)
-      const { data } = await supabase
-        .from('tracks')
-        .select(`
-          id,
-          title,
-          cover_image,
-          plays,
-          audio_url,
-          genre,
-          artist_id,
-          profiles!tracks_artist_id_fkey (
-            display_name
-          ),
-          artist_profiles!tracks_artist_id_fkey (
-            stage_name
-          )
-        `)
-        .eq('moderation_status', 'approved')
-        .order('plays', { ascending: false })
-        .limit(limit);
-
-      if (data) {
-        const formattedTracks = data.map(track => {
-          const profile = track.profiles as any;
-          const artistProfile = track.artist_profiles as any;
-          return {
-            id: track.id,
-            title: track.title,
-            artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown Artist',
-            artistId: track.artist_id,
-            coverImage: track.cover_image,
-            plays: track.plays || 0,
-            audioUrl: track.audio_url,
-            genre: track.genre,
-          };
-        });
-        setTracks(formattedTracks);
-      }
-    } catch (error) {
-      console.error('Error fetching trending tracks:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Transform the data
+  const tracks: TrendingTrack[] = rawTracks.map((track: any) => {
+    const profile = track.profiles as any;
+    const artistProfile = track.artist_profiles as any;
+    return {
+      id: track.id,
+      title: track.title,
+      artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown Artist',
+      artistId: track.artist_id,
+      coverImage: track.cover_image,
+      plays: track.plays || 0,
+      audioUrl: track.audio_url,
+      genre: track.genre,
+    };
+  });
 
   const handlePlay = (track: TrendingTrack) => {
     playTrack({

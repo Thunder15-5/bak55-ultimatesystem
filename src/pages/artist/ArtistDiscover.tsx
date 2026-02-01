@@ -1,70 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { TrackList } from "@/components/music/TrackList";
 import { TrackFilters } from "@/components/music/TrackFilters";
-import { supabase } from "@/integrations/supabase/client";
+import { useApprovedTracks } from "@/hooks/useTracks";
 
 export default function ArtistDiscover() {
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [filteredTracks, setFilteredTracks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchTracks();
-  }, []);
+  // Use React Query for approved tracks with automatic cache invalidation
+  const { data: tracks = [], isLoading: loading } = useApprovedTracks();
 
-  useEffect(() => {
-    filterTracks();
-  }, [tracks, selectedGenre, searchQuery]);
-
-  const fetchTracks = async () => {
-    setLoading(true);
-    
-    // Fetch tracks
-    // Fetch only approved tracks - RLS handles visibility but we also filter explicitly
-    const { data: tracksData, error: tracksError } = await supabase
-      .from("tracks")
-      .select("*")
-      .eq("moderation_status", "approved")
-      .order("created_at", { ascending: false });
-
-    if (tracksError) {
-      console.error("Error fetching tracks:", tracksError);
-      setLoading(false);
-      return;
-    }
-
-    if (!tracksData || tracksData.length === 0) {
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
-
-    // Fetch artist profiles for these tracks
-    const artistIds = [...new Set(tracksData.map(t => t.artist_id))];
-    const { data: artistsData, error: artistsError } = await supabase
-      .from("artist_profiles")
-      .select("user_id, stage_name")
-      .in("user_id", artistIds);
-
-    if (artistsError) {
-      console.error("Error fetching artists:", artistsError);
-    }
-
-    // Merge data
-    const tracksWithArtists = tracksData.map(track => ({
-      ...track,
-      artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
-    }));
-
-    setTracks(tracksWithArtists);
-    setLoading(false);
-  };
-
-  const filterTracks = () => {
+  // Filter tracks
+  const filteredTracks = useMemo(() => {
     let filtered = [...tracks];
 
     if (selectedGenre) {
@@ -81,8 +30,8 @@ export default function ArtistDiscover() {
       );
     }
 
-    setFilteredTracks(filtered);
-  };
+    return filtered;
+  }, [tracks, selectedGenre, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">

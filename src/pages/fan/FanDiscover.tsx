@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { TrackList } from "@/components/music/TrackList";
@@ -6,124 +6,66 @@ import { TrackFilters } from "@/components/music/TrackFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useApprovedTracks } from "@/hooks/useTracks";
+import { useQuery } from "@tanstack/react-query";
 
 export default function FanDiscover() {
   const { user } = useAuth();
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [filteredTracks, setFilteredTracks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => {
-    fetchTracks();
-  }, []);
+  // Use React Query for approved tracks
+  const { data: allTracks = [], isLoading: loadingAll } = useApprovedTracks();
 
-  useEffect(() => {
-    filterTracks();
-  }, [tracks, selectedGenre, searchQuery]);
+  // Fetch following tracks
+  const { data: followingTracks = [], isLoading: loadingFollowing } = useQuery({
+    queryKey: ['tracks', 'following', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
 
-  const fetchTracks = async () => {
-    setLoading(true);
-    
-    // Fetch tracks
-    const { data: tracksData, error: tracksError } = await supabase
-      .from("tracks")
-      .select("*")
-      .eq("moderation_status", "approved")
-      .order("created_at", { ascending: false });
+      const { data: followedArtists } = await supabase
+        .from("followers")
+        .select("artist_id")
+        .eq("follower_id", user.id);
 
-    if (tracksError) {
-      console.error("Error fetching tracks:", tracksError);
-      setLoading(false);
-      return;
-    }
+      if (!followedArtists || followedArtists.length === 0) {
+        return [];
+      }
 
-    if (!tracksData || tracksData.length === 0) {
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
+      const artistIds = followedArtists.map((f) => f.artist_id);
+      
+      const { data: tracksData, error } = await supabase
+        .from("tracks")
+        .select("*")
+        .in("artist_id", artistIds)
+        .eq("moderation_status", "approved")
+        .order("created_at", { ascending: false });
 
-    // Fetch artist profiles for these tracks
-    const artistIds = [...new Set(tracksData.map(t => t.artist_id))];
-    const { data: artistsData, error: artistsError } = await supabase
-      .from("artist_profiles")
-      .select("user_id, stage_name")
-      .in("user_id", artistIds);
+      if (error) throw error;
+      if (!tracksData || tracksData.length === 0) return [];
 
-    if (artistsError) {
-      console.error("Error fetching artists:", artistsError);
-    }
+      // Fetch artist profiles
+      const { data: artistsData } = await supabase
+        .from("artist_profiles")
+        .select("user_id, stage_name")
+        .in("user_id", artistIds);
 
-    // Merge data
-    const tracksWithArtists = tracksData.map(track => ({
-      ...track,
-      artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
-    }));
+      // Merge data
+      return tracksData.map(track => ({
+        ...track,
+        artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
+      }));
+    },
+    enabled: !!user,
+  });
 
-    setTracks(tracksWithArtists);
-    setLoading(false);
-  };
+  // Select tracks based on active tab
+  const tracks = activeTab === "all" ? allTracks : followingTracks;
+  const loading = activeTab === "all" ? loadingAll : loadingFollowing;
 
-  const fetchFollowingTracks = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    const { data: followedArtists } = await supabase
-      .from("followers")
-      .select("artist_id")
-      .eq("follower_id", user.id);
-
-    if (!followedArtists || followedArtists.length === 0) {
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
-
-    const artistIds = followedArtists.map((f) => f.artist_id);
-    
-    // Fetch tracks
-    const { data: tracksData, error: tracksError } = await supabase
-      .from("tracks")
-      .select("*")
-      .in("artist_id", artistIds)
-      .eq("moderation_status", "approved")
-      .order("created_at", { ascending: false });
-
-    if (tracksError) {
-      console.error("Error fetching following tracks:", tracksError);
-      setLoading(false);
-      return;
-    }
-
-    if (!tracksData || tracksData.length === 0) {
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
-
-    // Fetch artist profiles
-    const { data: artistsData, error: artistsError } = await supabase
-      .from("artist_profiles")
-      .select("user_id, stage_name")
-      .in("user_id", artistIds);
-
-    if (artistsError) {
-      console.error("Error fetching artists:", artistsError);
-    }
-
-    // Merge data
-    const tracksWithArtists = tracksData.map(track => ({
-      ...track,
-      artist_profiles: artistsData?.find(a => a.user_id === track.artist_id) || null
-    }));
-
-    setTracks(tracksWithArtists);
-    setLoading(false);
-  };
-
-  const filterTracks = () => {
+  // Filter tracks
+  const filteredTracks = useMemo(() => {
     let filtered = [...tracks];
 
     if (selectedGenre) {
@@ -140,8 +82,8 @@ export default function FanDiscover() {
       );
     }
 
-    setFilteredTracks(filtered);
-  };
+    return filtered;
+  }, [tracks, selectedGenre, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,12 +97,12 @@ export default function FanDiscover() {
           </p>
         </div>
 
-        <Tabs defaultValue="all" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="all" onClick={fetchTracks}>
+            <TabsTrigger value="all">
               All Tracks
             </TabsTrigger>
-            <TabsTrigger value="following" onClick={fetchFollowingTracks}>
+            <TabsTrigger value="following">
               Following
             </TabsTrigger>
           </TabsList>
