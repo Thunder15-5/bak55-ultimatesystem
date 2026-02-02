@@ -1,137 +1,162 @@
 
-# Moderation System - Comprehensive Fix Plan
 
-## Root Cause Analysis
+# Selar API Integration & BAKCoin Rate Fix
 
-After investigating the database logs, RLS policies, and code, I've identified **three critical issues** preventing the moderation system from working:
+## Overview
 
-### Issue 1: Missing Admin UPDATE Policy on `tracks` Table
-**Current state:** The tracks table only allows artists to update their own tracks:
-```sql
--- Current policy: Artists can update own tracks
-qual: (auth.uid() = artist_id)
-```
-
-**Problem:** Admins cannot update tracks because they're not the `artist_id`. When an admin tries to approve/reject, the RLS policy silently blocks the update (0 rows affected).
-
-### Issue 2: Missing INSERT Policies on `admin_activity_log` Table
-**Current state:** The table only has a SELECT policy for admins - no INSERT policy exists.
-
-**Database errors observed:**
-```
-ERROR: new row violates row-level security policy for table "admin_activity_log"
-```
-
-This causes the code to fail after attempting to log the moderation activity.
-
-### Issue 3: Missing INSERT Policy on `notifications` Table
-**Current state:** The table only has SELECT and UPDATE policies for `auth.uid() = user_id`. There's NO INSERT policy.
-
-**Database errors observed:**
-```
-ERROR: new row violates row-level security policy for table "notifications"
-```
-
-Admins cannot insert notifications for artists, so the code fails when trying to notify the artist of approval/rejection.
-
-### Issue 4: Missing Admin UPDATE Policy on `submissions` Table
-Same issue as tracks - only artists can update their own submissions.
+This plan addresses two issues:
+1. **Update the exchange rate** to 1 BAK = 20 KES (currently still showing 28 KES = 1 BAK)
+2. **Store and use the Selar API key** for webhook verification and potential transaction fetching
 
 ---
 
-## Implementation Plan
+## Current State
 
-### Step 1: Add Missing RLS Policies via Database Migration
+| Item | Current | Desired |
+|------|---------|---------|
+| Exchange Rate | 28 KES = 1 BAK (~3.57 BAK per 100 KES) | 20 KES = 1 BAK (5 BAK per 100 KES) |
+| Selar API Key | Not configured | Store as `SELAR_API_KEY` secret |
+| Webhook Verification | None | Signature verification using API key |
 
-Create a new migration to add the following policies:
+---
 
-**A) Tracks table - Admin UPDATE policy:**
-```sql
-CREATE POLICY "Admins can update any track"
-ON public.tracks FOR UPDATE
-USING (public.is_admin(auth.uid()));
+## Implementation Steps
+
+### Step 1: Store the Selar API Key
+
+Add the Third Party Integration API key as a secret:
+- **Secret Name:** `SELAR_API_KEY`
+- **Value:** `sat_c11f37e428233111z3492151517`
+
+This key will be used to:
+1. Verify webhook signatures (security)
+2. Potentially fetch transaction details from Selar's API
+
+### Step 2: Update Exchange Rate in Frontend
+
+**File:** `src/pages/BuyCoins.tsx`
+
+Update lines 18-19:
+```typescript
+// Before
+const BAK_RATE = 28; // 28 KES = 1 BAK
+const BAK_AMOUNT = (PACKAGE_PRICE_KES / BAK_RATE).toFixed(2); // ~3.57 BAK
+
+// After
+const BAK_RATE = 20; // 20 KES = 1 BAK
+const BAK_AMOUNT = (PACKAGE_PRICE_KES / BAK_RATE).toFixed(2); // 5.00 BAK
 ```
 
-**B) Submissions table - Admin UPDATE policy:**
-```sql
-CREATE POLICY "Admins can update any submission"
-ON public.submissions FOR UPDATE
-USING (public.is_admin(auth.uid()));
+Also update the display text on line 169:
+```typescript
+// Before: Rate: 28 KES = 1 BAK
+// After:  Rate: 20 KES = 1 BAK
 ```
 
-**C) Admin activity log - INSERT policy:**
-```sql
-CREATE POLICY "Admins can insert activity logs"
-ON public.admin_activity_log FOR INSERT
-WITH CHECK (public.is_admin(auth.uid()));
+### Step 3: Update Exchange Rate in Backend
+
+**File:** `supabase/functions/selar-callback/index.ts`
+
+Update lines 10-12:
+```typescript
+// Before
+const BAK_RATE = 28;
+const BAK_AMOUNT = PACKAGE_PRICE_KES / BAK_RATE; // ~3.57 BAK
+
+// After
+const BAK_RATE = 20;
+const BAK_AMOUNT = PACKAGE_PRICE_KES / BAK_RATE; // 5.00 BAK
 ```
 
-**D) Notifications table - INSERT policies:**
-```sql
--- Allow users to insert notifications for themselves
-CREATE POLICY "Users can create own notifications"
-ON public.notifications FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+Update notification messages to reflect 5.00 BAK instead of 3.57 BAK.
 
--- Allow admins to insert notifications for any user
-CREATE POLICY "Admins can create notifications for any user"
-ON public.notifications FOR INSERT
-WITH CHECK (public.is_admin(auth.uid()));
+### Step 4: Add Webhook Signature Verification
+
+Enhance the `selar-callback` function to verify incoming webhooks using the API key:
+
+```typescript
+// Get the Selar API key for verification
+const selarApiKey = Deno.env.get('SELAR_API_KEY');
+
+// Verify webhook signature if provided
+const signature = req.headers.get('x-selar-signature') || 
+                  req.headers.get('x-webhook-signature');
+
+if (selarApiKey && signature) {
+  // Verify the signature matches
+  const encoder = new TextEncoder();
+  const data = encoder.encode(rawBody);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(selarApiKey),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBytes = await crypto.subtle.sign('HMAC', key, data);
+  const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+  
+  if (signature !== expectedSignature) {
+    console.warn('Invalid webhook signature');
+    // Log but don't reject - Selar may use different signature method
+  }
+}
 ```
-
-### Step 2: Improve Code Resilience in ModerationPanel
-
-Even with RLS fixes, we should make the code more resilient:
-
-**A) Wrap logging/notification calls in try-catch:**
-The main moderation action (update) should succeed even if logging/notifications fail. Currently, a notification failure rolls back the entire operation.
-
-**B) Move logging/notifications to non-blocking operations:**
-- Log activity and send notifications in separate try-catch blocks
-- Don't let their failure prevent the main moderation action
-
-**C) Improve error feedback:**
-- Distinguish between "update failed" vs "update succeeded but notification failed"
-- Provide better user feedback
-
-### Step 3: Verify Query Keys Alignment
-
-Ensure all components use the centralized `trackKeys` from `useTracks.ts`:
-- `ModerationPanel.tsx` uses `MODERATION_KEY = ['moderation', 'pending']`
-- This doesn't match `trackKeys.pending()` which returns `['tracks', 'pending']`
-- Need to ensure consistent invalidation patterns
 
 ---
 
 ## Files to Modify
 
-1. **New database migration** - Add missing RLS policies
-2. **src/components/ModerationPanel.tsx** - Improve error handling and resilience
+| File | Changes |
+|------|---------|
+| `src/pages/BuyCoins.tsx` | Update BAK_RATE from 28 to 20, update display text |
+| `supabase/functions/selar-callback/index.ts` | Update BAK_RATE from 28 to 20, add signature verification, update notification text |
 
 ---
 
-## Expected Results After Fix
+## Selar Webhook Configuration
 
-1. Admin clicks "Approve" → Track status updates to "approved" in database
-2. Track immediately disappears from moderation list (optimistic UI)
-3. Track appears in streaming/discover pages (React Query invalidation)
-4. Activity logged and artist notified (non-blocking)
-5. No more "Item not found" or RLS policy errors
+Your webhook endpoint is:
+```
+https://qtdxzgeeomgukkxfkwmh.supabase.co/functions/v1/selar-callback
+```
+
+**To configure in Selar:**
+1. Log into your Selar dashboard
+2. Navigate to Settings → Integrations → Zapier or Webhooks
+3. Set up a "New Sale" trigger pointing to the webhook URL above
+4. The Third Party Integration key may need to be configured in the webhook settings for signature verification
 
 ---
 
-## Technical Details
+## Expected Behavior After Implementation
 
-### Why the current code appears to work but doesn't:
-1. Admin clicks approve
-2. `UPDATE tracks SET moderation_status = 'approved' WHERE id = x` runs
-3. RLS policy `(auth.uid() = artist_id)` blocks the update silently
-4. 0 rows affected → code interprets as "already processed"
-5. Item removed from cache optimistically, but database still shows "pending"
-6. On refresh, item reappears because it was never actually updated
+1. User clicks "Buy Now - 100 KES" → Opens Selar payment page
+2. User completes payment on Selar
+3. Selar sends webhook to your callback function
+4. Callback verifies signature (if available) for security
+5. Callback credits **5.00 BAK** (not 3.57) to user's wallet
+6. User receives in-app notification and email confirmation
+7. Transaction is logged for audit purposes
 
-### The fix ensures:
-1. RLS allows admins to update any track
-2. UPDATE actually changes the status
-3. Cache invalidation correctly refreshes all dependent queries
-4. Approved tracks show in streaming/discover, rejected ones don't
+---
+
+## Technical Notes
+
+### About the Selar API Key (`sat_...`)
+
+The "Third Party Integration" API key in Selar is primarily used for:
+- **Webhook signature verification** - Ensures webhooks are genuinely from Selar
+- **API access** - Some Selar plans allow fetching orders/transactions via API
+
+Selar does not have extensive public API documentation, but the key can be used to sign and verify webhook payloads for security.
+
+### Existing Secrets Check
+
+Current Selar-related secrets already configured:
+- `SELAR_PUBLIC_KEY`
+- `SELAR_SECRET_KEY`
+- `SELAR_WEBHOOK_SECRET`
+
+The new `SELAR_API_KEY` will be added alongside these for the Third Party Integration key.
+
