@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -32,8 +32,11 @@ export function PersistentMusicPlayer() {
   } = useMusicPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
+  const [localProgress, setLocalProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const hasIncrementedPlays = useRef(false);
   const lastTrackId = useRef<string | null>(null);
+  const isLoadingTrack = useRef(false);
 
   // Use the Howler-based audio engine
   const audio = useAudioEngine({
@@ -49,9 +52,16 @@ export function PersistentMusicPlayer() {
         setIsPlaying(false);
       }
     },
-    onPlay: () => setIsPlaying(true),
+    onPlay: () => {
+      isLoadingTrack.current = false;
+      setIsPlaying(true);
+    },
     onPause: () => setIsPlaying(false),
     onTimeUpdate: (time) => {
+      // Only update local progress if not dragging
+      if (!isDragging) {
+        setLocalProgress(time);
+      }
       if (!hasIncrementedPlays.current && time >= 30 && currentTrack) {
         hasIncrementedPlays.current = true;
         incrementPlayCount(currentTrack.id);
@@ -60,7 +70,7 @@ export function PersistentMusicPlayer() {
     preloadNext: nextTrackUrl,
   });
 
-  const incrementPlayCount = async (trackId: string) => {
+  const incrementPlayCount = useCallback(async (trackId: string) => {
     try {
       const { data } = await supabase
         .from("tracks")
@@ -77,22 +87,28 @@ export function PersistentMusicPlayer() {
     } catch (error) {
       console.error('Failed to increment play count:', error);
     }
-  };
+  }, []);
 
   // Load new track when currentTrack changes
   useEffect(() => {
     if (currentTrack && currentTrack.id !== lastTrackId.current) {
       lastTrackId.current = currentTrack.id;
       hasIncrementedPlays.current = false;
-      // Load and autoplay is handled by the audio engine - don't call play() separately
-      audio.load(currentTrack.audio_url, isPlaying);
+      isLoadingTrack.current = true;
+      setLocalProgress(0);
+      
+      // Try to use preloaded track first for gapless playback
+      const usedPreload = audio.usePreloaded(currentTrack.audio_url, isPlaying);
+      if (!usedPreload) {
+        audio.load(currentTrack.audio_url, isPlaying);
+      }
     }
-  }, [currentTrack, audio]); // Remove isPlaying from deps to prevent re-triggering
+  }, [currentTrack, audio, isPlaying]);
 
   // Sync play/pause state from context (only for pause/resume, NOT for initial load)
   useEffect(() => {
-    // Only sync if we have a loaded track and the track hasn't just changed
-    if (!audio.isLoaded || !currentTrack) return;
+    // Don't sync during track loading to prevent race conditions
+    if (!audio.isLoaded || !currentTrack || isLoadingTrack.current) return;
     
     // Avoid double-play: only call play() if audio is genuinely paused
     if (isPlaying && !audio.isPlaying) {
@@ -152,13 +168,22 @@ export function PersistentMusicPlayer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentTrack, audio, playNext, playPrevious, toggleShuffle, cycleRepeatMode]);
 
-  const handleSeek = (value: number[]) => {
-    audio.seek(value[0]);
-  };
+  const handleSeekStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
 
-  const handleVolumeChange = (value: number[]) => {
+  const handleSeekChange = useCallback((value: number[]) => {
+    setLocalProgress(value[0]);
+  }, []);
+
+  const handleSeekEnd = useCallback((value: number[]) => {
+    audio.seek(value[0]);
+    setIsDragging(false);
+  }, [audio]);
+
+  const handleVolumeChange = useCallback((value: number[]) => {
     audio.setVolume(value[0]);
-  };
+  }, [audio]);
 
   const formatTime = (time: number) => {
     if (!isFinite(time) || isNaN(time)) return "0:00";
@@ -220,14 +245,16 @@ export function PersistentMusicPlayer() {
                 {/* Progress */}
                 <div className="space-y-2">
                   <Slider
-                    value={[audio.currentTime]}
+                    value={[isDragging ? localProgress : audio.currentTime]}
                     max={audio.duration || 100}
                     step={0.1}
-                    onValueChange={handleSeek}
+                    onPointerDown={handleSeekStart}
+                    onValueChange={handleSeekChange}
+                    onValueCommit={handleSeekEnd}
                     className="cursor-pointer [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 sm:[&_[role=slider]]:h-5 sm:[&_[role=slider]]:w-5"
                   />
                   <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
-                    <span>{formatTime(audio.currentTime)}</span>
+                    <span>{formatTime(isDragging ? localProgress : audio.currentTime)}</span>
                     <span>{formatTime(audio.duration)}</span>
                   </div>
                 </div>
@@ -513,13 +540,15 @@ export function PersistentMusicPlayer() {
             {/* Progress bar */}
             <div className="flex items-center gap-2 w-full">
               <span className="text-xs text-muted-foreground w-10 text-right hidden sm:block">
-                {formatTime(audio.currentTime)}
+                {formatTime(isDragging ? localProgress : audio.currentTime)}
               </span>
               <Slider
-                value={[audio.currentTime]}
+                value={[isDragging ? localProgress : audio.currentTime]}
                 max={audio.duration || 100}
                 step={0.1}
-                onValueChange={handleSeek}
+                onPointerDown={handleSeekStart}
+                onValueChange={handleSeekChange}
+                onValueCommit={handleSeekEnd}
                 className="flex-1"
               />
               <span className="text-xs text-muted-foreground w-10 hidden sm:block">
