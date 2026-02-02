@@ -125,9 +125,9 @@ export default function CompetitionDetails() {
         .select('*')
         .eq('artist_id', user.id)
         .eq('competition_id', id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       setArtistJourney(data);
     } catch (error) {
       console.error('Error fetching artist journey:', error);
@@ -199,17 +199,26 @@ export default function CompetitionDetails() {
     const VOTE_COST = 1; // 1 BAKCoin per vote
 
     try {
-      // Check wallet balance
+      // Check wallet balance - use maybeSingle in case wallet doesn't exist
       const { data: wallet, error: walletError } = await supabase
         .from("wallets")
         .select("id, balance")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (walletError || !wallet) {
+      if (walletError) {
         toast({
           title: "Wallet Error",
           description: "Unable to access your wallet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!wallet) {
+        toast({
+          title: "Wallet Not Found",
+          description: "Please visit your wallet page to set it up first",
           variant: "destructive",
         });
         return;

@@ -46,14 +46,18 @@ export default function TrackDetails() {
   useEffect(() => {
     if (id) {
       fetchTrack();
-      if (user) {
-        fetchFollowStatus();
-      }
     }
     if (user) {
       fetchUserPlaylists();
     }
   }, [id, user]);
+
+  // Separate effect for follow status that depends on track
+  useEffect(() => {
+    if (user && track?.artist_id) {
+      fetchFollowStatus();
+    }
+  }, [user, track?.artist_id]);
 
 
   const fetchTrack = async () => {
@@ -221,21 +225,11 @@ export default function TrackDetails() {
           avatar_url: track.profiles.avatar_url,
         },
       });
-
-      // Increment play count after 30 seconds
-      setTimeout(async () => {
-        await supabase
-          .from("tracks")
-          .update({ plays: track.plays + 1 })
-          .eq("id", track.id);
-        
-        setTrack({ ...track, plays: track.plays + 1 });
-        
-        // Track fan activity for rewards
-        if (user) {
-          await trackActivity('track_play', { track_id: track.id });
-        }
-      }, 30000);
+      
+      // Track fan activity for rewards (play count is handled by PersistentMusicPlayer)
+      if (user) {
+        await trackActivity('track_play', { track_id: track.id });
+      }
     }
   };
 

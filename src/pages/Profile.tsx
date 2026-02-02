@@ -39,11 +39,16 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user?.id)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        return;
+      }
 
       if (profileData) {
         setProfile({
@@ -56,11 +61,16 @@ export default function Profile() {
       }
 
       if (userRole === "artist") {
-        const { data: artistData } = await supabase
+        const { data: artistData, error: artistError } = await supabase
           .from("artist_profiles")
           .select("*")
           .eq("user_id", user?.id)
-          .single();
+          .maybeSingle();
+
+        if (artistError) {
+          console.error("Error fetching artist profile:", artistError);
+          return;
+        }
 
         if (artistData) {
           setArtistProfile({
