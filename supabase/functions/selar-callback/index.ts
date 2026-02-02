@@ -59,75 +59,103 @@ serve(async (req) => {
         
         if (signature !== expectedSignature) {
           console.warn('Webhook signature mismatch - logging but proceeding');
-          // Log but don't reject - Selar may use different signature method
         } else {
           console.log('Webhook signature verified successfully');
         }
       } catch (sigError) {
         console.warn('Signature verification failed:', sigError);
-        // Continue processing - don't block on signature issues
       }
     } else {
       console.log('No signature verification (missing API key or signature header)');
     }
 
-    // Extract data from Selar webhook
-    // Selar sends different payload structures, handle common cases
-    const reference = payload.reference || payload.transaction_reference || payload.order_reference;
-    const transactionId = payload.transaction_id || payload.id;
-    const status = payload.status || payload.payment_status;
-    const email = payload.email || payload.customer_email || payload.buyer_email;
-    const metadata = payload.metadata || payload.custom_data || {};
-    const userId = metadata.user_id || payload.user_id;
+    // ====== PARSE SELAR'S NATIVE WEBHOOK FORMAT ======
+    // Selar sends: buyer_email, receipt_url, product_id, total_amount, etc.
+    // The webhook being received IS the success confirmation (no separate status field)
+    
+    // Extract email from Selar's native format
+    const email = payload.buyer_email || 
+                  payload.email || 
+                  payload.customer_email;
+    
+    // Extract transaction reference from receipt_url or other fields
+    // receipt_url format: "https://selar.com/receipt/S0C90IZ9V2FI9?products=x6r5dgu5h5"
+    let transactionId = payload.transaction_id || payload.id || payload.product_id;
+    
+    if (!transactionId && payload.receipt_url) {
+      // Extract receipt ID from URL
+      const receiptMatch = payload.receipt_url.match(/\/receipt\/([A-Z0-9]+)/i);
+      if (receiptMatch) {
+        transactionId = receiptMatch[1];
+      }
+    }
+    
+    const reference = payload.reference || 
+                      payload.transaction_reference || 
+                      payload.order_reference ||
+                      transactionId;
+    
+    // For Zapier forwarded webhooks, check for explicit status
+    const explicitStatus = payload.status || payload.payment_status;
+    
+    // Selar native webhooks don't have status - the webhook IS the success
+    // If we have product_code, product_id, or receipt_url, it's a successful payment
+    const isSelarNativeWebhook = payload.product_code || 
+                                  payload.product_id || 
+                                  payload.receipt_url ||
+                                  payload.buyer_email;
+    
+    const isSuccessful = isSelarNativeWebhook || 
+                         ['successful', 'success', 'completed', 'paid'].includes(
+                           (explicitStatus || '').toLowerCase()
+                         );
 
-    console.log('Parsed webhook data:', { reference, transactionId, status, email, userId });
-
-    // Check if payment is successful
-    const isSuccessful = ['successful', 'success', 'completed', 'paid'].includes(
-      (status || '').toLowerCase()
-    );
+    console.log('Parsed webhook data:', { 
+      email, 
+      transactionId, 
+      reference, 
+      isSelarNativeWebhook,
+      explicitStatus,
+      isSuccessful 
+    });
 
     if (!isSuccessful) {
-      console.log('Payment not successful, status:', status);
+      console.log('Payment not successful - no valid Selar webhook data');
       return new Response(
-        JSON.stringify({ success: false, message: 'Payment not successful' }),
+        JSON.stringify({ success: false, message: 'Payment not successful or invalid webhook' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Find user by email if userId not in metadata
-    let targetUserId = userId;
-    
-    if (!targetUserId && email) {
-      console.log('Looking up user by email:', email);
-      const { data: profile, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (profileError || !profile) {
-        console.error('User not found by email:', email, profileError);
-        return new Response(
-          JSON.stringify({ error: 'User not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      targetUserId = profile.id;
-    }
-
-    if (!targetUserId) {
-      console.error('No user ID found in webhook');
+    if (!email) {
+      console.error('No email found in webhook payload');
       return new Response(
-        JSON.stringify({ error: 'No user ID in webhook payload' }),
+        JSON.stringify({ error: 'No email in webhook payload' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processing payment for user:', targetUserId);
+    // Find user by email
+    console.log('Looking up user by email:', email);
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('User not found by email:', email, profileError);
+      return new Response(
+        JSON.stringify({ error: 'User not found', email }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const targetUserId = profile.id;
+    console.log('Found user:', targetUserId);
 
     // Check if this transaction was already processed (prevent double-crediting)
-    const txRef = transactionId || reference || `selar_${Date.now()}`;
+    const txRef = transactionId || reference || `selar_${Date.now()}_${email}`;
     
     const { data: existingTx } = await supabaseClient
       .from('payment_transactions')
@@ -212,7 +240,6 @@ serve(async (req) => {
 
     if (paymentTxError) {
       console.error('Failed to record payment transaction:', paymentTxError);
-      // Don't fail - wallet already credited
     }
 
     // Record in transactions table
@@ -273,7 +300,7 @@ serve(async (req) => {
       console.error('Failed to send email:', emailError);
     }
 
-    console.log('Payment processing complete');
+    console.log('Payment processing complete for', email);
 
     return new Response(
       JSON.stringify({ 
