@@ -1,62 +1,12 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Clock, Wallet, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Clock, Wallet, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+
+const SELAR_PRODUCT_LINK = "https://selar.com/x6r5dgu5h5";
 
 const PaymentPending = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { orderTrackingId, transactionId } = location.state || {};
-  const [checking, setChecking] = useState(false);
-
-  const checkStatus = async () => {
-    setChecking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('pesapal-callback', {
-        body: { 
-          OrderTrackingId: orderTrackingId,
-          transaction_id: transactionId,
-        }
-      });
-
-      if (error) throw error;
-
-      const status = data?.status;
-      
-      if (status === 'success') {
-        toast({
-          title: "Payment Confirmed!",
-          description: "Your payment has been verified successfully.",
-        });
-        navigate('/payment/success', { state: { orderTrackingId, transactionId } });
-      } else if (status === 'failed') {
-        toast({
-          title: "Payment Failed",
-          description: "Your payment could not be processed.",
-          variant: "destructive",
-        });
-        navigate('/payment/failed', { state: { orderTrackingId, transactionId } });
-      } else {
-        toast({
-          title: "Still Pending",
-          description: "Your payment is still being processed. Please check again shortly.",
-        });
-      }
-    } catch (error) {
-      console.error('Error checking status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to check payment status. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setChecking(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background-dark p-4">
@@ -73,40 +23,38 @@ const PaymentPending = () => {
             Your payment is being processed
           </p>
           <p className="text-sm text-muted-foreground">
-            This usually takes a few minutes. Our team will verify your payment shortly.
+            Once Selar confirms your payment, BAKCoins will be automatically credited to your wallet.
           </p>
         </div>
 
-        {orderTrackingId && (
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Transaction ID:</span>
-              <span className="font-mono text-xs">{transactionId?.substring(0, 8)}...</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Reference:</span>
-              <span className="font-mono text-xs">{orderTrackingId.substring(0, 16)}...</span>
-            </div>
+        <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Package:</span>
+            <span className="font-bold">100 KES → 5.00 BAK</span>
           </div>
-        )}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Payment Provider:</span>
+            <span className="font-medium">Selar</span>
+          </div>
+        </div>
 
         <div className="space-y-3 pt-4">
           <Button 
-            onClick={checkStatus} 
-            variant="outline"
+            onClick={() => navigate('/wallet')} 
             className="w-full"
-            disabled={checking}
+            size="lg"
           >
-            <RefreshCw className={`mr-2 h-5 w-5 ${checking ? 'animate-spin' : ''}`} />
-            {checking ? 'Checking...' : 'Check Status'}
+            <Wallet className="mr-2 h-5 w-5" />
+            Check My Wallet
           </Button>
 
           <Button 
-            onClick={() => navigate('/wallet')} 
+            onClick={() => window.open(SELAR_PRODUCT_LINK, '_blank')} 
+            variant="outline"
             className="w-full"
           >
-            <Wallet className="mr-2 h-5 w-5" />
-            Back to Wallet
+            <ExternalLink className="mr-2 h-5 w-5" />
+            Try Payment Again
           </Button>
 
           <p className="text-xs text-muted-foreground">

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Wallet, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,17 +9,11 @@ import confetti from "canvas-confetti";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { orderTrackingId, transactionId } = location.state || {};
 
   useEffect(() => {
     // Trigger confetti animation
     const duration = 3 * 1000;
     const animationEnd = Date.now() + duration;
-
-    const randomInRange = (min: number, max: number) => {
-      return Math.random() * (max - min) + min;
-    };
 
     const interval = setInterval(() => {
       const timeLeft = animationEnd - Date.now();
@@ -69,22 +63,24 @@ const PaymentSuccess = () => {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-success">Payment Successful!</h1>
           <p className="text-lg text-muted-foreground">
-            Your BAKCoins have been credited to your wallet
+            5.00 BAKCoins have been credited to your wallet
           </p>
         </div>
 
-        {orderTrackingId && (
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Transaction ID:</span>
-              <span className="font-mono text-xs">{transactionId?.substring(0, 8)}...</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Pesapal Reference:</span>
-              <span className="font-mono text-xs">{orderTrackingId.substring(0, 16)}...</span>
-            </div>
+        <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Amount Paid:</span>
+            <span className="font-bold">100 KES</span>
           </div>
-        )}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">BAKCoins Received:</span>
+            <span className="font-bold text-primary">5.00 BAK</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Payment Method:</span>
+            <span className="font-medium">Selar</span>
+          </div>
+        </div>
 
         <div className="space-y-3 pt-4">
           <Button 

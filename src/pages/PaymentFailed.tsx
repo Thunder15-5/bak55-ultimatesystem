@@ -1,12 +1,12 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { XCircle, Wallet, RefreshCcw, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { XCircle, Wallet, ExternalLink, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+const SELAR_PRODUCT_LINK = "https://selar.com/x6r5dgu5h5";
+
 const PaymentFailed = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { orderTrackingId, transactionId, error } = location.state || {};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background-dark p-4">
@@ -22,25 +22,7 @@ const PaymentFailed = () => {
           <p className="text-lg text-muted-foreground">
             Your payment could not be processed
           </p>
-          {error && (
-            <p className="text-sm text-muted-foreground bg-destructive/5 p-3 rounded">
-              {error}
-            </p>
-          )}
         </div>
-
-        {orderTrackingId && (
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Transaction ID:</span>
-              <span className="font-mono text-xs">{transactionId?.substring(0, 8)}...</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Reference:</span>
-              <span className="font-mono text-xs">{orderTrackingId.substring(0, 16)}...</span>
-            </div>
-          </div>
-        )}
 
         <div className="bg-muted/30 rounded-lg p-4 text-left text-sm space-y-2">
           <p className="font-semibold">Common reasons for payment failure:</p>
@@ -54,12 +36,12 @@ const PaymentFailed = () => {
 
         <div className="space-y-3 pt-4">
           <Button 
-            onClick={() => navigate('/wallet/buy-coins')} 
+            onClick={() => window.open(SELAR_PRODUCT_LINK, '_blank')} 
             className="w-full"
             size="lg"
           >
-            <RefreshCcw className="mr-2 h-5 w-5" />
-            Try Again
+            <ExternalLink className="mr-2 h-5 w-5" />
+            Try Again via Selar
           </Button>
 
           <Button 
