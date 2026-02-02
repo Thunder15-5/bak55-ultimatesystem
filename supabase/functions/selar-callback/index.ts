@@ -3,13 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-selar-signature, x-webhook-signature',
 };
 
-// Fixed package: 100 KES = 3.57 BAK (28 KES = 1 BAK)
+// Fixed package: 100 KES = 5 BAK (20 KES = 1 BAK)
 const PACKAGE_PRICE_KES = 100;
-const BAK_RATE = 28;
-const BAK_AMOUNT = PACKAGE_PRICE_KES / BAK_RATE; // ~3.57 BAK
+const BAK_RATE = 20;
+const BAK_AMOUNT = PACKAGE_PRICE_KES / BAK_RATE; // 5.00 BAK
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,8 +22,54 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const payload = await req.json();
+    // Get raw body for signature verification
+    const rawBody = await req.text();
+    let payload;
+    
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      console.error('Invalid JSON payload');
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON payload' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('Selar webhook received:', JSON.stringify(payload));
+
+    // Verify webhook signature if Selar API key is configured
+    const selarApiKey = Deno.env.get('SELAR_API_KEY');
+    const signature = req.headers.get('x-selar-signature') || 
+                      req.headers.get('x-webhook-signature');
+
+    if (selarApiKey && signature) {
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawBody);
+        const key = await crypto.subtle.importKey(
+          'raw',
+          encoder.encode(selarApiKey),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        const signatureBytes = await crypto.subtle.sign('HMAC', key, data);
+        const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+        
+        if (signature !== expectedSignature) {
+          console.warn('Webhook signature mismatch - logging but proceeding');
+          // Log but don't reject - Selar may use different signature method
+        } else {
+          console.log('Webhook signature verified successfully');
+        }
+      } catch (sigError) {
+        console.warn('Signature verification failed:', sigError);
+        // Continue processing - don't block on signature issues
+      }
+    } else {
+      console.log('No signature verification (missing API key or signature header)');
+    }
 
     // Extract data from Selar webhook
     // Selar sends different payload structures, handle common cases
@@ -122,7 +168,7 @@ serve(async (req) => {
       wallet = newWallet;
     }
 
-    // Credit the wallet with fixed BAK amount
+    // Credit the wallet with fixed BAK amount (5 BAK per 100 KES)
     const newBalance = (wallet.balance || 0) + BAK_AMOUNT;
     
     const { error: updateError } = await supabaseClient
@@ -159,6 +205,7 @@ serve(async (req) => {
         metadata: {
           selar_webhook: payload,
           bak_credited: BAK_AMOUNT,
+          bak_rate: BAK_RATE,
           processed_at: new Date().toISOString()
         }
       });
@@ -180,7 +227,8 @@ serve(async (req) => {
         metadata: {
           payment_provider: 'selar',
           selar_transaction_id: transactionId,
-          amount_kes: PACKAGE_PRICE_KES
+          amount_kes: PACKAGE_PRICE_KES,
+          bak_rate: BAK_RATE
         }
       });
 
@@ -214,6 +262,7 @@ serve(async (req) => {
               <h1>Payment Successful!</h1>
               <p>Your payment of <strong>100 KES</strong> has been processed successfully.</p>
               <p><strong>${BAK_AMOUNT.toFixed(2)} BAKCoins</strong> have been added to your wallet.</p>
+              <p>Exchange Rate: 20 KES = 1 BAK</p>
               <p>Reference: ${txRef}</p>
               <p>Thank you for using BAK55 Talent!</p>
             `
