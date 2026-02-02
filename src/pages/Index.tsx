@@ -40,14 +40,7 @@ const Index = () => {
 
   // Don't auto-redirect - let users view the landing page if they want
   // They can manually navigate to their dashboard via the navigation menu
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Note: We don't block on loading - show the landing page immediately
 
   // Only show landing page to non-authenticated users
   return (
