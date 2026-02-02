@@ -76,14 +76,22 @@ export default function Wallet() {
 
   const fetchWalletData = async () => {
     try {
-      // Fetch wallet balance
+      // Fetch wallet balance - use maybeSingle to handle new users without wallets
       const { data: walletData, error: walletError } = await supabase
         .from("wallets")
         .select("id, balance")
         .eq("user_id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (walletError) throw walletError;
+
+      // Handle case where user doesn't have a wallet yet
+      if (!walletData) {
+        setBalance(0);
+        setTransactions([]);
+        setLoading(false);
+        return;
+      }
 
       setBalance(walletData.balance);
 

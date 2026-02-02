@@ -90,7 +90,7 @@ export default function UploadTrack() {
       .eq('user_id', user.id)
       .eq('status', 'active')
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (data) {
       setSubscription(data);
