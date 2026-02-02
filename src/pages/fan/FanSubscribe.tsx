@@ -100,24 +100,41 @@ export default function FanSubscribe() {
     setSubscribing(plan.id);
 
     try {
+      // Get fresh session to ensure valid token (important for mobile)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast.error('Session expired. Please log in again.');
+        navigate('/login');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('subscribe-plan', {
         body: {
           plan_id: plan.id,
           payment_method: 'bakcoins',
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
 
-      if (data.error) {
+      if (data?.error) {
         toast.error(data.error);
       } else {
-        toast.success(data.message || 'Subscription activated!');
+        toast.success(data?.message || 'Subscription activated!');
         navigate('/fan/dashboard');
       }
     } catch (error: any) {
       console.error('Subscription error:', error);
-      toast.error(error.message || 'Failed to process subscription');
+      const errorMessage = error?.message || 'Failed to process subscription';
+      if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setSubscribing(null);
     }
