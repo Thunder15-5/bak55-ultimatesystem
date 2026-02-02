@@ -15,8 +15,8 @@ import { Separator } from "@/components/ui/separator";
 // Selar product link for 100 KES BAKCoin package
 const SELAR_PRODUCT_LINK = "https://selar.com/x6r5dgu5h5";
 const PACKAGE_PRICE_KES = 100;
-const BAK_RATE = 28; // 28 KES = 1 BAK
-const BAK_AMOUNT = (PACKAGE_PRICE_KES / BAK_RATE).toFixed(2); // ~3.57 BAK
+const BAK_RATE = 20; // 20 KES = 1 BAK
+const BAK_AMOUNT = (PACKAGE_PRICE_KES / BAK_RATE).toFixed(2); // 5.00 BAK
 
 const BuyCoins = () => {
   const { user } = useAuth();
@@ -166,7 +166,7 @@ const BuyCoins = () => {
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground text-center">
-                    Rate: 28 KES = 1 BAK
+                    Rate: 20 KES = 1 BAK
                   </div>
                 </div>
 
