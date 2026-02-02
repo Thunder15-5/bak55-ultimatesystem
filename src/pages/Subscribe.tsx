@@ -80,24 +80,42 @@ export default function Subscribe() {
     setSubscribing(true);
 
     try {
+      // Get fresh session to ensure valid token (important for mobile)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast.error('Session expired. Please log in again.');
+        navigate('/login');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('subscribe-plan', {
         body: {
           plan_id: planId,
           payment_method: 'bakcoins',
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
 
-      if (data.error) {
+      if (data?.error) {
         toast.error(data.error);
       } else {
-        toast.success(data.message || 'Subscription activated!');
+        toast.success(data?.message || 'Subscription activated!');
         navigate('/subscription/success');
       }
     } catch (error: any) {
       console.error('Subscription error:', error);
-      toast.error(error.message || 'Failed to process subscription');
+      // Provide more helpful error messages for mobile users
+      const errorMessage = error?.message || 'Failed to process subscription';
+      if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setSubscribing(false);
     }

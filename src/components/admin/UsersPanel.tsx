@@ -33,9 +33,10 @@ interface UserProfile {
   email: string;
   created_at: string;
   banned: boolean;
-  user_roles: Array<{ role: string }>;
-  artist_profiles?: { stage_name: string; total_earnings: number; verified: boolean };
-  wallets?: { balance: number };
+  user_roles: Array<{ role: string }> | null;
+  artist_profiles?: { stage_name: string; total_earnings: number; verified: boolean } | null;
+  brand_profiles?: { company_name: string; verified: boolean } | null;
+  wallets?: { balance: number } | null;
   tracks?: Array<{ id: string }>;
 }
 
@@ -51,13 +52,26 @@ export function UsersPanel() {
   });
 
   // Get primary role with priority: admin > artist > brand > fan
-  const getPrimaryRole = (roles: Array<{ role: string }> | undefined): "admin" | "artist" | "brand" | "fan" => {
-    if (!roles || roles.length === 0) return "fan";
+  // Also check for artist_profiles and brand_profiles as fallback
+  const getPrimaryRole = (
+    roles: Array<{ role: string }> | undefined | null,
+    hasArtistProfile: boolean = false,
+    hasBrandProfile: boolean = false
+  ): "admin" | "artist" | "brand" | "fan" => {
+    // First check explicit roles in user_roles table
+    if (roles && roles.length > 0) {
+      const roleNames = roles.map(r => r.role);
+      if (roleNames.includes("admin")) return "admin";
+      if (roleNames.includes("artist")) return "artist";
+      if (roleNames.includes("brand")) return "brand";
+      // Only return fan if it's explicitly set and no other roles
+      if (roleNames.includes("fan")) return "fan";
+    }
     
-    const roleNames = roles.map(r => r.role);
-    if (roleNames.includes("admin")) return "admin";
-    if (roleNames.includes("artist")) return "artist";
-    if (roleNames.includes("brand")) return "brand";
+    // Fallback: Check profile tables if no explicit role
+    if (hasArtistProfile) return "artist";
+    if (hasBrandProfile) return "brand";
+    
     return "fan";
   };
 
@@ -74,6 +88,7 @@ export function UsersPanel() {
         *,
         user_roles(role),
         artist_profiles(stage_name, total_earnings, verified),
+        brand_profiles(company_name, verified),
         wallets(balance),
         tracks(id)
       `)
@@ -181,9 +196,11 @@ export function UsersPanel() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Use getPrimaryRole function instead
+  // Use getPrimaryRole function with profile fallbacks
   const getUserRole = (user: UserProfile) => {
-    return getPrimaryRole(user.user_roles);
+    const hasArtistProfile = !!user.artist_profiles;
+    const hasBrandProfile = !!user.brand_profiles;
+    return getPrimaryRole(user.user_roles, hasArtistProfile, hasBrandProfile);
   };
 
   return (

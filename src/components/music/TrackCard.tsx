@@ -73,21 +73,26 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
           alt={track.title}
           className="w-full h-full object-cover"
         />
-        {/* Play/Pause overlay - Spotify style */}
-        <div className={`absolute inset-0 bg-black/40 ${isThisPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity flex items-center justify-center touch-manipulation`}>
+        {/* Play/Pause overlay - Spotify style with fixed mobile button */}
+        <div 
+          className={`absolute inset-0 bg-black/40 transition-opacity duration-200 flex items-center justify-center ${
+            isThisPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-active:opacity-100'
+          }`}
+        >
           <Button
-            size="lg"
+            size="icon"
             onClick={handlePlayPause}
-            className={`rounded-full w-12 h-12 sm:w-14 sm:h-14 shadow-xl hover:scale-110 transition-all touch-manipulation ${
+            className={`rounded-full w-14 h-14 min-w-[56px] min-h-[56px] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation flex items-center justify-center ${
               isThisPlaying 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-white/90 text-black hover:bg-white'
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                : 'bg-white text-black hover:bg-white/90'
             }`}
+            style={{ touchAction: 'manipulation' }}
           >
             {isThisPlaying ? (
-              <Pause className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Pause className="w-6 h-6 flex-shrink-0" />
             ) : (
-              <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5" />
+              <Play className="w-6 h-6 ml-0.5 flex-shrink-0" />
             )}
           </Button>
         </div>
