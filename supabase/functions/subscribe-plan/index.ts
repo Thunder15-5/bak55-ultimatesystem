@@ -18,6 +18,7 @@ serve(async (req: Request) => {
   }
 
   try {
+    // User client for auth verification
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -26,6 +27,12 @@ serve(async (req: Request) => {
           headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
+    );
+
+    // Admin client for wallet operations (bypasses RLS)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -112,14 +119,15 @@ serve(async (req: Request) => {
         );
       }
 
-      // Check wallet balance
-      const { data: wallet, error: walletError } = await supabase
+      // Check wallet balance using admin client
+      const { data: wallet, error: walletError } = await supabaseAdmin
         .from('wallets')
-        .select('balance')
+        .select('id, balance')
         .eq('user_id', user.id)
         .single();
 
       if (walletError || !wallet) {
+        console.error('Wallet fetch error:', walletError);
         return new Response(
           JSON.stringify({ error: 'Wallet not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -133,19 +141,24 @@ serve(async (req: Request) => {
         );
       }
 
-      // Deduct BAK from wallet
-      const { error: updateError } = await supabase
+      // Deduct BAK from wallet using admin client (bypasses RLS)
+      const { data: updatedWallet, error: updateError } = await supabaseAdmin
         .from('wallets')
         .update({ balance: wallet.balance - amount, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('balance', wallet.balance) // Optimistic lock to prevent race conditions
+        .select('id, balance')
+        .single();
 
-      if (updateError) {
+      if (updateError || !updatedWallet) {
         console.error('Wallet update error:', updateError);
         return new Response(
-          JSON.stringify({ error: 'Failed to process payment' }),
+          JSON.stringify({ error: 'Failed to process payment. Please try again.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      console.log(`Wallet deducted: ${amount} BAK from user ${user.id}. New balance: ${updatedWallet.balance}`);
 
       // Calculate expiry based on plan's duration_days
       const expiresAt = new Date();
@@ -168,8 +181,8 @@ serve(async (req: Request) => {
 
       if (subError) {
         console.error('Subscription creation error:', subError);
-        // Refund the wallet if subscription creation fails
-        await supabase
+        // Refund the wallet if subscription creation fails using admin client
+        await supabaseAdmin
           .from('wallets')
           .update({ balance: wallet.balance, updated_at: new Date().toISOString() })
           .eq('user_id', user.id);
@@ -180,8 +193,8 @@ serve(async (req: Request) => {
         );
       }
 
-      // Create transaction record
-      const { error: txError } = await supabase
+      // Create subscription transaction record using admin client
+      const { error: txError } = await supabaseAdmin
         .from('subscription_transactions')
         .insert({
           subscription_id: subscription.id,
@@ -193,26 +206,22 @@ serve(async (req: Request) => {
         });
 
       if (txError) {
-        console.error('Transaction record error:', txError);
+        console.error('Subscription transaction record error:', txError);
       }
 
-      // Create wallet transaction
-      const { data: walletData } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      // Create wallet transaction using admin client
+      const { error: walletTxError } = await supabaseAdmin
+        .from('transactions')
+        .insert({
+          wallet_id: wallet.id,
+          type: 'spending',
+          amount: -amount,
+          description: `Subscription: ${plan.name}`,
+          reference_id: subscription.id,
+        });
 
-      if (walletData) {
-        await supabase
-          .from('transactions')
-          .insert({
-            wallet_id: walletData.id,
-            type: 'spending',
-            amount: -amount,
-            description: `Subscription: ${plan.name}`,
-            reference_id: subscription.id,
-          });
+      if (walletTxError) {
+        console.error('Wallet transaction record error:', walletTxError);
       }
 
       // Send notification
