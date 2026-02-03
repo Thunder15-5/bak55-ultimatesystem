@@ -39,16 +39,41 @@ export function PersistentMusicPlayer() {
   const hasIncrementedPlays = useRef(false);
   const lastTrackId = useRef<string | null>(null);
   const isLoadingTrack = useRef(false);
+  
+  // Refs to prevent stale closures in callbacks
+  const repeatModeRef = useRef(repeatMode);
+  const queueRef = useRef(queue);
+  const shuffleEnabledRef = useRef(shuffleEnabled);
+  const audioRef = useRef<ReturnType<typeof useAudioEngine> | null>(null);
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
+  
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
+  
+  useEffect(() => {
+    shuffleEnabledRef.current = shuffleEnabled;
+  }, [shuffleEnabled]);
 
   // Use the Howler-based audio engine
   const audio = useAudioEngine({
     onEnd: () => {
-      if (repeatMode === 'one' && FEATURES.REPEAT_MODE) {
-        audio.seek(0);
-        audio.play();
-      } else if (queue.length > 0) {
+      const currentRepeatMode = repeatModeRef.current;
+      const currentQueue = queueRef.current;
+      
+      if (currentRepeatMode === 'one' && FEATURES.REPEAT_MODE) {
+        // Repeat the same track - use audioRef to avoid stale closure
+        if (audioRef.current) {
+          audioRef.current.seek(0);
+          audioRef.current.play();
+        }
+      } else if (currentQueue.length > 0) {
         playNext();
-      } else if (repeatMode === 'all' && FEATURES.REPEAT_MODE) {
+      } else if (currentRepeatMode === 'all' && FEATURES.REPEAT_MODE) {
         playNext();
       } else {
         setIsPlaying(false);
@@ -71,6 +96,11 @@ export function PersistentMusicPlayer() {
     },
     preloadNext: nextTrackUrl,
   });
+  
+  // Keep audio ref updated
+  useEffect(() => {
+    audioRef.current = audio;
+  }, [audio]);
 
   const incrementPlayCount = useCallback(async (trackId: string) => {
     try {
