@@ -284,7 +284,7 @@ export function ReferralDashboard() {
           <CardContent className="p-4 text-center">
             <Clock className="h-8 w-8 mx-auto text-blue-500 mb-2" />
             <div className="text-3xl font-bold">{referralData.pendingRewards}</div>
-            <div className="text-sm text-muted-foreground">Pending</div>
+            <div className="text-sm text-muted-foreground">Awaiting Deposit</div>
           </CardContent>
         </Card>
         <Card>
@@ -424,7 +424,7 @@ export function ReferralDashboard() {
                             </Badge>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {format(new Date(ref.created_at), 'MMM d, yyyy')} • {ref.reward_type}
+                            {format(new Date(ref.created_at), 'MMM d, yyyy')} • {ref.reward_type === 'first_deposit' ? 'Deposit Reward' : ref.reward_type}
                           </div>
                         </div>
                       </div>
@@ -435,7 +435,9 @@ export function ReferralDashboard() {
                             <span className="font-bold">+{ref.reward_amount} BAK</span>
                           </div>
                         ) : (
-                          <Badge variant="secondary">{ref.status}</Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {ref.status === 'pending' ? 'Awaiting Deposit' : ref.status}
+                          </Badge>
                         )}
                       </div>
                     </div>

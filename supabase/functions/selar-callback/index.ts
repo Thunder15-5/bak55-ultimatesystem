@@ -263,6 +263,52 @@ serve(async (req) => {
       console.error('Failed to create transaction record:', txRecordError);
     }
 
+    // === CHECK FOR PENDING REFERRAL AND PROCESS REWARDS ===
+    // Check if this is the user's first deposit
+    const { data: depositCount } = await supabaseClient
+      .from('payment_transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', targetUserId)
+      .eq('status', 'success');
+
+    const isFirstDeposit = !depositCount || (depositCount as any).length <= 1;
+
+    if (isFirstDeposit) {
+      console.log('First deposit detected for user:', targetUserId);
+      
+      // Check for pending referral
+      const { data: pendingReferral } = await supabaseClient
+        .from('referrals')
+        .select('id, referral_code, referrer_id')
+        .eq('referred_id', targetUserId)
+        .eq('status', 'pending')
+        .eq('rewarded', false)
+        .maybeSingle();
+
+      if (pendingReferral) {
+        console.log('Found pending referral, processing rewards:', pendingReferral.id);
+        
+        // Trigger referral reward processing
+        try {
+          const { error: referralError } = await supabaseClient.functions.invoke('process-referral', {
+            body: {
+              referral_code: pendingReferral.referral_code,
+              referred_user_id: targetUserId,
+              trigger: 'first_deposit'
+            }
+          });
+
+          if (referralError) {
+            console.error('Failed to process referral reward:', referralError);
+          } else {
+            console.log('Referral rewards processed successfully');
+          }
+        } catch (refError) {
+          console.error('Error invoking process-referral:', refError);
+        }
+      }
+    }
+
     // Send notification to user
     try {
       await supabaseClient
