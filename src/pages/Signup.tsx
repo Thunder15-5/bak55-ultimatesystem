@@ -126,31 +126,24 @@ export default function Signup() {
         return;
       }
 
-      // Process referral after successful signup
+      // Process referral after successful signup using edge function
       if (referralCode) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            const { data: codeData } = await supabase
-              .from("referral_codes")
-              .select("user_id")
-              .eq("code", referralCode)
-              .single();
-
-            if (codeData) {
-              await supabase.from("referrals").insert({
-                referrer_id: codeData.user_id,
-                referred_id: user.id,
+            // Use the enhanced process-referral edge function
+            const { data, error: refError } = await supabase.functions.invoke('process-referral', {
+              body: {
                 referral_code: referralCode,
-              });
+                referred_user_id: user.id,
+                reward_type: 'signup'
+              }
+            });
 
-              await supabase.rpc("transfer_funds", {
-                sender_id: '00000000-0000-0000-0000-000000000000',
-                recipient_id: codeData.user_id,
-                transfer_amount: 50
-              });
-
-              toast.success("Welcome! Your referrer earned 50 BAKCoins! 🎉");
+            if (!refError && data?.success) {
+              toast.success(`Welcome! Your referrer earned ${data.referrer_reward} BAKCoins! ${data.referred_bonus > 0 ? `You got ${data.referred_bonus} BAK welcome bonus!` : ''} 🎉`);
+            } else if (data?.flagged) {
+              toast.info("Your referral is being reviewed");
             }
           }
         } catch (err) {
