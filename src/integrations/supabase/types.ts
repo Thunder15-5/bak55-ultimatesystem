@@ -1498,33 +1498,96 @@ export type Database = {
         }
         Relationships: []
       }
-      referrals: {
+      referral_rewards_config: {
         Row: {
-          created_at: string
+          artist_referrer_reward: number
+          created_at: string | null
+          description: string | null
+          fan_referrer_reward: number
           id: string
-          referral_code: string
-          referred_id: string
-          referrer_id: string
-          reward_amount: number
-          rewarded: boolean
+          is_active: boolean | null
+          referred_bonus: number
+          reward_type: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          artist_referrer_reward?: number
+          created_at?: string | null
+          description?: string | null
+          fan_referrer_reward?: number
           id?: string
-          referral_code: string
-          referred_id: string
-          referrer_id: string
-          reward_amount?: number
-          rewarded?: boolean
+          is_active?: boolean | null
+          referred_bonus?: number
+          reward_type: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          artist_referrer_reward?: number
+          created_at?: string | null
+          description?: string | null
+          fan_referrer_reward?: number
           id?: string
+          is_active?: boolean | null
+          referred_bonus?: number
+          reward_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus_earned: number | null
+          completed_at: string | null
+          created_at: string
+          fraud_flagged: boolean | null
+          fraud_reason: string | null
+          id: string
+          metadata: Json | null
+          referral_code: string
+          referred_id: string
+          referred_role: string | null
+          referrer_id: string
+          referrer_role: string | null
+          reward_amount: number
+          reward_type: string | null
+          rewarded: boolean
+          status: string | null
+        }
+        Insert: {
+          bonus_earned?: number | null
+          completed_at?: string | null
+          created_at?: string
+          fraud_flagged?: boolean | null
+          fraud_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          referral_code: string
+          referred_id: string
+          referred_role?: string | null
+          referrer_id: string
+          referrer_role?: string | null
+          reward_amount?: number
+          reward_type?: string | null
+          rewarded?: boolean
+          status?: string | null
+        }
+        Update: {
+          bonus_earned?: number | null
+          completed_at?: string | null
+          created_at?: string
+          fraud_flagged?: boolean | null
+          fraud_reason?: string | null
+          id?: string
+          metadata?: Json | null
           referral_code?: string
           referred_id?: string
+          referred_role?: string | null
           referrer_id?: string
+          referrer_role?: string | null
           reward_amount?: number
+          reward_type?: string | null
           rewarded?: boolean
+          status?: string | null
         }
         Relationships: []
       }

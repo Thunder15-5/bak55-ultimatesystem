@@ -12,6 +12,7 @@ import { CompetitionStageManager } from "@/components/admin/CompetitionStageMana
 import { BadgeManagementPanel } from "@/components/admin/BadgeManagementPanel";
 import { FeaturedArtistsPanel } from "@/components/admin/FeaturedArtistsPanel";
 import { ApplicationsPanel } from "@/components/admin/ApplicationsPanel";
+import { ReferralPanel } from "@/components/admin/ReferralPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +24,7 @@ import {
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail,
-  Award, Target, Star, UserPlus
+  Award, Target, Star, UserPlus, Gift
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -555,6 +556,10 @@ export default function Admin() {
               <UserPlus className="h-4 w-4 mr-2" />
               Applications
             </TabsTrigger>
+            <TabsTrigger value="referrals">
+              <Gift className="h-4 w-4 mr-2" />
+              Referrals
+            </TabsTrigger>
           </TabsList>
 
           {/* Platform Metrics Tab */}
@@ -1044,6 +1049,11 @@ export default function Admin() {
           {/* Applications Tab */}
           <TabsContent value="applications">
             <ApplicationsPanel />
+          </TabsContent>
+
+          {/* Referrals Tab */}
+          <TabsContent value="referrals">
+            <ReferralPanel />
           </TabsContent>
         </Tabs>
       </div>
