@@ -1,4 +1,5 @@
 import { Navigation } from '@/components/Navigation';
+import { BlogSEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -78,6 +79,18 @@ export default function BlogPost() {
   const isSaved = savedPosts.includes(id!);
 
   return (
+    <>
+      <BlogSEO 
+        post={{
+          id: post.id,
+          title: post.title,
+          excerpt: post.excerpt,
+          category: post.category,
+          date: post.date,
+          readTime: post.readTime,
+          image: typeof post.image === 'string' ? post.image : undefined,
+        }} 
+      />
     <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 pt-24 pb-12">
@@ -181,5 +194,6 @@ export default function BlogPost() {
         </div>
       </main>
     </div>
+    </>
   );
 }
