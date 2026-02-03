@@ -9,8 +9,9 @@ const VOTE_COST = 1; // 1 BAKCoin per vote
 const ARTIST_SHARE = 0.65; // 65% to artist
 const PLATFORM_SHARE = 0.35; // 35% to platform
 
-// Platform wallet user ID (admin account)
-const PLATFORM_USER_ID = "6cf2ca99-4584-46a7-af7c-00985f624421";
+// BAK55 Platform Operations Wallet (admin@bak55talent.co.ke)
+// Used for: voting fees (35%), withdrawal fees, hosting & maintenance
+const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 
 interface VoteRequest {
   submission_id: string;
