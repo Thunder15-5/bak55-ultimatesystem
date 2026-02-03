@@ -109,11 +109,27 @@ serve(async (req) => {
         .from('transactions')
         .insert({
           wallet_id: wallet.id,
-          type: 'credit',
+          type: 'earning',
           amount: prize.amount,
           description: `${prize.place === 1 ? '1st' : prize.place === 2 ? '2nd' : '3rd'} place prize - ${competition.title}`,
-          reference_id: competition_id
+          reference_id: competition_id,
+          metadata: {
+            type: 'competition_prize',
+            competition_id: competition_id,
+            placement: prize.place
+          }
         });
+
+      // Send notification to winner
+      await supabase.from('notifications').insert({
+        user_id: winner.artist_id,
+        type: 'competition_win',
+        title: `🏆 Congratulations! You placed ${prize.place === 1 ? '1st' : prize.place === 2 ? '2nd' : '3rd'} in ${competition.title}!`,
+        message: `You've won ${prize.amount.toFixed(2)} BAKCoins! The prize has been credited to your wallet.`,
+        link: `/competition/${competition_id}`,
+        priority: 'high',
+        category: 'competition'
+      });
 
       console.log(`Awarded ${prize.amount} BAK to artist ${winner.artist_id} for ${prize.place} place`);
     }
