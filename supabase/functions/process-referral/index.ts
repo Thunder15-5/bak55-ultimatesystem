@@ -12,6 +12,7 @@ interface ProcessReferralRequest {
   referral_code: string;
   referred_user_id: string;
   reward_type?: string;
+  trigger?: 'signup' | 'first_deposit'; // New: trigger type
 }
 
 serve(async (req) => {
@@ -24,7 +25,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { referral_code, referred_user_id, reward_type = 'signup' }: ProcessReferralRequest = await req.json();
+    const { referral_code, referred_user_id, reward_type = 'signup', trigger = 'signup' }: ProcessReferralRequest = await req.json();
 
     if (!referral_code || !referred_user_id) {
       return new Response(
@@ -60,184 +61,254 @@ serve(async (req) => {
     // Check if referral already exists
     const { data: existingReferral } = await supabaseAdmin
       .from('referrals')
-      .select('id')
+      .select('id, status, rewarded')
       .eq('referrer_id', referrer_id)
       .eq('referred_id', referred_user_id)
-      .eq('reward_type', reward_type)
       .maybeSingle();
 
-    if (existingReferral) {
+    // If trigger is signup and referral exists, skip
+    if (trigger === 'signup' && existingReferral) {
       return new Response(
-        JSON.stringify({ error: 'Referral already processed', referral_id: existingReferral.id }),
+        JSON.stringify({ error: 'Referral already tracked', referral_id: existingReferral.id }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Fraud detection: Check for suspicious patterns
-    const fraudChecks = await performFraudChecks(supabaseAdmin, referrer_id, referred_user_id);
-    
-    if (fraudChecks.flagged) {
-      // Create flagged referral for admin review
-      await supabaseAdmin.from('referrals').insert({
-        referrer_id,
-        referred_id: referred_user_id,
-        referral_code,
-        reward_type,
-        reward_amount: 0,
-        rewarded: false,
-        status: 'flagged',
-        fraud_flagged: true,
-        fraud_reason: fraudChecks.reason,
-        metadata: { fraud_details: fraudChecks.details }
-      });
+    // If trigger is first_deposit and referral is already rewarded, skip
+    if (trigger === 'first_deposit' && existingReferral?.rewarded) {
+      return new Response(
+        JSON.stringify({ error: 'Referral already rewarded', referral_id: existingReferral.id }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fraud detection (only for new referrals at signup)
+    if (trigger === 'signup') {
+      const fraudChecks = await performFraudChecks(supabaseAdmin, referrer_id, referred_user_id);
+      
+      if (fraudChecks.flagged) {
+        // Create flagged referral for admin review
+        await supabaseAdmin.from('referrals').insert({
+          referrer_id,
+          referred_id: referred_user_id,
+          referral_code,
+          reward_type,
+          reward_amount: 0,
+          rewarded: false,
+          status: 'flagged',
+          fraud_flagged: true,
+          fraud_reason: fraudChecks.reason,
+          metadata: { fraud_details: fraudChecks.details }
+        });
+
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Referral flagged for review',
+            flagged: true 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Get referrer and referred roles
+      const { data: referrerRole } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', referrer_id)
+        .in('role', ['artist', 'brand', 'admin'])
+        .maybeSingle();
+
+      const { data: referredRole } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', referred_user_id)
+        .maybeSingle();
+
+      // Create PENDING referral record (no rewards yet)
+      const { data: referral, error: referralError } = await supabaseAdmin
+        .from('referrals')
+        .insert({
+          referrer_id,
+          referred_id: referred_user_id,
+          referral_code,
+          reward_type: 'first_deposit', // Rewards on first deposit
+          reward_amount: 0, // Will be set when deposit happens
+          bonus_earned: 0,
+          referrer_role: referrerRole?.role || 'fan',
+          referred_role: referredRole?.role || 'fan',
+          rewarded: false,
+          status: 'pending', // Pending until first deposit
+          metadata: {
+            signup_at: new Date().toISOString(),
+            awaiting_first_deposit: true
+          }
+        })
+        .select()
+        .single();
+
+      if (referralError) {
+        console.error('Failed to create referral record:', referralError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create referral' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Update referral code usage count
+      await supabaseAdmin
+        .from('referral_codes')
+        .update({ uses_count: codeData.uses_count + 1 })
+        .eq('code', referral_code);
 
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Referral flagged for review',
-          flagged: true 
+        JSON.stringify({
+          success: true,
+          referral_id: referral?.id,
+          status: 'pending',
+          message: 'Referral tracked! Rewards will be credited after first deposit.'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get reward configuration
-    const { data: rewardConfig } = await supabaseAdmin
-      .from('referral_rewards_config')
-      .select('*')
-      .eq('reward_type', reward_type)
-      .eq('is_active', true)
-      .single();
+    // === TRIGGER: FIRST DEPOSIT - Process rewards ===
+    if (trigger === 'first_deposit') {
+      if (!existingReferral) {
+        return new Response(
+          JSON.stringify({ error: 'No pending referral found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    if (!rewardConfig) {
-      return new Response(
-        JSON.stringify({ error: 'Reward type not configured or inactive' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      // Get reward configuration
+      const { data: rewardConfig } = await supabaseAdmin
+        .from('referral_rewards_config')
+        .select('*')
+        .eq('reward_type', 'first_deposit')
+        .eq('is_active', true)
+        .single();
 
-    // Get referrer role to determine reward amount
-    const { data: referrerRole } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', referrer_id)
-      .in('role', ['artist', 'brand', 'admin'])
-      .maybeSingle();
+      // Fallback to signup config if first_deposit not found
+      const configToUse = rewardConfig || (await supabaseAdmin
+        .from('referral_rewards_config')
+        .select('*')
+        .eq('reward_type', 'signup')
+        .eq('is_active', true)
+        .single()).data;
 
-    const { data: referredRole } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', referred_user_id)
-      .maybeSingle();
+      if (!configToUse) {
+        console.error('No reward configuration found');
+        return new Response(
+          JSON.stringify({ error: 'Reward configuration not found' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const isReferrerArtist = referrerRole?.role === 'artist' || referrerRole?.role === 'brand';
-    const referrerReward = isReferrerArtist 
-      ? rewardConfig.artist_referrer_reward 
-      : rewardConfig.fan_referrer_reward;
-    const referredBonus = rewardConfig.referred_bonus;
+      // Get referrer role to determine reward amount
+      const { data: referrerRole } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', referrer_id)
+        .in('role', ['artist', 'brand', 'admin'])
+        .maybeSingle();
 
-    // Get wallets
-    const { data: referrerWallet, error: referrerWalletError } = await supabaseAdmin
-      .from('wallets')
-      .select('id, balance')
-      .eq('user_id', referrer_id)
-      .single();
+      const isReferrerArtist = referrerRole?.role === 'artist' || referrerRole?.role === 'brand';
+      const referrerReward = isReferrerArtist 
+        ? configToUse.artist_referrer_reward 
+        : configToUse.fan_referrer_reward;
+      const referredBonus = configToUse.referred_bonus;
 
-    const { data: referredWallet } = await supabaseAdmin
-      .from('wallets')
-      .select('id, balance')
-      .eq('user_id', referred_user_id)
-      .single();
-
-    if (referrerWalletError || !referrerWallet) {
-      return new Response(
-        JSON.stringify({ error: 'Referrer wallet not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Credit referrer
-    if (referrerReward > 0) {
-      await supabaseAdmin
+      // Get wallets
+      const { data: referrerWallet, error: referrerWalletError } = await supabaseAdmin
         .from('wallets')
-        .update({ 
-          balance: parseFloat(referrerWallet.balance) + referrerReward,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', referrerWallet.id);
+        .select('id, balance')
+        .eq('user_id', referrer_id)
+        .single();
 
-      await supabaseAdmin.from('transactions').insert({
-        wallet_id: referrerWallet.id,
-        type: 'earning',
-        amount: referrerReward,
-        description: `Referral reward (${reward_type}) - New user joined via your link`,
-        metadata: { 
-          type: 'referral_reward',
-          reward_type,
-          referred_user_id,
-          referral_code
-        }
-      });
-    }
-
-    // Credit referred user bonus if applicable
-    if (referredBonus > 0 && referredWallet) {
-      await supabaseAdmin
+      const { data: referredWallet } = await supabaseAdmin
         .from('wallets')
-        .update({ 
-          balance: parseFloat(referredWallet.balance) + referredBonus,
-          updated_at: new Date().toISOString()
+        .select('id, balance')
+        .eq('user_id', referred_user_id)
+        .single();
+
+      if (referrerWalletError || !referrerWallet) {
+        console.error('Referrer wallet not found');
+        return new Response(
+          JSON.stringify({ error: 'Referrer wallet not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Credit referrer wallet
+      if (referrerReward > 0) {
+        await supabaseAdmin
+          .from('wallets')
+          .update({ 
+            balance: parseFloat(referrerWallet.balance) + referrerReward,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', referrerWallet.id);
+
+        await supabaseAdmin.from('transactions').insert({
+          wallet_id: referrerWallet.id,
+          type: 'earning',
+          amount: referrerReward,
+          description: `Referral reward - Your friend made their first deposit!`,
+          metadata: { 
+            type: 'referral_reward',
+            trigger: 'first_deposit',
+            referred_user_id,
+            referral_code
+          }
+        });
+
+        console.log(`Credited ${referrerReward} BAK to referrer ${referrer_id}`);
+      }
+
+      // Credit referred user bonus if applicable
+      if (referredBonus > 0 && referredWallet) {
+        await supabaseAdmin
+          .from('wallets')
+          .update({ 
+            balance: parseFloat(referredWallet.balance) + referredBonus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', referredWallet.id);
+
+        await supabaseAdmin.from('transactions').insert({
+          wallet_id: referredWallet.id,
+          type: 'earning',
+          amount: referredBonus,
+          description: `Welcome bonus - Thanks for making your first deposit!`,
+          metadata: { 
+            type: 'referral_welcome_bonus',
+            trigger: 'first_deposit',
+            referrer_id
+          }
+        });
+
+        console.log(`Credited ${referredBonus} BAK bonus to referred user ${referred_user_id}`);
+      }
+
+      // Update referral record to completed
+      await supabaseAdmin
+        .from('referrals')
+        .update({
+          rewarded: true,
+          status: 'completed',
+          reward_amount: referrerReward,
+          bonus_earned: referredBonus,
+          completed_at: new Date().toISOString(),
+          metadata: {
+            deposit_rewarded_at: new Date().toISOString(),
+            referrer_reward: referrerReward,
+            referred_bonus: referredBonus
+          }
         })
-        .eq('id', referredWallet.id);
+        .eq('id', existingReferral.id);
 
-      await supabaseAdmin.from('transactions').insert({
-        wallet_id: referredWallet.id,
-        type: 'earning',
-        amount: referredBonus,
-        description: `Welcome bonus - Referred by a friend`,
-        metadata: { 
-          type: 'referral_welcome_bonus',
-          reward_type,
-          referrer_id
-        }
-      });
-    }
-
-    // Create referral record
-    const { data: referral, error: referralError } = await supabaseAdmin
-      .from('referrals')
-      .insert({
-        referrer_id,
-        referred_id: referred_user_id,
-        referral_code,
-        reward_type,
-        reward_amount: referrerReward,
-        bonus_earned: referredBonus,
-        referrer_role: referrerRole?.role || 'fan',
-        referred_role: referredRole?.role || 'fan',
-        rewarded: true,
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        metadata: {
-          reward_config_id: rewardConfig.id,
-          processed_at: new Date().toISOString()
-        }
-      })
-      .select()
-      .single();
-
-    if (referralError) {
-      console.error('Failed to create referral record:', referralError);
-    }
-
-    // Update referral code usage count
-    await supabaseAdmin
-      .from('referral_codes')
-      .update({ uses_count: codeData.uses_count + 1 })
-      .eq('code', referral_code);
-
-    // Send email notification to referrer
-    try {
+      // Send notifications
       const { data: referrerProfile } = await supabaseAdmin
         .from('profiles')
         .select('email, username')
@@ -250,39 +321,69 @@ serve(async (req) => {
         .eq('id', referred_user_id)
         .single();
 
-      if (referrerProfile?.email) {
-        await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseServiceKey}`
-          },
-          body: JSON.stringify({
-            to: referrerProfile.email,
-            subject: '🎉 Your Referral Was Successful!',
-            template: 'referral_success',
-            data: {
-              username: referrerProfile.username,
-              referred_username: referredProfile?.username || 'A new user',
-              reward_amount: referrerReward,
-              reward_type
-            }
-          })
+      // Notify referrer
+      await supabaseAdmin.from('notifications').insert({
+        user_id: referrer_id,
+        type: 'referral',
+        title: '🎉 Referral Reward Earned!',
+        message: `${referredProfile?.username || 'Your friend'} made their first deposit! You earned ${referrerReward} BAK.`,
+        link: '/wallet',
+        category: 'wallet'
+      });
+
+      // Notify referred user about their bonus
+      if (referredBonus > 0) {
+        await supabaseAdmin.from('notifications').insert({
+          user_id: referred_user_id,
+          type: 'referral',
+          title: '🎁 Welcome Bonus Credited!',
+          message: `You earned ${referredBonus} BAK welcome bonus for your first deposit!`,
+          link: '/wallet',
+          category: 'wallet'
         });
       }
-    } catch (emailError) {
-      console.error('Failed to send referral email:', emailError);
+
+      // Send email to referrer
+      if (referrerProfile?.email) {
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`
+            },
+            body: JSON.stringify({
+              to: referrerProfile.email,
+              subject: '🎉 Your Referral Reward Has Been Credited!',
+              template: 'referral_success',
+              data: {
+                username: referrerProfile.username,
+                referred_username: referredProfile?.username || 'A new user',
+                reward_amount: referrerReward,
+                reward_type: 'first_deposit'
+              }
+            })
+          });
+        } catch (emailError) {
+          console.error('Failed to send referral email:', emailError);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          referral_id: existingReferral.id,
+          referrer_reward: referrerReward,
+          referred_bonus: referredBonus,
+          message: `Referral rewards credited! Referrer earned ${referrerReward} BAK, referred user got ${referredBonus} BAK bonus.`
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        referral_id: referral?.id,
-        referrer_reward: referrerReward,
-        referred_bonus: referredBonus,
-        message: `Referral processed! Referrer earned ${referrerReward} BAK`
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Invalid trigger type' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
