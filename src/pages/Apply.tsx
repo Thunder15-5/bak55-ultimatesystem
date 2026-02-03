@@ -127,7 +127,7 @@ export default function Apply() {
           </h1>
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Be part of BAK55's founding artists. Start your journey from 55 artists to becoming the champion.
+            Be part of BAK55's founding artists from across Africa. Start your journey from 55 artists to becoming the champion.
           </p>
         </div>
       </section>
@@ -146,11 +146,7 @@ export default function Apply() {
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-secondary mt-1">•</span>
-                  <span>Based in Nairobi, Kenya</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-secondary mt-1">•</span>
-                  <span>South Sudanese artist or origin</span>
+                  <span>African artist (any country across Africa)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-secondary mt-1">•</span>
@@ -159,6 +155,10 @@ export default function Apply() {
                 <li className="flex items-start gap-2">
                   <span className="text-secondary mt-1">•</span>
                   <span>Passionate about building a professional music career</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-secondary mt-1">•</span>
+                  <span>Committed to representing African talent globally</span>
                 </li>
               </ul>
             </CardContent>

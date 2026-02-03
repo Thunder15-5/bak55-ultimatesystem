@@ -61,6 +61,9 @@ serve(async (req) => {
 
     console.log("Processing withdrawal:", { user_id: user.id, amount });
 
+    // BAK55 Platform Operations Wallet (receives withdrawal fees)
+    const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
+
     // Validation
     const MIN_WITHDRAWAL = 5; // 5 BAK minimum
     const MAX_WITHDRAWAL = 50000; // 50,000 BAK
@@ -156,6 +159,18 @@ serve(async (req) => {
       throw new Error("Withdrawal flagged for review. Our team will process it manually within 2 hours.");
     }
 
+    // Get platform wallet for fee crediting
+    const { data: platformWallet, error: platformWalletError } = await supabaseClient
+      .from("wallets")
+      .select("id, balance")
+      .eq("user_id", PLATFORM_USER_ID)
+      .single();
+
+    if (platformWalletError || !platformWallet) {
+      console.error("Platform wallet not found:", platformWalletError);
+      throw new Error("Platform configuration error");
+    }
+
     // Deduct from wallet atomically
     const { error: deductError } = await supabaseClient
       .from("wallets")
@@ -170,8 +185,24 @@ serve(async (req) => {
       throw new Error("Failed to deduct from wallet - concurrent modification detected");
     }
 
-    // Create transaction record
+    // Credit withdrawal fee to platform operations wallet
+    const { error: platformCreditError } = await supabaseClient
+      .from("wallets")
+      .update({
+        balance: parseFloat(platformWallet.balance) + withdrawalFee,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", platformWallet.id);
+
+    if (platformCreditError) {
+      console.error("Failed to credit platform wallet:", platformCreditError);
+      // Non-critical, continue but log
+    }
+
+    // Create transaction records
     const reference = `WDL-${Date.now()}-${user.id.substring(0, 8)}`;
+    
+    // User's withdrawal transaction
     const { data: transaction, error: txError } = await supabaseClient
       .from("transactions")
       .insert({
@@ -190,6 +221,23 @@ serve(async (req) => {
       })
       .select()
       .single();
+
+    // Platform fee transaction
+    await supabaseClient
+      .from("transactions")
+      .insert({
+        wallet_id: platformWallet.id,
+        type: "earning",
+        amount: withdrawalFee,
+        description: `Withdrawal fee (15% of ${amount.toFixed(2)} BAK)`,
+        reference_id: transaction?.id,
+        metadata: {
+          type: "withdrawal_fee",
+          user_id: user.id,
+          gross_amount: amount,
+          fee_percentage: 15,
+        },
+      });
 
     if (txError) {
       console.error("Failed to create transaction record:", txError);

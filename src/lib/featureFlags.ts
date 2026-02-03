@@ -6,8 +6,8 @@ export const FEATURES = {
   LIKES_ENABLED: false,
   COMMENTS_ENABLED: false,
   
-  // Geographic restrictions
-  KENYA_ONLY_SIGNUP: true,
+  // Geographic restrictions - DISABLED: Now open to all Africa
+  KENYA_ONLY_SIGNUP: false,
   
   // Player features
   SHUFFLE_MODE: true,
