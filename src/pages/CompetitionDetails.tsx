@@ -196,86 +196,44 @@ export default function CompetitionDetails() {
       return;
     }
 
+    // Enforce voting window on frontend (also enforced on backend)
+    if (!isVotingOpen()) {
+      toast({
+        title: "Voting not available",
+        description: competition?.voting_start_date 
+          ? new Date() < new Date(competition.voting_start_date)
+            ? `Voting opens on ${new Date(competition.voting_start_date).toLocaleDateString()}`
+            : "Voting period has ended"
+          : "Voting dates not set for this competition",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const VOTE_COST = 1; // 1 BAKCoin per vote
 
     try {
-      // Check wallet balance - use maybeSingle in case wallet doesn't exist
-      const { data: wallet, error: walletError } = await supabase
-        .from("wallets")
-        .select("id, balance")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (walletError) {
-        toast({
-          title: "Wallet Error",
-          description: "Unable to access your wallet",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!wallet) {
-        toast({
-          title: "Wallet Not Found",
-          description: "Please visit your wallet page to set it up first",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (wallet.balance < VOTE_COST) {
-        toast({
-          title: "Insufficient Balance",
-          description: `You need ${VOTE_COST} BAKCoin to vote. Current balance: ${wallet.balance.toFixed(2)} BAK`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Record vote
-      const { error } = await supabase
-        .from('votes')
-        .insert({
+      const { data, error } = await supabase.functions.invoke('vote-submission', {
+        body: { 
           submission_id: submissionId,
-          voter_id: user.id
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Already voted",
-            description: "You've already voted for this submission",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
+          stage_id: activeStage || undefined
         }
-        return;
-      }
-
-      // Deduct vote cost from wallet
-      const { error: walletUpdateError } = await supabase
-        .from("wallets")
-        .update({ balance: wallet.balance - VOTE_COST })
-        .eq("id", wallet.id);
-
-      if (walletUpdateError) {
-        throw walletUpdateError;
-      }
-
-      // Create transaction record
-      await supabase.from("transactions").insert({
-        wallet_id: wallet.id,
-        amount: -VOTE_COST,
-        type: "purchase",
-        description: `Vote in competition`,
-        reference_id: submissionId,
       });
 
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: "Vote failed",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
-        title: "Vote recorded!",
-        description: `Your vote has been counted. ${VOTE_COST} BAK deducted.`,
+        title: "Vote recorded! 🗳️",
+        description: `${VOTE_COST} BAK deducted. Artist earned ${(VOTE_COST * 0.65).toFixed(2)} BAK from your vote!`,
       });
 
       setUserVotes(prev => new Set([...prev, submissionId]));
