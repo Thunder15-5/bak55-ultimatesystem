@@ -59,7 +59,16 @@ serve(async (req) => {
     }
 
     const aiResult = await aiResponse.json();
-    const classification = JSON.parse(aiResult.choices[0].message.content);
+    const rawContent = aiResult.choices[0].message.content;
+    
+    // Extract JSON from potential markdown code blocks
+    let jsonContent = rawContent;
+    const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      jsonContent = jsonMatch[1];
+    }
+    
+    const classification = JSON.parse(jsonContent.trim());
 
     // Update track with classified genre
     const { error: updateError } = await supabase
