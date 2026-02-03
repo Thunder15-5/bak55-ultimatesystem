@@ -301,7 +301,7 @@ export function UsersPanel() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <RoleBadge role={getPrimaryRole(user.user_roles)} />
+                              <RoleBadge role={role} />
                             </TableCell>
                             <TableCell>
                               {user.banned ? (
