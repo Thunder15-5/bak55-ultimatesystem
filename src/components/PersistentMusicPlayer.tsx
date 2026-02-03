@@ -12,6 +12,7 @@ import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { supabase } from "@/integrations/supabase/client";
 import { FEATURES } from "@/lib/featureFlags";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function PersistentMusicPlayer() {
   const {
@@ -31,6 +32,7 @@ export function PersistentMusicPlayer() {
     cycleRepeatMode,
   } = useMusicPlayer();
 
+  const isMobile = useIsMobile();
   const [showQueue, setShowQueue] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -428,7 +430,8 @@ export function PersistentMusicPlayer() {
           </div>
         </div>
 
-        {FEATURES.KEYBOARD_SHORTCUTS && (
+        {/* Hide keyboard shortcuts on mobile - they have no keyboard */}
+        {FEATURES.KEYBOARD_SHORTCUTS && !isMobile && (
           <div className="text-center text-xs text-muted-foreground pb-2">
             Keyboard: Space (play/pause) • ←→ (seek) • ↑↓ (volume) • N/P (next/prev) • M (mute) • S (shuffle) • R (repeat)
           </div>
