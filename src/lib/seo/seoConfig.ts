@@ -1,6 +1,6 @@
 // Enterprise SEO Configuration for BAK55 Talent Platform
 // Version suffix for cache-busting OG images (increment when updating branding assets)
-export const OG_IMAGE_VERSION = "v=2";
+export const OG_IMAGE_VERSION = "v=3";
 
 export const SEO_CONFIG = {
   site: {
@@ -10,7 +10,7 @@ export const SEO_CONFIG = {
     url: "https://bak55talent.co.ke",
     twitterHandle: "@BAK55Talent",
     logo: "https://bak55talent.co.ke/favicon.png",
-    ogImage: `https://bak55talent.co.ke/genesis-competition.png.jpeg?${OG_IMAGE_VERSION}`,
+    ogImage: `https://bak55talent.co.ke/favicon.png?${OG_IMAGE_VERSION}`,
     locale: "en_KE",
     alternateLocales: ["en_TZ", "en_UG", "en_NG", "sw_KE"],
     themeColor: "#D946EF",
@@ -67,7 +67,7 @@ export const SEO_CONFIG = {
   defaultMeta: {
     title: "BAK55 Talent - Where African Artists Build Careers",
     description: "The complete artist development ecosystem combining streaming, competitions, and AI tools—powered by BAKCoins. Discover talent, earn real money, and shape the future of African music.",
-    image: `https://bak55talent.co.ke/genesis-competition.png.jpeg?${OG_IMAGE_VERSION}`,
+    image: `https://bak55talent.co.ke/favicon.png?${OG_IMAGE_VERSION}`,
   },
 };
 
