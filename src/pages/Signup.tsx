@@ -35,6 +35,8 @@ export default function Signup() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [confirmedAge, setConfirmedAge] = useState(false);
 
+  const redirectUrl = searchParams.get("redirect");
+
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
@@ -118,7 +120,7 @@ export default function Signup() {
     };
 
     try {
-      const { error } = await signUp(email.trim(), password, userData);
+      const { error } = await signUp(email.trim(), password, userData, redirectUrl || undefined);
 
       if (error) {
         toast.error(getErrorMessage(error));
@@ -470,7 +472,7 @@ export default function Signup() {
             </div>
 
             <p className="text-sm text-center text-muted-foreground">
-              <Link to="/login" className="text-primary hover:underline font-semibold">
+              <Link to={`/login${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className="text-primary hover:underline font-semibold">
                 Login instead
               </Link>
             </p>

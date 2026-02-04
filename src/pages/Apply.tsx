@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Music, Trophy, CheckCircle2 } from "lucide-react";
+import { Loader2, Music, Trophy, CheckCircle2, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +20,7 @@ const genres = [
 ];
 
 export default function Apply() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -55,7 +55,7 @@ export default function Apply() {
     
     if (!user) {
       toast.error("Please log in to submit an application");
-      navigate("/login");
+      navigate("/login?redirect=/apply");
       return;
     }
 
@@ -166,7 +166,41 @@ export default function Apply() {
         </div>
       </section>
 
-      {/* Application Form */}
+      {/* Login Prompt for Unauthenticated Users */}
+      {!authLoading && !user && (
+        <section className="py-8 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <LogIn className="w-5 h-5 text-primary" />
+                  Login Required to Apply
+                </CardTitle>
+                <CardDescription className="text-base">
+                  Please log in or create an account to submit your Founders Season application
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link to="/login?redirect=/apply">
+                  <Button variant="hero" size="lg" className="w-full sm:w-auto">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup?redirect=/apply">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto border-primary/30 hover:bg-primary/10">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Create Account
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {/* Application Form - Only show when logged in */}
+      {user && (
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-4xl">
           <form onSubmit={handleSubmit}>
@@ -398,6 +432,7 @@ export default function Apply() {
           </form>
         </div>
       </section>
+      )}
 
       <Footer />
     </div>
