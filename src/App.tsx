@@ -77,6 +77,9 @@ const ArtistCatalog = lazy(() => import("./pages/artist/ArtistCatalog"));
 const ArtistDiscover = lazy(() => import("./pages/artist/ArtistDiscover"));
 const BrandDashboard = lazy(() => import("./pages/brand/BrandDashboard"));
 const BrandDiscover = lazy(() => import("./pages/brand/BrandDiscover"));
+const ProducerDashboard = lazy(() => import("./pages/producer/ProducerDashboard"));
+const ProducerCatalog = lazy(() => import("./pages/producer/ProducerCatalog"));
+const ProducerDiscover = lazy(() => import("./pages/producer/ProducerDiscover"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Apply = lazy(() => import("./pages/Apply"));
@@ -179,6 +182,15 @@ const App = () => (
                 <Route path="/brand/wallet" element={<ProtectedRoute requiredRole="brand"><Wallet /></ProtectedRoute>} />
                 <Route path="/brand/wallet/buy-coins" element={<ProtectedRoute requiredRole="brand"><BuyCoins /></ProtectedRoute>} />
                 <Route path="/brand/profile" element={<ProtectedRoute requiredRole="brand"><Profile /></ProtectedRoute>} />
+
+                {/* Producer Routes */}
+                <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><ProducerDashboard /></ProtectedRoute>} />
+                <Route path="/producer/upload" element={<ProtectedRoute requiredRole="producer"><UploadTrack /></ProtectedRoute>} />
+                <Route path="/producer/catalog" element={<ProtectedRoute requiredRole="producer"><ProducerCatalog /></ProtectedRoute>} />
+                <Route path="/producer/discover" element={<ProtectedRoute requiredRole="producer"><ProducerDiscover /></ProtectedRoute>} />
+                <Route path="/producer/wallet" element={<ProtectedRoute requiredRole="producer"><Wallet /></ProtectedRoute>} />
+                <Route path="/producer/wallet/buy-coins" element={<ProtectedRoute requiredRole="producer"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/producer/profile" element={<ProtectedRoute requiredRole="producer"><Profile /></ProtectedRoute>} />
 
                 {/* Role upgrade route */}
                 <Route path="/upgrade" element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />

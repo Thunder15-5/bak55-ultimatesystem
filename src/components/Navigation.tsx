@@ -157,6 +157,30 @@ export function Navigation() {
                   </>
                 )}
 
+                {/* Producer Navigation */}
+                {userRole === 'producer' && (
+                  <>
+                    <Link to="/producer/dashboard">
+                      <Button variant="ghost" size="sm">Dashboard</Button>
+                    </Link>
+                    <Link to="/producer/upload">
+                      <Button variant="ghost" size="sm">Upload</Button>
+                    </Link>
+                    <Link to="/producer/catalog">
+                      <Button variant="ghost" size="sm">My Beats</Button>
+                    </Link>
+                    <Link to="/producer/discover">
+                      <Button variant="ghost" size="sm">Browse</Button>
+                    </Link>
+                    <Link to="/producer/collaborations">
+                      <Button variant="ghost" size="sm">Collaborations</Button>
+                    </Link>
+                    <Link to="/producer/wallet">
+                      <Button variant="ghost" size="sm">Wallet</Button>
+                    </Link>
+                  </>
+                )}
+
                 {/* Admin Navigation */}
                 {userRole === 'admin' && (
                   <>
@@ -306,6 +330,30 @@ export function Navigation() {
                       <Button variant="ghost" className="w-full justify-start">Create Competition</Button>
                     </Link>
                     <Link to="/brand/wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    </Link>
+                  </>
+                )}
+
+                {/* Producer Mobile Navigation */}
+                {userRole === 'producer' && (
+                  <>
+                    <Link to="/producer/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    </Link>
+                    <Link to="/producer/upload" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Upload</Button>
+                    </Link>
+                    <Link to="/producer/catalog" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">My Beats</Button>
+                    </Link>
+                    <Link to="/producer/discover" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Browse</Button>
+                    </Link>
+                    <Link to="/producer/collaborations" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Collaborations</Button>
+                    </Link>
+                    <Link to="/producer/wallet" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">Wallet</Button>
                     </Link>
                   </>
