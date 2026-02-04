@@ -9,8 +9,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isActivated: boolean;
-  signUp: (email: string, password: string, userData: SignUpData) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData: SignUpData, redirectUrl?: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, redirectUrl?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   userRole: string | null;
   userRoles: string[];
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, userData: SignUpData) => {
+  const signUp = async (email: string, password: string, userData: SignUpData, redirectUrl?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -159,8 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Welcome email error (non-blocking):', emailErr);
         }
         
-        // Navigate to appropriate dashboard based on role
-        if (userData.role === 'artist') {
+        // Navigate to redirect URL if provided, otherwise to appropriate dashboard
+        if (redirectUrl) {
+          navigate(redirectUrl);
+        } else if (userData.role === 'artist') {
           navigate('/artist/dashboard');
         } else if (userData.role === 'brand') {
           navigate('/brand/dashboard');
@@ -176,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, redirectUrl?: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -203,7 +205,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         toast.success("Logged in successfully!");
         
-        if (role === "admin") {
+        // Navigate to redirect URL if provided, otherwise to appropriate dashboard
+        if (redirectUrl) {
+          navigate(redirectUrl);
+        } else if (role === "admin") {
           navigate("/admin");
         } else if (role) {
           navigate(`/${role}/dashboard`);

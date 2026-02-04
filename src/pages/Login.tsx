@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Sparkles, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import logoImage from "@/assets/bak55-logo.png";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const { signIn } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const redirectUrl = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +23,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, redirectUrl || undefined);
 
     if (error) {
       toast.error(error.message || "Failed to login");
@@ -133,7 +137,7 @@ export default function Login() {
 
             <p className="text-sm text-center text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-semibold">
+              <Link to={`/signup${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className="text-primary hover:underline font-semibold">
                 Create account
               </Link>
             </p>
