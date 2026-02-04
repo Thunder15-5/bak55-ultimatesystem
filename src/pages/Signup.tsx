@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Sparkles, Mail, Lock, User, MapPin, Music2, Building2, Globe } from "lucide-react";
+import { Loader2, Sparkles, Mail, Lock, User, MapPin, Music2, Building2, Globe, Headphones } from "lucide-react";
 import { toast } from "sonner";
 import logoImage from "@/assets/bak55-logo.png";
 import { FEATURES } from "@/lib/featureFlags";
@@ -20,7 +20,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [role, setRole] = useState<"artist" | "fan" | "brand">("fan");
+  const [role, setRole] = useState<"artist" | "fan" | "brand" | "producer">("fan");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
@@ -28,6 +28,7 @@ export default function Signup() {
   const [genres, setGenres] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [producerName, setProducerName] = useState("");
   const [loading, setLoading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [country, setCountry] = useState("Kenya");
@@ -117,6 +118,10 @@ export default function Signup() {
         companyName: (companyName || username).trim(),
         industry: industry.trim() || undefined,
       }),
+      ...(role === "producer" && {
+        producerName: (producerName || username).trim(),
+        genres: genres ? genres.split(",").map((g) => g.trim()).filter(Boolean) : [],
+      }),
     };
 
     try {
@@ -163,6 +168,7 @@ export default function Signup() {
   const roleCards = [
     { value: "fan", label: "Fan", icon: Sparkles, description: "Discover and support artists" },
     { value: "artist", label: "Artist", icon: Music2, description: "Build your music career" },
+    { value: "producer", label: "Producer", icon: Headphones, description: "Sell beats & collaborate" },
     { value: "brand", label: "Brand", icon: Building2, description: "Partner with talent" },
   ];
 
@@ -199,7 +205,7 @@ export default function Signup() {
             {/* Role Selection */}
             <div className="space-y-3">
               <Label className="text-sm font-medium">I am a... *</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {roleCards.map((roleCard) => (
                   <button
                     key={roleCard.value}
@@ -382,6 +388,36 @@ export default function Signup() {
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     className="h-11 bg-background/50 border-secondary/20 focus:border-secondary"
+                  />
+                </div>
+              </div>
+            )}
+
+            {role === "producer" && (
+              <div className="space-y-4 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                <div className="space-y-2">
+                  <Label htmlFor="producerName" className="text-sm font-medium flex items-center gap-2">
+                    <Headphones className="w-4 h-4 text-purple-500" />
+                    Producer Name
+                  </Label>
+                  <Input
+                    id="producerName"
+                    placeholder="Beat Master"
+                    value={producerName}
+                    onChange={(e) => setProducerName(e.target.value)}
+                    className="h-11 bg-background/50 border-purple-500/20 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="producerGenres" className="text-sm font-medium">
+                    Genres (comma-separated)
+                  </Label>
+                  <Input
+                    id="producerGenres"
+                    placeholder="Hip Hop, Trap, Afrobeats"
+                    value={genres}
+                    onChange={(e) => setGenres(e.target.value)}
+                    className="h-11 bg-background/50 border-purple-500/20 focus:border-purple-500"
                   />
                 </div>
               </div>

@@ -364,6 +364,256 @@ export type Database = {
           },
         ]
       }
+      beat_licenses: {
+        Row: {
+          beat_id: string
+          buyer_id: string
+          created_at: string | null
+          currency: string | null
+          download_count: number | null
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          license_terms: Json | null
+          license_type: string
+          max_downloads: number | null
+          platform_earnings: number
+          platform_share: number
+          price_paid: number
+          producer_earnings: number
+          producer_id: string
+          producer_share: number
+          status: string | null
+          stems_url: string | null
+        }
+        Insert: {
+          beat_id: string
+          buyer_id: string
+          created_at?: string | null
+          currency?: string | null
+          download_count?: number | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          license_terms?: Json | null
+          license_type: string
+          max_downloads?: number | null
+          platform_earnings: number
+          platform_share: number
+          price_paid: number
+          producer_earnings: number
+          producer_id: string
+          producer_share: number
+          status?: string | null
+          stems_url?: string | null
+        }
+        Update: {
+          beat_id?: string
+          buyer_id?: string
+          created_at?: string | null
+          currency?: string | null
+          download_count?: number | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          license_terms?: Json | null
+          license_type?: string
+          max_downloads?: number | null
+          platform_earnings?: number
+          platform_share?: number
+          price_paid?: number
+          producer_earnings?: number
+          producer_id?: string
+          producer_share?: number
+          status?: string | null
+          stems_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beat_licenses_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "beats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beat_licenses_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beat_licenses_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beat_likes: {
+        Row: {
+          beat_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          beat_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          beat_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beat_likes_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "beats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beat_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beats: {
+        Row: {
+          audio_url: string
+          bpm: number | null
+          cover_image: string | null
+          created_at: string | null
+          description: string | null
+          downloads: number | null
+          duration: number | null
+          genre: string | null
+          id: string
+          is_featured: boolean | null
+          is_free: boolean | null
+          is_sold_exclusive: boolean | null
+          key: string | null
+          likes: number | null
+          max_leases: number | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          moderation_status: string | null
+          mood: string[] | null
+          plays: number | null
+          preview_url: string | null
+          price_exclusive_bak: number | null
+          price_exclusive_kes: number | null
+          price_lease_bak: number | null
+          price_lease_kes: number | null
+          price_premium_bak: number | null
+          price_premium_kes: number | null
+          producer_id: string
+          status: string | null
+          tags: string[] | null
+          title: string
+          total_leases_sold: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          audio_url: string
+          bpm?: number | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          downloads?: number | null
+          duration?: number | null
+          genre?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_free?: boolean | null
+          is_sold_exclusive?: boolean | null
+          key?: string | null
+          likes?: number | null
+          max_leases?: number | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
+          mood?: string[] | null
+          plays?: number | null
+          preview_url?: string | null
+          price_exclusive_bak?: number | null
+          price_exclusive_kes?: number | null
+          price_lease_bak?: number | null
+          price_lease_kes?: number | null
+          price_premium_bak?: number | null
+          price_premium_kes?: number | null
+          producer_id: string
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          total_leases_sold?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          audio_url?: string
+          bpm?: number | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          downloads?: number | null
+          duration?: number | null
+          genre?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_free?: boolean | null
+          is_sold_exclusive?: boolean | null
+          key?: string | null
+          likes?: number | null
+          max_leases?: number | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string | null
+          mood?: string[] | null
+          plays?: number | null
+          preview_url?: string | null
+          price_exclusive_bak?: number | null
+          price_exclusive_kes?: number | null
+          price_lease_bak?: number | null
+          price_lease_kes?: number | null
+          price_premium_bak?: number | null
+          price_premium_kes?: number | null
+          producer_id?: string
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          total_leases_sold?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beats_moderated_by_fkey"
+            columns: ["moderated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beats_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_profiles: {
         Row: {
           company_name: string
@@ -1380,6 +1630,214 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      producer_collaboration_requests: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          from_artist_id: string
+          id: string
+          producer_response: string | null
+          project_type: string | null
+          quoted_price: number | null
+          reference_tracks: string[] | null
+          status: string | null
+          to_producer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          from_artist_id: string
+          id?: string
+          producer_response?: string | null
+          project_type?: string | null
+          quoted_price?: number | null
+          reference_tracks?: string[] | null
+          status?: string | null
+          to_producer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          from_artist_id?: string
+          id?: string
+          producer_response?: string | null
+          project_type?: string | null
+          quoted_price?: number | null
+          reference_tracks?: string[] | null
+          status?: string | null
+          to_producer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_collaboration_requests_from_artist_id_fkey"
+            columns: ["from_artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producer_collaboration_requests_to_producer_id_fkey"
+            columns: ["to_producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      producer_profiles: {
+        Row: {
+          accepts_custom_beats: boolean | null
+          available_for_hire: boolean | null
+          average_rating: number | null
+          bio: string | null
+          contact_email: string | null
+          created_at: string | null
+          credits: Json | null
+          equipment: string[] | null
+          genres: string[] | null
+          id: string
+          minimum_budget: number | null
+          producer_name: string
+          producer_tier: string | null
+          profile_views: number | null
+          sample_packs_created: number | null
+          social_links: Json | null
+          total_beats_sold: number | null
+          total_earnings: number | null
+          total_licenses_issued: number | null
+          total_reviews: number | null
+          turnaround_days: number | null
+          updated_at: string | null
+          user_id: string
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          accepts_custom_beats?: boolean | null
+          available_for_hire?: boolean | null
+          average_rating?: number | null
+          bio?: string | null
+          contact_email?: string | null
+          created_at?: string | null
+          credits?: Json | null
+          equipment?: string[] | null
+          genres?: string[] | null
+          id?: string
+          minimum_budget?: number | null
+          producer_name: string
+          producer_tier?: string | null
+          profile_views?: number | null
+          sample_packs_created?: number | null
+          social_links?: Json | null
+          total_beats_sold?: number | null
+          total_earnings?: number | null
+          total_licenses_issued?: number | null
+          total_reviews?: number | null
+          turnaround_days?: number | null
+          updated_at?: string | null
+          user_id: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          accepts_custom_beats?: boolean | null
+          available_for_hire?: boolean | null
+          average_rating?: number | null
+          bio?: string | null
+          contact_email?: string | null
+          created_at?: string | null
+          credits?: Json | null
+          equipment?: string[] | null
+          genres?: string[] | null
+          id?: string
+          minimum_budget?: number | null
+          producer_name?: string
+          producer_tier?: string | null
+          profile_views?: number | null
+          sample_packs_created?: number | null
+          social_links?: Json | null
+          total_beats_sold?: number | null
+          total_earnings?: number | null
+          total_licenses_issued?: number | null
+          total_reviews?: number | null
+          turnaround_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      producer_reviews: {
+        Row: {
+          created_at: string | null
+          id: string
+          license_id: string | null
+          producer_id: string
+          producer_response: string | null
+          rating: number
+          responded_at: string | null
+          review_text: string | null
+          reviewer_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          license_id?: string | null
+          producer_id: string
+          producer_response?: string | null
+          rating: number
+          responded_at?: string | null
+          review_text?: string | null
+          reviewer_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          license_id?: string | null
+          producer_id?: string
+          producer_response?: string | null
+          rating?: number
+          responded_at?: string | null
+          review_text?: string | null
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_reviews_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "beat_licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producer_reviews_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producer_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2546,6 +3004,22 @@ export type Database = {
         }[]
       }
       get_public_platform_stats: { Args: never; Returns: Json }
+      get_public_producers: {
+        Args: { limit_count?: number }
+        Returns: {
+          avatar_url: string
+          average_rating: number
+          bio: string
+          display_name: string
+          genres: string[]
+          producer_name: string
+          producer_tier: string
+          total_beats_sold: number
+          user_id: string
+          username: string
+          verified: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2568,7 +3042,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "artist" | "brand" | "admin" | "fan"
+      app_role: "artist" | "brand" | "admin" | "fan" | "producer"
       competition_status:
         | "draft"
         | "active"
@@ -2712,7 +3186,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["artist", "brand", "admin", "fan"],
+      app_role: ["artist", "brand", "admin", "fan", "producer"],
       competition_status: [
         "draft",
         "active",

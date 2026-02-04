@@ -18,7 +18,7 @@ interface AuthContextType {
 
 interface SignUpData {
   username: string;
-  role: "artist" | "fan" | "brand";
+  role: "artist" | "fan" | "brand" | "producer";
   displayName?: string;
   bio?: string;
   location?: string;
@@ -26,6 +26,7 @@ interface SignUpData {
   genres?: string[];
   companyName?: string;
   industry?: string;
+  producerName?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,8 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       let primaryRole = null;
       if (allRoles.includes('admin')) primaryRole = 'admin';
-      else if (allRoles.includes('artist')) primaryRole = 'artist';
       else if (allRoles.includes('brand')) primaryRole = 'brand';
+      else if (allRoles.includes('producer')) primaryRole = 'producer';
+      else if (allRoles.includes('artist')) primaryRole = 'artist';
       else if (allRoles.includes('fan')) primaryRole = 'fan';
       
       setUserRole(primaryRole);
@@ -133,6 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             companyName: userData.companyName || userData.username,
             company_name: userData.companyName || userData.username,
             industry: userData.industry || null,
+            producerName: userData.producerName || userData.username,
+            producer_name: userData.producerName || userData.username,
           }
         }
       });
@@ -166,6 +170,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           navigate('/artist/dashboard');
         } else if (userData.role === 'brand') {
           navigate('/brand/dashboard');
+        } else if (userData.role === 'producer') {
+          navigate('/producer/dashboard');
         } else {
           navigate('/fan/dashboard');
         }
@@ -199,8 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         let role = null;
         if (allRoles.includes('admin')) role = 'admin';
-        else if (allRoles.includes('artist')) role = 'artist';
         else if (allRoles.includes('brand')) role = 'brand';
+        else if (allRoles.includes('producer')) role = 'producer';
+        else if (allRoles.includes('artist')) role = 'artist';
         else if (allRoles.includes('fan')) role = 'fan';
 
         toast.success("Logged in successfully!");

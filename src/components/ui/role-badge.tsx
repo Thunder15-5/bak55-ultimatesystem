@@ -1,9 +1,9 @@
-import { Crown, Music, Briefcase, Heart } from "lucide-react";
+import { Crown, Music, Briefcase, Heart, Headphones } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface RoleBadgeProps {
-  role: "admin" | "artist" | "brand" | "fan";
+  role: "admin" | "artist" | "brand" | "fan" | "producer";
   className?: string;
 }
 
@@ -18,6 +18,8 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
         return <Briefcase className="w-3 h-3" />;
       case "fan":
         return <Heart className="w-3 h-3" />;
+      case "producer":
+        return <Headphones className="w-3 h-3" />;
     }
   };
 
@@ -31,6 +33,8 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
         return "outline";
       case "fan":
         return "secondary";
+      case "producer":
+        return "default";
     }
   };
 
