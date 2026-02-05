@@ -104,25 +104,26 @@ export default function Signup() {
       return;
     }
 
+    // Build userData with all required fields for the database trigger
     const userData = {
       username: username.trim(),
-      role,
+      role: role, // Ensure role is explicitly set
       displayName: (displayName || username).trim(),
       bio: bio.trim() || undefined,
       location: location.trim() || undefined,
-      ...(role === "artist" && {
-        stageName: (stageName || username).trim(),
-        genres: genres ? genres.split(",").map((g) => g.trim()).filter(Boolean) : [],
-      }),
-      ...(role === "brand" && {
-        companyName: (companyName || username).trim(),
-        industry: industry.trim() || undefined,
-      }),
-      ...(role === "producer" && {
-        producerName: (producerName || username).trim(),
-        genres: genres ? genres.split(",").map((g) => g.trim()).filter(Boolean) : [],
-      }),
+      // Artist-specific fields
+      stageName: role === "artist" ? (stageName || username).trim() : undefined,
+      genres: (role === "artist" || role === "producer") 
+        ? (genres ? genres.split(",").map((g) => g.trim()).filter(Boolean) : [])
+        : undefined,
+      // Brand-specific fields  
+      companyName: role === "brand" ? (companyName || username).trim() : undefined,
+      industry: role === "brand" ? (industry.trim() || undefined) : undefined,
+      // Producer-specific fields
+      producerName: role === "producer" ? (producerName || username).trim() : undefined,
     };
+
+    console.log('Signing up with role:', role, 'userData:', userData);
 
     try {
       const { error } = await signUp(email.trim(), password, userData, redirectUrl || undefined);
@@ -166,7 +167,7 @@ export default function Signup() {
   };
 
   const roleCards = [
-    { value: "fan", label: "Fan", icon: Sparkles, description: "Discover and support artists" },
+    { value: "fan", label: "Fan", icon: Sparkles, description: "Discover & support artists" },
     { value: "artist", label: "Artist", icon: Music2, description: "Build your music career" },
     { value: "producer", label: "Producer", icon: Headphones, description: "Sell beats & collaborate" },
     { value: "brand", label: "Brand", icon: Building2, description: "Partner with talent" },
@@ -201,25 +202,25 @@ export default function Signup() {
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6 p-6 sm:p-8">
-            {/* Role Selection */}
+          <CardContent className="space-y-6 p-4 sm:p-6 md:p-8">
+            {/* Role Selection - Mobile Optimized */}
             <div className="space-y-3">
               <Label className="text-sm font-medium">I am a... *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {roleCards.map((roleCard) => (
                   <button
                     key={roleCard.value}
                     type="button"
                     onClick={() => setRole(roleCard.value as any)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center text-center min-h-[90px] sm:min-h-[100px] ${
                       role === roleCard.value
                         ? 'border-primary bg-primary/10 shadow-lg'
-                        : 'border-primary/20 hover:border-primary/40 bg-background/50'
+                        : 'border-muted hover:border-primary/40 bg-background/50'
                     }`}
                   >
-                    <roleCard.icon className={`w-8 h-8 mb-2 mx-auto ${role === roleCard.value ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <div className="font-semibold text-sm">{roleCard.label}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{roleCard.description}</div>
+                    <roleCard.icon className={`w-6 h-6 sm:w-8 sm:h-8 mb-1.5 sm:mb-2 flex-shrink-0 ${role === roleCard.value ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <div className="font-semibold text-xs sm:text-sm">{roleCard.label}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2 leading-tight">{roleCard.description}</div>
                   </button>
                 ))}
               </div>
@@ -394,10 +395,10 @@ export default function Signup() {
             )}
 
             {role === "producer" && (
-              <div className="space-y-4 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
                 <div className="space-y-2">
                   <Label htmlFor="producerName" className="text-sm font-medium flex items-center gap-2">
-                    <Headphones className="w-4 h-4 text-purple-500" />
+                    <Headphones className="w-4 h-4 text-primary" />
                     Producer Name
                   </Label>
                   <Input
@@ -405,7 +406,7 @@ export default function Signup() {
                     placeholder="Beat Master"
                     value={producerName}
                     onChange={(e) => setProducerName(e.target.value)}
-                    className="h-11 bg-background/50 border-purple-500/20 focus:border-purple-500"
+                    className="h-11 bg-background/50 border-primary/20 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
@@ -417,7 +418,7 @@ export default function Signup() {
                     placeholder="Hip Hop, Trap, Afrobeats"
                     value={genres}
                     onChange={(e) => setGenres(e.target.value)}
-                    className="h-11 bg-background/50 border-purple-500/20 focus:border-purple-500"
+                    className="h-11 bg-background/50 border-primary/20 focus:border-primary"
                   />
                 </div>
               </div>
