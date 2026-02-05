@@ -72,95 +72,108 @@ export function ForYouSection() {
       if (favoriteArtists.size > 0) {
         const { data: artistTracks } = await supabase
           .from('tracks')
-          .select(`
-            id, title, cover_image, audio_url, genre, artist_id,
-            profiles!tracks_artist_id_fkey (display_name),
-            artist_profiles!tracks_artist_id_fkey (stage_name)
-          `)
+          .select('id, title, cover_image, audio_url, genre, artist_id')
           .in('artist_id', Array.from(favoriteArtists))
           .eq('moderation_status', 'approved')
           .order('created_at', { ascending: false })
           .limit(5);
 
-        artistTracks?.forEach(track => {
-          if (!listenedTrackIds.has(track.id)) {
-            const profile = track.profiles as any;
-            const artistProfile = track.artist_profiles as any;
-            recommendations.push({
-              id: track.id,
-              title: track.title,
-              artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
-              artistId: track.artist_id,
-              coverImage: track.cover_image,
-              audioUrl: track.audio_url,
-              genre: track.genre,
-              reason: 'From artists you follow',
-            });
-          }
-        });
+        if (artistTracks && artistTracks.length > 0) {
+          // Fetch artist names separately
+          const artistIds = [...new Set(artistTracks.map(t => t.artist_id))];
+          const [artistProfilesRes, profilesRes] = await Promise.all([
+            supabase.from('artist_profiles').select('user_id, stage_name').in('user_id', artistIds),
+            supabase.from('profiles').select('id, display_name').in('id', artistIds),
+          ]);
+
+          artistTracks.forEach(track => {
+            if (!listenedTrackIds.has(track.id)) {
+              const artistProfile = artistProfilesRes.data?.find(ap => ap.user_id === track.artist_id);
+              const profile = profilesRes.data?.find(p => p.id === track.artist_id);
+              recommendations.push({
+                id: track.id,
+                title: track.title,
+                artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
+                artistId: track.artist_id,
+                coverImage: track.cover_image,
+                audioUrl: track.audio_url,
+                genre: track.genre,
+                reason: 'From artists you follow',
+              });
+            }
+          });
+        }
       }
 
       // 2. Similar genres
       if (genres.size > 0 && recommendations.length < 10) {
         const { data: genreTracks } = await supabase
           .from('tracks')
-          .select(`
-            id, title, cover_image, audio_url, genre, artist_id,
-            profiles!tracks_artist_id_fkey (display_name),
-            artist_profiles!tracks_artist_id_fkey (stage_name)
-          `)
+          .select('id, title, cover_image, audio_url, genre, artist_id')
           .in('genre', Array.from(genres))
           .eq('moderation_status', 'approved')
           .order('plays', { ascending: false })
           .limit(10);
 
-        genreTracks?.forEach(track => {
-          if (!listenedTrackIds.has(track.id) && !recommendations.find(r => r.id === track.id)) {
-            const profile = track.profiles as any;
-            const artistProfile = track.artist_profiles as any;
-            recommendations.push({
-              id: track.id,
-              title: track.title,
-              artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
-              artistId: track.artist_id,
-              coverImage: track.cover_image,
-              audioUrl: track.audio_url,
-              genre: track.genre,
-              reason: `Because you like ${track.genre}`,
-            });
-          }
-        });
+        if (genreTracks && genreTracks.length > 0) {
+          const artistIds = [...new Set(genreTracks.map(t => t.artist_id))];
+          const [artistProfilesRes, profilesRes] = await Promise.all([
+            supabase.from('artist_profiles').select('user_id, stage_name').in('user_id', artistIds),
+            supabase.from('profiles').select('id, display_name').in('id', artistIds),
+          ]);
+
+          genreTracks.forEach(track => {
+            if (!listenedTrackIds.has(track.id) && !recommendations.find(r => r.id === track.id)) {
+              const artistProfile = artistProfilesRes.data?.find(ap => ap.user_id === track.artist_id);
+              const profile = profilesRes.data?.find(p => p.id === track.artist_id);
+              recommendations.push({
+                id: track.id,
+                title: track.title,
+                artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
+                artistId: track.artist_id,
+                coverImage: track.cover_image,
+                audioUrl: track.audio_url,
+                genre: track.genre,
+                reason: `Because you like ${track.genre}`,
+              });
+            }
+          });
+        }
       }
 
       // 3. Popular tracks fallback
       if (recommendations.length < 5) {
         const { data: popularTracks } = await supabase
           .from('tracks')
-          .select(`
-            id, title, cover_image, audio_url, genre, artist_id,
-            profiles!tracks_artist_id_fkey (display_name),
-            artist_profiles!tracks_artist_id_fkey (stage_name)
-          `)
+          .select('id, title, cover_image, audio_url, genre, artist_id')
           .eq('moderation_status', 'approved')
           .order('plays', { ascending: false })
           .limit(10);
 
-        popularTracks?.forEach(track => {
-          if (!recommendations.find(r => r.id === track.id)) {
-            const profile = track.profiles as any;
-            const artistProfile = track.artist_profiles as any;
-            recommendations.push({
-              id: track.id,
-              title: track.title,
-              artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
-              artistId: track.artist_id,
-              coverImage: track.cover_image,
-              audioUrl: track.audio_url,
-              genre: track.genre,
-              reason: 'Popular on BAK55',
-            });
-          }
-        });
+        if (popularTracks && popularTracks.length > 0) {
+          const artistIds = [...new Set(popularTracks.map(t => t.artist_id))];
+          const [artistProfilesRes, profilesRes] = await Promise.all([
+            supabase.from('artist_profiles').select('user_id, stage_name').in('user_id', artistIds),
+            supabase.from('profiles').select('id, display_name').in('id', artistIds),
+          ]);
+
+          popularTracks.forEach(track => {
+            if (!recommendations.find(r => r.id === track.id)) {
+              const artistProfile = artistProfilesRes.data?.find(ap => ap.user_id === track.artist_id);
+              const profile = profilesRes.data?.find(p => p.id === track.artist_id);
+              recommendations.push({
+                id: track.id,
+                title: track.title,
+                artistName: artistProfile?.stage_name || profile?.display_name || 'Unknown',
+                artistId: track.artist_id,
+                coverImage: track.cover_image,
+                audioUrl: track.audio_url,
+                genre: track.genre,
+                reason: 'Popular on BAK55',
+              });
+            }
+          });
+        }
       }
 
       setTracks(recommendations.slice(0, 6));

@@ -63,31 +63,30 @@ export function ActivityFeed({ limit = 5 }: { limit?: number }) {
       // Fetch recent track uploads (only approved tracks)
       const { data: tracks } = await supabase
         .from('tracks')
-        .select(`
-          id,
-          title,
-          created_at,
-          moderation_status,
-          profiles!tracks_artist_id_fkey (
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('id, title, created_at, moderation_status, artist_id')
         .eq('moderation_status', 'approved')
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      tracks?.forEach(track => {
-        const profile = track.profiles as any;
-        activities.push({
-          id: `track-${track.id}`,
-          type: 'upload',
-          message: `uploaded "${track.title}"`,
-          userName: profile?.display_name || 'An artist',
-          userAvatar: profile?.avatar_url,
-          timestamp: track.created_at,
+      if (tracks && tracks.length > 0) {
+        const artistIds = [...new Set(tracks.map(t => t.artist_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url')
+          .in('id', artistIds);
+
+        tracks.forEach(track => {
+          const profile = profiles?.find(p => p.id === track.artist_id);
+          activities.push({
+            id: `track-${track.id}`,
+            type: 'upload',
+            message: `uploaded "${track.title}"`,
+            userName: profile?.display_name || 'An artist',
+            userAvatar: profile?.avatar_url,
+            timestamp: track.created_at,
+          });
         });
-      });
+      }
 
       // Fetch recent follows
       const { data: follows } = await supabase

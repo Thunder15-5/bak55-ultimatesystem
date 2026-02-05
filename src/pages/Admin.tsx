@@ -13,6 +13,7 @@ import { BadgeManagementPanel } from "@/components/admin/BadgeManagementPanel";
 import { FeaturedArtistsPanel } from "@/components/admin/FeaturedArtistsPanel";
 import { ApplicationsPanel } from "@/components/admin/ApplicationsPanel";
 import { ReferralPanel } from "@/components/admin/ReferralPanel";
+import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -560,6 +561,10 @@ export default function Admin() {
               <Gift className="h-4 w-4 mr-2" />
               Referrals
             </TabsTrigger>
+            <TabsTrigger value="emails">
+              <Mail className="h-4 w-4 mr-2" />
+              Emails
+            </TabsTrigger>
           </TabsList>
 
           {/* Platform Metrics Tab */}
@@ -1054,6 +1059,11 @@ export default function Admin() {
           {/* Referrals Tab */}
           <TabsContent value="referrals">
             <ReferralPanel />
+          </TabsContent>
+
+          {/* Emails Tab */}
+          <TabsContent value="emails">
+            <EmailTemplatesPanel />
           </TabsContent>
         </Tabs>
       </div>

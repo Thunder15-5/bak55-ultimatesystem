@@ -105,33 +105,50 @@ export function usePendingTracks() {
   });
 }
 
-// Fetch trending tracks
+// Fetch trending tracks with proper artist name resolution
 export function useTrendingTracks(limit: number = 5) {
   return useQuery({
     queryKey: trackKeys.trending(limit),
     queryFn: async () => {
-      const { data } = await supabase
+      // First fetch tracks
+      const { data: tracksData, error: tracksError } = await supabase
         .from('tracks')
-        .select(`
-          id,
-          title,
-          cover_image,
-          plays,
-          audio_url,
-          genre,
-          artist_id,
-          profiles!tracks_artist_id_fkey (
-            display_name
-          ),
-          artist_profiles!tracks_artist_id_fkey (
-            stage_name
-          )
-        `)
+        .select('id, title, cover_image, plays, audio_url, genre, artist_id')
         .eq('moderation_status', 'approved')
         .order('plays', { ascending: false })
         .limit(limit);
 
-      return data || [];
+      if (tracksError) throw tracksError;
+      if (!tracksData || tracksData.length === 0) return [];
+
+      // Get unique artist IDs
+      const artistIds = [...new Set(tracksData.map(t => t.artist_id))];
+
+      // Fetch artist profiles and profiles in parallel
+      const [artistProfilesRes, profilesRes] = await Promise.all([
+        supabase
+          .from('artist_profiles')
+          .select('user_id, stage_name')
+          .in('user_id', artistIds),
+        supabase
+          .from('profiles')
+          .select('id, display_name, username')
+          .in('id', artistIds)
+      ]);
+
+      const artistProfiles = artistProfilesRes.data || [];
+      const profiles = profilesRes.data || [];
+
+      // Merge the data
+      return tracksData.map(track => {
+        const artistProfile = artistProfiles.find(ap => ap.user_id === track.artist_id);
+        const profile = profiles.find(p => p.id === track.artist_id);
+        return {
+          ...track,
+          artist_profiles: artistProfile || null,
+          profiles: profile || null,
+        };
+      });
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
