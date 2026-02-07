@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,27 +7,59 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Coins, ArrowLeft, Loader2, Info, Ticket, ExternalLink, CheckCircle } from "lucide-react";
+import { Coins, ArrowLeft, Loader2, Info, Ticket, ExternalLink, CheckCircle, Sparkles } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-// Selar product link for 100 KES BAKCoin package
-const SELAR_PRODUCT_LINK = "https://selar.com/x6r5dgu5h5";
-const PACKAGE_PRICE_KES = 100;
+// Selar payment packages
+const PAYMENT_PACKAGES = [
+  { 
+    id: 'pkg_250', 
+    priceKES: 250, 
+    bakAmount: 12.5, 
+    selarLink: 'https://selar.com/5b14447v0n',
+    popular: false
+  },
+  { 
+    id: 'pkg_500', 
+    priceKES: 500, 
+    bakAmount: 25, 
+    selarLink: 'https://selar.com/79r4616705',
+    popular: false
+  },
+  { 
+    id: 'pkg_1000', 
+    priceKES: 1000, 
+    bakAmount: 50, 
+    selarLink: 'https://selar.com/22en2upr67',
+    popular: true
+  },
+  { 
+    id: 'pkg_2500', 
+    priceKES: 2500, 
+    bakAmount: 125, 
+    selarLink: 'https://selar.com/f176d5q724',
+    popular: false
+  },
+  { 
+    id: 'pkg_5000', 
+    priceKES: 5000, 
+    bakAmount: 250, 
+    selarLink: 'https://selar.com/7167167f11',
+    popular: false
+  },
+];
+
 const BAK_RATE = 20; // 20 KES = 1 BAK
-const BAK_AMOUNT = (PACKAGE_PRICE_KES / BAK_RATE).toFixed(2); // 5.00 BAK
 
 const BuyCoins = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [voucherCode, setVoucherCode] = useState("");
   const [redeemingVoucher, setRedeemingVoucher] = useState(false);
-
-  // Check if user just completed a payment
-  const paymentStatus = searchParams.get("status");
-  const paymentReference = searchParams.get("reference");
+  const [selectedPackage, setSelectedPackage] = useState<typeof PAYMENT_PACKAGES[0] | null>(null);
 
   const handleRedeemVoucher = async () => {
     if (!user) {
@@ -80,7 +112,7 @@ const BuyCoins = () => {
     }
   };
 
-  const handleBuyWithSelar = () => {
+  const handleBuyWithSelar = (pkg: typeof PAYMENT_PACKAGES[0]) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -91,19 +123,22 @@ const BuyCoins = () => {
       return;
     }
 
-    // Open Selar payment link with user email pre-filled if possible
-    const selarUrl = new URL(SELAR_PRODUCT_LINK);
+    // Open Selar payment link with user email pre-filled
+    const selarUrl = new URL(pkg.selarLink);
     if (user.email) {
       selarUrl.searchParams.set('email', user.email);
     }
     // Add user_id as metadata for callback tracking
     selarUrl.searchParams.set('metadata[user_id]', user.id);
+    selarUrl.searchParams.set('metadata[package_id]', pkg.id);
+    selarUrl.searchParams.set('metadata[amount_kes]', pkg.priceKES.toString());
+    selarUrl.searchParams.set('metadata[bak_amount]', pkg.bakAmount.toString());
     
     window.open(selarUrl.toString(), '_blank');
     
     toast({
       title: "Payment Window Opened",
-      description: "Complete your payment in the new tab. Your BAKCoins will be credited automatically.",
+      description: `Complete your payment of KES ${pkg.priceKES.toLocaleString()} in the new tab. Your ${pkg.bakAmount} BAKCoins will be credited automatically.`,
     });
   };
 
@@ -111,7 +146,7 @@ const BuyCoins = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8 pt-24 max-w-2xl">
+      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => navigate("/wallet")}
@@ -121,131 +156,153 @@ const BuyCoins = () => {
           Back to Wallet
         </Button>
 
-        {/* Payment Success Message */}
-        {paymentStatus === "success" && (
-          <Alert className="mb-6 bg-green-500/10 border-green-500/30">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <AlertTitle className="text-green-600">Payment Successful!</AlertTitle>
-            <AlertDescription>
-              Your BAKCoins have been credited to your wallet.
-              {paymentReference && <span className="block text-xs mt-1">Reference: {paymentReference}</span>}
-            </AlertDescription>
-          </Alert>
-        )}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+            <Coins className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Buy BAKCoins</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            Get <span className="text-gradient">BAKCoins</span>
+          </h1>
+          <p className="text-muted-foreground">
+            Support artists, vote in competitions, and unlock premium features
+          </p>
+        </div>
 
-        <Card>
+        {/* Package Selection */}
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl sm:text-3xl">Buy BAKCoins</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Select Package
+            </CardTitle>
             <CardDescription>
-              Purchase BAKCoins to support artists and vote in competitions
+              Choose the amount of BAKCoins you want to purchase
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            
-            {/* Main Purchase Section - Selar */}
-            <Card className="bg-primary/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Coins className="h-6 w-6 text-primary" />
-                  Buy BAKCoins Package
-                </CardTitle>
-                <CardDescription>
-                  Quick and secure payment via Selar
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-background/50 p-4 rounded-lg space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Package Price:</span>
-                    <span className="text-xl font-bold">100 KES</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-sm font-medium">You Receive:</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {BAK_AMOUNT} BAK
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground text-center">
-                    Rate: 20 KES = 1 BAK
-                  </div>
-                </div>
-
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleBuyWithSelar}
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {PAYMENT_PACKAGES.map((pkg) => (
+                <Card 
+                  key={pkg.id}
+                  className={`cursor-pointer transition-all hover:border-primary/60 ${
+                    selectedPackage?.id === pkg.id 
+                      ? 'border-primary ring-2 ring-primary/20' 
+                      : 'border-border hover:shadow-md'
+                  } ${pkg.popular ? 'relative' : ''}`}
+                  onClick={() => setSelectedPackage(pkg)}
                 >
-                  <ExternalLink className="mr-2 h-5 w-5" />
-                  Buy Now - 100 KES
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  You'll be redirected to Selar to complete your payment securely
-                </p>
-              </CardContent>
-            </Card>
-
-            <Separator className="my-6" />
-
-            {/* Voucher Redemption Section */}
-            <Card className="bg-accent/5">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Ticket className="h-5 w-5 text-primary" />
-                  Have a Voucher Code?
-                </CardTitle>
-                <CardDescription>
-                  Redeem your voucher code to instantly add BAKCoins to your wallet
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="voucher">Voucher Code</Label>
-                  <Input
-                    id="voucher"
-                    type="text"
-                    placeholder="Enter your voucher code"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                    disabled={redeemingVoucher}
-                    maxLength={20}
-                  />
-                </div>
-                <Button 
-                  className="w-full" 
-                  onClick={handleRedeemVoucher}
-                  disabled={!voucherCode.trim() || redeemingVoucher}
-                  variant="secondary"
-                >
-                  {redeemingVoucher ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Redeeming...
-                    </>
-                  ) : (
-                    <>
-                      <Ticket className="mr-2 h-4 w-4" />
-                      Redeem Voucher
-                    </>
+                  {pkg.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-primary to-secondary">
+                        Most Popular
+                      </Badge>
+                    </div>
                   )}
-                </Button>
-              </CardContent>
-            </Card>
+                  <CardContent className="p-4 pt-6 text-center">
+                    <div className="text-3xl font-bold text-primary mb-1">
+                      {pkg.bakAmount}
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      BAKCoins
+                    </div>
+                    <div className="text-xl font-semibold">
+                      KES {pkg.priceKES.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Rate: {BAK_RATE} KES = 1 BAK
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-            <div className="bg-muted/50 p-4 rounded-lg flex gap-3">
-              <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm space-y-1">
-                <p className="font-medium">What you get with BAKCoins:</p>
-                <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                  <li>Support your favorite artists with tips</li>
-                  <li>Vote in competitions</li>
-                  <li>Unlock premium features</li>
-                  <li>Enter exclusive contests</li>
-                </ul>
+            {selectedPackage && (
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm text-muted-foreground">You selected:</p>
+                    <p className="text-lg font-semibold">
+                      {selectedPackage.bakAmount} BAKCoins for KES {selectedPackage.priceKES.toLocaleString()}
+                    </p>
+                  </div>
+                  <Button 
+                    size="lg"
+                    onClick={() => handleBuyWithSelar(selectedPackage)}
+                    className="w-full sm:w-auto"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Pay Now
+                  </Button>
+                </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Separator className="my-6" />
+
+        {/* Voucher Redemption Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" />
+              Have a Voucher Code?
+            </CardTitle>
+            <CardDescription>
+              Redeem your voucher code to instantly add BAKCoins to your wallet
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                type="text"
+                placeholder="Enter your voucher code"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                disabled={redeemingVoucher}
+                maxLength={20}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleRedeemVoucher}
+                disabled={!voucherCode.trim() || redeemingVoucher}
+                variant="secondary"
+              >
+                {redeemingVoucher ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Redeeming...
+                  </>
+                ) : (
+                  <>
+                    <Ticket className="mr-2 h-4 w-4" />
+                    Redeem
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Info Section */}
+        <Alert className="mt-6">
+          <Info className="h-4 w-4" />
+          <AlertTitle>What you can do with BAKCoins</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Support your favorite artists with tips</li>
+              <li>Vote in competitions</li>
+              <li>Unlock premium features</li>
+              <li>Enter exclusive contests</li>
+              <li>Purchase beat licenses</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+
+        <p className="text-xs text-center text-muted-foreground mt-6">
+          Payments are processed securely via Selar. BAKCoins are credited instantly after payment confirmation.
+        </p>
       </div>
     </div>
   );
