@@ -80,6 +80,9 @@ const BrandDiscover = lazy(() => import("./pages/brand/BrandDiscover"));
 const ProducerDashboard = lazy(() => import("./pages/producer/ProducerDashboard"));
 const ProducerCatalog = lazy(() => import("./pages/producer/ProducerCatalog"));
 const ProducerDiscover = lazy(() => import("./pages/producer/ProducerDiscover"));
+const ProducerUploadBeat = lazy(() => import("./pages/producer/ProducerUploadBeat"));
+const ProducerCollaborations = lazy(() => import("./pages/producer/ProducerCollaborations"));
+const ProducerCompetitions = lazy(() => import("./pages/producer/ProducerCompetitions"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Apply = lazy(() => import("./pages/Apply"));
@@ -185,9 +188,12 @@ const App = () => (
 
                 {/* Producer Routes */}
                 <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><ProducerDashboard /></ProtectedRoute>} />
-                <Route path="/producer/upload" element={<ProtectedRoute requiredRole="producer"><UploadTrack /></ProtectedRoute>} />
+                <Route path="/producer/upload" element={<ProtectedRoute requiredRole="producer"><ProducerUploadBeat /></ProtectedRoute>} />
                 <Route path="/producer/catalog" element={<ProtectedRoute requiredRole="producer"><ProducerCatalog /></ProtectedRoute>} />
                 <Route path="/producer/discover" element={<ProtectedRoute requiredRole="producer"><ProducerDiscover /></ProtectedRoute>} />
+                <Route path="/producer/collaborations" element={<ProtectedRoute requiredRole="producer"><ProducerCollaborations /></ProtectedRoute>} />
+                <Route path="/producer/competitions" element={<ProtectedRoute requiredRole="producer"><ProducerCompetitions /></ProtectedRoute>} />
+                <Route path="/producer/competitions/create" element={<ProtectedRoute requiredRole="producer"><CreateCompetition /></ProtectedRoute>} />
                 <Route path="/producer/wallet" element={<ProtectedRoute requiredRole="producer"><Wallet /></ProtectedRoute>} />
                 <Route path="/producer/wallet/buy-coins" element={<ProtectedRoute requiredRole="producer"><BuyCoins /></ProtectedRoute>} />
                 <Route path="/producer/profile" element={<ProtectedRoute requiredRole="producer"><Profile /></ProtectedRoute>} />
