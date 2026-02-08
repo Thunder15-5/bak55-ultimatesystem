@@ -57,9 +57,8 @@ export default function ProducerDiscover() {
         .select(`
           *,
           profiles!beats_producer_id_fkey(username, display_name, avatar_url),
-          producer_profiles!inner(producer_name, verified)
+          producer_profiles(producer_name, verified)
         `)
-        .eq('moderation_status', 'approved')
         .eq('status', 'active');
 
       if (genreFilter !== 'all') {

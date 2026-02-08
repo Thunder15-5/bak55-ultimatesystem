@@ -11,12 +11,12 @@ const BAK_RATE = 20;
 
 // Package mappings based on Selar product URLs
 const PACKAGES: Record<string, { priceKES: number; bakAmount: number }> = {
+  'x6r5dgu5h5': { priceKES: 100, bakAmount: 5 },
   '5b14447v0n': { priceKES: 250, bakAmount: 12.5 },
   '79r4616705': { priceKES: 500, bakAmount: 25 },
   '22en2upr67': { priceKES: 1000, bakAmount: 50 },
   'f176d5q724': { priceKES: 2500, bakAmount: 125 },
   '7167167f11': { priceKES: 5000, bakAmount: 250 },
-  'x6r5dgu5h5': { priceKES: 100, bakAmount: 5 }, // Legacy package
 };
 
 serve(async (req) => {

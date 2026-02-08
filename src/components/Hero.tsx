@@ -6,7 +6,7 @@ import { MarketResearchStats } from "./MarketResearchStats";
 
 export const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 sm:pt-20 pb-8 sm:pb-12">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-8 sm:pb-12">
       {/* Background */}
       <div 
         className="absolute inset-0 z-0"
@@ -28,9 +28,9 @@ export const Hero = () => {
       {/* Grid pattern */}
       <div className="absolute inset-0 z-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:60px_60px]" />
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+      <div className="container mx-auto px-5 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-5 sm:space-y-8 mb-10 sm:mb-16">
+          <div className="text-center space-y-6 sm:space-y-8 mb-10 sm:mb-16">
             {/* Badge */}
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 backdrop-blur-xl animate-fade-in shadow-lg shadow-primary/10">
               <div className="relative">
@@ -45,12 +45,12 @@ export const Hero = () => {
               <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary fill-secondary" />
             </div>
 
-            {/* Main Headline - Optimized for mobile */}
-            <div className="space-y-2 sm:space-y-4 px-2">
-              <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.15] sm:leading-[1.1] tracking-tight animate-fade-in-up">
+            {/* Main Headline - Optimized for mobile with better spacing */}
+            <div className="space-y-3 sm:space-y-4 px-1">
+              <h1 className="text-[1.65rem] leading-tight xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold sm:leading-[1.1] tracking-tight animate-fade-in-up">
                 Building Infrastructure for
               </h1>
-              <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.15] sm:leading-[1.1] tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <h1 className="text-[1.65rem] leading-tight xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold sm:leading-[1.1] tracking-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 <span className="text-gradient-primary relative">
                   African Music's Digital Future
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 blur-xl sm:blur-2xl -z-10 animate-pulse-slow" />

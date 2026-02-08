@@ -16,6 +16,13 @@ import { Badge } from "@/components/ui/badge";
 // Selar payment packages
 const PAYMENT_PACKAGES = [
   { 
+    id: 'pkg_100', 
+    priceKES: 100, 
+    bakAmount: 5, 
+    selarLink: 'https://selar.com/x6r5dgu5h5',
+    popular: false
+  },
+  { 
     id: 'pkg_250', 
     priceKES: 250, 
     bakAmount: 12.5, 
