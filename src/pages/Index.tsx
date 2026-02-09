@@ -27,11 +27,14 @@ const Index = () => {
   }, []);
 
   const fetchFeaturedCompetition = async () => {
+    // Fetch the latest active competition dynamically
     const { data } = await supabase
       .from('competitions')
       .select('*, submissions(count)')
-      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
-      .single();
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
     if (data) {
       setFeaturedCompetition(data);
