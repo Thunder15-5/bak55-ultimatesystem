@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trophy, Plus, Trash2 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 
+// Build version: 2026-02-09-v3 - Stage type validation fix
 // Valid stage types matching database constraint
 const VALID_STAGE_TYPES = ['onboarding', 'mini_edition', 'studio_session', 'grand_finale'] as const;
 type ValidStageType = typeof VALID_STAGE_TYPES[number];
@@ -63,6 +64,11 @@ export default function CreateCompetition() {
   const [loading, setLoading] = useState(false);
   const [multiStageEnabled, setMultiStageEnabled] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("custom");
+
+  // Debug: Confirm new code is running
+  useEffect(() => {
+    console.log('[CreateCompetition] v3 loaded - Valid stage types:', VALID_STAGE_TYPES);
+  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
