@@ -293,6 +293,40 @@ export default function CompetitionDetails() {
     return now >= start && now <= end;
   };
 
+  const getCompetitionPhase = () => {
+    if (!competition) return 'closed';
+    const now = new Date();
+    const submissionStart = new Date(competition.start_date);
+    const submissionEnd = new Date(competition.end_date);
+    const votingStart = competition.voting_start_date ? new Date(competition.voting_start_date) : null;
+    const votingEnd = competition.voting_end_date ? new Date(competition.voting_end_date) : null;
+
+    // Check if competition is active in the database
+    if (competition.status !== 'active') {
+      return competition.status === 'completed' ? 'completed' : 'closed';
+    }
+
+    // Submission period
+    if (now < submissionStart) {
+      return 'opening_soon';
+    }
+    if (now >= submissionStart && now <= submissionEnd) {
+      return 'submissions_open';
+    }
+
+    // Voting period
+    if (votingStart && votingEnd) {
+      if (now > submissionEnd && now < votingStart) {
+        return 'voting_soon';
+      }
+      if (now >= votingStart && now <= votingEnd) {
+        return 'voting_open';
+      }
+    }
+
+    return 'closed';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -411,9 +445,19 @@ export default function CompetitionDetails() {
 
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={isSubmissionOpen() ? "default" : "secondary"}>
-                  {isSubmissionOpen() ? "Submissions Open" : isVotingOpen() ? "Voting Open" : "Closed"}
-                </Badge>
+                {(() => {
+                  const phase = getCompetitionPhase();
+                  const phaseConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+                    opening_soon: { label: "Opening Soon", variant: "outline" },
+                    submissions_open: { label: "Submissions Open", variant: "default" },
+                    voting_soon: { label: "Voting Soon", variant: "outline" },
+                    voting_open: { label: "Voting Open", variant: "default" },
+                    completed: { label: "Completed", variant: "secondary" },
+                    closed: { label: "Closed", variant: "secondary" },
+                  };
+                  const config = phaseConfig[phase] || phaseConfig.closed;
+                  return <Badge variant={config.variant}>{config.label}</Badge>;
+                })()}
               </div>
 
               {userRole === 'artist' && isSubmissionOpen() && (
