@@ -504,40 +504,47 @@ const templates: Record<string, (data: any) => string> = {
   custom: (data: any) => emailWrapper(data.html_content || '<p>No content provided</p>'),
 };
 
-async function sendEmailViaResend(to: string, subject: string, html: string): Promise<{ success: boolean; id?: string; error?: string }> {
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-  
-  if (!RESEND_API_KEY) {
-    console.error("RESEND_API_KEY not configured");
+async function sendEmailViaSMTP(to: string, subject: string, html: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  const SMTP_HOST = Deno.env.get("SMTP_HOST");
+  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+  const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME");
+  const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
+
+  if (!SMTP_HOST || !SMTP_USERNAME || !SMTP_PASSWORD) {
+    console.error("SMTP credentials not configured");
     return { success: false, error: "Email service not configured" };
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+    const { SMTPClient } = await import("https://deno.land/x/denomailer@1.6.0/mod.ts");
+
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USERNAME,
+          password: SMTP_PASSWORD,
+        },
       },
-      body: JSON.stringify({
-        from: "BAK55 Talent <onboarding@resend.dev>", // Change to verified domain in production
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
     });
 
-    const data = await response.json();
+    await client.send({
+      from: `BAK55 Talent <${SMTP_USERNAME}>`,
+      to: to,
+      subject: subject,
+      content: "Please view this email in an HTML-capable client.",
+      html: html,
+    });
 
-    if (!response.ok) {
-      console.error("Resend API error:", data);
-      return { success: false, error: data.message || "Failed to send email" };
-    }
+    await client.close();
 
-    console.log("Email sent successfully via Resend:", data.id);
-    return { success: true, id: data.id };
+    const msgId = crypto.randomUUID();
+    console.log("Email sent successfully via SMTP:", msgId);
+    return { success: true, id: msgId };
   } catch (error: any) {
-    console.error("Error sending email via Resend:", error);
+    console.error("Error sending email via SMTP:", error);
     return { success: false, error: error.message || "Unknown error" };
   }
 }
@@ -575,8 +582,8 @@ serve(async (req) => {
       );
     }
     
-    // Send email via Resend API
-    const result = await sendEmailViaResend(to, subject, emailHtml);
+    // Send email via SMTP
+    const result = await sendEmailViaSMTP(to, subject, emailHtml);
 
     if (result.success) {
       return new Response(
