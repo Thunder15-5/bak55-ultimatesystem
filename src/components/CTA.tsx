@@ -123,7 +123,7 @@ export const CTA = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                No credit card required · Launching Q1 2026 · 100% free during beta
+                🏆 Founders Season is live · Compete for 1000 BAK prizes
               </p>
             </form>
 
