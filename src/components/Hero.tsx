@@ -31,8 +31,8 @@ export const Hero = () => {
       <div className="container mx-auto px-5 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-6 sm:space-y-8 mb-10 sm:mb-16">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 backdrop-blur-xl animate-fade-in shadow-lg shadow-primary/10">
+            {/* Badge - Competition Promo */}
+            <Link to="/competitions" className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 backdrop-blur-xl animate-fade-in shadow-lg shadow-primary/10 hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
               <div className="relative">
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                 <div className="absolute inset-0 animate-ping">
@@ -40,10 +40,10 @@ export const Hero = () => {
                 </div>
               </div>
               <span className="text-xs sm:text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Launching Q1 2026 · MVP Phase
+                🏆 Founders Season Live · Win 1000 BAK
               </span>
               <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary fill-secondary" />
-            </div>
+            </Link>
 
             {/* Main Headline - Optimized for mobile with better spacing */}
             <div className="space-y-3 sm:space-y-4 px-1">
@@ -86,17 +86,17 @@ export const Hero = () => {
               </Link>
             </div>
 
-            {/* Trust indicators - Optimized for mobile */}
+            {/* Trust indicators - Competition focused */}
             <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-4 pt-3 sm:pt-4 text-xs sm:text-sm text-muted-foreground animate-fade-in px-4" style={{ animationDelay: '0.4s' }}>
-              <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/50">
+              <Link to="/competitions" className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-pointer">
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
-                <span>100% Free Beta Access</span>
-              </div>
+                <span>Founders Season Active</span>
+              </Link>
+              <Link to="/competitions" className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-pointer">
+                <span>🏆 Compete & Win Prizes</span>
+              </Link>
               <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/50">
-                <span>No Credit Card Required</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/50">
-                <span>Launching Early 2026</span>
+                <span>55 Artists · 7 Stages</span>
               </div>
             </div>
           </div>
