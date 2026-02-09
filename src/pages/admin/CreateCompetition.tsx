@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { addDays, format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,10 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trophy, Plus, Trash2 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 
-// Build version: 2026-02-09-v3 - Stage type validation fix
+// Build version: 2026-02-09-v4 - Stage date validation + renumbering
 // Valid stage types matching database constraint
-const VALID_STAGE_TYPES = ['onboarding', 'mini_edition', 'studio_session', 'grand_finale'] as const;
-type ValidStageType = typeof VALID_STAGE_TYPES[number];
+const VALID_STAGE_TYPES = ["onboarding", "mini_edition", "studio_session", "grand_finale"] as const;
+type ValidStageType = (typeof VALID_STAGE_TYPES)[number];
 
 interface Stage {
   stage_number: number;
@@ -32,6 +33,9 @@ interface Stage {
   max_participants: number;
   elimination_count: number;
 }
+
+const dayMs = (value: string) => parseISO(value).getTime();
+const nextDay = (value: string) => format(addDays(parseISO(value), 1), "yyyy-MM-dd");
 
 const STAGE_TEMPLATES = {
   bak55_discovery: {
@@ -51,9 +55,7 @@ const STAGE_TEMPLATES = {
   },
   monthly_mini: {
     name: "Monthly Mini (1 Stage)",
-    stages: [
-      { stage_name: "Mini Edition", stage_type: "mini_edition", max_participants: 30, elimination_count: 27 },
-    ],
+    stages: [{ stage_name: "Mini Edition", stage_type: "mini_edition", max_participants: 30, elimination_count: 27 }],
   },
 };
 
@@ -67,7 +69,7 @@ export default function CreateCompetition() {
 
   // Debug: Confirm new code is running
   useEffect(() => {
-    console.log('[CreateCompetition] v3 loaded - Valid stage types:', VALID_STAGE_TYPES);
+    console.log("[CreateCompetition] v4 loaded - Valid stage types:", VALID_STAGE_TYPES);
   }, []);
 
   const [formData, setFormData] = useState({
@@ -83,74 +85,83 @@ export default function CreateCompetition() {
     voting_end_date: "",
   });
 
-  const [stages, setStages] = useState<Stage[]>([{
-    stage_number: 1,
-    stage_name: "Main Stage",
-    stage_type: "mini_edition",
-    description: "",
-    challenge_theme: "",
-    start_date: "",
-    end_date: "",
-    voting_start_date: "",
-    voting_end_date: "",
-    max_participants: 50,
-    elimination_count: 0
-  }]);
+  const [stages, setStages] = useState<Stage[]>([
+    {
+      stage_number: 1,
+      stage_name: "Main Stage",
+      stage_type: "mini_edition",
+      description: "",
+      challenge_theme: "",
+      start_date: "",
+      end_date: "",
+      voting_start_date: "",
+      voting_end_date: "",
+      max_participants: 50,
+      elimination_count: 0,
+    },
+  ]);
 
   const [coverImage, setCoverImage] = useState<File | null>(null);
 
+  const normalizeStages = (list: Stage[]): Stage[] => list.map((s, idx) => ({ ...s, stage_number: idx + 1 }));
+
   const applyTemplate = (templateKey: string) => {
     if (templateKey === "custom") return;
-    
+
     const template = STAGE_TEMPLATES[templateKey as keyof typeof STAGE_TEMPLATES];
     const baseDate = new Date();
-    
+
     const newStages: Stage[] = template.stages.map((stage, index) => {
       const stageStart = new Date(baseDate);
-      stageStart.setDate(stageStart.getDate() + (index * 14)); // 2 weeks per stage
-      
+      stageStart.setDate(stageStart.getDate() + index * 14); // 2 weeks per stage
+
       const stageEnd = new Date(stageStart);
       stageEnd.setDate(stageEnd.getDate() + 10);
-      
+
       const votingStart = new Date(stageEnd);
       votingStart.setDate(votingStart.getDate() - 3);
-      
+
       return {
         stage_number: index + 1,
         stage_name: stage.stage_name,
         stage_type: stage.stage_type as ValidStageType,
         description: "",
         challenge_theme: "",
-        start_date: stageStart.toISOString().split('T')[0],
-        end_date: stageEnd.toISOString().split('T')[0],
-        voting_start_date: votingStart.toISOString().split('T')[0],
-        voting_end_date: stageEnd.toISOString().split('T')[0],
+        start_date: stageStart.toISOString().split("T")[0],
+        end_date: stageEnd.toISOString().split("T")[0],
+        voting_start_date: votingStart.toISOString().split("T")[0],
+        voting_end_date: stageEnd.toISOString().split("T")[0],
         max_participants: stage.max_participants,
-        elimination_count: stage.elimination_count
+        elimination_count: stage.elimination_count,
       };
     });
-    
+
     setStages(newStages);
   };
 
   const addStage = () => {
     const lastStage = stages[stages.length - 1];
-    const newStageStart = lastStage.end_date ? new Date(lastStage.end_date) : new Date();
-    newStageStart.setDate(newStageStart.getDate() + 1);
-    
-    setStages([...stages, {
-      stage_number: stages.length + 1,
-      stage_name: `Stage ${stages.length + 1}`,
-      stage_type: "mini_edition",
-      description: "",
-      challenge_theme: "",
-      start_date: newStageStart.toISOString().split('T')[0],
-      end_date: "",
-      voting_start_date: "",
-      voting_end_date: "",
-      max_participants: lastStage.max_participants - lastStage.elimination_count,
-      elimination_count: 0
-    }]);
+
+    const computedStart = lastStage.end_date ? nextDay(lastStage.end_date) : format(new Date(), "yyyy-MM-dd");
+
+    setStages(
+      normalizeStages([
+        ...stages,
+        {
+          stage_number: stages.length + 1,
+          stage_name: `Stage ${stages.length + 1}`,
+          stage_type: "mini_edition",
+          description: "",
+          challenge_theme: "",
+          start_date: computedStart,
+          end_date: "",
+          voting_start_date: "",
+          voting_end_date: "",
+          max_participants: lastStage.max_participants - lastStage.elimination_count,
+          elimination_count: 0,
+        },
+      ])
+    );
   };
 
   const removeStage = (index: number) => {
@@ -162,56 +173,90 @@ export default function CreateCompetition() {
       });
       return;
     }
-    setStages(stages.filter((_, i) => i !== index));
+
+    setStages(normalizeStages(stages.filter((_, i) => i !== index)));
   };
 
   const updateStage = (index: number, field: keyof Stage, value: any) => {
     const newStages = [...stages];
+
     // Ensure stage_type is always a valid value
-    if (field === 'stage_type') {
-      value = VALID_STAGE_TYPES.includes(value) ? value : 'mini_edition';
+    if (field === "stage_type") {
+      value = VALID_STAGE_TYPES.includes(value) ? value : "mini_edition";
     }
+
+    // If a stage's start date is moved earlier than allowed, bump it to the next valid day.
+    if (field === "start_date" && typeof value === "string" && value && index > 0) {
+      const prevEnd = newStages[index - 1]?.end_date;
+      if (prevEnd && dayMs(value) <= dayMs(prevEnd)) {
+        const adjusted = nextDay(prevEnd);
+        value = adjusted;
+        toast({
+          title: "Adjusted stage start date",
+          description: `Stage ${newStages[index].stage_number} start date must be after Stage ${newStages[index - 1].stage_number} end date. Set to ${adjusted}.`,
+        });
+      }
+    }
+
     newStages[index] = { ...newStages[index], [field]: value };
+
+    // If a stage's end date is moved later, ensure the NEXT stage still starts after it.
+    if (field === "end_date" && typeof value === "string" && value && index < newStages.length - 1) {
+      const next = newStages[index + 1];
+      if (next?.start_date && dayMs(next.start_date) <= dayMs(value)) {
+        newStages[index + 1] = { ...next, start_date: nextDay(value) };
+      }
+    }
+
     setStages(newStages);
   };
 
   const validateStages = () => {
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
-      
-      if (new Date(stage.start_date) >= new Date(stage.end_date)) {
+
+      if (!stage.start_date || !stage.end_date || !stage.voting_start_date || !stage.voting_end_date) {
         toast({
           title: "Validation Error",
-          description: `Stage ${i + 1}: Start date must be before end date`,
+          description: `Stage ${stage.stage_number}: Please fill in all dates (start, end, voting start, voting end)`,
           variant: "destructive",
         });
         return false;
       }
-      
-      if (new Date(stage.voting_start_date) >= new Date(stage.voting_end_date)) {
+
+      if (dayMs(stage.start_date) >= dayMs(stage.end_date)) {
         toast({
           title: "Validation Error",
-          description: `Stage ${i + 1}: Voting start must be before voting end`,
+          description: `Stage ${stage.stage_number}: Start date must be before end date`,
           variant: "destructive",
         });
         return false;
       }
-      
+
+      if (dayMs(stage.voting_start_date) >= dayMs(stage.voting_end_date)) {
+        toast({
+          title: "Validation Error",
+          description: `Stage ${stage.stage_number}: Voting start must be before voting end`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
       if (stage.elimination_count >= stage.max_participants) {
         toast({
           title: "Validation Error",
-          description: `Stage ${i + 1}: Elimination count must be less than max participants`,
+          description: `Stage ${stage.stage_number}: Elimination count must be less than max participants`,
           variant: "destructive",
         });
         return false;
       }
-      
+
       if (i > 0) {
         const prevStage = stages[i - 1];
-        if (new Date(stage.start_date) <= new Date(prevStage.end_date)) {
+        if (dayMs(stage.start_date) <= dayMs(prevStage.end_date)) {
           toast({
             title: "Validation Error",
-            description: `Stage ${i + 1} start date must be after Stage ${i} end date`,
+            description: `Stage ${stage.stage_number} start date (${stage.start_date}) must be after Stage ${prevStage.stage_number} end date (${prevStage.end_date})`,
             variant: "destructive",
           });
           return false;
