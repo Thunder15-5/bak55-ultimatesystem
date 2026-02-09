@@ -7,15 +7,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Mail, Loader2, CheckCircle, Shield } from "lucide-react";
+import { Mail, Loader2, CheckCircle, Shield, Coins, Music, Users, TrendingUp } from "lucide-react";
 import logoImage from "@/assets/bak55-logo.png";
 
 export default function VerifyAccount() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+
+  const getRoleMessage = () => {
+    switch (userRole) {
+      case 'artist':
+        return {
+          bonus: 20,
+          nextStep: "Upload your first track and start competing!",
+          icon: Music,
+          cta: "Go to Dashboard",
+          path: "/artist/dashboard"
+        };
+      case 'producer':
+        return {
+          bonus: 20,
+          nextStep: "Upload your first beat and connect with artists!",
+          icon: Music,
+          cta: "Go to Dashboard",
+          path: "/producer/dashboard"
+        };
+      case 'brand':
+        return {
+          bonus: 10,
+          nextStep: "Discover artists and create competitions!",
+          icon: TrendingUp,
+          cta: "Go to Dashboard",
+          path: "/brand/dashboard"
+        };
+      default:
+        return {
+          bonus: 10,
+          nextStep: "Discover music and start voting in competitions!",
+          icon: Users,
+          cta: "Discover Music",
+          path: "/fan/dashboard"
+        };
+    }
+  };
+
+  const roleInfo = getRoleMessage();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +74,9 @@ export default function VerifyAccount() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Account activated successfully! 🎉");
-        setTimeout(() => navigate('/dashboard'), 1500);
+        const bonus = data.welcomeBonus || roleInfo.bonus;
+        toast.success(`Account activated! You received ${bonus} BAKCoins! 🎉`);
+        setTimeout(() => navigate(roleInfo.path), 1500);
       } else {
         toast.error(data.error || "Invalid activation code");
       }
@@ -141,6 +181,17 @@ export default function VerifyAccount() {
                 </>
               )}
             </Button>
+
+            {/* Welcome bonus info */}
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 text-center space-y-2">
+              <div className="flex items-center justify-center gap-2 text-primary">
+                <Coins className="h-5 w-5" />
+                <span className="font-semibold">{roleInfo.bonus} BAKCoins Welcome Bonus</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {roleInfo.nextStep}
+              </p>
+            </div>
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">

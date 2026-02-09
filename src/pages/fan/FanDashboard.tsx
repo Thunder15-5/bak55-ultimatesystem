@@ -39,8 +39,10 @@ export default function FanDashboard() {
     const { data } = await supabase
       .from('competitions')
       .select('*, submissions(count)')
-      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
-      .single();
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
     if (data) {
       setFeaturedCompetition(data);
@@ -269,7 +271,7 @@ export default function FanDashboard() {
                 <Trophy className="mr-2 h-4 w-4" />
                 Vote in Competitions
               </Button>
-              <Button onClick={() => navigate('/buy-coins')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/wallet')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />
                 Buy BAKCoins
               </Button>

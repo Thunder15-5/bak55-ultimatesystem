@@ -79,8 +79,10 @@ export default function ArtistDashboard() {
     const { data } = await supabase
       .from('competitions')
       .select('*, submissions(count)')
-      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
-      .single();
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
     if (data) {
       setFeaturedCompetition(data);
@@ -172,12 +174,12 @@ export default function ArtistDashboard() {
   };
 
   const statCards = [
-    { icon: Wallet, value: stats.balance.toFixed(2), label: "BAKCoins Balance", color: "from-primary to-primary-glow", link: "/wallet", trend: "+12%" },
-    { icon: Music, value: stats.tracksCount, label: "Total Tracks", color: "from-secondary to-secondary-glow", link: "/catalog", trend: null },
+    { icon: Wallet, value: stats.balance.toFixed(2), label: "BAKCoins Balance", color: "from-primary to-primary-glow", link: "/artist/wallet", trend: "+12%" },
+    { icon: Music, value: stats.tracksCount, label: "Total Tracks", color: "from-secondary to-secondary-glow", link: "/artist/catalog", trend: null },
     { icon: TrendingUp, value: stats.totalPlays.toLocaleString(), label: "Total Plays", color: "from-accent to-accent-glow", link: "/analytics", trend: `+${stats.monthlyGrowth.toFixed(1)}%` },
-    { icon: DollarSign, value: stats.totalEarnings.toFixed(2), label: "Lifetime Earnings", color: "from-primary via-accent to-secondary", link: "/wallet", trend: "+8%" },
-    { icon: Users, value: stats.followers, label: "Followers", color: "from-blue-500 to-cyan-500", link: "/profile", trend: "+5%" },
-    { icon: Heart, value: stats.likes, label: "Total Likes", color: "from-red-500 to-pink-500", link: "/catalog", trend: "+15%" },
+    { icon: DollarSign, value: stats.totalEarnings.toFixed(2), label: "Lifetime Earnings", color: "from-primary via-accent to-secondary", link: "/artist/wallet", trend: "+8%" },
+    { icon: Users, value: stats.followers, label: "Followers", color: "from-blue-500 to-cyan-500", link: "/artist/profile", trend: "+5%" },
+    { icon: Heart, value: stats.likes, label: "Total Likes", color: "from-red-500 to-pink-500", link: "/artist/catalog", trend: "+15%" },
     { icon: Trophy, value: stats.competitions, label: "Competitions", color: "from-yellow-500 to-amber-500", link: "/competitions", trend: null },
     { icon: MessageCircle, value: stats.comments, label: "Comments", color: "from-green-500 to-emerald-500", link: "/catalog", trend: "+10%" },
   ];
@@ -386,13 +388,13 @@ export default function ArtistDashboard() {
                     Competitions
                   </Button>
                 </Link>
-                <Link to="/catalog" className="group">
+                <Link to="/artist/catalog" className="group">
                   <Button variant="secondary" className="w-full h-14 text-base font-semibold">
                     <Music className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     My Tracks
                   </Button>
                 </Link>
-                <Link to="/discover" className="group">
+                <Link to="/artist/discover" className="group">
                   <Button variant="outline" className="w-full h-14 text-base font-semibold border-2">
                     <TrendingUp className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Discover

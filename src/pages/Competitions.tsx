@@ -20,8 +20,10 @@ const Competitions = () => {
     const { data } = await supabase
       .from('competitions')
       .select('*, submissions(count)')
-      .eq('id', '627488d7-abe5-4469-bb7a-0863225fea34')
-      .single();
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
     if (data) {
       setFeaturedCompetition(data);
@@ -71,10 +73,10 @@ const Competitions = () => {
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                <span className="text-gradient">Live Now:</span> BAK55 Genesis
+                <span className="text-gradient">Live Now:</span> {featuredCompetition.title}
               </h2>
               <p className="text-lg text-muted-foreground">
-                The first 55 founding artists of the BAK55 movement
+                {featuredCompetition.description || "Compete now for prizes and recognition!"}
               </p>
             </div>
             <CompetitionBanner

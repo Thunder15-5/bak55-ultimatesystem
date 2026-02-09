@@ -80,12 +80,72 @@ serve(async (req) => {
       .update({ 
         is_activated: true,
         activation_code: null, // Clear the code
-        activation_code_sent_at: null
+        activation_code_sent_at: null,
+        signup_bonus_awarded: true
       })
       .eq('id', user.id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // Fetch the user's role to determine bonus amount
+    const { data: roleData } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const userRole = roleData?.role || 'fan';
+    // Artists get 20 BAK, Fans get 10 BAK welcome bonus
+    const welcomeBonus = userRole === 'artist' ? 20 : 10;
+
+    // Get or create wallet and add welcome bonus
+    const { data: existingWallet } = await supabaseAdmin
+      .from('wallets')
+      .select('id, balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (existingWallet) {
+      // Update existing wallet with bonus
+      await supabaseAdmin
+        .from('wallets')
+        .update({ balance: existingWallet.balance + welcomeBonus })
+        .eq('id', existingWallet.id);
+
+      // Record the transaction
+      await supabaseAdmin
+        .from('transactions')
+        .insert({
+          wallet_id: existingWallet.id,
+          amount: welcomeBonus,
+          type: 'credit',
+          description: 'Welcome bonus for email verification 🎉',
+          reference: `WELCOME_BONUS_${user.id.substring(0, 8)}`
+        });
+    } else {
+      // Create wallet with welcome bonus
+      const { data: newWallet } = await supabaseAdmin
+        .from('wallets')
+        .insert({
+          user_id: user.id,
+          balance: welcomeBonus
+        })
+        .select()
+        .single();
+
+      if (newWallet) {
+        await supabaseAdmin
+          .from('transactions')
+          .insert({
+            wallet_id: newWallet.id,
+            amount: welcomeBonus,
+            type: 'credit',
+            description: 'Welcome bonus for email verification 🎉',
+            reference: `WELCOME_BONUS_${user.id.substring(0, 8)}`
+          });
+      }
     }
 
     // Send welcome email
@@ -115,7 +175,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Account activated successfully!' 
+        message: 'Account activated successfully!',
+        welcomeBonus
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
