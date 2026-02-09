@@ -223,7 +223,12 @@ const App = () => (
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
           <Route path="/admin/create-competition" element={
-            <ProtectedRoute requiredRoles={['admin', 'brand']}>
+            <ProtectedRoute requiredRoles={['admin', 'brand', 'producer']}>
+              <CreateCompetition />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/competitions/create" element={
+            <ProtectedRoute requiredRole="admin">
               <CreateCompetition />
             </ProtectedRoute>
           } />
