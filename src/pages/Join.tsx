@@ -219,9 +219,9 @@ const Join = () => {
           <Card className="p-12 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
             <div className="text-center space-y-8">
               <div>
-                <h2 className="text-3xl font-bold mb-4">Get Early Access</h2>
+                <h2 className="text-3xl font-bold mb-4">Get Started</h2>
                 <p className="text-muted-foreground">
-                  Join the waitlist for {userType === "artist" ? "founding artist status" : "early fan access"}
+                  {userType === "artist" ? "Join as a founding artist" : "Join as an early fan"}
                 </p>
               </div>
               
@@ -235,13 +235,28 @@ const Join = () => {
                 />
                 
                 <Button type="submit" variant="hero" size="xl" className="w-full">
-                  Join as {userType === "artist" ? "Artist" : "Fan"}
+                  Get Early Access
                 </Button>
                 
                 <p className="text-xs text-muted-foreground">
                   🏆 Founders Season is live · Compete for prizes · Free to join
                 </p>
               </form>
+
+              {/* Continue to Full Registration */}
+              <div className="pt-4 border-t border-primary/10">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Ready to create your account?
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="w-full"
+                  onClick={() => navigate(`/signup?role=${userType}&from=join`)}
+                >
+                  Continue to Registration →
+                </Button>
+              </div>
               
               {userType === "artist" && (
                 <div className="pt-8 border-t border-primary/10">
@@ -259,7 +274,7 @@ const Join = () => {
                       Early AI access
                     </div>
                     <div className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm">
-                      Bonus BAKCoins
+                      20 BAK welcome bonus
                     </div>
                   </div>
                 </div>

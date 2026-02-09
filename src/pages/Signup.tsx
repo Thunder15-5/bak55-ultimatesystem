@@ -37,11 +37,18 @@ export default function Signup() {
   const [confirmedAge, setConfirmedAge] = useState(false);
 
   const redirectUrl = searchParams.get("redirect");
+  const fromJoin = searchParams.get("from") === "join";
 
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref);
+    }
+    
+    // Pre-select role from URL params (e.g., from /join page)
+    const roleParam = searchParams.get("role");
+    if (roleParam && ["fan", "artist", "brand", "producer"].includes(roleParam)) {
+      setRole(roleParam as any);
     }
   }, [searchParams]);
 

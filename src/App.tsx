@@ -8,6 +8,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
 import { CookieConsent } from "@/components/CookieConsent";
+import { BottomNavigation } from "@/components/BottomNavigation";
 import { lazy, Suspense } from "react";
 import { PageLoader } from "@/components/PageLoader";
 
@@ -258,6 +259,7 @@ const App = () => (
               </Routes>
               </Suspense>
               <PersistentMusicPlayer />
+              <BottomNavigation />
               <InstallPrompt />
               <CookieConsent />
             </MusicPlayerProvider>

@@ -122,8 +122,9 @@ export default function CompetitionsActive() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {competitions.map((competition) => {
-              const isFeatured = competition.id === '627488d7-abe5-4469-bb7a-0863225fea34';
+            {competitions.map((competition, index) => {
+              // First competition in the sorted list is the most recent/featured
+              const isFeatured = index === 0;
               
               return (
               <Card 
@@ -138,7 +139,7 @@ export default function CompetitionsActive() {
                   {isFeatured && (
                     <div className="absolute top-4 left-4 z-10">
                       <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
-                        🎤 FEATURED - FOUNDING ARTISTS
+                        🔥 FEATURED
                       </Badge>
                     </div>
                   )}
@@ -200,7 +201,7 @@ export default function CompetitionsActive() {
                       }`}
                       variant={isFeatured ? 'default' : 'default'}
                     >
-                      {isFeatured ? 'Join The Genesis' : 'View Details'}
+                      {isFeatured ? 'Enter Now' : 'View Details'}
                     </Button>
                   </Link>
                 </CardContent>

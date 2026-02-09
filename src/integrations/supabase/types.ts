@@ -2079,6 +2079,7 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_step: number | null
           phone_number: string | null
+          signup_bonus_awarded: boolean | null
           updated_at: string
           username: string
         }
@@ -2100,6 +2101,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
+          signup_bonus_awarded?: boolean | null
           updated_at?: string
           username: string
         }
@@ -2121,6 +2123,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
+          signup_bonus_awarded?: boolean | null
           updated_at?: string
           username?: string
         }
