@@ -84,14 +84,12 @@ const Join = () => {
         body: {
           to: 'info@bak55talent.co.ke',
           subject: `New ${userType === 'artist' ? 'Artist' : 'Fan'} Signup - Join Page`,
-          html: `
-            <h2>New ${userType === 'artist' ? 'Artist' : 'Fan'} Signup</h2>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>User Type:</strong> ${userType === 'artist' ? 'Artist' : 'Fan'}</p>
-            <p><strong>Source:</strong> Join Page (100 Artist Alliance)</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-          `,
-          type: 'signup',
+          template: 'new_signup_admin',
+          data: {
+            email,
+            user_type: userType === 'artist' ? 'Artist' : 'Fan',
+            source: 'Join Page (100 Artist Alliance)',
+          },
         },
       });
 

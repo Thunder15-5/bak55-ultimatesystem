@@ -165,16 +165,14 @@ export default function ProducerUploadBeat() {
         body: {
           to: 'info@bak55talent.co.ke',
           subject: 'New Beat Upload - Pending Approval',
-          html: `
-            <h2>New Beat Uploaded</h2>
-            <p><strong>Producer:</strong> ${user.email}</p>
-            <p><strong>Beat Title:</strong> ${formData.title}</p>
-            <p><strong>Genre:</strong> ${formData.genre || 'Not specified'}</p>
-            <p><strong>BPM:</strong> ${formData.bpm || 'Not specified'}</p>
-            <p><strong>Status:</strong> Pending Approval</p>
-            <p><a href="${window.location.origin}/admin">Review in Admin Panel</a></p>
-          `,
-          type: 'upload',
+          template: 'beat_upload_admin',
+          data: {
+            producer_name: user.user_metadata?.username || user.email,
+            producer_email: user.email,
+            beat_title: formData.title,
+            genre: formData.genre || 'Not specified',
+            bpm: formData.bpm || 'Not specified',
+          },
         },
       }).catch(() => {}); // Don't fail if email fails
 

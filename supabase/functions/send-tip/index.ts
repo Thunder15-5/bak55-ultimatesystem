@@ -178,7 +178,58 @@ Deno.serve(async (req) => {
 
     if (transactionError) {
       console.error('Failed to create transaction records:', transactionError);
-      // Don't fail since the transfer succeeded
+    }
+
+    // Send tip notification email to artist
+    try {
+      const { data: artistProfile } = await supabaseClient
+        .from('profiles')
+        .select('email, username, display_name')
+        .eq('id', tipRequest.to_artist_id)
+        .single();
+
+      const { data: senderProfile } = await supabaseClient
+        .from('profiles')
+        .select('username, display_name')
+        .eq('id', user.id)
+        .single();
+
+      const { data: recipientWalletBalance } = await supabaseClient
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', tipRequest.to_artist_id)
+        .single();
+
+      let trackTitle = null;
+      if (tipRequest.track_id) {
+        const { data: track } = await supabaseClient
+          .from('tracks')
+          .select('title')
+          .eq('id', tipRequest.track_id)
+          .single();
+        trackTitle = track?.title;
+      }
+
+      if (artistProfile?.email) {
+        await supabaseClient.functions.invoke('send-email', {
+          body: {
+            to: artistProfile.email,
+            subject: `💝 You received a ${normalizedAmount} BAKCoin tip!`,
+            template: 'tip_received',
+            data: {
+              artist_name: artistProfile.display_name || artistProfile.username,
+              tipper_name: senderProfile?.display_name || senderProfile?.username || 'A fan',
+              amount: normalizedAmount,
+              message: tipRequest.message,
+              track_title: trackTitle,
+              new_balance: recipientWalletBalance?.balance || 0,
+              track_url: tipRequest.track_id ? `https://bak55talent.co.ke/track/${tipRequest.track_id}` : undefined,
+            },
+          },
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send tip email:', emailError);
     }
 
     console.log('Tip sent successfully');

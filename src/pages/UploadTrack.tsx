@@ -224,16 +224,13 @@ export default function UploadTrack() {
           body: {
             to: 'info@bak55talent.co.ke',
             subject: 'New Track Upload - Pending Approval',
-            html: `
-              <h2>New Track Uploaded</h2>
-              <p><strong>Artist:</strong> ${user.email}</p>
-              <p><strong>Track Title:</strong> ${formData.title}</p>
-              <p><strong>Genre:</strong> ${formData.genre || 'Not specified'}</p>
-              <p><strong>Status:</strong> Pending Approval</p>
-              <p><strong>Uploaded:</strong> ${new Date().toLocaleString()}</p>
-              <p><a href="${window.location.origin}/admin">Review in Admin Panel</a></p>
-            `,
-            type: 'upload',
+            template: 'track_upload_admin',
+            data: {
+              artist_name: user.user_metadata?.username || user.email,
+              artist_email: user.email,
+              track_title: formData.title,
+              genre: formData.genre || 'Not specified',
+            },
           },
         });
       }
