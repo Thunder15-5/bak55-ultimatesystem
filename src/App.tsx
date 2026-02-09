@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
 import { CookieConsent } from "@/components/CookieConsent";
 import { BottomNavigation } from "@/components/BottomNavigation";
@@ -102,6 +103,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <MusicPlayerProvider>
+              <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -256,8 +258,9 @@ const App = () => (
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/buy-coins" element={<ProtectedRoute><BuyCoins /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
+               </Routes>
               </Suspense>
+              </ErrorBoundary>
               <PersistentMusicPlayer />
               <BottomNavigation />
               <InstallPrompt />

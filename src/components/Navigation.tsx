@@ -259,23 +259,26 @@ export function Navigation() {
           <div className="md:hidden mt-4 pb-4 space-y-3">
             {user ? (
               <>
-                {/* Fan Mobile Navigation */}
+                {/* Secondary items only — core nav handled by BottomNavigation */}
                 {userRole === 'fan' && (
                   <>
-                    <Link to="/fan/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-                    </Link>
-                    <Link to="/fan/discover" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Discover</Button>
-                    </Link>
                     <Link to="/fan/competitions/active" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">Competitions</Button>
                     </Link>
                     <Link to="/fan/playlists" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">Playlists</Button>
                     </Link>
-                    <Link to="/fan/wallet" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    <Link to="/fan/history" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <History className="mr-2 h-4 w-4" />
+                        Listening History
+                      </Button>
+                    </Link>
+                    <Link to="/leaderboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Trophy className="mr-2 h-4 w-4" />
+                        Leaderboard
+                      </Button>
                     </Link>
                     <Link to="/upgrade" onClick={() => setIsOpen(false)}>
                       <Button variant="hero" className="w-full">
@@ -286,108 +289,85 @@ export function Navigation() {
                   </>
                 )}
 
-                {/* Artist Mobile Navigation */}
                 {userRole === 'artist' && (
                   <>
-                    <Link to="/artist/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-                    </Link>
-                    <Link to="/artist/upload" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Upload</Button>
+                    <Link to="/artist/analytics" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Analytics
+                      </Button>
                     </Link>
                     <Link to="/artist/catalog" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">My Music</Button>
-                    </Link>
-                    <Link to="/artist/discover" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Browse</Button>
-                    </Link>
-                    <Link to="/artist/analytics" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Analytics</Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <ListMusic className="mr-2 h-4 w-4" />
+                        My Music
+                      </Button>
                     </Link>
                     <Link to="/artist/competitions" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Competitions</Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Trophy className="mr-2 h-4 w-4" />
+                        Competitions
+                      </Button>
                     </Link>
-                    <Link to="/artist/wallet" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    <Link to="/leaderboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Leaderboard</Button>
                     </Link>
                     {subscription && <SubscriptionBadge planName={subscription.subscription_plans.name} />}
                   </>
                 )}
 
-                {/* Brand Mobile Navigation */}
                 {userRole === 'brand' && (
                   <>
-                    <Link to="/brand/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-                    </Link>
-                    <Link to="/brand/discover" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Discover Artists</Button>
-                    </Link>
                     <Link to="/brand/competitions" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">My Competitions</Button>
                     </Link>
                     <Link to="/brand/competitions/create" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">Create Competition</Button>
                     </Link>
-                    <Link to="/brand/wallet" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
-                    </Link>
                   </>
                 )}
 
-                {/* Producer Mobile Navigation */}
                 {userRole === 'producer' && (
                   <>
-                    <Link to="/producer/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-                    </Link>
-                    <Link to="/producer/upload" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Upload</Button>
-                    </Link>
                     <Link to="/producer/catalog" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">My Beats</Button>
-                    </Link>
-                    <Link to="/producer/discover" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Browse</Button>
                     </Link>
                     <Link to="/producer/collaborations" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">Collaborations</Button>
                     </Link>
-                    <Link to="/producer/wallet" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    <Link to="/producer/competitions" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Competitions</Button>
                     </Link>
                   </>
                 )}
 
-                {/* Admin Mobile Navigation */}
                 {userRole === 'admin' && (
                   <>
-                    <Link to="/admin" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                    <Link to="/admin/deposits" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Deposits</Button>
                     </Link>
-                    <Link to="/admin/streaming" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Streaming</Button>
+                    <Link to="/admin/vouchers" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Vouchers</Button>
                     </Link>
-                    <Link to="/admin/wallet" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">Wallet</Button>
+                    <Link to="/admin/cash-reserve" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">Cash Reserve</Button>
                     </Link>
                   </>
                 )}
 
-                <Link to={`/${userRole}/profile`} onClick={() => setIsOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">Profile</Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    signOut();
-                    setIsOpen(false);
-                  }}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
+                <div className="border-t border-primary/10 pt-3 mt-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      signOut();
+                      setIsOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               </>
             ) : (
               <>
