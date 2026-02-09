@@ -14,6 +14,7 @@ import { FeaturedArtistsPanel } from "@/components/admin/FeaturedArtistsPanel";
 import { ApplicationsPanel } from "@/components/admin/ApplicationsPanel";
 import { ReferralPanel } from "@/components/admin/ReferralPanel";
 import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
+import { ProducersPanel } from "@/components/admin/ProducersPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +26,7 @@ import {
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail,
-  Award, Target, Star, UserPlus, Gift
+  Award, Target, Star, UserPlus, Gift, Music2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -79,7 +80,9 @@ interface Metrics {
   totalUsers: number;
   totalArtists: number;
   totalBrands: number;
+  totalProducers: number;
   totalTracks: number;
+  totalBeats: number;
   totalCompetitions: number;
   activeCompetitions: number;
   totalRevenue: number;
@@ -97,7 +100,9 @@ export default function Admin() {
     totalUsers: 0,
     totalArtists: 0,
     totalBrands: 0,
+    totalProducers: 0,
     totalTracks: 0,
+    totalBeats: 0,
     totalCompetitions: 0,
     activeCompetitions: 0,
     totalRevenue: 0,
@@ -215,8 +220,10 @@ export default function Admin() {
         usersCount, 
         artistsCount, 
         brandsCount,
+        producersCount,
         fansCount,
-        tracksCount, 
+        tracksCount,
+        beatsCount,
         compsCount, 
         activeCompsCount, 
         withdrawalsSum,
@@ -226,8 +233,10 @@ export default function Admin() {
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "artist"),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "brand"),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "producer"),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "fan"),
         supabase.from("tracks").select("*", { count: "exact", head: true }),
+        supabase.from("beats").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("transactions").select("amount, withdrawal_fee").gt("withdrawal_fee", 0).eq("metadata->>status", "pending"),
@@ -243,7 +252,9 @@ export default function Admin() {
         totalUsers: usersCount.count || 0,
         totalArtists: artistsCount.count || 0,
         totalBrands: brandsCount.count || 0,
+        totalProducers: producersCount.count || 0,
         totalTracks: tracksCount.count || 0,
+        totalBeats: beatsCount.count || 0,
         totalCompetitions: compsCount.count || 0,
         activeCompetitions: activeCompsCount.count || 0,
         totalRevenue: totalRevenue,
@@ -565,6 +576,10 @@ export default function Admin() {
               <Mail className="h-4 w-4 mr-2" />
               Emails
             </TabsTrigger>
+            <TabsTrigger value="producers">
+              <Music2 className="h-4 w-4 mr-2" />
+              Producers
+            </TabsTrigger>
           </TabsList>
 
           {/* Platform Metrics Tab */}
@@ -578,7 +593,7 @@ export default function Admin() {
                 <CardContent>
                   <div className="text-2xl font-bold">{metrics.totalUsers}</div>
                   <p className="text-xs text-muted-foreground">
-                    {metrics.totalArtists} artists, {metrics.totalBrands} brands
+                    {metrics.totalArtists} artists, {metrics.totalBrands} brands, {metrics.totalProducers} producers
                   </p>
                 </CardContent>
               </Card>
@@ -591,6 +606,17 @@ export default function Admin() {
                 <CardContent>
                   <div className="text-2xl font-bold">{metrics.totalTracks}</div>
                   <p className="text-xs text-muted-foreground">Uploaded by artists</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Beats</CardTitle>
+                  <Music2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metrics.totalBeats}</div>
+                  <p className="text-xs text-muted-foreground">Uploaded by producers</p>
                 </CardContent>
               </Card>
 
@@ -1064,6 +1090,11 @@ export default function Admin() {
           {/* Emails Tab */}
           <TabsContent value="emails">
             <EmailTemplatesPanel />
+          </TabsContent>
+
+          {/* Producers Tab */}
+          <TabsContent value="producers">
+            <ProducersPanel />
           </TabsContent>
         </Tabs>
       </div>
