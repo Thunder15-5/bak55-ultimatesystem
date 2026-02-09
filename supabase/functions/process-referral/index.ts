@@ -346,7 +346,7 @@ serve(async (req) => {
       // Send email to referrer
       if (referrerProfile?.email) {
         try {
-          await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+          await fetch(`${supabaseUrl}/functions/v1/send-email`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

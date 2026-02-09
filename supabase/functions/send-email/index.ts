@@ -651,6 +651,146 @@ const templates: Record<string, (data: any) => string> = {
     </div>
   `, `Support ticket from ${data.name || 'user'}.`),
 
+  // ━━━ WALLET: Purchase Success ━━━
+  purchase_success: (data: any) => emailWrapper(`
+    <h1>Purchase Successful! ✅</h1>
+    <p class="greeting">Hi <strong>${data.username || 'there'}</strong>,</p>
+    <p>Your payment has been processed and BAKCoins have been credited to your wallet.</p>
+    
+    <div class="highlight-card">
+      <div class="label">BAKCoins Credited</div>
+      <div class="value-text" style="color: #10B981;">${data.bak_amount || 0} BAKCoins</div>
+      <p style="margin: 8px 0 0; color: #8b8ba0; font-size: 14px;">from KES ${data.amount_kes || 0} payment</p>
+    </div>
+    
+    <table class="detail-table">
+      <tr><td class="label-cell">Payment Method</td><td class="value-cell">${data.payment_method || 'M-Pesa / Selar'}</td></tr>
+      <tr><td class="label-cell">Exchange Rate</td><td class="value-cell">20 KES = 1 BAK</td></tr>
+      <tr><td class="label-cell">Reference</td><td class="value-cell">${data.reference || 'N/A'}</td></tr>
+      <tr><td class="label-cell">Status</td><td class="value-cell"><span class="success-badge">Complete</span></td></tr>
+    </table>
+    
+    <p>Your new balance is ready to use for voting, tipping artists, or entering competitions!</p>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/wallet" class="cta-button">View Your Wallet →</a>
+    </div>
+  `, `${data.bak_amount || 0} BAKCoins credited to your wallet.`),
+
+  // ━━━ SOCIAL: Referral Success ━━━
+  referral_success: (data: any) => emailWrapper(`
+    <h1>Referral Reward Earned! 🎉</h1>
+    <p class="greeting">Hi <strong>${data.username || 'there'}</strong>,</p>
+    <p>Great news! Your referral has completed their first deposit, and your reward has been credited.</p>
+    
+    <div class="highlight-card">
+      <div class="label">Referral Reward</div>
+      <div class="value-text" style="color: #D946EF;">${data.reward_amount || 0} BAKCoins</div>
+      <p style="margin: 8px 0 0; color: #8b8ba0; font-size: 14px;">Referred: <strong style="color: #0f0f1a;">${data.referred_username || 'A new user'}</strong></p>
+    </div>
+    
+    <div class="info-card">
+      <p>💡 <strong>Keep sharing!</strong> Every friend you refer earns you BAKCoins when they make their first deposit. Share your referral code from your dashboard.</p>
+    </div>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/wallet" class="cta-button">View Your Wallet →</a>
+    </div>
+  `, `You earned ${data.reward_amount || 0} BAKCoins from a referral!`),
+
+  // ━━━ WALLET: Deposit Approved ━━━
+  deposit_approved: (data: any) => emailWrapper(`
+    <h1>Deposit Approved! ✅</h1>
+    <p class="greeting">Hi <strong>${data.username || 'there'}</strong>,</p>
+    <p>Your M-Pesa deposit has been verified and BAKCoins have been credited to your wallet.</p>
+    
+    <div class="highlight-card">
+      <div class="label">Deposit Credited</div>
+      <div class="value-text" style="color: #10B981;">${data.bak_amount || 0} BAKCoins</div>
+      <p style="margin: 8px 0 0; color: #8b8ba0; font-size: 14px;">from KES ${data.amount_kes || 0} deposit</p>
+    </div>
+    
+    <table class="detail-table">
+      <tr><td class="label-cell">Receipt Code</td><td class="value-cell">${data.receipt_code || 'N/A'}</td></tr>
+      <tr><td class="label-cell">Exchange Rate</td><td class="value-cell">20 KES = 1 BAK</td></tr>
+      <tr><td class="label-cell">Status</td><td class="value-cell"><span class="success-badge">Approved</span></td></tr>
+    </table>
+    
+    <p>Your BAKCoins are ready to use! Start voting in competitions, tipping your favorite artists, or save for withdrawals.</p>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/wallet" class="cta-button">Go to Wallet →</a>
+    </div>
+  `, `Your deposit of KES ${data.amount_kes || 0} has been approved!`),
+
+  // ━━━ WALLET: Deposit Rejected ━━━
+  deposit_rejected: (data: any) => emailWrapper(`
+    <h1>Deposit Request Update ⚠️</h1>
+    <p class="greeting">Hi <strong>${data.username || 'there'}</strong>,</p>
+    <p>Unfortunately, we were unable to verify your deposit request.</p>
+    
+    <table class="detail-table">
+      <tr><td class="label-cell">Amount</td><td class="value-cell">KES ${data.amount_kes || 0}</td></tr>
+      <tr><td class="label-cell">Receipt Code</td><td class="value-cell">${data.receipt_code || 'N/A'}</td></tr>
+      <tr><td class="label-cell">Status</td><td class="value-cell" style="color: #EF4444;">Rejected</td></tr>
+      ${data.reason ? `<tr><td class="label-cell">Reason</td><td class="value-cell">${data.reason}</td></tr>` : ''}
+    </table>
+    
+    <div class="info-card">
+      <p>📝 <strong>What you can do:</strong> Double-check your M-Pesa receipt code and resubmit. Make sure the transaction matches the amount submitted. If you believe this is an error, contact support.</p>
+    </div>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/wallet" class="cta-button">Try Again →</a>
+      <br><br>
+      <a href="mailto:${SUPPORT_EMAIL}" class="cta-secondary">Contact Support</a>
+    </div>
+  `, `Your deposit of KES ${data.amount_kes || 0} was not approved.`),
+
+  // ━━━ ADMIN: Application Approved ━━━
+  application_approved: (data: any) => emailWrapper(`
+    <h1>Application Approved! 🎉</h1>
+    <p class="greeting">Hi <strong>${data.username || data.full_name || 'Artist'}</strong>,</p>
+    <p>Congratulations! Your application to join ${COMPANY_NAME} Founders Season has been approved.</p>
+    
+    <div class="highlight-card">
+      <div class="label">Status</div>
+      <div class="value-text" style="color: #10B981;">✅ Approved</div>
+      <p style="margin: 8px 0 0; color: #8b8ba0; font-size: 14px;">Stage Name: <strong style="color: #0f0f1a;">${data.stage_name || 'N/A'}</strong></p>
+    </div>
+    
+    <h2>Next Steps:</h2>
+    <div class="step-list">
+      <div class="step-item"><span class="step-num">1</span><span class="step-text"><strong>Upload your first track</strong> from your Artist Dashboard</span></div>
+      <div class="step-item"><span class="step-num">2</span><span class="step-text"><strong>Enter the active competition</strong> to start competing</span></div>
+      <div class="step-item"><span class="step-num">3</span><span class="step-text"><strong>Share your profile</strong> to build your fanbase</span></div>
+    </div>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/artist/dashboard" class="cta-button">Go to Artist Dashboard →</a>
+    </div>
+  `, 'Your BAK55 application has been approved!'),
+
+  // ━━━ ADMIN: Application Rejected ━━━
+  application_rejected: (data: any) => emailWrapper(`
+    <h1>Application Update ⚠️</h1>
+    <p class="greeting">Hi <strong>${data.username || data.full_name || 'there'}</strong>,</p>
+    <p>Thank you for your interest in ${COMPANY_NAME} Founders Season. After careful review, we're unable to approve your application at this time.</p>
+    
+    ${data.review_notes ? `<div class="info-card"><p>📝 <strong>Reviewer notes:</strong> ${data.review_notes}</p></div>` : ''}
+    
+    <p>This doesn't mean the end of your journey! You can:</p>
+    <div class="step-list">
+      <div class="step-item"><span class="step-num">1</span><span class="step-text">Continue building your skills and portfolio</span></div>
+      <div class="step-item"><span class="step-num">2</span><span class="step-text">Reapply for the next season</span></div>
+      <div class="step-item"><span class="step-num">3</span><span class="step-text">Stay as a fan and earn BAKCoins through engagement</span></div>
+    </div>
+    
+    <div class="cta-wrapper">
+      <a href="${PRODUCTION_DOMAIN}/apply" class="cta-button">Apply Again →</a>
+    </div>
+  `, 'Update on your BAK55 application.'),
+
   // ━━━ Queue template aliases used by process-email-queue ━━━
   first_upload_guide: (data: any) => templates.onboarding_upload(data),
   competition_guide: (data: any) => templates.onboarding_competitions(data),

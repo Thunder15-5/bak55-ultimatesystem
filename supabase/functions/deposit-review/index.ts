@@ -140,6 +140,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get user profile for email
+    const { data: userProfile } = await supabaseClient
+      .from('profiles')
+      .select('email, username, display_name')
+      .eq('id', depositRequest.user_id)
+      .single();
+
     // Create notification for user
     await supabaseClient
       .from('notifications')
@@ -152,6 +159,30 @@ Deno.serve(async (req) => {
           : `Your deposit request was rejected. ${notes || 'Please contact support for details.'}`,
         link: '/wallet'
       });
+
+    // Send email notification
+    if (userProfile?.email) {
+      try {
+        await supabaseClient.functions.invoke('send-email', {
+          body: {
+            to: userProfile.email,
+            subject: action === 'approve' 
+              ? '✅ Deposit Approved - BAKCoins Credited!'
+              : '⚠️ Deposit Request Update',
+            template: action === 'approve' ? 'deposit_approved' : 'deposit_rejected',
+            data: {
+              username: userProfile.display_name || userProfile.username || 'there',
+              bak_amount: depositRequest.expected_bak,
+              amount_kes: depositRequest.amount_kes,
+              receipt_code: depositRequest.receipt_code,
+              reason: notes || undefined
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send deposit email:', emailError);
+      }
+    }
 
     return new Response(JSON.stringify({ 
       success: true,
