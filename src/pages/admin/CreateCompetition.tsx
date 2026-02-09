@@ -32,24 +32,24 @@ const STAGE_TEMPLATES = {
   bak55_discovery: {
     name: "BAK55 Discovery (3 Stages)",
     stages: [
-      { stage_name: "Auditions", stage_type: "audition", max_participants: 50, elimination_count: 25 },
-      { stage_name: "Semifinals", stage_type: "performance", max_participants: 25, elimination_count: 15 },
-      { stage_name: "Finals", stage_type: "finale", max_participants: 10, elimination_count: 7 }
-    ]
+      { stage_name: "Onboarding", stage_type: "onboarding", max_participants: 50, elimination_count: 25 },
+      { stage_name: "Mini Edition", stage_type: "mini_edition", max_participants: 25, elimination_count: 15 },
+      { stage_name: "Grand Finale", stage_type: "grand_finale", max_participants: 10, elimination_count: 7 },
+    ],
   },
   classic: {
     name: "Classic Competition (2 Stages)",
     stages: [
-      { stage_name: "Qualifiers", stage_type: "submission", max_participants: 100, elimination_count: 50 },
-      { stage_name: "Finals", stage_type: "finale", max_participants: 50, elimination_count: 47 }
-    ]
+      { stage_name: "Mini Edition", stage_type: "mini_edition", max_participants: 100, elimination_count: 50 },
+      { stage_name: "Grand Finale", stage_type: "grand_finale", max_participants: 50, elimination_count: 47 },
+    ],
   },
   monthly_mini: {
     name: "Monthly Mini (1 Stage)",
     stages: [
-      { stage_name: "Main Round", stage_type: "submission", max_participants: 30, elimination_count: 27 }
-    ]
-  }
+      { stage_name: "Mini Edition", stage_type: "mini_edition", max_participants: 30, elimination_count: 27 },
+    ],
+  },
 };
 
 export default function CreateCompetition() {
@@ -76,7 +76,7 @@ export default function CreateCompetition() {
   const [stages, setStages] = useState<Stage[]>([{
     stage_number: 1,
     stage_name: "Main Stage",
-    stage_type: "submission",
+    stage_type: "mini_edition",
     description: "",
     challenge_theme: "",
     start_date: "",
@@ -131,7 +131,7 @@ export default function CreateCompetition() {
     setStages([...stages, {
       stage_number: stages.length + 1,
       stage_name: `Stage ${stages.length + 1}`,
-      stage_type: "submission",
+      stage_type: "mini_edition",
       description: "",
       challenge_theme: "",
       start_date: newStageStart.toISOString().split('T')[0],
@@ -540,10 +540,10 @@ export default function CreateCompetition() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="audition">Audition</SelectItem>
-                              <SelectItem value="submission">Submission</SelectItem>
-                              <SelectItem value="performance">Performance</SelectItem>
-                              <SelectItem value="finale">Finale</SelectItem>
+                              <SelectItem value="onboarding">Onboarding</SelectItem>
+                              <SelectItem value="mini_edition">Mini Edition</SelectItem>
+                              <SelectItem value="studio_session">Studio Session</SelectItem>
+                              <SelectItem value="grand_finale">Grand Finale</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
