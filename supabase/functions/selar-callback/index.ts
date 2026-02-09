@@ -307,18 +307,17 @@ serve(async (req) => {
 
     // Send email notification
     try {
-      await supabaseClient.functions.invoke('send-notification-email', {
+      await supabaseClient.functions.invoke('send-email', {
         body: {
           to: email,
-          subject: 'BAKCoins Purchase Successful!',
-          html: `
-            <h1>Payment Successful!</h1>
-            <p>Your payment of <strong>${priceKES.toLocaleString()} KES</strong> has been processed.</p>
-            <p><strong>${bakAmount.toFixed(2)} BAKCoins</strong> have been credited to your wallet.</p>
-            <p>Exchange Rate: 20 KES = 1 BAK</p>
-            <p>Reference: ${txRef}</p>
-            <p>Thank you for using BAK55 Talent!</p>
-          `
+          subject: '✅ BAKCoins Purchase Successful!',
+          template: 'purchase_success',
+          data: {
+            bak_amount: bakAmount.toFixed(2),
+            amount_kes: priceKES.toLocaleString(),
+            payment_method: 'Selar',
+            reference: txRef
+          }
         }
       });
     } catch (emailError) {

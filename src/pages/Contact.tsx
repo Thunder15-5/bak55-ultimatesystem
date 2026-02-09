@@ -53,21 +53,19 @@ const Contact = () => {
           }
         ]);
 
-      // Send email notification to admin
-      await supabase.functions.invoke('send-notification-email', {
+      // Send email notification to admin using template
+      await supabase.functions.invoke('send-email', {
         body: {
           to: 'info@bak55talent.co.ke',
           subject: `📧 Contact Form: ${validated.subject}`,
-          html: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${validated.name}</p>
-            <p><strong>Email:</strong> ${validated.email}</p>
-            <p><strong>Subject:</strong> ${validated.subject}</p>
-            <p><strong>Message:</strong></p>
-            <p>${validated.message.replace(/\n/g, '<br>')}</p>
-            <hr>
-            <p><small>Submitted at ${new Date().toLocaleString()}</small></p>
-          `
+          template: 'contact_form',
+          data: {
+            name: validated.name,
+            email: validated.email,
+            subject: validated.subject,
+            message: validated.message.replace(/\n/g, '<br>'),
+            type: 'Contact'
+          }
         }
       });
 
