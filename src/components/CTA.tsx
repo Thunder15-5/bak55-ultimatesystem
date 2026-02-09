@@ -45,13 +45,11 @@ export const CTA = () => {
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'info@bak55talent.co.ke',
-          subject: 'New Early Access Signup - CTA',
-          template: 'contact_form',
+          subject: 'New Early Access Signup',
+          template: 'early_access_admin',
           data: {
-            name: 'Early Access User',
             email,
-            subject: 'New Early Access Signup',
-            message: `New early access signup from homepage CTA at ${new Date().toLocaleString()}`
+            source: 'Homepage CTA',
           }
         }
       });

@@ -148,27 +148,17 @@ serve(async (req) => {
       }
     }
 
-    // Send welcome email
+    // Send welcome email using proper template
     await supabaseAdmin.functions.invoke('send-email', {
       body: {
         to: profile.email,
         subject: 'Welcome to BAK55 Talent! 🎉',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #D946EF;">Welcome to BAK55 Talent!</h1>
-            <p>Your account has been successfully activated.</p>
-            <p>You can now:</p>
-            <ul>
-              <li>Stream music from emerging African artists</li>
-              <li>Participate in competitions</li>
-              <li>Earn and spend BAKCoins</li>
-              <li>Connect with the music community</li>
-            </ul>
-            <p>Get started: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', '')}/dashboard">Go to Dashboard</a></p>
-            <p>Best regards,<br>The BAK55 Team</p>
-          </div>
-        `,
-        type: 'welcome',
+        template: 'welcome',
+        data: {
+          username: profile.username || profile.email.split('@')[0],
+          email: profile.email,
+          role: 'fan',
+        },
       },
     });
 

@@ -249,15 +249,21 @@ serve(async (req) => {
       throw new Error("Failed to create transaction record");
     }
 
-    // Send withdrawal request email
+    // Send withdrawal request email with real user data
     try {
+      const { data: userProfile } = await supabaseClient
+        .from('profiles')
+        .select('username, display_name')
+        .eq('id', user.id)
+        .single();
+
       await supabaseClient.functions.invoke("send-email", {
         body: {
           to: user.email,
-          subject: "Withdrawal Request Received",
+          subject: "Withdrawal Request Received 💰",
           template: "withdrawal_request",
           data: {
-            username: user.email?.split('@')[0] || 'User',
+            username: userProfile?.display_name || userProfile?.username || user.email?.split('@')[0] || 'User',
             amount,
             ksh_amount: kshAmount,
             phone_number: formattedPhone,
@@ -267,7 +273,6 @@ serve(async (req) => {
       });
     } catch (emailError) {
       console.error("Failed to send email:", emailError);
-      // Don't fail the withdrawal if email fails
     }
 
     // Process withdrawal via M-PESA Daraja API (B2C)
