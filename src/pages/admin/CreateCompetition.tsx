@@ -221,18 +221,26 @@ export default function CreateCompetition() {
 
       // Upload cover image if provided
       if (coverImage) {
-        const fileExt = coverImage.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileExt = coverImage.name.split(".").pop()?.toLowerCase() || "png";
+        const safeExt = fileExt.replace(/[^a-z0-9]/g, "") || "png";
+        const randomPart =
+          (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) +
+          "-" +
+          Date.now().toString(36);
+
+        // Storage policy requires first path segment to be the user's id (folder)
+        const filePath = `${user.id}/${randomPart}.${safeExt}`;
+
         const { error: uploadError } = await supabase.storage
-          .from('covers')
-          .upload(fileName, coverImage);
+          .from("covers")
+          .upload(filePath, coverImage, { upsert: false });
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('covers')
-          .getPublicUrl(fileName);
-        
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("covers").getPublicUrl(filePath);
+
         coverImageUrl = publicUrl;
       }
 
