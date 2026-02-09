@@ -173,7 +173,32 @@ serve(async (req) => {
     }
 
     const aiResult = await aiResponse.json();
-    const fraudAnalysis = JSON.parse(aiResult.choices[0].message.content);
+    const rawContent = aiResult.choices[0].message.content;
+    
+    // Extract JSON from AI response (may be wrapped in markdown or have extra text)
+    let fraudAnalysis;
+    try {
+      // Try direct parse first
+      fraudAnalysis = JSON.parse(rawContent);
+    } catch {
+      // Try to extract JSON from markdown code blocks or text
+      const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/) || 
+                        rawContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[1] || jsonMatch[0];
+        fraudAnalysis = JSON.parse(jsonStr.trim());
+      } else {
+        // Fallback response if AI didn't return valid JSON
+        console.error('AI returned non-JSON response:', rawContent);
+        fraudAnalysis = {
+          fraud_detected: false,
+          risk_level: 'low',
+          flagged_items: [],
+          recommendations: ['Unable to analyze - AI response was not in expected format. Manual review recommended.'],
+          raw_response: rawContent.substring(0, 200)
+        };
+      }
+    }
 
     // Log fraud detection results
     console.log(`Fraud detection for competition ${competition_id}:`, fraudAnalysis);
