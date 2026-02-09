@@ -14,10 +14,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trophy, Plus, Trash2 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 
+// Valid stage types matching database constraint
+const VALID_STAGE_TYPES = ['onboarding', 'mini_edition', 'studio_session', 'grand_finale'] as const;
+type ValidStageType = typeof VALID_STAGE_TYPES[number];
+
 interface Stage {
   stage_number: number;
   stage_name: string;
-  stage_type: string;
+  stage_type: ValidStageType;
   description: string;
   challenge_theme?: string;
   start_date: string;
@@ -108,7 +112,7 @@ export default function CreateCompetition() {
       return {
         stage_number: index + 1,
         stage_name: stage.stage_name,
-        stage_type: stage.stage_type,
+        stage_type: stage.stage_type as ValidStageType,
         description: "",
         challenge_theme: "",
         start_date: stageStart.toISOString().split('T')[0],
@@ -157,6 +161,10 @@ export default function CreateCompetition() {
 
   const updateStage = (index: number, field: keyof Stage, value: any) => {
     const newStages = [...stages];
+    // Ensure stage_type is always a valid value
+    if (field === 'stage_type') {
+      value = VALID_STAGE_TYPES.includes(value) ? value : 'mini_edition';
+    }
     newStages[index] = { ...newStages[index], [field]: value };
     setStages(newStages);
   };
@@ -213,6 +221,19 @@ export default function CreateCompetition() {
 
     if (multiStageEnabled && !validateStages()) {
       return;
+    }
+
+    // Validate all stage types before submission
+    if (multiStageEnabled) {
+      const invalidStages = stages.filter(s => !VALID_STAGE_TYPES.includes(s.stage_type as ValidStageType));
+      if (invalidStages.length > 0) {
+        toast({
+          title: "Invalid Stage Type",
+          description: `Stage "${invalidStages[0].stage_name}" has invalid type "${invalidStages[0].stage_type}". Please select a valid type.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -276,7 +297,10 @@ export default function CreateCompetition() {
           competition_id: competition.id,
           stage_number: stage.stage_number,
           stage_name: stage.stage_name,
-          stage_type: stage.stage_type,
+          // Ensure stage_type is valid, fallback to mini_edition
+          stage_type: VALID_STAGE_TYPES.includes(stage.stage_type as ValidStageType) 
+            ? stage.stage_type 
+            : 'mini_edition',
           description: stage.description,
           challenge_theme: stage.challenge_theme || null,
           start_date: stage.start_date,
@@ -287,6 +311,8 @@ export default function CreateCompetition() {
           elimination_count: stage.elimination_count,
           status: stage.stage_number === 1 ? 'active' : 'upcoming'
         }));
+
+        console.log('Inserting stages:', stageInserts); // Debug log
 
         const { error: stagesError } = await supabase
           .from('competition_stages')
