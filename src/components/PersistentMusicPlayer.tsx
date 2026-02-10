@@ -236,7 +236,7 @@ export function PersistentMusicPlayer() {
   // EXPANDED PLAYER VIEW
   if (!isMinimized) {
     return (
-      <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
+      <Card className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
         <div className="p-4 sm:p-6">
           <div className="container mx-auto">
             <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
@@ -472,7 +472,7 @@ export function PersistentMusicPlayer() {
 
   // MINIMIZED PLAYER VIEW
   return (
-    <Card className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
+    <Card className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-xl shadow-2xl safe-area-bottom">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Track Info */}

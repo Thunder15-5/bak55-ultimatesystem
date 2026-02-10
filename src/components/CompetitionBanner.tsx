@@ -60,11 +60,11 @@ export const CompetitionBanner = ({
     <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background shadow-lg">
       <div className="grid md:grid-cols-2 gap-4 md:gap-6 p-4 sm:p-6">
         {/* Cover Image */}
-        <div className="relative rounded-lg overflow-hidden aspect-[16/9] md:aspect-square">
+        <div className="relative rounded-lg overflow-hidden aspect-video md:aspect-square">
           <img
             src={imgSrc}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
           <div className="absolute top-4 left-4">
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
