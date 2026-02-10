@@ -97,7 +97,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <div className="overflow-x-hidden w-full">
+      <div className="overflow-x-hidden w-full pb-16 md:pb-0">
         <Toaster />
         <Sonner />
         <BrowserRouter>

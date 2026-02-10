@@ -528,16 +528,27 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
   
-  /* Music player spacing - accounts for fixed player */
-  .music-player-padding {
-    padding-bottom: 100px;
-  }
-  
-  @media (max-width: 640px) {
-    .music-player-padding {
-      padding-bottom: 90px;
-    }
-  }
+   /* Music player spacing - accounts for fixed player */
+   .music-player-padding {
+     padding-bottom: 100px;
+   }
+   
+   @media (max-width: 640px) {
+     .music-player-padding {
+       padding-bottom: 90px;
+     }
+   }
+   
+   /* Bottom navigation spacing for mobile - prevents content overlap */
+   .has-bottom-nav {
+     padding-bottom: 5rem; /* 80px = bottom nav height (64px) + safe spacing */
+   }
+   
+   @media (min-width: 768px) {
+     .has-bottom-nav {
+       padding-bottom: 0;
+     }
+   }
   
   /* Touch-friendly minimum tap targets */
   .touch-target {
