@@ -237,7 +237,7 @@ export function ProducersPanel() {
         .from("beats")
         .update({ 
           moderation_status: "approved",
-          status: "published"
+          status: "active"
         })
         .eq("id", beatId);
 
@@ -259,7 +259,7 @@ export function ProducersPanel() {
         .from("beats")
         .update({ 
           moderation_status: "rejected",
-          status: "rejected"
+          status: "archived"
         })
         .eq("id", beatId);
 
