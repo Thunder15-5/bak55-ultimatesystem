@@ -1,6 +1,6 @@
 // Enterprise SEO Configuration for BAK55 Talent Platform
 // Version suffix for cache-busting OG images (increment when updating branding assets)
-export const OG_IMAGE_VERSION = "v=3";
+export const OG_IMAGE_VERSION = "v=4";
 
 export const SEO_CONFIG = {
   site: {

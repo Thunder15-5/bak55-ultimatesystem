@@ -230,7 +230,7 @@ export function FeaturedArtistsCarousel() {
                     <div className="flex justify-center -mt-10 sm:-mt-14 mb-3 sm:mb-4">
                       <Avatar className="h-16 w-16 sm:h-24 sm:w-24 border-4 border-background shadow-xl">
                         <AvatarImage src={artist.avatar_url || undefined} />
-                        <AvatarFallback className="text-lg sm:text-2xl font-bold">
+                        <AvatarFallback className="text-sm sm:text-xl font-bold">
                           {(artist.stage_name || artist.username).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -239,8 +239,8 @@ export function FeaturedArtistsCarousel() {
                     {/* Artist Info */}
                     <div className="text-center space-y-2 sm:space-y-3">
                       <div>
-                        <div className="flex items-center justify-center gap-2 mb-1">
-                          <h3 className="font-bold text-base sm:text-xl truncate max-w-[180px]">
+                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                          <h3 className="font-bold text-sm sm:text-xl truncate max-w-[140px] sm:max-w-[180px]">
                             {artist.stage_name || artist.username}
                           </h3>
                           {artist.verified && (

@@ -220,9 +220,28 @@ export default function CompetitionDetails() {
         }
       });
 
-      if (error) throw error;
+      // Handle edge function errors - parse error body for user-friendly message
+      if (error) {
+        let errorMessage = "Failed to record vote. Please try again.";
+        try {
+          // The error context contains the response body
+          const errorBody = error.context ? await error.context.json() : null;
+          if (errorBody?.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch {
+          // If we can't parse, check the error message directly
+          if (error.message) errorMessage = error.message;
+        }
+        toast({
+          title: "Vote failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (data.error) {
+      if (data?.error) {
         toast({
           title: "Vote failed",
           description: data.error,
@@ -242,7 +261,7 @@ export default function CompetitionDetails() {
       console.error('Error voting:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to record vote",
+        description: "Failed to record vote. Please check your wallet balance and try again.",
         variant: "destructive",
       });
     }

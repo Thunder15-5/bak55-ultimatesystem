@@ -169,7 +169,7 @@ export function TrendingArtists() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-lg truncate">
+                        <h3 className="font-semibold text-base sm:text-lg truncate max-w-[140px] sm:max-w-none">
                           {artist.stage_name || artist.username}
                         </h3>
                         {artist.verified && (
