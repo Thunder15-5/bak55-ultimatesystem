@@ -388,7 +388,7 @@ export default function CompetitionDetails() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
+      <section className="relative pt-24 pb-8 px-4 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src={competition.cover_image || "/genesis-competition.png.jpeg"} 
@@ -405,6 +405,17 @@ export default function CompetitionDetails() {
               Back to Competitions
             </Button>
           </Link>
+
+          {/* Full Competition Cover Image */}
+          {competition.cover_image && (
+            <div className="rounded-xl overflow-hidden mb-6 aspect-video max-h-[400px]">
+              <img 
+                src={competition.cover_image} 
+                alt={competition.title}
+                className="w-full h-full object-contain bg-black/20"
+              />
+            </div>
+          )}
         </div>
       </section>
       
@@ -602,11 +613,11 @@ export default function CompetitionDetails() {
                   )}
                   
                   {submission.cover_image && (
-                    <div className="h-48 overflow-hidden">
+                    <div className="aspect-square overflow-hidden">
                       <img 
                         src={submission.cover_image} 
                         alt={submission.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-black/10"
                       />
                     </div>
                   )}

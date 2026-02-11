@@ -830,6 +830,7 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string): Prom
       subject: subject,
       content: "Please view this email in an HTML-capable client.",
       html: html,
+      encoding: "8bit",
     });
 
     await client.close();
