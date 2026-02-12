@@ -32,7 +32,7 @@ const features = [
     icon: coinsIcon,
     iconFallback: Users,
     title: "BAKCoins Economy",
-    description: "Platform currency enabling transparent earnings, instant withdrawals, and seamless fan-artist interactions. 1 BAK = $0.20 USD.",
+    description: "Platform currency enabling transparent earnings, instant withdrawals, and seamless fan-artist interactions.",
     color: "from-accent to-accent-glow",
     gradient: "bg-gradient-to-br from-accent/10 to-accent-glow/5",
     link: "/bakcoins",
