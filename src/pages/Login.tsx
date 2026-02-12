@@ -19,6 +19,24 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const getLoginErrorMessage = (error: any): string => {
+    const msg = (error?.message || '').toLowerCase();
+    
+    if (msg.includes('invalid login credentials')) {
+      return 'Invalid email or password. If you recently signed up, please check your email and verify your account first.';
+    }
+    if (msg.includes('email not confirmed')) {
+      return 'Please verify your email address before logging in. Check your inbox for a confirmation link.';
+    }
+    if (msg.includes('rate limit') || msg.includes('too many')) {
+      return 'Too many login attempts. Please wait a few minutes before trying again.';
+    }
+    if (msg.includes('network') || msg.includes('fetch')) {
+      return 'Connection error. Please check your internet and try again.';
+    }
+    return error?.message || 'Failed to login. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,7 +44,7 @@ export default function Login() {
     const { error } = await signIn(email, password, redirectUrl || undefined);
 
     if (error) {
-      toast.error(error.message || "Failed to login");
+      toast.error(getLoginErrorMessage(error));
     }
 
     setLoading(false);
