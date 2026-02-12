@@ -67,6 +67,7 @@ export function EmailTemplatesPanel() {
   const [queue, setQueue] = useState<EmailQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingTest, setSendingTest] = useState(false);
+  const [sendingBulkWelcome, setSendingBulkWelcome] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
@@ -215,6 +216,26 @@ export function EmailTemplatesPanel() {
     }
   };
 
+  const handleSendBulkWelcome = async () => {
+    if (!confirm('This will send the welcome email to ALL 75 registered users. Continue?')) return;
+    
+    setSendingBulkWelcome(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-bulk-welcome');
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Welcome emails sent: ${data.sent} delivered, ${data.failed} failed out of ${data.total}`);
+      } else {
+        toast.error(data?.error || 'Failed to send bulk welcome emails');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send bulk welcome emails');
+    } finally {
+      setSendingBulkWelcome(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'sent':
@@ -248,7 +269,15 @@ export function EmailTemplatesPanel() {
           </h2>
           <p className="text-muted-foreground">Manage templates, campaigns, and send custom emails</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="default" 
+            onClick={handleSendBulkWelcome} 
+            disabled={sendingBulkWelcome}
+          >
+            {sendingBulkWelcome ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Users className="w-4 h-4 mr-2" />}
+            {sendingBulkWelcome ? 'Sending...' : 'Send Welcome to All Users'}
+          </Button>
           <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
             <DialogTrigger asChild>
               <Button variant="outline">
