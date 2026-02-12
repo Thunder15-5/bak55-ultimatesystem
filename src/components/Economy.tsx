@@ -31,7 +31,7 @@ export const Economy = () => {
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             A sustainable ecosystem where artists earn real income and fans actively participate in success stories.
             <br />
-            <span className="text-primary font-semibold">1 BAKCoin = $0.20 USD · Convertible to cash anytime</span>
+            <span className="text-primary font-semibold">Convertible to cash anytime via M-Pesa</span>
           </p>
         </div>
 

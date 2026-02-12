@@ -85,7 +85,7 @@ const HowToEarn = () => {
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-gradient-secondary">2</div>
                   <div className="text-sm font-semibold">Request Withdrawal</div>
-                  <p className="text-xs text-muted-foreground">Convert BAKCoins to cash (1 coin = $0.20 USD)</p>
+                  <p className="text-xs text-muted-foreground">Convert BAKCoins to cash via M-Pesa</p>
                 </div>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-accent">3</div>
