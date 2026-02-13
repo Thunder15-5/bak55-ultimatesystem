@@ -89,6 +89,7 @@ const Upgrade = lazy(() => import("./pages/Upgrade"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Apply = lazy(() => import("./pages/Apply"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
+const Careers = lazy(() => import("./pages/Careers"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 
@@ -272,6 +273,7 @@ const App = () => (
                 <Route path="/investors" element={<Investors />} />
                 <Route path="/success-stories" element={<SuccessStories />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/careers" element={<Careers />} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
