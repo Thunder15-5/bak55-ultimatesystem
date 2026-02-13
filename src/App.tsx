@@ -148,6 +148,7 @@ const App = () => (
                 <Route path="/fan/history" element={<ProtectedRoute requiredRole="fan"><ListeningHistory /></ProtectedRoute>} />
                 <Route path="/fan/track/:id" element={<ProtectedRoute requiredRole="fan"><TrackDetails /></ProtectedRoute>} />
                 <Route path="/fan/artist/:id" element={<ProtectedRoute requiredRole="fan"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/fan/live-streams" element={<ProtectedRoute requiredRole="fan"><LiveStreams /></ProtectedRoute>} />
                 <Route path="/fan/wallet" element={<ProtectedRoute requiredRole="fan"><Wallet /></ProtectedRoute>} />
                 <Route path="/fan/wallet/buy-coins" element={<ProtectedRoute requiredRole="fan"><BuyCoins /></ProtectedRoute>} />
                 <Route path="/fan/profile" element={<ProtectedRoute requiredRole="fan"><Profile /></ProtectedRoute>} />
@@ -155,6 +156,7 @@ const App = () => (
                 <Route path="/fan/competitions/active" element={<ProtectedRoute requiredRole="fan"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/fan/competition/:id" element={<ProtectedRoute requiredRole="fan"><CompetitionDetails /></ProtectedRoute>} />
                 <Route path="/fan/subscribe" element={<ProtectedRoute requiredRole="fan"><FanSubscribe /></ProtectedRoute>} />
+                <Route path="/fan/leaderboard" element={<ProtectedRoute requiredRole="fan"><Leaderboard /></ProtectedRoute>} />
 
                 {/* Artist Routes */}
                 <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><ArtistDashboard /></ProtectedRoute>} />
@@ -167,6 +169,7 @@ const App = () => (
                 <Route path="/artist/playlists" element={<ProtectedRoute requiredRole="artist"><Playlists /></ProtectedRoute>} />
                 <Route path="/artist/playlist/:id" element={<ProtectedRoute requiredRole="artist"><PlaylistDetails /></ProtectedRoute>} />
                 <Route path="/artist/history" element={<ProtectedRoute requiredRole="artist"><ListeningHistory /></ProtectedRoute>} />
+                <Route path="/artist/live-streams" element={<ProtectedRoute requiredRole="artist"><LiveStreams /></ProtectedRoute>} />
                 <Route path="/artist/competitions" element={<ProtectedRoute requiredRole="artist"><Competitions /></ProtectedRoute>} />
                 <Route path="/artist/competitions/active" element={<ProtectedRoute requiredRole="artist"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/artist/competition/:id" element={<ProtectedRoute requiredRole="artist"><CompetitionDetails /></ProtectedRoute>} />
@@ -175,18 +178,24 @@ const App = () => (
                 <Route path="/artist/subscription/success" element={<ProtectedRoute requiredRole="artist"><SubscriptionSuccess /></ProtectedRoute>} />
                 <Route path="/artist/wallet" element={<ProtectedRoute requiredRole="artist"><Wallet /></ProtectedRoute>} />
                 <Route path="/artist/wallet/buy-coins" element={<ProtectedRoute requiredRole="artist"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/artist/leaderboard" element={<ProtectedRoute requiredRole="artist"><Leaderboard /></ProtectedRoute>} />
                 <Route path="/artist/profile" element={<ProtectedRoute requiredRole="artist"><Profile /></ProtectedRoute>} />
 
                 {/* Brand Routes */}
                 <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><BrandDashboard /></ProtectedRoute>} />
                 <Route path="/brand/discover" element={<ProtectedRoute requiredRole="brand"><BrandDiscover /></ProtectedRoute>} />
                 <Route path="/brand/artist/:id" element={<ProtectedRoute requiredRole="brand"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/brand/track/:id" element={<ProtectedRoute requiredRole="brand"><TrackDetails /></ProtectedRoute>} />
                 <Route path="/brand/competitions" element={<ProtectedRoute requiredRole="brand"><Competitions /></ProtectedRoute>} />
                 <Route path="/brand/competitions/create" element={<ProtectedRoute requiredRole="brand"><CreateCompetition /></ProtectedRoute>} />
                 <Route path="/brand/competitions/active" element={<ProtectedRoute requiredRole="brand"><CompetitionsActive /></ProtectedRoute>} />
                 <Route path="/brand/competition/:id" element={<ProtectedRoute requiredRole="brand"><CompetitionDetails /></ProtectedRoute>} />
+                <Route path="/brand/analytics" element={<ProtectedRoute requiredRole="brand"><Analytics /></ProtectedRoute>} />
+                <Route path="/brand/playlists" element={<ProtectedRoute requiredRole="brand"><Playlists /></ProtectedRoute>} />
+                <Route path="/brand/playlist/:id" element={<ProtectedRoute requiredRole="brand"><PlaylistDetails /></ProtectedRoute>} />
                 <Route path="/brand/wallet" element={<ProtectedRoute requiredRole="brand"><Wallet /></ProtectedRoute>} />
                 <Route path="/brand/wallet/buy-coins" element={<ProtectedRoute requiredRole="brand"><BuyCoins /></ProtectedRoute>} />
+                <Route path="/brand/subscribe" element={<ProtectedRoute requiredRole="brand"><Subscribe /></ProtectedRoute>} />
                 <Route path="/brand/profile" element={<ProtectedRoute requiredRole="brand"><Profile /></ProtectedRoute>} />
 
                 {/* Producer Routes */}
@@ -197,6 +206,17 @@ const App = () => (
                 <Route path="/producer/collaborations" element={<ProtectedRoute requiredRole="producer"><ProducerCollaborations /></ProtectedRoute>} />
                 <Route path="/producer/competitions" element={<ProtectedRoute requiredRole="producer"><ProducerCompetitions /></ProtectedRoute>} />
                 <Route path="/producer/competitions/create" element={<ProtectedRoute requiredRole="producer"><CreateCompetition /></ProtectedRoute>} />
+                <Route path="/producer/competitions/active" element={<ProtectedRoute requiredRole="producer"><CompetitionsActive /></ProtectedRoute>} />
+                <Route path="/producer/competition/:id" element={<ProtectedRoute requiredRole="producer"><CompetitionDetails /></ProtectedRoute>} />
+                <Route path="/producer/track/:id" element={<ProtectedRoute requiredRole="producer"><TrackDetails /></ProtectedRoute>} />
+                <Route path="/producer/artist/:id" element={<ProtectedRoute requiredRole="producer"><ArtistProfile /></ProtectedRoute>} />
+                <Route path="/producer/analytics" element={<ProtectedRoute requiredRole="producer"><Analytics /></ProtectedRoute>} />
+                <Route path="/producer/playlists" element={<ProtectedRoute requiredRole="producer"><Playlists /></ProtectedRoute>} />
+                <Route path="/producer/playlist/:id" element={<ProtectedRoute requiredRole="producer"><PlaylistDetails /></ProtectedRoute>} />
+                <Route path="/producer/history" element={<ProtectedRoute requiredRole="producer"><ListeningHistory /></ProtectedRoute>} />
+                <Route path="/producer/subscribe" element={<ProtectedRoute requiredRole="producer"><Subscribe /></ProtectedRoute>} />
+                <Route path="/producer/subscription/manage" element={<ProtectedRoute requiredRole="producer"><SubscriptionManage /></ProtectedRoute>} />
+                <Route path="/producer/subscription/success" element={<ProtectedRoute requiredRole="producer"><SubscriptionSuccess /></ProtectedRoute>} />
                 <Route path="/producer/wallet" element={<ProtectedRoute requiredRole="producer"><Wallet /></ProtectedRoute>} />
                 <Route path="/producer/wallet/buy-coins" element={<ProtectedRoute requiredRole="producer"><BuyCoins /></ProtectedRoute>} />
                 <Route path="/producer/profile" element={<ProtectedRoute requiredRole="producer"><Profile /></ProtectedRoute>} />
