@@ -14,7 +14,7 @@ import { ForYouSection } from '@/components/ForYouSection';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { isFeatureEnabled } from '@/lib/featureFlags';
-import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle } from 'lucide-react';
+import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle, Headphones } from 'lucide-react';
 
 export default function FanDashboard() {
   const { user } = useAuth();
@@ -262,7 +262,7 @@ export default function FanDashboard() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-4">
+            <CardContent className="grid gap-3 md:grid-cols-5">
               <Button onClick={() => navigate('/fan/discover')} variant="outline" className="w-full">
                 <Play className="mr-2 h-4 w-4" />
                 Discover Music
@@ -270,6 +270,10 @@ export default function FanDashboard() {
               <Button onClick={() => navigate('/competitions/active')} variant="outline" className="w-full">
                 <Trophy className="mr-2 h-4 w-4" />
                 Vote in Competitions
+              </Button>
+              <Button onClick={() => navigate('/beats')} variant="outline" className="w-full">
+                <Headphones className="mr-2 h-4 w-4" />
+                Browse Beats
               </Button>
               <Button onClick={() => navigate('/wallet')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />

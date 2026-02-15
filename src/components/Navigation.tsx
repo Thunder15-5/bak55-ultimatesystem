@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio, Headphones } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -203,6 +204,7 @@ export function Navigation() {
                 )}
 
                 {/* Common Actions */}
+                <GlobalSearch />
                 <RealtimeNotifications />
                 <Link to={`/${userRole}/profile`}>
                   <Button variant="ghost" size="sm">

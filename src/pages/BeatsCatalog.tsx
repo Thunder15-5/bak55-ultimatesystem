@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Play, Pause, Music2, User, Headphones } from "lucide-react";
+import { Loader2, Search, Play, Pause, Music2, User, Headphones, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { BeatLicenseDialog } from "@/components/BeatLicenseDialog";
 
 interface Beat {
   id: string;
@@ -238,7 +239,7 @@ export default function BeatsCatalog() {
                     {/* Producer name */}
                     {producer ? (
                       <Link
-                        to={`${getRolePrefix()}/artist/${beat.producer_id}`}
+                        to={`/producer/${beat.producer_id}`}
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
                         <User className="w-3 h-3" />
@@ -267,18 +268,18 @@ export default function BeatsCatalog() {
                       )}
                     </div>
 
-                    {/* Plays */}
+                    {/* Plays & License */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{beat.plays || 0} plays</span>
-                      {beat.is_free ? (
-                        <Badge variant="outline" className="text-[10px] border-green-500 text-green-500">
-                          Free
-                        </Badge>
-                      ) : beat.price_lease_kes ? (
-                        <span className="font-medium text-foreground">
-                          KES {beat.price_lease_kes}
-                        </span>
-                      ) : null}
+                      <BeatLicenseDialog
+                        beat={beat as any}
+                        producerName={producer?.producer_name || "Producer"}
+                      >
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1">
+                          <ShoppingCart className="w-3 h-3" />
+                          {beat.is_free ? "Free" : beat.price_lease_kes ? `KES ${beat.price_lease_kes}` : "License"}
+                        </Button>
+                      </BeatLicenseDialog>
                     </div>
                   </CardContent>
                 </Card>
