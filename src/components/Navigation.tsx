@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
-import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio } from "lucide-react";
+import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio, Headphones } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logoImage from "@/assets/bak55-logo.png";
@@ -107,6 +107,12 @@ export function Navigation() {
                     </Link>
                     <Link to="/artist/discover">
                       <Button variant="ghost" size="sm">Browse</Button>
+                    </Link>
+                    <Link to="/beats">
+                      <Button variant="ghost" size="sm">
+                        <Headphones className="mr-1 h-3 w-3" />
+                        Beats
+                      </Button>
                     </Link>
                     <Link to="/artist/analytics">
                       <Button variant="ghost" size="sm">Analytics</Button>
@@ -221,6 +227,9 @@ export function Navigation() {
                 </Link>
                 <Link to="/bakcoins" className="text-foreground hover:text-primary transition-colors">
                   BAKCoins
+                </Link>
+                <Link to="/beats" className="text-foreground hover:text-primary transition-colors">
+                  Browse Beats
                 </Link>
                 <Link to="/ai-tools" className="text-foreground hover:text-primary transition-colors">
                   AI Tools
