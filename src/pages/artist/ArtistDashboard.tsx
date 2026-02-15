@@ -14,7 +14,7 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { DailyStreak } from "@/components/DailyStreak";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award } from "lucide-react";
+import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistCollaboration } from "@/components/ArtistCollaboration";
 
@@ -394,6 +394,12 @@ export default function ArtistDashboard() {
                     My Tracks
                   </Button>
                 </Link>
+                <Link to="/beats" className="group">
+                  <Button variant="outline" className="w-full h-14 text-base font-semibold border-2">
+                    <Headphones className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
+                    Browse Beats
+                  </Button>
+                </Link>
                 <Link to="/artist/discover" className="group">
                   <Button variant="outline" className="w-full h-14 text-base font-semibold border-2">
                     <TrendingUp className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -408,6 +414,36 @@ export default function ArtistDashboard() {
             <TrackRecommendations />
           </div>
         </div>
+
+        {/* Revenue Split Transparency */}
+        <Card className="mt-8 border-primary/20 bg-card/60 backdrop-blur-xl">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" />
+              <CardTitle className="font-heading text-lg">Revenue Split</CardTitle>
+            </div>
+            <CardDescription>How earnings are distributed on BAK55</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-3xl font-bold text-primary mb-1">65%</p>
+                <p className="text-sm text-muted-foreground">Artist Share</p>
+                <p className="text-xs text-muted-foreground mt-1">Competition winnings</p>
+              </div>
+              <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/10 text-center">
+                <p className="text-3xl font-bold text-secondary mb-1">85%</p>
+                <p className="text-sm text-muted-foreground">Producer Share</p>
+                <p className="text-xs text-muted-foreground mt-1">Beat licensing</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted border border-border text-center">
+                <p className="text-3xl font-bold mb-1">100%</p>
+                <p className="text-sm text-muted-foreground">Tips</p>
+                <p className="text-xs text-muted-foreground mt-1">Fan tips go directly to you</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

@@ -174,7 +174,7 @@ export default function BrandDashboard() {
                 Quick Actions
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-3">
+            <CardContent className="grid gap-3 md:grid-cols-4">
               <Button onClick={() => navigate('/admin/create-competition')} variant="hero" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Competition
@@ -182,6 +182,10 @@ export default function BrandDashboard() {
               <Button onClick={() => navigate('/brand/discover')} variant="outline" className="w-full">
                 <Users className="mr-2 h-4 w-4" />
                 Discover Artists
+              </Button>
+              <Button onClick={() => navigate('/beats')} variant="outline" className="w-full">
+                <Music className="mr-2 h-4 w-4" />
+                Browse Beats
               </Button>
               <Button onClick={() => navigate('/brand/wallet')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />
