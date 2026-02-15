@@ -90,6 +90,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Apply = lazy(() => import("./pages/Apply"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
 const Careers = lazy(() => import("./pages/Careers"));
+const BeatsCatalog = lazy(() => import("./pages/BeatsCatalog"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 
@@ -122,8 +123,9 @@ const App = () => (
           <Route path="/competitions" element={<Competitions />} />
           <Route path="/competitions/active" element={<CompetitionsActive />} />
           <Route path="/competition/:id" element={<CompetitionDetails />} />
-          <Route path="/apply" element={<Apply />} />
-          <Route path="/live-streams" element={<LiveStreams />} />
+           <Route path="/apply" element={<Apply />} />
+           <Route path="/beats" element={<BeatsCatalog />} />
+           <Route path="/live-streams" element={<LiveStreams />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/install" element={<InstallApp />} />
                 

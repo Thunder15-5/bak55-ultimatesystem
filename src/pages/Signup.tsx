@@ -65,10 +65,13 @@ export default function Signup() {
       return 'Please enter a valid email address.';
     }
     if (msg.includes('rate limit') || msg.includes('too many')) {
-      return 'Too many attempts. Please wait a moment and try again.';
+      return 'Our server is experiencing high traffic. Please wait 2-3 minutes and try again. Your first attempt will work after the cooldown.';
     }
     if (msg.includes('database') || msg.includes('saving')) {
       return 'We encountered a temporary issue. Please try again.';
+    }
+    if (msg.includes('network') || msg.includes('fetch')) {
+      return 'Connection error. Please check your internet and try again.';
     }
     
     return error?.message || 'Failed to create account. Please try again.';
