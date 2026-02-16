@@ -205,7 +205,7 @@ export default function BeatsCatalog() {
                       <img
                         src={beat.cover_image}
                         alt={beat.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-black/50"
                         loading="lazy"
                       />
                     ) : (
