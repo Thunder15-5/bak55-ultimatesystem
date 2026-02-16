@@ -163,10 +163,10 @@ export default function FanSubscribe() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-y-auto">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-12 mt-20">
+      <main className="container mx-auto px-4 py-12 mt-20 pb-24">
         <div className="max-w-5xl mx-auto space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">

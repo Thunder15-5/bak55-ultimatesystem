@@ -844,6 +844,48 @@ async function sendEmailViaSMTP(to: string, subject: string, html: string): Prom
   }
 }
 
+// ─── Dynamic DB Template Loader ──────────────────────────────────
+async function loadTemplateFromDB(templateName: string, data: Record<string, any>): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) return null;
+
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.49.1");
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: tmpl, error } = await supabase
+      .from("email_templates")
+      .select("html_content, variables")
+      .eq("name", templateName)
+      .eq("is_active", true)
+      .single();
+
+    if (error || !tmpl) return null;
+
+    // Replace variables in DB template
+    let html = tmpl.html_content;
+    for (const [key, value] of Object.entries(data)) {
+      html = html.replaceAll(`{{${key}}}`, String(value ?? ''));
+    }
+    // Also replace common links
+    html = html.replaceAll("{{dashboard_link}}", `${PRODUCTION_DOMAIN}/dashboard`);
+    html = html.replaceAll("{{profile_link}}", `${PRODUCTION_DOMAIN}/profile`);
+    html = html.replaceAll("{{upload_link}}", `${PRODUCTION_DOMAIN}/upload`);
+    html = html.replaceAll("{{competitions_link}}", `${PRODUCTION_DOMAIN}/competitions`);
+    html = html.replaceAll("{{wallet_link}}", `${PRODUCTION_DOMAIN}/wallet`);
+    html = html.replaceAll("{{support_email}}", SUPPORT_EMAIL);
+    html = html.replaceAll("{{company_name}}", COMPANY_NAME);
+    html = html.replaceAll("{{domain}}", PRODUCTION_DOMAIN);
+
+    console.log(`Loaded template "${templateName}" from database`);
+    return emailWrapper(html);
+  } catch (err) {
+    console.warn(`Failed to load DB template "${templateName}":`, err);
+    return null;
+  }
+}
+
 // ─── Handler ──────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -869,13 +911,20 @@ serve(async (req) => {
     if (template === 'custom' && html) {
       emailHtml = emailWrapper(html);
     } else if (html && !template) {
-      // Legacy: raw HTML passed without template (e.g. old callers)
       emailHtml = emailWrapper(html);
-    } else if (template && templates[template]) {
-      emailHtml = templates[template](data || {});
+    } else if (template) {
+      // Priority 1: Check database for latest template (no caching — always fresh)
+      const dbHtml = await loadTemplateFromDB(template, data || {});
+      if (dbHtml) {
+        emailHtml = dbHtml;
+      } else if (templates[template]) {
+        // Priority 2: Fall back to hardcoded templates
+        emailHtml = templates[template](data || {});
+      } else {
+        console.warn(`Unknown template: ${template}, falling back to custom wrapper`);
+        emailHtml = emailWrapper(html || `<p>${JSON.stringify(data || {})}</p>`);
+      }
     } else {
-      console.warn(`Unknown template: ${template}, falling back to custom wrapper`);
-      // Graceful fallback instead of hard error
       emailHtml = emailWrapper(html || `<p>${JSON.stringify(data || {})}</p>`);
     }
     
