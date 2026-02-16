@@ -215,11 +215,11 @@ export function FeaturedArtistsCarousel() {
                 <Card className="group hover:shadow-2xl hover:border-primary transition-all duration-300 overflow-hidden h-full">
                   {/* Artist Top Track Cover as Background */}
                   {artist.top_track?.cover_image && (
-                    <div className="relative h-32 sm:h-48 overflow-hidden">
+                    <div className="relative h-32 sm:h-48 overflow-hidden bg-muted">
                       <img
                         src={artist.top_track.cover_image}
                         alt={artist.top_track.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
                     </div>
