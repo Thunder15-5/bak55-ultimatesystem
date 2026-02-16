@@ -212,10 +212,10 @@ export function FeaturedArtistsCarousel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 px-8 sm:px-14">
             {visibleArtists.map((artist, idx) => (
               <Link key={`${artist.user_id}-${idx}`} to={`/artist/${artist.user_id}`}>
-                <Card className="group hover:shadow-2xl hover:border-primary transition-all duration-300 overflow-hidden h-full">
+                <Card className="group hover:shadow-2xl hover:border-primary transition-all duration-300 h-full overflow-visible">
                   {/* Artist Top Track Cover as Background */}
                   {artist.top_track?.cover_image && (
-                    <div className="relative h-32 sm:h-48 overflow-hidden bg-muted">
+                    <div className="relative h-32 sm:h-48 overflow-hidden rounded-t-xl bg-muted">
                       <img
                         src={artist.top_track.cover_image}
                         alt={artist.top_track.title}
@@ -228,7 +228,7 @@ export function FeaturedArtistsCarousel() {
                   <CardContent className="p-4 sm:p-6 relative">
                     {/* Avatar */}
                     <div className="flex justify-center -mt-10 sm:-mt-14 mb-3 sm:mb-4">
-                      <Avatar className="h-16 w-16 sm:h-24 sm:w-24 border-4 border-background shadow-xl">
+                      <Avatar className="h-16 w-16 sm:h-24 sm:w-24 border-4 border-card shadow-xl">
                         <AvatarImage src={artist.avatar_url || undefined} />
                         <AvatarFallback className="text-sm sm:text-xl font-bold">
                           {(artist.stage_name || artist.username).substring(0, 2).toUpperCase()}
