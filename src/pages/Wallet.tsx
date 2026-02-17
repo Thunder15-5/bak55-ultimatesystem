@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign } from "lucide-react";
+import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign, ShoppingBag } from "lucide-react";
 import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -26,6 +26,8 @@ export default function Wallet() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalSales, setTotalSales] = useState(0);
+  const [totalSalesCount, setTotalSalesCount] = useState(0);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [accountDetails, setAccountDetails] = useState({
@@ -76,7 +78,7 @@ export default function Wallet() {
 
   const fetchWalletData = async () => {
     try {
-      // Fetch wallet balance - use maybeSingle to handle new users without wallets
+      // Fetch wallet balance
       const { data: walletData, error: walletError } = await supabase
         .from("wallets")
         .select("id, balance")
@@ -85,7 +87,6 @@ export default function Wallet() {
 
       if (walletError) throw walletError;
 
-      // Handle case where user doesn't have a wallet yet
       if (!walletData) {
         setBalance(0);
         setTransactions([]);
@@ -104,8 +105,21 @@ export default function Wallet() {
         .limit(20);
 
       if (txError) throw txError;
-
       setTransactions(txData || []);
+
+      // Fetch song sales stats for artists
+      if (userRole === 'artist') {
+        const { data: salesData, error: salesError } = await supabase
+          .from('song_purchases')
+          .select('amount_kes')
+          .eq('artist_id', user?.id)
+          .eq('status', 'completed');
+
+        if (!salesError && salesData) {
+          setTotalSalesCount(salesData.length);
+          setTotalSales(salesData.reduce((sum, s) => sum + (s.amount_kes || 0), 0));
+        }
+      }
     } catch (error: any) {
       toast.error("Failed to load wallet data");
       console.error(error);
@@ -350,6 +364,36 @@ export default function Wallet() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Song Sales Stats - Artists Only */}
+        {userRole === 'artist' && totalSalesCount > 0 && (
+          <Card className="mb-8 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="p-2 rounded-xl bg-primary/20">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                </div>
+                Song Sales
+              </CardTitle>
+              <CardDescription>Revenue from direct song sales (0% commission)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">Total Sales</p>
+                  <p className="text-2xl font-bold">{totalSalesCount}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">Revenue (KES)</p>
+                  <p className="text-2xl font-bold text-primary">KES {totalSales.toLocaleString()}</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                💡 A 5% fee applies only when you withdraw earnings.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Transaction History */}
         <Card>

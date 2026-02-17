@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Upload, Music, Sparkles } from "lucide-react";
+import { Loader2, Upload, Music, Sparkles, DollarSign, Info } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +27,8 @@ export default function UploadTrack() {
     genre: "",
     description: "",
   });
+  const [isPaidDownload, setIsPaidDownload] = useState(false);
+  const [priceKes, setPriceKes] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [submitToCompetition, setSubmitToCompetition] = useState(false);
@@ -212,7 +215,9 @@ export default function UploadTrack() {
             audio_url: audioUrl,
             cover_image: coverUrl,
             moderation_status: 'pending',
-          })
+            is_paid_download: isPaidDownload && !submitToCompetition,
+            price_kes: isPaidDownload && !submitToCompetition ? parseFloat(priceKes) || null : null,
+          } as any)
           .select()
           .single();
 
@@ -312,6 +317,8 @@ export default function UploadTrack() {
       setSelectedCompetition("");
       setSelectedExistingTrack("");
       setUploadMode('new');
+      setIsPaidDownload(false);
+      setPriceKes("");
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
@@ -536,6 +543,61 @@ export default function UploadTrack() {
                   placeholder="Describe your track..."
                   rows={3}
                 />
+              </div>
+
+              {/* Paid Download Toggle */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="paidDownload" className="text-base font-semibold flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      Enable Paid Download
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Sell your track directly to fans
+                    </p>
+                  </div>
+                  <Switch
+                    id="paidDownload"
+                    checked={isPaidDownload}
+                    onCheckedChange={setIsPaidDownload}
+                    disabled={submitToCompetition}
+                  />
+                </div>
+
+                {submitToCompetition && (
+                  <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                    <Info className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-destructive">
+                      Paid downloads are disabled while this song is in an active competition.
+                    </p>
+                  </div>
+                )}
+
+                {isPaidDownload && !submitToCompetition && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="priceKes">Price (KES) *</Label>
+                      <Input
+                        id="priceKes"
+                        type="number"
+                        min="50"
+                        step="10"
+                        value={priceKes}
+                        onChange={(e) => setPriceKes(e.target.value)}
+                        placeholder="e.g. 100"
+                        required={isPaidDownload}
+                      />
+                      <p className="text-xs text-muted-foreground">Minimum: KES 50</p>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-primary/10 border border-primary/20">
+                      <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground">
+                        BAK55 takes <strong className="text-foreground">0% per sale</strong>. A small fee applies only during withdrawal.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {competitions.length > 0 && (
