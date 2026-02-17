@@ -1167,6 +1167,55 @@ export type Database = {
           },
         ]
       }
+      download_logs: {
+        Row: {
+          downloaded_at: string
+          id: string
+          ip_address: string | null
+          purchase_id: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          downloaded_at?: string
+          id?: string
+          ip_address?: string | null
+          purchase_id: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          downloaded_at?: string
+          id?: string
+          ip_address?: string | null
+          purchase_id?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "download_logs_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "song_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "download_logs_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "download_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       early_access_signups: {
         Row: {
           converted: boolean | null
@@ -2300,6 +2349,41 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_config: {
+        Row: {
+          config_key: string
+          config_value: number
+          description: string | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: number
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: number
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_analytics: {
         Row: {
           id: string
@@ -2370,6 +2454,70 @@ export type Database = {
           },
           {
             foreignKeyName: "share_rewards_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      song_purchases: {
+        Row: {
+          amount_kes: number
+          artist_id: string
+          buyer_id: string
+          created_at: string
+          download_count: number
+          id: string
+          max_downloads: number
+          payment_method: string
+          payment_reference: string | null
+          status: string
+          track_id: string
+        }
+        Insert: {
+          amount_kes: number
+          artist_id: string
+          buyer_id: string
+          created_at?: string
+          download_count?: number
+          id?: string
+          max_downloads?: number
+          payment_method?: string
+          payment_reference?: string | null
+          status?: string
+          track_id: string
+        }
+        Update: {
+          amount_kes?: number
+          artist_id?: string
+          buyer_id?: string
+          created_at?: string
+          download_count?: number
+          id?: string
+          max_downloads?: number
+          payment_method?: string
+          payment_reference?: string | null
+          status?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_purchases_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_purchases_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_purchases_track_id_fkey"
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
@@ -2754,11 +2902,13 @@ export type Database = {
           duration: number | null
           genre: string | null
           id: string
+          is_paid_download: boolean
           moderated_at: string | null
           moderated_by: string | null
           moderation_notes: string | null
           moderation_status: string | null
           plays: number | null
+          price_kes: number | null
           title: string
           updated_at: string | null
         }
@@ -2770,11 +2920,13 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          is_paid_download?: boolean
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_notes?: string | null
           moderation_status?: string | null
           plays?: number | null
+          price_kes?: number | null
           title: string
           updated_at?: string | null
         }
@@ -2786,11 +2938,13 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          is_paid_download?: boolean
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_notes?: string | null
           moderation_status?: string | null
           plays?: number | null
+          price_kes?: number | null
           title?: string
           updated_at?: string | null
         }

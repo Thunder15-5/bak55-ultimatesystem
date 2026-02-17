@@ -8,11 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart } from "lucide-react";
+import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart, Download, ShoppingCart, CheckCircle, AlertCircle } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TipDialog } from "@/components/TipDialog";
+import { Badge } from "@/components/ui/badge";
 
 interface Track {
   id: string;
@@ -22,6 +23,8 @@ interface Track {
   cover_image: string | null;
   genre: string | null;
   plays: number;
+  is_paid_download?: boolean;
+  price_kes?: number | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -42,6 +45,10 @@ export default function TrackDetails() {
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [isInCompetition, setIsInCompetition] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -57,7 +64,112 @@ export default function TrackDetails() {
     if (user && track?.artist_id) {
       fetchFollowStatus();
     }
-  }, [user, track?.artist_id]);
+    if (user && track?.id) {
+      checkPurchaseStatus();
+      checkCompetitionStatus();
+    }
+  }, [user, track?.artist_id, track?.id]);
+
+  const checkPurchaseStatus = async () => {
+    if (!user || !track) return;
+    const { data } = await supabase
+      .from('song_purchases')
+      .select('id')
+      .eq('track_id', track.id)
+      .eq('buyer_id', user.id)
+      .eq('status', 'completed')
+      .maybeSingle();
+    setHasPurchased(!!data);
+  };
+
+  const checkCompetitionStatus = async () => {
+    if (!track) return;
+    const { data: sub } = await supabase
+      .from('submissions')
+      .select('id, competition_id')
+      .eq('track_id', track.id)
+      .eq('status', 'approved')
+      .maybeSingle();
+    if (sub) {
+      const { data: comp } = await supabase
+        .from('competitions')
+        .select('id')
+        .eq('id', sub.competition_id)
+        .eq('status', 'active')
+        .maybeSingle();
+      setIsInCompetition(!!comp);
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (!user) {
+      toast.error("Please log in to purchase");
+      navigate("/login");
+      return;
+    }
+    if (!track) return;
+
+    setPurchasing(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke('purchase-track', {
+        body: { track_id: track.id },
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
+      });
+
+      if (error) throw error;
+      if (data.error) {
+        if (data.error === 'Already purchased') {
+          setHasPurchased(true);
+          toast.info("You already own this track!");
+        } else {
+          toast.error(data.error);
+        }
+        return;
+      }
+
+      setHasPurchased(true);
+      toast.success(data.message || "Purchase successful! 🎉", {
+        description: `${data.amount_bak} BAKCoins deducted`,
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Purchase failed");
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!track) return;
+    setDownloading(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke('download-track', {
+        body: { track_id: track.id },
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
+      });
+
+      if (error) throw error;
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = data.download_url;
+      link.download = `${track.title}.mp3`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Download started!");
+    } catch (error: any) {
+      toast.error(error.message || "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
 
   const fetchTrack = async () => {
@@ -370,6 +482,40 @@ export default function TrackDetails() {
                     </>
                   )}
                 </Button>
+
+                {/* Purchase / Download Button */}
+                {track.is_paid_download && track.price_kes && !isInCompetition && user?.id !== track.artist_id && (
+                  <>
+                    {hasPurchased ? (
+                      <Button onClick={handleDownload} disabled={downloading} size="lg" variant="default" className="min-w-[140px]">
+                        {downloading ? (
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : (
+                          <Download className="mr-2 h-5 w-5" />
+                        )}
+                        Download
+                        <Badge variant="outline" className="ml-2 text-xs">Purchased</Badge>
+                      </Button>
+                    ) : (
+                      <Button onClick={handlePurchase} disabled={purchasing} size="lg" variant="hero" className="min-w-[160px]">
+                        {purchasing ? (
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : (
+                          <ShoppingCart className="mr-2 h-5 w-5" />
+                        )}
+                        Buy for KES {track.price_kes}
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                {/* Free download for track owner */}
+                {user?.id === track.artist_id && (
+                  <Button onClick={handleDownload} disabled={downloading} size="lg" variant="outline">
+                    {downloading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Download className="mr-2 h-5 w-5" />}
+                    Download
+                  </Button>
+                )}
 
             {user ? (
               <>

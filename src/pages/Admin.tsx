@@ -15,6 +15,7 @@ import { ApplicationsPanel } from "@/components/admin/ApplicationsPanel";
 import { ReferralPanel } from "@/components/admin/ReferralPanel";
 import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
 import { ProducersPanel } from "@/components/admin/ProducersPanel";
+import { SalesPanel } from "@/components/admin/SalesPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,7 +27,7 @@ import {
   DollarSign, Check, X, Loader2, Users, Trophy, 
   BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Share2, Wallet, Bell, FileText, Mail,
-  Award, Target, Star, UserPlus, Gift, Music2
+  Award, Target, Star, UserPlus, Gift, Music2, ShoppingBag
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -580,6 +581,10 @@ export default function Admin() {
               <Music2 className="h-4 w-4 mr-2" />
               Producers
             </TabsTrigger>
+            <TabsTrigger value="sales">
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Sales
+            </TabsTrigger>
           </TabsList>
 
           {/* Platform Metrics Tab */}
@@ -1095,6 +1100,11 @@ export default function Admin() {
           {/* Producers Tab */}
           <TabsContent value="producers">
             <ProducersPanel />
+          </TabsContent>
+
+          {/* Sales Tab */}
+          <TabsContent value="sales">
+            <SalesPanel />
           </TabsContent>
         </Tabs>
       </div>
