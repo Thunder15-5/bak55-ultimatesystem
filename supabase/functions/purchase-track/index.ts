@@ -16,7 +16,6 @@ serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Not authenticated' }), {
@@ -33,7 +32,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const { track_id, payment_method = 'wallet' } = await req.json();
+    const { track_id } = await req.json();
 
     if (!track_id) {
       return new Response(JSON.stringify({ error: 'track_id is required' }), {
@@ -41,10 +40,10 @@ serve(async (req: Request) => {
       });
     }
 
-    // 1. Fetch track details
+    // 1. Fetch track — read price_in_bak (new) or fall back to price_kes (legacy)
     const { data: track, error: trackError } = await supabase
       .from('tracks')
-      .select('id, title, artist_id, is_paid_download, price_kes, audio_url')
+      .select('id, title, artist_id, is_paid_download, price_in_bak, price_kes, audio_url')
       .eq('id', track_id)
       .single();
 
@@ -54,10 +53,24 @@ serve(async (req: Request) => {
       });
     }
 
-    if (!track.is_paid_download || !track.price_kes) {
+    // Resolve BAK amount: prefer price_in_bak, else convert legacy price_kes using config
+    let bakAmount: number = track.price_in_bak ?? null;
+
+    if (!track.is_paid_download || (!bakAmount && !track.price_kes)) {
       return new Response(JSON.stringify({ error: 'Track is not available for paid download' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // If no price_in_bak, use bak_to_kes_rate config to convert legacy KES price
+    if (!bakAmount && track.price_kes) {
+      const { data: rateConfig } = await supabase
+        .from('sales_config')
+        .select('config_value')
+        .eq('config_key', 'bak_to_kes_rate')
+        .maybeSingle();
+      const rate = Number(rateConfig?.config_value) || 1;
+      bakAmount = track.price_kes / rate;
     }
 
     // Prevent self-purchase
@@ -67,7 +80,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // 2. Check if already purchased
+    // 2. Check already purchased
     const { data: existingPurchase } = await supabase
       .from('song_purchases')
       .select('id')
@@ -82,7 +95,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // 3. Check if track is in active competition (disable paid sales)
+    // 3. Block if track is in active competition
     const { data: activeSubmission } = await supabase
       .from('submissions')
       .select('id, competition_id')
@@ -105,11 +118,7 @@ serve(async (req: Request) => {
       }
     }
 
-    // 4. Process payment via wallet (BAK coins)
-    // Convert KES to BAK: 1 BAK = 20 KES
-    const bakAmount = track.price_kes / 20;
-
-    // Get buyer wallet
+    // 4. Deduct BAK from buyer wallet (optimistic locking)
     const { data: buyerWallet } = await supabase
       .from('wallets')
       .select('id, balance')
@@ -117,8 +126,8 @@ serve(async (req: Request) => {
       .single();
 
     if (!buyerWallet || buyerWallet.balance < bakAmount) {
-      return new Response(JSON.stringify({ 
-        error: 'Insufficient BAKCoin balance',
+      return new Response(JSON.stringify({
+        error: 'Insufficient BAK Coin balance',
         required: bakAmount,
         current: buyerWallet?.balance || 0,
       }), {
@@ -126,7 +135,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Deduct from buyer (optimistic locking)
     const { error: deductError } = await supabase
       .from('wallets')
       .update({ balance: buyerWallet.balance - bakAmount, updated_at: new Date().toISOString() })
@@ -154,17 +162,15 @@ serve(async (req: Request) => {
     }
 
     // 6. Record transactions
-    // Buyer spending
     await supabase.from('transactions').insert({
       wallet_id: buyerWallet.id,
       type: 'spending',
       amount: -bakAmount,
       description: `Purchased "${track.title}"`,
       reference_id: track_id,
-      metadata: { type: 'song_purchase', price_kes: track.price_kes },
+      metadata: { type: 'song_purchase', price_bak: bakAmount },
     });
 
-    // Artist earning
     if (artistWallet) {
       await supabase.from('transactions').insert({
         wallet_id: artistWallet.id,
@@ -172,19 +178,18 @@ serve(async (req: Request) => {
         amount: bakAmount,
         description: `Song sale: "${track.title}"`,
         reference_id: track_id,
-        metadata: { type: 'song_sale', price_kes: track.price_kes, buyer_id: user.id },
+        metadata: { type: 'song_sale', price_bak: bakAmount, buyer_id: user.id },
       });
     }
 
-    // 7. Create purchase record
+    // 7. Create purchase record (amount_bak column)
     const { data: purchase, error: purchaseError } = await supabase
       .from('song_purchases')
       .insert({
         track_id,
         buyer_id: user.id,
         artist_id: track.artist_id,
-        amount_kes: track.price_kes,
-        payment_method,
+        amount_bak: bakAmount,
         status: 'completed',
       })
       .select()
@@ -199,7 +204,7 @@ serve(async (req: Request) => {
       user_id: track.artist_id,
       type: 'song_sale',
       title: '💰 Song Sold!',
-      message: `Someone purchased "${track.title}" for KES ${track.price_kes}`,
+      message: `Someone purchased "${track.title}" for ${bakAmount} BAK`,
       link: '/wallet',
       priority: 'high',
       category: 'payment',
@@ -209,7 +214,6 @@ serve(async (req: Request) => {
       success: true,
       purchase_id: purchase?.id,
       amount_bak: bakAmount,
-      amount_kes: track.price_kes,
       message: `Successfully purchased "${track.title}"`,
     }), {
       status: 200,

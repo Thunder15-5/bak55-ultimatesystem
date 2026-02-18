@@ -28,7 +28,7 @@ export default function UploadTrack() {
     description: "",
   });
   const [isPaidDownload, setIsPaidDownload] = useState(false);
-  const [priceKes, setPriceKes] = useState("");
+  const [priceBak, setPriceBak] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [submitToCompetition, setSubmitToCompetition] = useState(false);
@@ -216,7 +216,7 @@ export default function UploadTrack() {
             cover_image: coverUrl,
             moderation_status: 'pending',
             is_paid_download: isPaidDownload && !submitToCompetition,
-            price_kes: isPaidDownload && !submitToCompetition ? parseFloat(priceKes) || null : null,
+            price_in_bak: isPaidDownload && !submitToCompetition ? parseFloat(priceBak) || null : null,
           } as any)
           .select()
           .single();
@@ -318,7 +318,7 @@ export default function UploadTrack() {
       setSelectedExistingTrack("");
       setUploadMode('new');
       setIsPaidDownload(false);
-      setPriceKes("");
+      setPriceBak("");
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
@@ -577,23 +577,23 @@ export default function UploadTrack() {
                 {isPaidDownload && !submitToCompetition && (
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <Label htmlFor="priceKes">Price (KES) *</Label>
+                      <Label htmlFor="priceBak">Price (BAK Coins) *</Label>
                       <Input
-                        id="priceKes"
+                        id="priceBak"
                         type="number"
-                        min="50"
-                        step="10"
-                        value={priceKes}
-                        onChange={(e) => setPriceKes(e.target.value)}
-                        placeholder="e.g. 100"
+                        min="2.5"
+                        step="0.5"
+                        value={priceBak}
+                        onChange={(e) => setPriceBak(e.target.value)}
+                        placeholder="e.g. 2.5"
                         required={isPaidDownload}
                       />
-                      <p className="text-xs text-muted-foreground">Minimum: KES 50</p>
+                      <p className="text-xs text-muted-foreground">Minimum: 2.5 BAK Coins</p>
                     </div>
                     <div className="flex items-start gap-2 p-3 rounded-md bg-primary/10 border border-primary/20">
                       <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        BAK55 takes <strong className="text-foreground">0% per sale</strong>. A small fee applies only during withdrawal.
+                        BAK55 takes <strong className="text-foreground">0% per sale</strong>. A 5% fee applies only during withdrawal.
                       </p>
                     </div>
                   </div>

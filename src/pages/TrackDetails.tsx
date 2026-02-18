@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TipDialog } from "@/components/TipDialog";
 import { Badge } from "@/components/ui/badge";
 
-interface Track {
+  interface Track {
   id: string;
   title: string;
   artist_id: string;
@@ -25,6 +25,7 @@ interface Track {
   plays: number;
   is_paid_download?: boolean;
   price_kes?: number | null;
+  price_in_bak?: number | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -38,6 +39,7 @@ export default function TrackDetails() {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useMusicPlayer();
   const { trackActivity } = useFanActivity();
   const [track, setTrack] = useState<Track | null>(null);
+  const [bakRate, setBakRate] = useState(1); // 1 BAK = 1 KES default
   const [loading, setLoading] = useState(true);
   const [tipDialogOpen, setTipDialogOpen] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -57,7 +59,17 @@ export default function TrackDetails() {
     if (user) {
       fetchUserPlaylists();
     }
+    fetchBakRate();
   }, [id, user]);
+
+  const fetchBakRate = async () => {
+    const { data } = await supabase
+      .from('sales_config')
+      .select('config_value')
+      .eq('config_key', 'bak_to_kes_rate')
+      .maybeSingle();
+    if (data) setBakRate(Number(data.config_value) || 1);
+  };
 
   // Separate effect for follow status that depends on track
   useEffect(() => {
@@ -129,8 +141,9 @@ export default function TrackDetails() {
       }
 
       setHasPurchased(true);
+      setHasPurchased(true);
       toast.success(data.message || "Purchase successful! 🎉", {
-        description: `${data.amount_bak} BAKCoins deducted`,
+        description: `${data.amount_bak} BAK Coins deducted`,
       });
     } catch (error: any) {
       toast.error(error.message || "Purchase failed");
@@ -484,7 +497,7 @@ export default function TrackDetails() {
                 </Button>
 
                 {/* Purchase / Download Button */}
-                {track.is_paid_download && track.price_kes && !isInCompetition && user?.id !== track.artist_id && (
+                {track.is_paid_download && (track.price_in_bak || track.price_kes) && !isInCompetition && user?.id !== track.artist_id && (
                   <>
                     {hasPurchased ? (
                       <Button onClick={handleDownload} disabled={downloading} size="lg" variant="default" className="min-w-[140px]">
@@ -503,7 +516,7 @@ export default function TrackDetails() {
                         ) : (
                           <ShoppingCart className="mr-2 h-5 w-5" />
                         )}
-                        Buy for KES {track.price_kes}
+                        Buy for {track.price_in_bak ?? (track.price_kes ? track.price_kes / bakRate : 0)} BAK
                       </Button>
                     )}
                   </>

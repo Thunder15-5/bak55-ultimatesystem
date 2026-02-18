@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Upload, Play, Heart, MessageCircle, MoreVertical, Trash2, BarChart3, Music } from "lucide-react";
+import { Upload, Play, Heart, MessageCircle, MoreVertical, Trash2, BarChart3, Music, Coins, Info } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
 import {
@@ -31,6 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 export default function ArtistCatalog() {
@@ -46,6 +56,14 @@ export default function ArtistCatalog() {
   });
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+
+  // Monetization dialog state
+  const [monetizationOpen, setMonetizationOpen] = useState(false);
+  const [monetizationTrack, setMonetizationTrack] = useState<any>(null);
+  const [isPaid, setIsPaid] = useState(false);
+  const [priceBak, setPriceBak] = useState("");
+  const [savingMonetization, setSavingMonetization] = useState(false);
+  const [isInCompetition, setIsInCompetition] = useState(false);
 
   useEffect(() => {
     fetchTracks();
@@ -104,6 +122,64 @@ export default function ArtistCatalog() {
   const handleSubmitToCompetition = (trackId: string) => {
     setSelectedTrackId(trackId);
     setSubmitDialogOpen(true);
+  };
+
+  const openMonetizationDialog = async (track: any) => {
+    setMonetizationTrack(track);
+    setIsPaid(!!track.is_paid_download);
+    setPriceBak(track.price_in_bak ? String(track.price_in_bak) : track.price_kes ? String(track.price_kes) : "");
+
+    // Check if in active competition
+    const { data: sub } = await supabase
+      .from('submissions')
+      .select('id, competition_id')
+      .eq('track_id', track.id)
+      .eq('status', 'approved')
+      .maybeSingle();
+
+    let inComp = false;
+    if (sub) {
+      const { data: comp } = await supabase
+        .from('competitions')
+        .select('id')
+        .eq('id', sub.competition_id)
+        .eq('status', 'active')
+        .maybeSingle();
+      inComp = !!comp;
+    }
+    setIsInCompetition(inComp);
+    setMonetizationOpen(true);
+  };
+
+  const handleSaveMonetization = async () => {
+    if (!monetizationTrack) return;
+    if (isPaid && (!priceBak || parseFloat(priceBak) < 2.5)) {
+      toast.error("Minimum price is 2.5 BAK Coins");
+      return;
+    }
+
+    setSavingMonetization(true);
+    try {
+      const updates: any = {
+        is_paid_download: isPaid && !isInCompetition,
+        price_in_bak: isPaid && !isInCompetition ? parseFloat(priceBak) : null,
+      };
+
+      const { error } = await supabase
+        .from('tracks')
+        .update(updates)
+        .eq('id', monetizationTrack.id);
+
+      if (error) throw error;
+
+      toast.success(isPaid ? `Paid download enabled at ${priceBak} BAK` : "Paid download disabled");
+      setMonetizationOpen(false);
+      fetchTracks();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save");
+    } finally {
+      setSavingMonetization(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -196,9 +272,9 @@ export default function ArtistCatalog() {
                   <TableHead>Track</TableHead>
                   <TableHead>Genre</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Price</TableHead>
                   <TableHead className="text-center">Plays</TableHead>
                   <TableHead className="text-center">Likes</TableHead>
-                  <TableHead className="text-center">Comments</TableHead>
                   <TableHead>Uploaded</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -220,12 +296,19 @@ export default function ArtistCatalog() {
                     </TableCell>
                     <TableCell>{track.genre || "—"}</TableCell>
                     <TableCell>{getStatusBadge(track.moderation_status)}</TableCell>
+                    <TableCell>
+                      {track.is_paid_download ? (
+                        <Badge variant="default" className="gap-1">
+                          <Coins className="w-3 h-3" />
+                          {track.price_in_bak ?? track.price_kes ?? "—"} BAK
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Free</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-center">{track.plays || 0}</TableCell>
                     <TableCell className="text-center">
                       {track.track_likes?.[0]?.count || 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {track.comments?.[0]?.count || 0}
                     </TableCell>
                     <TableCell>
                       {new Date(track.created_at).toLocaleDateString()}
@@ -238,6 +321,12 @@ export default function ArtistCatalog() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => openMonetizationDialog(track)}
+                          >
+                            <Coins className="w-4 h-4 mr-2" />
+                            Edit Monetization
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => navigate(`/artist/track/${track.id}`)}
                           >
@@ -280,6 +369,83 @@ export default function ArtistCatalog() {
         onOpenChange={setSubmitDialogOpen}
         onSuccess={fetchTracks}
       />
+
+      {/* Monetization Dialog */}
+      <Dialog open={monetizationOpen} onOpenChange={setMonetizationOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="h-5 w-5 text-primary" />
+              Edit Monetization
+            </DialogTitle>
+            <DialogDescription>
+              {monetizationTrack?.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {isInCompetition ? (
+              <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                <Info className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-destructive">
+                  Paid downloads are disabled while this song is in an active competition.
+                  You can re-enable them after the competition ends.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
+                  <div className="space-y-0.5">
+                    <Label className="text-base font-semibold">Enable Paid Download</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Fans pay BAK Coins to download this track
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isPaid}
+                    onCheckedChange={setIsPaid}
+                  />
+                </div>
+
+                {isPaid && (
+                  <div className="space-y-2">
+                    <Label htmlFor="priceBakEdit">Price (BAK Coins)</Label>
+                    <Input
+                      id="priceBakEdit"
+                      type="number"
+                      min="2.5"
+                      step="0.5"
+                      value={priceBak}
+                      onChange={(e) => setPriceBak(e.target.value)}
+                      placeholder="e.g. 2.5"
+                    />
+                    <p className="text-xs text-muted-foreground">Minimum: 2.5 BAK Coins • Allow decimals</p>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 p-3 rounded-md bg-primary/10 border border-primary/20">
+                  <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    BAK55 takes <strong className="text-foreground">0% per sale</strong>. A 5% fee applies only when you withdraw earnings.
+                  </p>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setMonetizationOpen(false)}>
+                Cancel
+              </Button>
+              {!isInCompetition && (
+                <Button className="flex-1" onClick={handleSaveMonetization} disabled={savingMonetization}>
+                  {savingMonetization ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Save
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
