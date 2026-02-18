@@ -130,7 +130,7 @@ export default function BeatsCatalog() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-y-auto">
       <SEOHead
         title="Browse Beats | BAK55 Talent"
         description="Discover and license beats from talented producers on BAK55 Talent platform."

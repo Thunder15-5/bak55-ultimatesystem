@@ -4,27 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DollarSign, Download, TrendingUp, ShoppingBag, Settings, Loader2 } from "lucide-react";
+import { DollarSign, Download, TrendingUp, ShoppingBag, Settings, Loader2, Coins } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface SaleSummary {
   totalSales: number;
-  totalRevenue: number;
-  totalWithdrawalFees: number;
+  totalRevenueBak: number;
   recentSales: any[];
 }
 
 export function SalesPanel() {
   const [stats, setStats] = useState<SaleSummary>({
     totalSales: 0,
-    totalRevenue: 0,
-    totalWithdrawalFees: 0,
+    totalRevenueBak: 0,
     recentSales: [],
   });
   const [loading, setLoading] = useState(true);
   const [withdrawalFee, setWithdrawalFee] = useState("5");
+  const [bakRate, setBakRate] = useState("1");
   const [savingFee, setSavingFee] = useState(false);
+  const [savingRate, setSavingRate] = useState(false);
 
   useEffect(() => {
     fetchSalesData();
@@ -33,23 +33,23 @@ export function SalesPanel() {
 
   const fetchSalesData = async () => {
     try {
-      // Fetch all completed purchases
       const { data: purchases, error } = await supabase
         .from('song_purchases')
-        .select('*, tracks(title), profiles!song_purchases_buyer_id_fkey(username, email), artist:profiles!song_purchases_artist_id_fkey(username)')
+        .select('id, created_at, status, track_id, buyer_id, artist_id')
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      const totalRevenue = (purchases || []).reduce((sum, p) => sum + (p.amount_kes || 0), 0);
+      // Fetch amount_bak separately using raw cast since types may lag migrations
+      const purchasesWithBak: any[] = purchases || [];
+      const totalRevenueBak = purchasesWithBak.reduce((sum, p) => sum + (Number((p as any).amount_bak) || 0), 0);
 
       setStats({
-        totalSales: purchases?.length || 0,
-        totalRevenue,
-        totalWithdrawalFees: totalRevenue * 0.05, // Estimated based on 5% at withdrawal
-        recentSales: purchases || [],
+        totalSales: purchasesWithBak.length,
+        totalRevenueBak,
+        recentSales: purchasesWithBak,
       });
     } catch (error) {
       console.error('Error fetching sales:', error);
@@ -61,28 +61,30 @@ export function SalesPanel() {
   const fetchConfig = async () => {
     const { data } = await supabase
       .from('sales_config')
-      .select('config_value')
-      .eq('config_key', 'withdrawal_fee_percent')
-      .single();
+      .select('config_key, config_value');
+
     if (data) {
-      setWithdrawalFee(String(data.config_value));
+      const fee = data.find(d => d.config_key === 'withdrawal_fee_percent');
+      const rate = data.find(d => d.config_key === 'bak_to_kes_rate');
+      if (fee) setWithdrawalFee(String(fee.config_value));
+      if (rate) setBakRate(String(rate.config_value));
     }
   };
 
-  const handleUpdateFee = async () => {
-    setSavingFee(true);
+  const handleUpdateConfig = async (key: string, value: string, label: string, setter: (v: boolean) => void) => {
+    setter(true);
     try {
       const { error } = await supabase
         .from('sales_config')
-        .update({ config_value: parseFloat(withdrawalFee), updated_at: new Date().toISOString() })
-        .eq('config_key', 'withdrawal_fee_percent');
+        .update({ config_value: parseFloat(value) })
+        .eq('config_key', key);
 
       if (error) throw error;
-      toast.success(`Withdrawal fee updated to ${withdrawalFee}%`);
+      toast.success(`${label} updated successfully`);
     } catch (error: any) {
       toast.error(error.message || 'Failed to update');
     } finally {
-      setSavingFee(false);
+      setter(false);
     }
   };
 
@@ -92,14 +94,13 @@ export function SalesPanel() {
       return;
     }
 
-    const headers = ['Date', 'Track', 'Artist', 'Buyer', 'Amount (KES)', 'Payment Method'];
+    const headers = ['Date', 'Track ID', 'Artist ID', 'Buyer ID', 'Amount (BAK)'];
     const rows = stats.recentSales.map(sale => [
       new Date(sale.created_at).toLocaleDateString(),
-      sale.tracks?.title || 'Unknown',
-      sale.artist?.username || 'Unknown',
-      sale.profiles?.username || sale.profiles?.email || 'Unknown',
-      sale.amount_kes,
-      sale.payment_method,
+      sale.track_id,
+      sale.artist_id,
+      sale.buyer_id,
+      sale.amount_bak,
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -112,6 +113,9 @@ export function SalesPanel() {
     URL.revokeObjectURL(url);
     toast.success("CSV exported!");
   };
+
+  const estKes = (stats.totalRevenueBak * Number(bakRate)).toLocaleString();
+  const estFees = (stats.totalRevenueBak * Number(bakRate) * (Number(withdrawalFee) / 100)).toLocaleString();
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -132,12 +136,12 @@ export function SalesPanel() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue (KES)</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Revenue (BAK)</CardTitle>
+            <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">KES {stats.totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">100% credited to artists</p>
+            <div className="text-2xl font-bold">{stats.totalRevenueBak.toFixed(2)} BAK</div>
+            <p className="text-xs text-muted-foreground">≈ KES {estKes} • 100% to artists</p>
           </CardContent>
         </Card>
         <Card>
@@ -146,24 +150,24 @@ export function SalesPanel() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">KES {stats.totalWithdrawalFees.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Platform revenue at withdrawal</p>
+            <div className="text-2xl font-bold">KES {estFees}</div>
+            <p className="text-xs text-muted-foreground">Platform revenue at withdrawal ({withdrawalFee}%)</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Config + Export */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Config Section */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Settings className="h-4 w-4" /> Withdrawal Fee Configuration
+              <Settings className="h-4 w-4" /> Withdrawal Fee
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-3 items-end">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="fee">Fee Percentage (%)</Label>
+                <Label htmlFor="fee">Fee (%)</Label>
                 <Input
                   id="fee"
                   type="number"
@@ -174,13 +178,46 @@ export function SalesPanel() {
                   onChange={(e) => setWithdrawalFee(e.target.value)}
                 />
               </div>
-              <Button onClick={handleUpdateFee} disabled={savingFee} size="sm">
+              <Button
+                onClick={() => handleUpdateConfig('withdrawal_fee_percent', withdrawalFee, 'Withdrawal fee', setSavingFee)}
+                disabled={savingFee}
+                size="sm"
+              >
                 {savingFee ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              This fee is deducted when artists withdraw their song sale earnings.
-            </p>
+            <p className="text-xs text-muted-foreground">Deducted when artists withdraw earnings.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" /> BAK → KES Rate
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-3 items-end">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="rate">1 BAK = X KES</Label>
+                <Input
+                  id="rate"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={bakRate}
+                  onChange={(e) => setBakRate(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={() => handleUpdateConfig('bak_to_kes_rate', bakRate, 'BAK rate', setSavingRate)}
+                disabled={savingRate}
+                size="sm"
+              >
+                {savingRate ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Used for withdrawal conversions.</p>
           </CardContent>
         </Card>
 
@@ -199,7 +236,7 @@ export function SalesPanel() {
         </Card>
       </div>
 
-      {/* Recent Sales Table */}
+      {/* Recent Sales */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Sales</CardTitle>
@@ -213,16 +250,18 @@ export function SalesPanel() {
               {stats.recentSales.map((sale) => (
                 <div key={sale.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm truncate">{sale.tracks?.title || 'Unknown Track'}</p>
                     <p className="text-xs text-muted-foreground">
-                      by {sale.artist?.username || 'Unknown'} • bought by {sale.profiles?.username || 'Unknown'}
+                      {new Date(sale.created_at).toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(sale.created_at).toLocaleDateString()} • {sale.payment_method}
+                    <p className="text-xs text-muted-foreground font-mono truncate">
+                      Track: {sale.track_id?.slice(0, 8)}...
                     </p>
                   </div>
                   <div className="text-right">
-                    <Badge variant="secondary">KES {sale.amount_kes}</Badge>
+                    <Badge variant="secondary" className="gap-1">
+                      <Coins className="w-3 h-3" />
+                      {Number(sale.amount_bak).toFixed(2)} BAK
+                    </Badge>
                   </div>
                 </div>
               ))}
