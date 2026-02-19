@@ -159,15 +159,15 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>License "{beat.title}"</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base sm:text-lg">License "{beat.title}"</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             Choose a license tier from {producerName}. Revenue split: 85% producer / 15% platform.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           {LICENSE_TIERS.map((tier) => {
             const price = getPrice(tier);
             const isAvailable = price.bak > 0;
