@@ -209,8 +209,9 @@ export default function TrackDetails() {
       
       setTrack(data);
     } catch (error: any) {
-      toast.error("Failed to load track");
-      navigate("/catalog");
+      console.error("Failed to load track:", error);
+      toast.error("Track not found or unavailable");
+      setTrack(null);
     } finally {
       setLoading(false);
     }
@@ -391,7 +392,22 @@ export default function TrackDetails() {
     );
   }
 
-  if (!track) return null;
+  if (!track) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24 text-center">
+          <Music className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Track Not Found</h1>
+          <p className="text-muted-foreground mb-6">This track may have been removed or is unavailable.</p>
+          <Button onClick={() => navigate("/catalog")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Browse Music
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const shareUrl = `${window.location.origin}/track/${id}`;
   const shareTitle = `${track.title} by ${track.profiles.username}`;

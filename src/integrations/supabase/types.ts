@@ -2908,6 +2908,7 @@ export type Database = {
           moderation_notes: string | null
           moderation_status: string | null
           plays: number | null
+          price_in_bak: number | null
           price_kes: number | null
           title: string
           updated_at: string | null
@@ -2926,6 +2927,7 @@ export type Database = {
           moderation_notes?: string | null
           moderation_status?: string | null
           plays?: number | null
+          price_in_bak?: number | null
           price_kes?: number | null
           title: string
           updated_at?: string | null
@@ -2944,6 +2946,7 @@ export type Database = {
           moderation_notes?: string | null
           moderation_status?: string | null
           plays?: number | null
+          price_in_bak?: number | null
           price_kes?: number | null
           title?: string
           updated_at?: string | null
