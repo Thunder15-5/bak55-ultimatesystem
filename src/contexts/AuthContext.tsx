@@ -115,7 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: SignUpData, redirectUrl?: string) => {
     try {
-      const emailRedirect = `${window.location.origin}/`;
+      const PRODUCTION_DOMAIN = "https://www.bak55talent.co.ke";
+      const emailRedirect = `${PRODUCTION_DOMAIN}/login`;
       
       const { data, error } = await supabase.auth.signUp({
         email,

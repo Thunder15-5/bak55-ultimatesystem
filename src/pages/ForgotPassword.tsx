@@ -26,7 +26,7 @@ export default function ForgotPassword() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://www.bak55talent.co.ke/reset-password`,
       });
 
       if (error) {

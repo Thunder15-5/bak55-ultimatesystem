@@ -94,6 +94,7 @@ const BeatsCatalog = lazy(() => import("./pages/BeatsCatalog"));
 const ProducerProfile = lazy(() => import("./pages/ProducerProfile"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
 const queryClient = new QueryClient();
 
@@ -248,7 +249,8 @@ const App = () => (
                 <Route path="/admin/vouchers" element={<ProtectedRoute requiredRole="admin"><Vouchers /></ProtectedRoute>} />
                 <Route path="/admin/deposits" element={<ProtectedRoute requiredRole="admin"><Deposits /></ProtectedRoute>} />
 
-          <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/verify-account" element={<ProtectedRoute><VerifyAccount /></ProtectedRoute>} />
           <Route path="/admin/create-competition" element={
             <ProtectedRoute requiredRoles={['admin', 'brand', 'producer']}>
