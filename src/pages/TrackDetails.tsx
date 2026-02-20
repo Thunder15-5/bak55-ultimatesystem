@@ -198,12 +198,13 @@ export default function TrackDetails() {
 
       if (error) throw error;
       
-      // Only show approved tracks to non-owners and non-admins
-      if (data.moderation_status !== 'approved' && 
+      // Only show rejected tracks to non-owners and non-admins
+      // null or 'pending' moderation_status should still be viewable publicly
+      if (data.moderation_status === 'rejected' && 
           data.artist_id !== user?.id && 
           userRole !== 'admin') {
         toast.error("This track is not available");
-        navigate("/catalog");
+        setTrack(null);
         return;
       }
       
@@ -664,49 +665,17 @@ export default function TrackDetails() {
                   url: shareUrl,
                 };
                 
-                // Track share analytics and give rewards
+                // Track share activity
                 if (user) {
                   try {
-                    await supabase.from('share_analytics').insert({
-                      track_id: id,
+                    await supabase.from('fan_activities').insert({
                       user_id: user.id,
-                      platform: navigator.share ? 'native_share' : 'clipboard',
+                      activity_type: 'track_share',
+                      points_earned: 5,
+                      metadata: { track_id: id, platform: navigator.share ? 'native_share' : 'clipboard' },
                     });
-
-                    // Give 5 BAKCoins reward for sharing
-                    const { data: walletData } = await supabase
-                      .from('wallets')
-                      .select('id')
-                      .eq('user_id', user.id)
-                      .single();
-
-                    if (walletData) {
-                      await supabase.from('share_rewards').insert({
-                        user_id: user.id,
-                        track_id: id,
-                        artist_id: track.artist_id,
-                        reward_amount: 5,
-                        share_platform: navigator.share ? 'native_share' : 'clipboard',
-                      });
-
-                      await supabase.from('transactions').insert({
-                        wallet_id: walletData.id,
-                        type: 'income',
-                        amount: 5,
-                        description: 'Share reward',
-                        reference_id: id,
-                      });
-
-                      await supabase.rpc('transfer_funds', {
-                        sender_id: '00000000-0000-0000-0000-000000000000',
-                        recipient_id: user.id,
-                        transfer_amount: 5
-                      }).then(() => {
-                        toast.success("You earned 5 BAKCoins for sharing! 💰");
-                      });
-                    }
                   } catch (error) {
-                    console.error('Failed to process share reward:', error);
+                    console.error('Failed to log share activity:', error);
                   }
                 }
                 

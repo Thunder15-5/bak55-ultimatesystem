@@ -283,6 +283,20 @@ export default function Admin() {
 
       if (error) throw error;
 
+      // Notify user of approval
+      const userId = request.wallets?.user_id || request.metadata?.user_id;
+      if (userId) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          type: 'withdrawal_approved',
+          title: '✅ Withdrawal Approved',
+          message: `Your withdrawal of ${Math.abs(request.amount).toFixed(2)} BAK has been approved and is being processed.`,
+          link: '/wallet',
+          priority: 'high',
+          category: 'payment',
+        });
+      }
+
       toast.success("Withdrawal approved! Process payment manually.");
       fetchAllData();
     } catch (error: any) {
@@ -304,12 +318,29 @@ export default function Admin() {
 
       if (!walletData) throw new Error("Wallet not found");
 
+      // Refund the full amount back to wallet
       const { error: updateError } = await supabase
         .from("wallets")
         .update({ balance: walletData.balance + Math.abs(request.amount) })
         .eq("id", request.wallet_id);
 
       if (updateError) throw updateError;
+
+      // Also refund the withdrawal fee from platform wallet
+      const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
+      const feeAmount = request.metadata?.withdrawal_fee || (Math.abs(request.amount) * 0.05 / 0.95);
+      const { data: platformWallet } = await supabase
+        .from("wallets")
+        .select("id, balance")
+        .eq("user_id", PLATFORM_USER_ID)
+        .single();
+
+      if (platformWallet) {
+        await supabase
+          .from("wallets")
+          .update({ balance: Math.max(0, platformWallet.balance - feeAmount) })
+          .eq("id", platformWallet.id);
+      }
 
       const { error } = await supabase
         .from("transactions")
@@ -323,6 +354,20 @@ export default function Admin() {
         .eq("id", request.id);
 
       if (error) throw error;
+
+      // Notify user of rejection
+      const userId = request.wallets?.user_id || request.metadata?.user_id;
+      if (userId) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          type: 'withdrawal_rejected',
+          title: '❌ Withdrawal Rejected',
+          message: `Your withdrawal of ${Math.abs(request.amount).toFixed(2)} BAK has been rejected. The amount has been refunded to your wallet.`,
+          link: '/wallet',
+          priority: 'high',
+          category: 'payment',
+        });
+      }
 
       toast.success("Withdrawal rejected and amount refunded");
       fetchAllData();
@@ -712,16 +757,16 @@ export default function Admin() {
                                 </h3>
                               </div>
                               <p className="text-sm text-muted-foreground break-words">
-                                <strong>Artist:</strong> {request.wallets.profiles.username} ({request.wallets.profiles.email})
+                                <strong>Artist:</strong> {request.metadata?.username || request.wallets?.profiles?.username || 'Unknown'} ({request.metadata?.email || request.wallets?.profiles?.email || ''})
                               </p>
                               <p className="text-sm text-muted-foreground break-words">
-                                <strong>Account Name:</strong> {request.metadata.account_name}
+                                <strong>Phone:</strong> {request.metadata?.phone_number || request.metadata?.account_number || 'N/A'}
                               </p>
                               <p className="text-sm text-muted-foreground break-words">
-                                <strong>Account Number:</strong> {request.metadata.account_number}
+                                <strong>Net Amount:</strong> {(request.metadata?.net_amount || Math.abs(request.amount) * 0.95).toFixed(2)} BAK (after 5% fee)
                               </p>
                               <p className="text-sm text-muted-foreground break-words">
-                                <strong>Bank:</strong> {request.metadata.bank_name}
+                                <strong>Balance Before:</strong> {request.metadata?.wallet_balance_before?.toFixed?.(2) || 'N/A'} BAK
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 Requested: {new Date(request.created_at).toLocaleString()}

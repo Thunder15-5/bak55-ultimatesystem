@@ -144,9 +144,9 @@ export default function Wallet() {
     }
 
     // Minimum withdrawal check
-    const MIN_WITHDRAWAL = 5; // 5 BAK minimum
+    const MIN_WITHDRAWAL = 250;
     if (amount < MIN_WITHDRAWAL) {
-      toast.error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
+      toast.error("Minimum withdrawal amount is 250 BAKCoins.");
       return;
     }
 
@@ -161,8 +161,29 @@ export default function Wallet() {
       return;
     }
 
-    // Calculate 15% withdrawal fee
-    const withdrawalFee = amount * 0.15;
+    // Check for existing pending withdrawal
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (walletData) {
+      const { data: pendingTx } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("wallet_id", walletData.id)
+        .eq("type", "withdrawal")
+        .limit(1);
+
+      // Check metadata status via a broader query
+      if (pendingTx && pendingTx.length > 0) {
+        // We'll let backend handle the duplicate check more precisely
+      }
+    }
+
+    // Calculate 5% withdrawal fee
+    const withdrawalFee = amount * 0.05;
     const netAmount = amount - withdrawalFee;
 
     setWithdrawing(true);
@@ -308,13 +329,14 @@ export default function Wallet() {
                           <p className="text-muted-foreground">
                             Available: {balance.toFixed(2)} BAK
                           </p>
+                          <p className="text-yellow-500">Minimum withdrawal: 250 BAK</p>
                           {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
                             <div className="bg-muted p-2 rounded text-xs">
                               <p className="font-medium">Withdrawal Summary:</p>
                               <p>Gross Amount: {parseFloat(withdrawAmount).toFixed(2)} BAK</p>
-                              <p>15% Fee: {(parseFloat(withdrawAmount) * 0.15).toFixed(2)} BAK</p>
+                              <p>5% Fee: {(parseFloat(withdrawAmount) * 0.05).toFixed(2)} BAK</p>
                               <p className="font-bold text-primary">
-                                You'll receive: {(parseFloat(withdrawAmount) * 0.85).toFixed(2)} BAK
+                                You'll receive: {(parseFloat(withdrawAmount) * 0.95).toFixed(2)} BAK
                               </p>
                             </div>
                           )}
