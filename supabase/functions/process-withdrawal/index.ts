@@ -52,7 +52,8 @@ serve(async (req) => {
       throw new Error("Only artists can withdraw funds");
     }
 
-    const { amount, phone_number }: WithdrawalRequest = await req.json();
+    const body = await req.json();
+    const { amount, phone_number, bank_details }: { amount: number; phone_number: string; bank_details?: any } = body;
 
     // Production validation
     if (typeof amount !== 'number' || isNaN(amount) || !phone_number) {
@@ -61,14 +62,27 @@ serve(async (req) => {
 
     console.log("Processing withdrawal:", { user_id: user.id, amount });
 
+    // Check for existing pending withdrawal
+    const { data: existingPending } = await supabaseClient
+      .from("transactions")
+      .select("id")
+      .eq("wallet_id", (await supabaseClient.from("wallets").select("id").eq("user_id", user.id).single()).data?.id)
+      .eq("type", "withdrawal")
+      .filter("metadata->>status", "in", '("pending","processing","pending_manual")')
+      .limit(1);
+
+    if (existingPending && existingPending.length > 0) {
+      throw new Error("You already have a pending withdrawal request. Please wait for it to be processed.");
+    }
+
     // BAK55 Platform Operations Wallet (receives withdrawal fees)
     const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 
     // Validation
-    const MIN_WITHDRAWAL = 5; // 5 BAK minimum
+    const MIN_WITHDRAWAL = 250; // 250 BAK minimum
     const MAX_WITHDRAWAL = 50000; // 50,000 BAK
-    const CONVERSION_RATE = 20; // 1 BAK = 20 KSh
-    const WITHDRAWAL_FEE_PERCENT = 0.15; // 15% fee
+    const CONVERSION_RATE = 1; // 1 BAK = 1 KSh (configurable)
+    const WITHDRAWAL_FEE_PERCENT = 0.05; // 5% fee
 
     if (amount < MIN_WITHDRAWAL) {
       throw new Error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
@@ -288,16 +302,57 @@ serve(async (req) => {
       console.warn("⚠️ M-PESA credentials not configured - withdrawal pending manual processing");
       
       // Create admin task for manual processing
+      const { data: userProfile } = await supabaseClient
+        .from('profiles')
+        .select('username, email')
+        .eq('id', user.id)
+        .single();
+
       await supabaseClient.from("admin_tasks").insert({
         task_type: "process_withdrawal",
         related_id: transaction.id,
         status: "pending",
         metadata: {
-          amount: netAmount,
+          user_id: user.id,
+          username: userProfile?.username || 'Unknown',
+          email: userProfile?.email || user.email,
+          amount,
+          net_amount: netAmount,
+          withdrawal_fee: withdrawalFee,
           ksh_amount: netKshAmount,
           phone_number: formattedPhone,
+          wallet_balance_before: wallet.balance,
+          bank_details: bank_details || {},
           reference,
         },
+      });
+
+      // Notify all admins
+      const { data: adminIds } = await supabaseClient
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (adminIds && adminIds.length > 0) {
+        const notifications = adminIds.map((admin: any) => ({
+          user_id: admin.user_id,
+          type: 'withdrawal_request',
+          title: '💰 New Withdrawal Request',
+          message: `${userProfile?.username || 'A user'} requested withdrawal of ${amount.toFixed(2)} BAK (${netKshAmount.toFixed(0)} KES)`,
+          link: '/admin',
+          priority: 'high',
+          category: 'payment',
+        }));
+        await supabaseClient.from('notifications').insert(notifications);
+      }
+
+      // Log admin activity
+      await supabaseClient.from('admin_activity_log').insert({
+        user_id: user.id,
+        event_type: 'withdrawal_request',
+        event_category: 'payment',
+        description: `Withdrawal request: ${amount} BAK by ${userProfile?.username}`,
+        metadata: { amount, reference, phone_number: formattedPhone },
       });
 
       return new Response(
