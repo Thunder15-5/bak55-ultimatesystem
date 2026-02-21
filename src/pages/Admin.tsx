@@ -140,20 +140,17 @@ export default function Admin() {
           *,
           wallets (
             user_id,
-            profiles:user_id (username, email)
+            balance,
+            profiles:user_id (username, email, phone_number)
           )
         `)
-        .gt("withdrawal_fee", 0)
-        .eq("metadata->>status", "pending")
+        .eq("type", "withdrawal")
+        .in("metadata->>status", ["pending", "processing"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const pendingRequests = (data as any[] | null)?.filter(
-        (tx: any) => (tx.metadata as any)?.status === "pending"
-      ) || [] as any[];
-
-      setWithdrawalRequests(pendingRequests as any);
+      setWithdrawalRequests((data || []) as any);
     } catch (error: any) {
       console.error("Failed to load withdrawal requests:", error);
     }
@@ -240,7 +237,7 @@ export default function Admin() {
         supabase.from("beats").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }),
         supabase.from("competitions").select("*", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("transactions").select("amount, withdrawal_fee").gt("withdrawal_fee", 0).eq("metadata->>status", "pending"),
+        supabase.from("transactions").select("amount, withdrawal_fee").eq("type", "withdrawal").in("metadata->>status", ["pending", "processing"]),
         supabase.from("tracks").select("plays"),
         supabase.from("payment_transactions").select("amount").eq("status", "success"),
       ]);

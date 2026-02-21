@@ -140,7 +140,7 @@ export function AddTracksDialog({ playlistId, existingTrackIds, onTracksAdded }:
           Add Tracks
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Tracks to Playlist</DialogTitle>
           <DialogDescription>Select tracks to add to this playlist</DialogDescription>
