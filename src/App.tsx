@@ -77,6 +77,7 @@ const FanDiscover = lazy(() => import("./pages/fan/FanDiscover"));
 const ArtistDashboard = lazy(() => import("./pages/artist/ArtistDashboard"));
 const ArtistCatalog = lazy(() => import("./pages/artist/ArtistCatalog"));
 const ArtistDiscover = lazy(() => import("./pages/artist/ArtistDiscover"));
+const ArtistCourse = lazy(() => import("./pages/artist/ArtistCourse"));
 const BrandDashboard = lazy(() => import("./pages/brand/BrandDashboard"));
 const BrandDiscover = lazy(() => import("./pages/brand/BrandDiscover"));
 const ProducerDashboard = lazy(() => import("./pages/producer/ProducerDashboard"));
@@ -186,6 +187,7 @@ const App = () => (
                 <Route path="/artist/wallet/buy-coins" element={<ProtectedRoute requiredRole="artist"><BuyCoins /></ProtectedRoute>} />
                 <Route path="/artist/leaderboard" element={<ProtectedRoute requiredRole="artist"><Leaderboard /></ProtectedRoute>} />
                 <Route path="/artist/profile" element={<ProtectedRoute requiredRole="artist"><Profile /></ProtectedRoute>} />
+                <Route path="/artist/course" element={<ProtectedRoute requiredRole="artist"><ArtistCourse /></ProtectedRoute>} />
 
                 {/* Brand Routes */}
                 <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><BrandDashboard /></ProtectedRoute>} />
