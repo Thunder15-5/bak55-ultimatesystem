@@ -189,7 +189,7 @@ serve(async (req: Request) => {
         track_id,
         buyer_id: user.id,
         artist_id: track.artist_id,
-        amount_bak: bakAmount,
+        amount_kes: bakAmount,
         status: 'completed',
       })
       .select()

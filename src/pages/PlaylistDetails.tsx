@@ -188,9 +188,9 @@ export default function PlaylistDetails() {
 
         <Card className="mb-8">
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <ListMusic className="h-12 w-12 text-primary" />
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <ListMusic className="h-12 w-12 text-primary flex-shrink-0" />
                 <div>
                   <CardTitle className="text-3xl mb-2">{playlist.title}</CardTitle>
                   {playlist.description && (
@@ -204,13 +204,13 @@ export default function PlaylistDetails() {
                 </div>
               </div>
               {isOwner && (
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <AddTracksDialog 
                     playlistId={id!}
                     existingTrackIds={tracks.map(t => t.tracks.id)}
                     onTracksAdded={fetchPlaylistData}
                   />
-                  <Button variant="destructive" onClick={handleDeletePlaylist}>
+                  <Button variant="destructive" onClick={handleDeletePlaylist} className="w-full sm:w-auto">
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Playlist
                   </Button>
