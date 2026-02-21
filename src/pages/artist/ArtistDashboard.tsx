@@ -14,7 +14,7 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { DailyStreak } from "@/components/DailyStreak";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones } from "lucide-react";
+import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistCollaboration } from "@/components/ArtistCollaboration";
 
@@ -216,6 +216,22 @@ export default function ArtistDashboard() {
         <div className="mb-8">
           <OnboardingChecklist />
         </div>
+
+        {/* Artist Course Banner */}
+        <Link to="/artist/course" className="block mb-8">
+          <Card className="border-primary/20 hover:border-primary/40 transition-all bg-gradient-to-r from-primary/5 to-accent/5 cursor-pointer">
+            <CardContent className="flex items-center gap-4 py-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <GraduationCap className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground text-sm">BAK55 Artist Course</p>
+                <p className="text-xs text-muted-foreground">Learn how to succeed on the platform</p>
+              </div>
+              <Button size="sm" variant="outline" className="flex-shrink-0">Start</Button>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Featured Competition Banner */}
         {featuredCompetition && (
