@@ -16,7 +16,6 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
   const [hasShownToast, setHasShownToast] = useState(false);
 
   useEffect(() => {
-    // Only show toast if we're done loading AND user is definitely not authenticated
     if (!loading && !user && !hasShownToast && location.pathname !== '/login' && location.pathname !== '/signup') {
       toast.error("Please log in to access this page");
       setHasShownToast(true);
@@ -32,9 +31,10 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
     );
   }
 
-  // Not authenticated - redirect to login
+  // Not authenticated - redirect to login, preserving the intended destination
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const intendedPath = location.pathname + location.search + location.hash;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(intendedPath)}`} state={{ from: location }} replace />;
   }
 
   // User is authenticated but role not loaded yet - show loading
@@ -54,7 +54,6 @@ export function ProtectedRoute({ children, requiredRole, requiredRoles }: Protec
         setHasShownToast(true);
       }
       
-      // Redirect to role-specific dashboard
       const dashboardPath = userRole === 'admin' ? '/admin' : `/${userRole}/dashboard`;
       return <Navigate to={dashboardPath} replace />;
     }
