@@ -73,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let initialLoadDone = false;
 
     // Try to restore from session storage for instant UI
     const cachedRole = sessionStorage.getItem('userRole');
@@ -80,31 +81,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserRole(cachedRole);
     }
 
-    // Set up auth state listener FIRST (for ongoing changes)
+    // Set up auth state listener FIRST (for ongoing changes only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Only handle ongoing changes AFTER initial load is done
+        if (!initialLoadDone) return;
+        
         if (session?.user) {
-          // Fetch user roles using setTimeout to avoid deadlock
+          // Use setTimeout to avoid deadlock per Supabase docs
           setTimeout(() => {
             if (!isMounted) return;
-            fetchUserRoles(session.user.id).finally(() => {
-              if (isMounted) setLoading(false);
-            });
+            fetchUserRoles(session.user.id);
           }, 0);
         } else {
           setUserRole(null);
           setUserRoles([]);
           sessionStorage.removeItem('userRole');
-          setLoading(false);
         }
       }
     );
 
-    // THEN check for existing session (controls initial loading state)
+    // INITIAL load - this is the ONLY place that controls loading state
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -115,11 +117,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           await fetchUserRoles(session.user.id);
+        } else {
+          setUserRole(null);
+          setUserRoles([]);
+          sessionStorage.removeItem('userRole');
         }
       } catch (err) {
         console.error("Auth initialization error:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          initialLoadDone = true;
+          setLoading(false);
+        }
       }
     };
 
