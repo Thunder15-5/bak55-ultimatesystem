@@ -72,22 +72,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Try to restore from session storage for instant UI
     const cachedRole = sessionStorage.getItem('userRole');
     if (cachedRole) {
       setUserRole(cachedRole);
     }
 
-    // Set up auth state listener
+    // Set up auth state listener FIRST (for ongoing changes)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!isMounted) return;
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Fetch user roles using setTimeout to avoid deadlock
           setTimeout(() => {
-            fetchUserRoles(session.user.id).finally(() => setLoading(false));
+            if (!isMounted) return;
+            fetchUserRoles(session.user.id).finally(() => {
+              if (isMounted) setLoading(false);
+            });
           }, 0);
         } else {
           setUserRole(null);
@@ -98,19 +104,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRoles(session.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
+    // THEN check for existing session (controls initial loading state)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
 
-    return () => subscription.unsubscribe();
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserRoles(session.user.id);
+        }
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, userData: SignUpData, redirectUrl?: string) => {
