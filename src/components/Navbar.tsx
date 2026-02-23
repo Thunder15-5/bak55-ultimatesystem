@@ -1,11 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "@/assets/bak55-logo.png";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, userRole, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const getDashboardPath = () => {
+    if (userRole === 'admin') return '/admin';
+    if (userRole) return `/${userRole}/dashboard`;
+    return '/dashboard';
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsOpen(false);
+    navigate('/');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-primary/20 shadow-lg overflow-x-hidden">
@@ -41,16 +56,33 @@ export const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="default" className="hidden xl:inline-flex">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="gradient" size="default">
-                Join as Artist
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to={getDashboardPath()}>
+                  <Button variant="ghost" size="default" className="gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="outline" size="default" onClick={handleSignOut} className="gap-2">
+                  <LogOut className="w-4 h-4" />
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="default" className="hidden xl:inline-flex">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="gradient" size="default">
+                    Join as Artist
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -102,16 +134,33 @@ export const Navbar = () => {
               About
             </Link>
             <div className="pt-2 space-y-2">
-              <Link to="/login" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" size="default" className="w-full">
-                  Log In
-                </Button>
-              </Link>
-              <Link to="/signup" onClick={() => setIsOpen(false)}>
-                <Button variant="gradient" size="default" className="w-full">
-                  Join as Artist
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link to={getDashboardPath()} onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" size="default" className="w-full gap-2">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button variant="ghost" size="default" className="w-full gap-2" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4" />
+                    Log Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" size="default" className="w-full">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsOpen(false)}>
+                    <Button variant="gradient" size="default" className="w-full">
+                      Join as Artist
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
