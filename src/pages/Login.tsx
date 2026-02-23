@@ -160,18 +160,6 @@ export default function Login() {
               </Link>
             </p>
 
-            {/* Admin CTA */}
-            <div className="mt-4 p-4 rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 text-center">
-              <p className="text-sm mb-3">Are you an admin?</p>
-              <Link to="/admin">
-                <Button variant="hero" size="sm" className="w-full sm:w-auto">
-                  Go to Admin Panel
-                </Button>
-              </Link>
-              <p className="text-xs text-muted-foreground mt-2">
-                After login, admin accounts are auto-redirected to the Admin Panel.
-              </p>
-            </div>
           </CardFooter>
         </form>
       </Card>
