@@ -133,7 +133,7 @@ export default function Signup() {
       producerName: role === "producer" ? (producerName || username).trim() : undefined,
     };
 
-    console.log('Signing up with role:', role, 'userData:', userData);
+    // Role and userData ready for signup
 
     try {
       const { error } = await signUp(email.trim(), password, userData, redirectUrl || undefined);
