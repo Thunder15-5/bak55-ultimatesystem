@@ -123,7 +123,7 @@ serve(async (req: Request) => {
       .from('wallets')
       .select('id, balance')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!buyerWallet || buyerWallet.balance < bakAmount) {
       return new Response(JSON.stringify({
@@ -152,7 +152,7 @@ serve(async (req: Request) => {
       .from('wallets')
       .select('id, balance')
       .eq('user_id', track.artist_id)
-      .single();
+      .maybeSingle();
 
     if (artistWallet) {
       await supabase
@@ -190,10 +190,11 @@ serve(async (req: Request) => {
         buyer_id: user.id,
         artist_id: track.artist_id,
         amount_kes: bakAmount,
+        payment_method: 'bak_coins',
         status: 'completed',
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (purchaseError) {
       console.error('Purchase record error:', purchaseError);
