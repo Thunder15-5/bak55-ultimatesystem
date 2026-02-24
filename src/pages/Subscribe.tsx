@@ -63,7 +63,7 @@ export default function Subscribe() {
       .eq('user_id', user.id)
       .eq('status', 'active')
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
       setCurrentSubscription(data);
