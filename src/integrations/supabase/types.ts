@@ -347,6 +347,7 @@ export type Database = {
           banner_url: string | null
           created_at: string
           genres: string[] | null
+          hidden: boolean
           id: string
           social_links: Json | null
           stage_name: string | null
@@ -360,6 +361,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           genres?: string[] | null
+          hidden?: boolean
           id?: string
           social_links?: Json | null
           stage_name?: string | null
@@ -373,6 +375,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           genres?: string[] | null
+          hidden?: boolean
           id?: string
           social_links?: Json | null
           stage_name?: string | null

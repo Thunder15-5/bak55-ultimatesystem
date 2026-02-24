@@ -68,7 +68,7 @@ serve(async (req: Request) => {
       .eq('user_id', user.id)
       .eq('status', 'active')
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (existingSub) {
       return new Response(
