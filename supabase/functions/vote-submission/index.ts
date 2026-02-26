@@ -68,6 +68,8 @@ Deno.serve(async (req) => {
         id,
         artist_id,
         competition_id,
+        voting_enabled,
+        moderation_status,
         competitions (
           id,
           voting_start_date,
@@ -82,6 +84,22 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Submission not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if voting is enabled for this submission
+    if (!(submission as any).voting_enabled) {
+      return new Response(
+        JSON.stringify({ error: 'Voting is disabled for this submission' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if submission is approved
+    if ((submission as any).moderation_status !== 'approved') {
+      return new Response(
+        JSON.stringify({ error: 'This submission has not been approved yet' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
