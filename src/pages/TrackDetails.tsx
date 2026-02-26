@@ -649,8 +649,8 @@ export default function TrackDetails() {
                 )}
               </>
             ) : (
-              <Button onClick={() => navigate('/signup')} size="lg" variant="outline">
-                Sign Up to Follow
+              <Button onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/track/${id}`)}`)} size="lg" variant="outline" className="min-w-[140px]">
+                Sign Up to Interact
               </Button>
             )}
 
