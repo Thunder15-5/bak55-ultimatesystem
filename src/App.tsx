@@ -109,6 +109,7 @@ const InstallApp = lazyRetry(() => import("./pages/InstallApp"));
 const Careers = lazyRetry(() => import("./pages/Careers"));
 const BeatsCatalog = lazyRetry(() => import("./pages/BeatsCatalog"));
 const ProducerProfile = lazyRetry(() => import("./pages/ProducerProfile"));
+const RisingStarsVoting = lazyRetry(() => import("./pages/RisingStarsVoting"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 const AuthCallback = lazyRetry(() => import("./pages/AuthCallback"));
@@ -157,6 +158,7 @@ const App = () => (
            <Route path="/producer/:id" element={<ProducerProfile />} />
            <Route path="/live-streams" element={<LiveStreams />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/rising-stars/voting" element={<RisingStarsVoting />} />
                 <Route path="/install" element={<InstallApp />} />
                 
                 {/* Legacy routes - redirect to role-specific paths */}

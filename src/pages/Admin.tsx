@@ -16,6 +16,7 @@ import { ReferralPanel } from "@/components/admin/ReferralPanel";
 import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
 import { ProducersPanel } from "@/components/admin/ProducersPanel";
 import { SalesPanel } from "@/components/admin/SalesPanel";
+import { VotingControlsPanel } from "@/components/admin/VotingControlsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -627,6 +628,10 @@ export default function Admin() {
               <ShoppingBag className="h-4 w-4 mr-2" />
               Sales
             </TabsTrigger>
+            <TabsTrigger value="voting">
+              <Trophy className="h-4 w-4 mr-2" />
+              Voting
+            </TabsTrigger>
           </TabsList>
 
           {/* Platform Metrics Tab */}
@@ -1147,6 +1152,11 @@ export default function Admin() {
           {/* Sales Tab */}
           <TabsContent value="sales">
             <SalesPanel />
+          </TabsContent>
+
+          {/* Voting Controls Tab */}
+          <TabsContent value="voting">
+            <VotingControlsPanel />
           </TabsContent>
         </Tabs>
       </div>

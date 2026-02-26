@@ -2912,6 +2912,7 @@ export type Database = {
           track_id: string | null
           updated_at: string
           vote_count: number | null
+          voting_enabled: boolean | null
         }
         Insert: {
           ai_analysis?: Json | null
@@ -2934,6 +2935,7 @@ export type Database = {
           track_id?: string | null
           updated_at?: string
           vote_count?: number | null
+          voting_enabled?: boolean | null
         }
         Update: {
           ai_analysis?: Json | null
@@ -2956,6 +2958,7 @@ export type Database = {
           track_id?: string | null
           updated_at?: string
           vote_count?: number | null
+          voting_enabled?: boolean | null
         }
         Relationships: [
           {
