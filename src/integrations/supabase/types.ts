@@ -92,6 +92,113 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_track_analyses: {
+        Row: {
+          analysis_type: string
+          breakout_probability: number | null
+          campaign_ideas: Json | null
+          commercial_readiness: number | null
+          comparable_artists: Json | null
+          completed_at: string | null
+          cover_art_concepts: Json | null
+          created_at: string
+          emerging_genre: string | null
+          emotional_tone: string | null
+          fan_growth_prediction: Json | null
+          genre_crossovers: Json | null
+          id: string
+          listener_persona: Json | null
+          market_hotspots: Json | null
+          platform_strategy: Json | null
+          production_quality: number | null
+          promo_captions: Json | null
+          raw_analysis: Json | null
+          recommendations: Json | null
+          release_window: Json | null
+          status: string
+          talent_score: number | null
+          target_countries: Json | null
+          track_id: string | null
+          trend_alignment_score: number | null
+          updated_at: string
+          user_id: string
+          visualizer_concepts: Json | null
+          vocal_strength: number | null
+        }
+        Insert: {
+          analysis_type: string
+          breakout_probability?: number | null
+          campaign_ideas?: Json | null
+          commercial_readiness?: number | null
+          comparable_artists?: Json | null
+          completed_at?: string | null
+          cover_art_concepts?: Json | null
+          created_at?: string
+          emerging_genre?: string | null
+          emotional_tone?: string | null
+          fan_growth_prediction?: Json | null
+          genre_crossovers?: Json | null
+          id?: string
+          listener_persona?: Json | null
+          market_hotspots?: Json | null
+          platform_strategy?: Json | null
+          production_quality?: number | null
+          promo_captions?: Json | null
+          raw_analysis?: Json | null
+          recommendations?: Json | null
+          release_window?: Json | null
+          status?: string
+          talent_score?: number | null
+          target_countries?: Json | null
+          track_id?: string | null
+          trend_alignment_score?: number | null
+          updated_at?: string
+          user_id: string
+          visualizer_concepts?: Json | null
+          vocal_strength?: number | null
+        }
+        Update: {
+          analysis_type?: string
+          breakout_probability?: number | null
+          campaign_ideas?: Json | null
+          commercial_readiness?: number | null
+          comparable_artists?: Json | null
+          completed_at?: string | null
+          cover_art_concepts?: Json | null
+          created_at?: string
+          emerging_genre?: string | null
+          emotional_tone?: string | null
+          fan_growth_prediction?: Json | null
+          genre_crossovers?: Json | null
+          id?: string
+          listener_persona?: Json | null
+          market_hotspots?: Json | null
+          platform_strategy?: Json | null
+          production_quality?: number | null
+          promo_captions?: Json | null
+          raw_analysis?: Json | null
+          recommendations?: Json | null
+          release_window?: Json | null
+          status?: string
+          talent_score?: number | null
+          target_countries?: Json | null
+          track_id?: string | null
+          trend_alignment_score?: number | null
+          updated_at?: string
+          user_id?: string
+          visualizer_concepts?: Json | null
+          vocal_strength?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_track_analyses_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_applications: {
         Row: {
           age: number

@@ -55,6 +55,7 @@ const CompetitionDetails = lazyRetry(() => import("./pages/CompetitionDetails"))
 const CreateCompetition = lazyRetry(() => import("./pages/admin/CreateCompetition"));
 const BAKCoins = lazyRetry(() => import("./pages/BAKCoins"));
 const AITools = lazyRetry(() => import("./pages/AITools"));
+const AIIntelligence = lazyRetry(() => import("./pages/AIIntelligence"));
 const Join = lazyRetry(() => import("./pages/Join"));
 const HowToEarn = lazyRetry(() => import("./pages/HowToEarn"));
 const SuccessStories = lazyRetry(() => import("./pages/SuccessStories"));
@@ -171,6 +172,7 @@ const App = () => (
                 <Route path="/history" element={<ProtectedRoute><RoleBasedRedirect to="history" /></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><UploadTrack /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/ai-intelligence" element={<ProtectedRoute><AIIntelligence /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
                 <Route path="/subscription/manage" element={<ProtectedRoute><SubscriptionManage /></ProtectedRoute>} />
                 <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
