@@ -70,9 +70,9 @@ const AITools = () => {
             End-to-end artificial intelligence integration that helps you create better, reach more fans, and make smarter career decisions.
           </p>
           
-          <Link to="/join" className="inline-block w-full sm:w-auto max-w-md mx-auto">
+          <Link to="/ai-intelligence" className="inline-block w-full sm:w-auto max-w-md mx-auto">
             <Button variant="hero" size="xl" className="w-full sm:w-auto">
-              Access AI Tools
+              Launch AI Intelligence Suite
             </Button>
           </Link>
         </div>
@@ -94,9 +94,11 @@ const AITools = () => {
                 <p className="text-muted-foreground leading-relaxed">
                   {tool.description}
                 </p>
-                <Button variant="ghost" className="mt-4 group-hover:bg-primary/10">
-                  Learn More →
-                </Button>
+                <Link to="/ai-intelligence">
+                  <Button variant="ghost" className="mt-4 group-hover:bg-primary/10">
+                    Launch Tool →
+                  </Button>
+                </Link>
               </Card>
             ))}
           </div>
