@@ -2,12 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
-
-interface StageProgressRequest {
-  stageId: string;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,10 +12,51 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { stageId } = await req.json() as StageProgressRequest;
+    // Authenticate user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: corsHeaders });
+    }
+    const userId = claimsData.claims.sub;
+
+    // Check admin role
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: corsHeaders });
+    }
+
+    // Validate input
+    const body = await req.json();
+    const stageId = body?.stageId;
+
+    if (!stageId || typeof stageId !== 'string') {
+      return new Response(JSON.stringify({ error: 'stageId is required' }), { status: 400, headers: corsHeaders });
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(stageId)) {
+      return new Response(JSON.stringify({ error: 'Invalid stageId format' }), { status: 400, headers: corsHeaders });
+    }
 
     console.log('Processing stage progression for stage:', stageId);
 
@@ -67,52 +104,34 @@ Deno.serve(async (req) => {
       })
       .sort((a, b) => b.finalScore - a.finalScore);
 
-    // Determine who advances and who gets eliminated
     const advancingCount = (stage.max_participants || 0) - (stage.elimination_count || 0);
     const advancing = rankedSubmissions.slice(0, advancingCount);
     const eliminated = rankedSubmissions.slice(advancingCount);
 
     console.log(`Stage ${stageId}: ${advancing.length} advancing, ${eliminated.length} eliminated`);
 
-    // Update stage submissions status
     for (let i = 0; i < advancing.length; i++) {
       await supabase
         .from('stage_submissions')
-        .update({
-          status: 'advanced',
-          stage_rank: i + 1,
-        })
+        .update({ status: 'advanced', stage_rank: i + 1 })
         .eq('id', advancing[i].id);
     }
 
     for (let i = 0; i < eliminated.length; i++) {
       await supabase
         .from('stage_submissions')
-        .update({
-          status: 'eliminated',
-          stage_rank: advancingCount + i + 1,
-          eliminated_at: new Date().toISOString(),
-        })
+        .update({ status: 'eliminated', stage_rank: advancingCount + i + 1, eliminated_at: new Date().toISOString() })
         .eq('id', eliminated[i].id);
 
-      // Update artist journey
       await supabase
         .from('artist_competition_journey')
-        .update({
-          is_eliminated: true,
-          elimination_stage_id: stageId,
-        })
+        .update({ is_eliminated: true, elimination_stage_id: stageId })
         .eq('competition_id', stage.competition_id)
         .eq('artist_id', eliminated[i].artist_id);
     }
 
-    // Update stage status to completed
-    await supabase
-      .from('competition_stages')
-      .update({ status: 'completed' })
-      .eq('id', stageId);
+    await supabase.from('competition_stages').update({ status: 'completed' }).eq('id', stageId);
 
-    // Send notifications to eliminated artists
     for (const elim of eliminated) {
       await supabase.from('notifications').insert({
         user_id: elim.artist_id,
@@ -125,7 +144,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send notifications to advancing artists
     for (const adv of advancing) {
       await supabase.from('notifications').insert({
         user_id: adv.artist_id,
@@ -143,9 +161,9 @@ Deno.serve(async (req) => {
         success: true,
         advancing: advancing.length,
         eliminated: eliminated.length,
-        rankings: rankedSubmissions.map(s => ({
+        rankings: rankedSubmissions.map((s, idx) => ({
           artistId: s.artist_id,
-          rank: rankedSubmissions.indexOf(s) + 1,
+          rank: idx + 1,
           score: s.finalScore,
         })),
       }),
@@ -153,9 +171,8 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error processing stage:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'An internal error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

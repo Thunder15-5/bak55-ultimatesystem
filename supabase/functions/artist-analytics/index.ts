@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -13,15 +13,52 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
+
+    // Authenticate user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: corsHeaders });
+    }
+    const userId = claimsData.claims.sub;
+
     const { artistId } = await req.json();
-    
-    if (!artistId) {
-      throw new Error('Artist ID is required');
+
+    if (!artistId || typeof artistId !== 'string') {
+      return new Response(JSON.stringify({ error: 'artistId is required' }), { status: 400, headers: corsHeaders });
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(artistId)) {
+      return new Response(JSON.stringify({ error: 'Invalid artistId format' }), { status: 400, headers: corsHeaders });
+    }
+
+    // Authorization: only the artist themselves or an admin
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (userId !== artistId) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: 'Unauthorized to view this artist\'s data' }), { status: 403, headers: corsHeaders });
+      }
     }
 
     console.log('Fetching analytics for artist:', artistId);
@@ -33,18 +70,12 @@ serve(async (req) => {
       .eq('artist_id', artistId)
       .order('created_at', { ascending: false });
 
-    // Fetch listening history for demographics
     const trackIds = tracks?.map(t => t.id) || [];
     const { data: listeningHistory } = await supabase
       .from('listening_history')
-      .select(`
-        listened_at,
-        user_id,
-        profiles(location)
-      `)
-      .in('track_id', trackIds);
+      .select(`listened_at, user_id, profiles(location)`)
+      .in('track_id', trackIds.length > 0 ? trackIds : ['00000000-0000-0000-0000-000000000000']);
 
-    // Fetch earnings/transactions
     const { data: wallet } = await supabase
       .from('wallets')
       .select('id')
@@ -54,31 +85,28 @@ serve(async (req) => {
     const { data: transactions } = await supabase
       .from('transactions')
       .select('amount, created_at, type, description')
-      .eq('wallet_id', wallet?.id)
+      .eq('wallet_id', wallet?.id || '00000000-0000-0000-0000-000000000000')
       .order('created_at', { ascending: false });
 
-    // Fetch follower data
     const { count: followerCount } = await supabase
       .from('followers')
       .select('*', { count: 'exact', head: true })
       .eq('artist_id', artistId);
 
-    // Get submissions and votes
     const { data: submissions } = await supabase
       .from('submissions')
       .select('id, vote_count, ai_score, created_at')
       .eq('artist_id', artistId);
 
-    // Prepare data for AI analysis
     const analyticsData = {
       tracks: tracks?.length || 0,
       totalPlays: tracks?.reduce((sum, t) => sum + (t.plays || 0), 0) || 0,
       genres: [...new Set(tracks?.map(t => t.genre).filter(Boolean))],
       followers: followerCount || 0,
-      totalEarnings: transactions?.reduce((sum, t) => 
+      totalEarnings: transactions?.reduce((sum, t) =>
         t.type === 'earning' ? sum + Number(t.amount) : sum, 0
       ) || 0,
-      avgPlaysPerTrack: tracks?.length 
+      avgPlaysPerTrack: tracks?.length
         ? (tracks.reduce((sum, t) => sum + (t.plays || 0), 0) / tracks.length).toFixed(1)
         : 0,
       topLocations: listeningHistory?.reduce((acc: any, curr: any) => {
@@ -93,7 +121,7 @@ serve(async (req) => {
       })),
       competitionStats: {
         totalSubmissions: submissions?.length || 0,
-        avgVotes: submissions?.length 
+        avgVotes: submissions?.length
           ? (submissions.reduce((sum, s) => sum + s.vote_count, 0) / submissions.length).toFixed(1)
           : 0,
         avgAiScore: submissions?.length
@@ -104,7 +132,6 @@ serve(async (req) => {
 
     console.log('Calling AI for insights...');
 
-    // Call Lovable AI for personalized insights
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -153,13 +180,12 @@ Provide insights in this exact JSON format:
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI analysis failed: ${errorText}`);
+      throw new Error(`AI analysis failed`);
     }
 
     const aiResult = await aiResponse.json();
     const insightsText = aiResult.choices[0].message.content;
-    
-    // Parse AI response
+
     let insights;
     try {
       const jsonMatch = insightsText.match(/\{[\s\S]*\}/);
@@ -184,21 +210,14 @@ Provide insights in this exact JSON format:
     }
 
     return new Response(
-      JSON.stringify({
-        data: analyticsData,
-        insights,
-      }),
+      JSON.stringify({ data: analyticsData, insights }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error: any) {
     console.error('Error in artist-analytics:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({ error: 'Failed to fetch analytics' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
