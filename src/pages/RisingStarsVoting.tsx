@@ -78,15 +78,20 @@ export default function RisingStarsVoting() {
       );
 
       const artistIds = [...new Set(activeSubmissions.map((s: any) => s.artist_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', artistIds.length > 0 ? artistIds : ['none']);
+      const safeIds = artistIds.length > 0 ? artistIds : ['none'];
+
+      const [{ data: profiles }, { data: artistProfiles }] = await Promise.all([
+        supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', safeIds),
+        supabase.from('artist_profiles').select('user_id, stage_name').in('user_id', safeIds),
+      ]);
 
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const artistProfileMap = new Map(artistProfiles?.map(a => [a.user_id, a]) || []);
 
       const formatted: VotingSubmission[] = activeSubmissions.map((s: any) => {
         const profile = profileMap.get(s.artist_id);
+        const artistProfile = artistProfileMap.get(s.artist_id);
+        const artistName = artistProfile?.stage_name || profile?.display_name || profile?.username || 'Unknown Artist';
         return {
           id: s.id,
           title: s.title,
@@ -95,7 +100,7 @@ export default function RisingStarsVoting() {
           vote_count: s.vote_count || 0,
           artist_id: s.artist_id,
           competition_id: s.competition_id,
-          artist_username: profile?.username || 'Unknown Artist',
+          artist_username: artistName,
           artist_avatar: profile?.avatar_url || null,
           competition_title: s.competitions?.title || 'Rising Stars',
         };
@@ -289,59 +294,53 @@ export default function RisingStarsVoting() {
                       : 'border-primary/10 hover:border-primary/30'
                   }`}
                 >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center gap-4">
+                  <CardContent className="p-3 sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       {/* Rank */}
-                      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center">
                         {getRankIcon(index)}
                       </div>
 
                       {/* Cover Image */}
-                      <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted">
+                      <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted">
                         {submission.cover_image ? (
                           <img src={submission.cover_image} alt={submission.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Music className="h-6 w-6 text-muted-foreground" />
+                            <Music className="h-5 w-5 text-muted-foreground" />
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate text-base sm:text-lg">{submission.title}</h3>
+                        <h3 className="font-semibold truncate text-sm sm:text-lg">{submission.title}</h3>
                         <Link
                           to={`/artist/${submission.artist_id}`}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors block truncate"
                         >
                           {submission.artist_username}
                         </Link>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {submission.competition_title}
-                          </Badge>
-                        </div>
+                        <Badge variant="outline" className="text-[10px] mt-1 hidden sm:inline-flex max-w-[200px] truncate">
+                          {submission.competition_title}
+                        </Badge>
                       </div>
 
-                      {/* Vote Count */}
-                      <div className="flex-shrink-0 text-center">
-                        <div className="text-2xl sm:text-3xl font-bold text-primary">{submission.vote_count}</div>
-                        <div className="text-xs text-muted-foreground">votes</div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex-shrink-0 flex flex-col gap-2">
+                      {/* Vote Count + Actions */}
+                      <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                        <div className="text-xl sm:text-3xl font-bold text-primary leading-none">{submission.vote_count}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">votes</div>
                         <Button
                           size="sm"
                           disabled={votingSubmission === submission.id}
                           onClick={() => handleVote(submission.id)}
-                          className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                          className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 h-8 px-3 text-xs mt-1"
                         >
                           {votingSubmission === submission.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <>
-                              <Heart className="h-4 w-4 mr-1" />
+                              <Heart className="h-3 w-3 mr-1" />
                               Vote
                             </>
                           )}
@@ -350,7 +349,7 @@ export default function RisingStarsVoting() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleShare(submission)}
-                          className="text-xs"
+                          className="text-[10px] h-6 px-2"
                         >
                           <Share2 className="h-3 w-3 mr-1" />
                           Share
@@ -360,7 +359,7 @@ export default function RisingStarsVoting() {
 
                     {/* Audio Player */}
                     {submission.audio_url && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
+                      <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border/50">
                         <audio controls className="w-full h-8" preload="none">
                           <source src={submission.audio_url} type="audio/mpeg" />
                         </audio>
