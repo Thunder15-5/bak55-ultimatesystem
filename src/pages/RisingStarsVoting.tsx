@@ -2,12 +2,20 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Heart, Music, Crown, Medal, Award, Loader2, Share2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Trophy, Heart, Music, Crown, Medal, Award, Loader2, Share2, Coins } from "lucide-react";
 
 interface VotingSubmission {
   id: string;
@@ -23,18 +31,18 @@ interface VotingSubmission {
 }
 
 export default function RisingStarsVoting() {
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VotingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
   const [votingSubmission, setVotingSubmission] = useState<string | null>(null);
+  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
+  const [currentBalance, setCurrentBalance] = useState<number>(0);
 
   useEffect(() => {
     fetchApprovedSubmissions();
-    if (user) fetchUserVotes();
-  }, [user]);
+  }, []);
 
   // Real-time vote updates
   useEffect(() => {
@@ -52,7 +60,6 @@ export default function RisingStarsVoting() {
 
   const fetchApprovedSubmissions = async () => {
     try {
-      // Get all approved, voting-enabled submissions from active competitions
       const { data: subs, error } = await supabase
         .from('submissions')
         .select(`
@@ -66,12 +73,10 @@ export default function RisingStarsVoting() {
 
       if (error) throw error;
 
-      // Filter to active competitions
       const activeSubmissions = (subs || []).filter(
         (s: any) => s.competitions?.status === 'active'
       );
 
-      // Batch fetch artist profiles
       const artistIds = [...new Set(activeSubmissions.map((s: any) => s.artist_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -104,20 +109,13 @@ export default function RisingStarsVoting() {
     }
   };
 
-  const fetchUserVotes = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('votes')
-      .select('submission_id')
-      .eq('voter_id', user.id);
-    setUserVotes(new Set(data?.map(v => v.submission_id) || []));
-  };
-
   const handleVote = async (submissionId: string) => {
     if (!user) {
       navigate(`/login?redirect=/rising-stars/voting`);
       return;
     }
+
+    if (votingSubmission) return; // Prevent double-click
 
     setVotingSubmission(submissionId);
     try {
@@ -126,26 +124,41 @@ export default function RisingStarsVoting() {
       });
 
       if (error) {
-        let errorMessage = "Failed to record vote.";
+        let errorBody: any = null;
         try {
-          const errorBody = error.context ? await error.context.json() : null;
-          if (errorBody?.error) errorMessage = errorBody.error;
+          errorBody = error.context ? await error.context.json() : null;
         } catch {}
-        toast({ title: "Vote failed", description: errorMessage, variant: "destructive" });
+
+        // Check for insufficient balance
+        if (errorBody?.code === 'INSUFFICIENT_BALANCE') {
+          setCurrentBalance(errorBody.current_balance ?? 0);
+          setShowInsufficientDialog(true);
+          return;
+        }
+
+        toast({
+          title: "Vote failed",
+          description: errorBody?.error || "Failed to record vote.",
+          variant: "destructive",
+        });
         return;
       }
 
       if (data?.error) {
+        if (data.code === 'INSUFFICIENT_BALANCE') {
+          setCurrentBalance(data.current_balance ?? 0);
+          setShowInsufficientDialog(true);
+          return;
+        }
         toast({ title: "Vote failed", description: data.error, variant: "destructive" });
         return;
       }
 
       toast({
         title: "Vote recorded! 🗳️",
-        description: `1 BAK deducted. Artist earned 0.65 BAK from your vote!`,
+        description: `1 BAK deducted. New balance: ${data?.new_balance?.toFixed(2) ?? '—'} BAK`,
       });
 
-      setUserVotes(prev => new Set([...prev, submissionId]));
       fetchApprovedSubmissions();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record vote.", variant: "destructive" });
@@ -187,6 +200,37 @@ export default function RisingStarsVoting() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
+      {/* Insufficient BAKCoins Dialog */}
+      <Dialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="h-5 w-5 text-secondary" />
+              Insufficient BAKCoins
+            </DialogTitle>
+            <DialogDescription>
+              You don't have enough BAKCoins to vote. Each vote costs 1 BAK.
+              Your current balance is <strong>{currentBalance.toFixed(2)} BAK</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowInsufficientDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-primary to-secondary"
+              onClick={() => {
+                setShowInsufficientDialog(false);
+                navigate('/buy-coins');
+              }}
+            >
+              <Coins className="h-4 w-4 mr-2" />
+              Buy BAKCoins
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Hero */}
       <div className="relative bg-gradient-radial from-secondary/10 via-background to-background border-b border-secondary/10">
         <div className="container mx-auto px-4 py-12 pt-32">
@@ -199,14 +243,14 @@ export default function RisingStarsVoting() {
               Rising <span className="text-gradient-secondary">Stars</span> Voting
             </h1>
             <p className="text-lg text-muted-foreground animate-fade-in max-w-2xl mx-auto">
-              Vote for your favorite artists! Each vote costs 1 BAK — 65% goes directly to the artist.
+              Vote for your favorite artists! Each vote costs 1 BAK — 65% goes directly to the artist. Vote as many times as you want!
             </p>
             <div className="flex justify-center gap-4 pt-2">
               <Badge variant="outline" className="text-sm px-4 py-1">
                 <Music className="h-3 w-3 mr-1" /> {submissions.length} Songs
               </Badge>
               <Badge variant="outline" className="text-sm px-4 py-1">
-                <Heart className="h-3 w-3 mr-1" /> 1 BAK per vote
+                <Heart className="h-3 w-3 mr-1" /> Unlimited Voting
               </Badge>
             </div>
           </div>
@@ -225,7 +269,6 @@ export default function RisingStarsVoting() {
           </Card>
         ) : (
           <div className="space-y-4 max-w-3xl mx-auto">
-            {/* Top 10 header */}
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-heading font-bold flex items-center gap-2">
                 <Trophy className="h-6 w-6 text-secondary" />
@@ -235,7 +278,6 @@ export default function RisingStarsVoting() {
             </div>
 
             {submissions.slice(0, 10).map((submission, index) => {
-              const hasVoted = userVotes.has(submission.id);
               const isTop3 = index < 3;
 
               return (
@@ -291,15 +333,12 @@ export default function RisingStarsVoting() {
                       <div className="flex-shrink-0 flex flex-col gap-2">
                         <Button
                           size="sm"
-                          variant={hasVoted ? "secondary" : "default"}
-                          disabled={hasVoted || votingSubmission === submission.id}
+                          disabled={votingSubmission === submission.id}
                           onClick={() => handleVote(submission.id)}
-                          className={!hasVoted ? "bg-gradient-to-r from-primary to-secondary hover:opacity-90" : ""}
+                          className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
                         >
                           {votingSubmission === submission.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : hasVoted ? (
-                            <>✓ Voted</>
                           ) : (
                             <>
                               <Heart className="h-4 w-4 mr-1" />
@@ -336,38 +375,39 @@ export default function RisingStarsVoting() {
             {submissions.length > 10 && (
               <div className="pt-4">
                 <h3 className="text-lg font-semibold text-muted-foreground mb-3">Other Entries</h3>
-                {submissions.slice(10).map((submission, idx) => {
-                  const hasVoted = userVotes.has(submission.id);
-                  return (
-                    <Card key={submission.id} className="mb-3 border-primary/5">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm font-bold text-muted-foreground w-8">#{idx + 11}</span>
-                          <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-muted">
-                            {submission.cover_image ? (
-                              <img src={submission.cover_image} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center"><Music className="h-4 w-4 text-muted-foreground" /></div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{submission.title}</p>
-                            <p className="text-xs text-muted-foreground">{submission.artist_username}</p>
-                          </div>
-                          <span className="font-bold text-primary">{submission.vote_count}</span>
-                          <Button
-                            size="sm"
-                            variant={hasVoted ? "secondary" : "default"}
-                            disabled={hasVoted || votingSubmission === submission.id}
-                            onClick={() => handleVote(submission.id)}
-                          >
-                            {hasVoted ? "✓" : <Heart className="h-4 w-4" />}
-                          </Button>
+                {submissions.slice(10).map((submission, idx) => (
+                  <Card key={submission.id} className="mb-3 border-primary/5">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-bold text-muted-foreground w-8">#{idx + 11}</span>
+                        <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-muted">
+                          {submission.cover_image ? (
+                            <img src={submission.cover_image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><Music className="h-4 w-4 text-muted-foreground" /></div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{submission.title}</p>
+                          <p className="text-xs text-muted-foreground">{submission.artist_username}</p>
+                        </div>
+                        <span className="font-bold text-primary">{submission.vote_count}</span>
+                        <Button
+                          size="sm"
+                          disabled={votingSubmission === submission.id}
+                          onClick={() => handleVote(submission.id)}
+                          className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                        >
+                          {votingSubmission === submission.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Heart className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </div>
