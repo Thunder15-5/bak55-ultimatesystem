@@ -693,6 +693,10 @@ async function loadTemplateFromDB(templateName: string, data: Record<string, any
     html = html.replaceAll("{{domain}}", PRODUCTION_DOMAIN);
 
     console.log(`Loaded template "${templateName}" from database`);
+    // If DB template is already a complete HTML document, don't double-wrap
+    if (html.trim().toLowerCase().startsWith('<!doctype') || html.trim().toLowerCase().startsWith('<html')) {
+      return html;
+    }
     return emailWrapper(html);
   } catch (err) {
     console.warn(`Failed to load DB template "${templateName}":`, err);
