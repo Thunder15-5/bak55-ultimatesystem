@@ -21,7 +21,7 @@ export function BottomNavigation() {
         return [
           { icon: Home, label: "Home", href: "/fan/dashboard" },
           { icon: Search, label: "Discover", href: "/fan/discover" },
-          { icon: Trophy, label: "Vote", href: "/competitions/active" },
+          { icon: Trophy, label: "Vote", href: "/rising-stars/voting" },
           { icon: Wallet, label: "Wallet", href: "/fan/wallet" },
           { icon: User, label: "Profile", href: "/fan/profile" },
         ];

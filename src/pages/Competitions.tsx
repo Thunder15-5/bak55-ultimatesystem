@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Users, Clock, DollarSign, Star, Award } from "lucide-react";
+import { Trophy, Users, Clock, DollarSign, Star, Award, Vote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { FoundersSeason } from "@/components/FoundersSeason";
@@ -53,8 +53,14 @@ const Competitions = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/rising-stars/voting" className="inline-block w-full sm:w-auto">
+              <Button variant="hero" size="xl" className="w-full sm:w-auto gap-2">
+                <Vote className="w-5 h-5" />
+                🔥 Vote for Rising Stars
+              </Button>
+            </Link>
             <Link to="/competitions/active" className="inline-block w-full sm:w-auto">
-              <Button variant="hero" size="xl" className="w-full sm:w-auto">
+              <Button variant="outline" size="xl" className="w-full sm:w-auto">
                 View Active Competitions
               </Button>
             </Link>
