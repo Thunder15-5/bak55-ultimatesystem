@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ const BAK_RATE = 20; // 20 KES = 1 BAK
 
 const BuyCoins = () => {
   const { user } = useAuth();
+  const { formatFromKES } = useCurrency();
   const navigate = useNavigate();
   const [voucherCode, setVoucherCode] = useState("");
   const [redeemingVoucher, setRedeemingVoucher] = useState(false);
@@ -145,7 +147,7 @@ const BuyCoins = () => {
     
     toast({
       title: "Payment Window Opened",
-      description: `Complete your payment of KES ${pkg.priceKES.toLocaleString()} in the new tab. Your ${pkg.bakAmount} BAKCoins will be credited automatically.`,
+      description: `Complete your payment of ${formatFromKES(pkg.priceKES)} in the new tab. Your ${pkg.bakAmount} BAKCoins will be credited automatically.`,
     });
   };
 
@@ -214,7 +216,7 @@ const BuyCoins = () => {
                       BAKCoins
                     </div>
                     <div className="text-xl font-semibold">
-                      KES {pkg.priceKES.toLocaleString()}
+                      {formatFromKES(pkg.priceKES)}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       Rate: {BAK_RATE} KES = 1 BAK
@@ -230,7 +232,7 @@ const BuyCoins = () => {
                   <div className="text-center sm:text-left">
                     <p className="text-sm text-muted-foreground">You selected:</p>
                     <p className="text-lg font-semibold">
-                      {selectedPackage.bakAmount} BAKCoins for KES {selectedPackage.priceKES.toLocaleString()}
+                      {selectedPackage.bakAmount} BAKCoins for {formatFromKES(selectedPackage.priceKES)}
                     </p>
                   </div>
                   <Button 

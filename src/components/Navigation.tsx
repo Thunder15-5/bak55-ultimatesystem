@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { RealtimeNotifications } from "@/components/RealtimeNotifications";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio, Headphones } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -210,6 +211,7 @@ export function Navigation() {
                 )}
 
                 {/* Common Actions */}
+                <CurrencySelector variant="compact" />
                 <GlobalSearch />
                 <RealtimeNotifications />
                 <Link to={`/${userRole}/profile`}>

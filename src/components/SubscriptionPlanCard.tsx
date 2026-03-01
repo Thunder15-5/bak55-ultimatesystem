@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Check, Crown, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface SubscriptionPlanCardProps {
   plan: {
@@ -22,6 +23,7 @@ export function SubscriptionPlanCard({ plan, isCurrentPlan, onSubscribe, loading
   const isPremium = plan.name === 'Artist Premium';
   const isPro = plan.name === 'Artist Pro';
   const isFree = plan.name === 'Artist Free';
+  const { formatFromKES } = useCurrency();
 
   return (
     <Card className={`relative ${isPremium ? 'border-primary shadow-lg' : ''}`}>
@@ -55,7 +57,7 @@ export function SubscriptionPlanCard({ plan, isCurrentPlan, onSubscribe, loading
       <CardContent className="space-y-4">
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold">${plan.price_usd || (plan.price_bak * 0.20)}</span>
+            <span className="text-4xl font-bold">{formatFromKES(plan.price_kes)}</span>
             <span className="text-muted-foreground">/month</span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">

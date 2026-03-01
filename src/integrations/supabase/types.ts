@@ -1789,6 +1789,30 @@ export type Database = {
           },
         ]
       }
+      exchange_rates: {
+        Row: {
+          base_currency: string
+          id: string
+          rate: number
+          target_currency: string
+          updated_at: string
+        }
+        Insert: {
+          base_currency?: string
+          id?: string
+          rate: number
+          target_currency: string
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          id?: string
+          rate?: number
+          target_currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fan_activities: {
         Row: {
           activity_type: string
@@ -2482,6 +2506,7 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_step: number | null
           phone_number: string | null
+          preferred_currency: string | null
           signup_bonus_awarded: boolean | null
           updated_at: string
           username: string
@@ -2504,6 +2529,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
+          preferred_currency?: string | null
           signup_bonus_awarded?: boolean | null
           updated_at?: string
           username: string
@@ -2526,6 +2552,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           phone_number?: string | null
+          preferred_currency?: string | null
           signup_bonus_awarded?: boolean | null
           updated_at?: string
           username?: string

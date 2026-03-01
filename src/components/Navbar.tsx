@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "@/assets/bak55-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,6 +61,7 @@ export const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            <CurrencySelector variant="compact" />
             {user ? (
               <>
                 <Link to={getDashboardPath()}>
@@ -145,6 +147,10 @@ export const Navbar = () => {
               <Vote className="w-5 h-5" />
               🔥 Vote Now — Rising Stars
             </Link>
+            <div className="flex items-center gap-2 px-4 py-2">
+              <CurrencySelector variant="compact" />
+              <span className="text-xs text-muted-foreground">Currency</span>
+            </div>
             <div className="pt-2 space-y-2">
               {user ? (
                 <>

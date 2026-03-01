@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
@@ -135,6 +136,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <CurrencyProvider>
             <MusicPlayerProvider>
               <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
@@ -326,6 +328,7 @@ const App = () => (
               <InstallPrompt />
               <CookieConsent />
             </MusicPlayerProvider>
+            </CurrencyProvider>
           </AuthProvider>
         </BrowserRouter>
       </div>
