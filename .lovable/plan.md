@@ -1,40 +1,55 @@
 
 
-## Bugs Identified
+## Plan: Fix Logo + Update BAKCoin Rate to $0.16 + Add Exchange Rate Table
 
-### Bug 1: Queue processor silently fails — edge-to-edge function invocation
-`process-email-queue` calls `supabase.functions.invoke("send-email")` using a service-role Supabase client. Edge-to-edge function invocation via `functions.invoke` is unreliable and often times out or fails silently inside Deno edge runtime. The logs confirm: the function boots but produces zero processing output — no "Processed X emails" or error messages.
+### 1. Fix Logo Not Showing
 
-**Fix**: Inline the SMTP sending logic directly in `process-email-queue` instead of calling the `send-email` edge function. Load templates from DB, substitute variables, and send via SMTP directly — same pattern as `send-email` but without the inter-function call.
+The logo file `src/assets/bak55-logo.png` exists and is imported correctly in code. The issue is likely the actual image file being corrupted or empty. I'll need to verify the file loads in the preview. If it's a build/asset issue, we may need to move it to the `public` folder and reference it via URL instead of ES module import across all 9 files that use it.
 
-### Bug 2: Duplicate emails in sent logs
-Looking at the sent log data, the same user receives the same template twice within seconds (e.g., `hirwabertrand49@gmail.com` got 2 welcome emails at 06:48:41 and 06:48:42). The `send-bulk-welcome` function has no deduplication — it sends to ALL profiles without checking `email_sent_log`.
+**Approach**: Change all logo references from ES module import (`import logo from "@/assets/bak55-logo.png"`) to a public path (`/favicon.png` or copy the logo to `public/bak55-logo.png`), which is more reliable for deployed builds.
 
-**Fix**: Add a check in `send-bulk-welcome` to skip users who already received a welcome email (query `email_sent_log` for `template_name = 'welcome'`).
+**Files affected**: `Navbar.tsx`, `Navigation.tsx`, `Footer.tsx`, `Login.tsx`, `Signup.tsx`, `VerifyAccount.tsx`, `VerifyEmail.tsx`, `ForgotPassword.tsx`, `ResetPassword.tsx`
 
-### Bug 3: Stale pending queue items never cleared
-Queue has 30+ items from Feb 17-26 stuck as "pending" because the queue processor never runs successfully. Even when manually triggered from admin, it fails silently per Bug 1.
+### 2. Update BAKCoin Exchange Rate: 1 BAK = $0.16
 
-**Fix**: Resolved by fixing Bug 1. Additionally, add a "Retry Failed" and "Clear Stale" button in the admin panel.
+Update all hardcoded references from `$0.20` and `1 BAK = 20 KES` to `$0.16` across:
 
----
+| File | Change |
+|------|--------|
+| `src/pages/BAKCoins.tsx` | `$0.20 USD` → `$0.16 USD` |
+| `src/pages/Terms.tsx` | `$0.20 USD` → `$0.16 USD` |
+| `src/pages/Support.tsx` | `$0.20 USD` → `$0.16 USD` |
+| `src/pages/FAQ.tsx` | `$0.20 USD` → `$0.16 USD` |
+| `src/pages/blogData.ts` | All `1 BAK = 20 KES` → `1 BAK = $0.16 USD` (5 occurrences) |
+| `src/pages/admin/CashReserve.tsx` | `totalBAK * 20` → `totalBAK * 0.16` (USD base) |
+| `src/components/admin/SalesPanel.tsx` | Label update `1 BAK = X KES` → `1 BAK = X USD` |
 
-## Implementation Plan
+### 3. Add Exchange Rates Display Table
 
-### 1. Rewrite `process-email-queue` edge function
-- Import SMTP sending logic directly (denomailer) instead of calling `send-email`
-- Load DB templates inline using `loadTemplateFromDB` pattern
-- Fall back to hardcoded template aliases (`first_upload_guide` → `onboarding_upload`, etc.)
-- Add proper error logging for each email
-- Keep the 500ms throttle between sends
+Create a reusable `ExchangeRatesTable` component showing live rates for all supported currencies. Display it on:
 
-### 2. Fix `send-bulk-welcome` to prevent duplicates
-- Query `email_sent_log` for existing `welcome` template sends
-- Build a Set of user IDs already sent
-- Skip those users in the loop
+- **BAKCoins page** — below the hero showing 1 BAK equivalent in all currencies
+- **Wallet page** — sidebar/card showing current rates
+- **BuyCoins page** — reference rates for purchases
 
-### 3. Add queue management actions in admin panel
-- "Retry Failed" button: resets `failed` queue items back to `pending`
-- "Clear Stale" button: deletes queue items older than 7 days that are still pending
-- Show count of stale items in the queue header
+The table will pull from the `useCurrency` hook's `rates` data and show:
+```
+Currency  | 1 BAK Value
+KES       | KSh 20.72
+NGN       | ₦ 246.40
+GHS       | GH₵ 2.35
+...
+```
+
+### 4. Update Backend Email Templates
+
+Update `supabase/functions/send-email/index.ts` to remove hardcoded KES references in email templates for withdrawals and deposits.
+
+### Summary of Files to Create/Modify
+
+- **Create**: `src/components/ExchangeRatesTable.tsx`
+- **Modify** (logo fix): 9 files
+- **Modify** (rate update): 7 files  
+- **Modify** (add rates table): `BAKCoins.tsx`, `Wallet.tsx`, `BuyCoins.tsx`
+- **Modify** (emails): `send-email/index.ts`
 
