@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail, Loader2, CheckCircle, Shield, Coins, Music, Users, TrendingUp } from "lucide-react";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 
 export default function VerifyAccount() {
   const { user, userRole } = useAuth();

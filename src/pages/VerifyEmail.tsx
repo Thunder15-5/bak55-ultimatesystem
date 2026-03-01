@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, Mail, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();

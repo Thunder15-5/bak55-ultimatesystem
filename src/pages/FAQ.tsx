@@ -36,7 +36,7 @@ const FAQ = () => {
       items: [
         {
           question: "What are BAKCoins?",
-          answer: "BAKCoins are our platform's utility tokens used for voting, tipping artists, entering competitions, and purchasing subscriptions. 1 BAKCoin = $0.20 USD. The equivalent in your local currency is shown automatically based on your selected currency."
+          answer: "BAKCoins are our platform's utility tokens used for voting, tipping artists, entering competitions, and purchasing subscriptions. 1 BAKCoin = $0.16 USD. The equivalent in your local currency is shown automatically based on your selected currency."
         },
         {
           question: "How do I buy BAKCoins?",

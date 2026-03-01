@@ -78,7 +78,7 @@ export default function CashReserve() {
 
       setReserveData({
         totalBAKInCirculation: totalBAK,
-        totalKshReserve: totalBAK * 20, // 1 BAK = 20 KSh
+        totalKshReserve: totalBAK * 0.16, // 1 BAK = $0.16 USD (reserve in USD)
         totalUsers: userCount || 0,
         totalTransactions: transactions.length,
         totalWithdrawals: withdrawals,

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Lock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 
 export default function ResetPassword() {
   const navigate = useNavigate();

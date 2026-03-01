@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");

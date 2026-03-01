@@ -195,13 +195,13 @@ export function SalesPanel() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> BAK → KES Rate
+              <TrendingUp className="h-4 w-4" /> BAK → USD Rate
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-3 items-end">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="rate">1 BAK = X KES</Label>
+                <Label htmlFor="rate">1 BAK = X USD</Label>
                 <Input
                   id="rate"
                   type="number"

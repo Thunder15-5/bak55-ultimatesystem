@@ -232,7 +232,7 @@ export const blogPosts = [
       "• Artists submit tracks to open competitions",
       "• Community members and judges evaluate submissions",
       "• Winners receive BAKCoins directly to their wallets",
-      "• BAKCoins can be withdrawn as real money (1 BAK = 20 KES)",
+      "• BAKCoins can be withdrawn as real money (1 BAK = $0.16 USD)",
       
       "Real Example: A newcomer artist winning third place in their first competition could earn enough to cover professional mixing for their next three tracks. That's the difference between struggling and progressing.",
       
@@ -554,7 +554,7 @@ export const blogPosts = [
       
       "Key Characteristics:",
       "• Digital currency used exclusively on BAK55",
-      "• Real monetary value (1 BAK = 20 KES)",
+      "• Real monetary value (1 BAK = $0.16 USD)",
       "• Can be earned, spent, and withdrawn",
       "• Transparent tracking in your wallet",
       
@@ -626,7 +626,7 @@ export const blogPosts = [
       
       "1. Purchase Directly",
       
-      "Buy BAKCoins through the platform using M-Pesa or other supported payment methods. Conversion rate: 1 BAK = 20 KES.",
+      "Buy BAKCoins through the platform using M-Pesa or other supported payment methods. Conversion rate: 1 BAK = $0.16 USD.",
       
       "2. Deposit Requests",
       
@@ -655,7 +655,7 @@ export const blogPosts = [
       "• Minimum withdrawal amounts may apply",
       "• Processing time varies (typically within 24-48 hours)",
       "• Small processing fees cover transaction costs",
-      "• KES conversion at current rate (1 BAK = 20 KES)",
+      "• Conversion at current rate (1 BAK = $0.16 USD)",
       
       "The ability to withdraw real money is what makes BAKCoins meaningful. Earnings aren't theoretical—they're spendable.",
       
@@ -901,7 +901,7 @@ export const blogPosts = [
       "• Select Withdraw",
       "• Enter amount and M-Pesa details",
       "• Receive money within processing time",
-      "• Conversion: 1 BAK = 20 KES",
+      "• Conversion: 1 BAK = $0.16 USD",
       
       "Your money is accessible. No mystery. No waiting months for royalty statements.",
       

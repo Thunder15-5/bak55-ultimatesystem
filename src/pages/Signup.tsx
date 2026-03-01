@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Sparkles, Mail, Lock, User, MapPin, Music2, Building2, Globe, Headphones } from "lucide-react";
 import { toast } from "sonner";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 import { FEATURES } from "@/lib/featureFlags";
 
 export default function Signup() {

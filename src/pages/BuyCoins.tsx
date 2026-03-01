@@ -13,6 +13,7 @@ import { Navigation } from "@/components/Navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
 
 // Selar payment packages
 const PAYMENT_PACKAGES = [
@@ -60,7 +61,7 @@ const PAYMENT_PACKAGES = [
   },
 ];
 
-const BAK_RATE = 20; // 20 KES = 1 BAK
+const BAK_RATE = 20; // 20 KES = 1 BAK (internal KES rate for packages)
 
 const BuyCoins = () => {
   const { user } = useAuth();
@@ -308,6 +309,8 @@ const BuyCoins = () => {
             </ul>
           </AlertDescription>
         </Alert>
+
+        <ExchangeRatesTable variant="compact" className="mt-6" />
 
         <p className="text-xs text-center text-muted-foreground mt-6">
           Payments are processed securely via Selar. BAKCoins are credited instantly after payment confirmation.
