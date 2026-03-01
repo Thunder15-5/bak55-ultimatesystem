@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign, ShoppingBag } from "lucide-react";
@@ -22,6 +23,7 @@ interface Transaction {
 
 export default function Wallet() {
   const { user, userRole } = useAuth();
+  const { formatFromKES, formatBAK } = useCurrency();
   const navigate = useNavigate();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -406,8 +408,8 @@ export default function Wallet() {
                   <p className="text-2xl font-bold">{totalSalesCount}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Revenue (KES)</p>
-                  <p className="text-2xl font-bold text-primary">KES {totalSales.toLocaleString()}</p>
+                 <p className="text-sm text-muted-foreground">Revenue</p>
+                  <p className="text-2xl font-bold text-primary">{formatFromKES(totalSales)}</p>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">

@@ -8,9 +8,11 @@ import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { FoundersSeason } from "@/components/FoundersSeason";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Competitions = () => {
   const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
+  const { formatFromKES } = useCurrency();
 
   useEffect(() => {
     fetchFeaturedCompetition();
@@ -156,14 +158,14 @@ const Competitions = () => {
               <Award className="w-16 h-16 text-secondary mx-auto mb-4" />
               <div className="text-4xl font-bold text-gradient-secondary mb-2">1st Place</div>
               <p className="text-muted-foreground mb-4">Major Competitions</p>
-              <div className="text-3xl font-bold">KSh 50,000+</div>
+              <div className="text-3xl font-bold">{formatFromKES(50000)}+</div>
             </Card>
             
             <Card className="p-8 text-center bg-gradient-to-br from-primary/20 to-primary/5 border-primary/30">
               <Star className="w-16 h-16 text-primary mx-auto mb-4" />
               <div className="text-4xl font-bold text-gradient-primary mb-2">2nd Place</div>
               <p className="text-muted-foreground mb-4">Major Competitions</p>
-              <div className="text-3xl font-bold">KSh 25,000+</div>
+              <div className="text-3xl font-bold">{formatFromKES(25000)}+</div>
             </Card>
             
             <Card className="p-8 text-center bg-gradient-to-br from-accent/20 to-accent/5 border-accent/30">

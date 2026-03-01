@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,7 @@ interface DepositRequest {
 
 const Deposits = () => {
   const { user, userRole } = useAuth();
+  const { formatFromKES } = useCurrency();
   const navigate = useNavigate();
   const [deposits, setDeposits] = useState<DepositRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,7 +213,7 @@ const Deposits = () => {
                           <div className="text-sm text-muted-foreground">{deposit.profiles.email}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{deposit.amount_kes} KSh</TableCell>
+                      <TableCell className="font-medium">{formatFromKES(deposit.amount_kes)}</TableCell>
                       <TableCell className="text-primary font-bold">{deposit.expected_bak.toFixed(2)} BAK</TableCell>
                       <TableCell className="font-mono text-sm">{deposit.receipt_code}</TableCell>
                       <TableCell>

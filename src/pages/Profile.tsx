@@ -21,6 +21,8 @@ import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { FanRewards } from "@/components/FanRewards";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { CurrencySelector } from "@/components/CurrencySelector";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -465,6 +467,12 @@ export default function Profile() {
                           value={profile.location}
                           onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                         />
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <Label>Preferred Currency</Label>
+                        <CurrencySelector variant="full" />
+                        <p className="text-xs text-muted-foreground">All monetary values will be displayed in your selected currency</p>
                       </div>
                       {userRole === "artist" && (
                         <>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,6 +53,7 @@ const LICENSE_TIERS = [
 
 export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseDialogProps) {
   const { user } = useAuth();
+  const { formatFromKES } = useCurrency();
   const navigate = useNavigate();
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -193,7 +195,7 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
                     <div className="text-center">
                       <div className="text-2xl font-bold text-primary">{price.bak} BAK</div>
                       {price.kes > 0 && (
-                        <div className="text-xs text-muted-foreground">≈ KES {price.kes}</div>
+                        <div className="text-xs text-muted-foreground">≈ {formatFromKES(price.kes)}</div>
                       )}
                     </div>
                   )}
