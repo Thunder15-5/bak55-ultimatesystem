@@ -456,14 +456,14 @@ export function EmailTemplatesPanel() {
         <TabsContent value="queue" className="mt-6">
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="space-y-3">
                 <div>
                   <CardTitle className="text-base">Email Queue</CardTitle>
                   <CardDescription className="text-xs">{pendingInQueue} pending · {failedInQueue} failed · {staleInQueue > 0 ? `${staleInQueue} stale · ` : ''}{queue.length} total</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Select value={queueFilter} onValueChange={setQueueFilter}>
-                    <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[100px] h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
@@ -471,9 +471,9 @@ export function EmailTemplatesPanel() {
                       <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="sm" onClick={handleRetryFailed}><RefreshCw className="w-3.5 h-3.5 mr-1.5" />Retry Failed</Button>
-                  <Button variant="outline" size="sm" onClick={handleClearStale}><Trash2 className="w-3.5 h-3.5 mr-1.5" />Clear Stale</Button>
-                  <Button variant="outline" size="sm" onClick={handleProcessQueue}><Send className="w-3.5 h-3.5 mr-1.5" />Process</Button>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleRetryFailed}><RefreshCw className="w-3.5 h-3.5 mr-1" />Retry</Button>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleClearStale}><Trash2 className="w-3.5 h-3.5 mr-1" />Clear Stale</Button>
+                  <Button variant="default" size="sm" className="h-8 text-xs" onClick={handleProcessQueue}><Send className="w-3.5 h-3.5 mr-1" />Process Queue</Button>
                 </div>
               </div>
             </CardHeader>
