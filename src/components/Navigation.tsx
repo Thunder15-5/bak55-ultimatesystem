@@ -85,6 +85,12 @@ export function Navigation() {
                         Live Streams
                       </Button>
                     </Link>
+                    <Link to="/rising-stars/voting">
+                      <Button variant="ghost" size="sm" className="text-primary font-semibold">
+                        <Trophy className="mr-1 h-3 w-3" />
+                        Vote
+                      </Button>
+                    </Link>
                     <Link to="/upgrade">
                       <Button variant="hero" size="sm" className="ml-2">
                         <TrendingUp className="mr-1 h-3 w-3" />
@@ -242,6 +248,10 @@ export function Navigation() {
                 <Link to="/blog" className="text-foreground hover:text-primary transition-colors">
                   Blog
                 </Link>
+                <Link to="/rising-stars/voting" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors">
+                  <Trophy className="h-3 w-3" />
+                  Vote Now
+                </Link>
                 <Link to="/login">
                   <Button variant="outline" size="sm">
                     Login
@@ -283,6 +293,12 @@ export function Navigation() {
                       <Button variant="ghost" className="w-full justify-start">
                         <History className="mr-2 h-4 w-4" />
                         Listening History
+                      </Button>
+                    </Link>
+                    <Link to="/rising-stars/voting" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start text-primary font-semibold">
+                        <Trophy className="mr-2 h-4 w-4" />
+                        Vote — Rising Stars
                       </Button>
                     </Link>
                     <Link to="/leaderboard" onClick={() => setIsOpen(false)}>
@@ -430,6 +446,13 @@ export function Navigation() {
                   onClick={() => setIsOpen(false)}
                 >
                   Blog
+                </Link>
+                <Link
+                  to="/rising-stars/voting"
+                  className="block py-2 text-primary font-semibold hover:text-primary/80 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  🗳️ Vote Now — Rising Stars
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full mb-2">
