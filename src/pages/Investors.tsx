@@ -160,7 +160,7 @@ const Investors = () => {
                 <div>
                   <h3 className="text-xl font-bold mb-2">Year 2-3: Regional Scale</h3>
                   <p className="text-muted-foreground">
-                    East Africa coverage, 20,000 artists, 250,000 fans, KSh 38.75M revenue, 40%+ margins, West Africa entry
+                    East Africa coverage, 20,000 artists, 250,000 fans, $300K+ revenue, 40%+ margins, West Africa entry
                   </p>
                 </div>
               </div>
@@ -197,15 +197,15 @@ const Investors = () => {
                 <tbody className="text-muted-foreground">
                   <tr className="border-b border-primary/10">
                     <td className="py-4 px-4">Total Revenue</td>
-                    <td className="text-right py-4 px-4 font-semibold">KSh 7.95M</td>
-                    <td className="text-right py-4 px-4 font-semibold">KSh 23.75M</td>
-                    <td className="text-right py-4 px-4 font-semibold">KSh 38.75M</td>
+                    <td className="text-right py-4 px-4 font-semibold">$61K</td>
+                    <td className="text-right py-4 px-4 font-semibold">$183K</td>
+                    <td className="text-right py-4 px-4 font-semibold">$300K</td>
                   </tr>
                   <tr className="border-b border-primary/10">
                     <td className="py-4 px-4">Operating Profit</td>
-                    <td className="text-right py-4 px-4 font-semibold text-primary">KSh 2.25M</td>
-                    <td className="text-right py-4 px-4 font-semibold text-primary">KSh 8.75M</td>
-                    <td className="text-right py-4 px-4 font-semibold text-primary">KSh 15.75M</td>
+                    <td className="text-right py-4 px-4 font-semibold text-primary">$17K</td>
+                    <td className="text-right py-4 px-4 font-semibold text-primary">$68K</td>
+                    <td className="text-right py-4 px-4 font-semibold text-primary">$122K</td>
                   </tr>
                   <tr>
                     <td className="py-4 px-4">Operating Margin</td>

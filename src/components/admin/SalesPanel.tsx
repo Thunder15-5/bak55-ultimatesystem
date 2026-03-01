@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DollarSign, Download, TrendingUp, ShoppingBag, Settings, Loader2, Coins } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface SaleSummary {
   totalSales: number;
@@ -15,6 +16,7 @@ interface SaleSummary {
 }
 
 export function SalesPanel() {
+  const { formatFromKES } = useCurrency();
   const [stats, setStats] = useState<SaleSummary>({
     totalSales: 0,
     totalRevenueBak: 0,
@@ -141,7 +143,7 @@ export function SalesPanel() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalRevenueBak.toFixed(2)} BAK</div>
-            <p className="text-xs text-muted-foreground">≈ KES {estKes} • 100% to artists</p>
+            <p className="text-xs text-muted-foreground">≈ {formatFromKES(stats.totalRevenueBak * Number(bakRate))} • 100% to artists</p>
           </CardContent>
         </Card>
         <Card>
@@ -150,7 +152,7 @@ export function SalesPanel() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">KES {estFees}</div>
+            <div className="text-2xl font-bold">{formatFromKES(stats.totalRevenueBak * Number(bakRate) * (Number(withdrawalFee) / 100))}</div>
             <p className="text-xs text-muted-foreground">Platform revenue at withdrawal ({withdrawalFee}%)</p>
           </CardContent>
         </Card>

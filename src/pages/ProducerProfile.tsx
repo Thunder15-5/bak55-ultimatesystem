@@ -13,6 +13,7 @@ import {
   Headphones, Star, ShoppingCart, Award, MapPin, Calendar, 
   Loader2, Play, Pause, Music2, MessageSquare, TrendingUp
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ProducerData {
   user_id: string;
@@ -56,6 +57,7 @@ interface Beat {
 export default function ProducerProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { formatFromKES } = useCurrency();
   const [producer, setProducer] = useState<ProducerData | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [beats, setBeats] = useState<Beat[]>([]);
@@ -266,7 +268,7 @@ export default function ProducerProfile() {
                         {beat.is_free ? (
                           <Badge variant="outline" className="text-xs border-primary text-primary">Free</Badge>
                         ) : beat.price_lease_kes ? (
-                          <Badge variant="default" className="text-xs">KES {beat.price_lease_kes}</Badge>
+                          <Badge variant="default" className="text-xs">{formatFromKES(beat.price_lease_kes)}</Badge>
                         ) : null}
                       </div>
                     </div>

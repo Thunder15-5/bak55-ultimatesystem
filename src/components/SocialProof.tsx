@@ -25,7 +25,7 @@ const testimonials = [
 const projectionMetrics = [
   { icon: Users, value: "2,000+", label: "Target Users", sublabel: "Year 1 Goal" },
   { icon: Music, value: "500+", label: "Target Tracks", sublabel: "Year 1 Goal" },
-  { icon: DollarSign, value: "KSh 1M+", label: "Artist Payouts", sublabel: "Year 1 Target" },
+  { icon: DollarSign, value: "$10K+", label: "Artist Payouts", sublabel: "Year 1 Target" },
   { icon: TrendingUp, value: "100K+", label: "Platform Streams", sublabel: "Year 1 Target" },
 ];
 

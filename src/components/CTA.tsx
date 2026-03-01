@@ -133,7 +133,7 @@ export const CTA = () => {
                   <div className="text-xs text-muted-foreground">Pre-seed Funding</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-secondary">KSh 38.75M</div>
+                  <div className="text-2xl font-bold text-secondary">$300K+</div>
                   <div className="text-xs text-muted-foreground">Year 3 Revenue Target</div>
                 </div>
                 <div>

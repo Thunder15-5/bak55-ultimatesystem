@@ -13,6 +13,7 @@ import { Loader2, Search, Play, Pause, Music2, User, Headphones, ShoppingCart } 
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { BeatLicenseDialog } from "@/components/BeatLicenseDialog";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Beat {
   id: string;
@@ -40,6 +41,7 @@ interface ProducerInfo {
 
 export default function BeatsCatalog() {
   const { userRole } = useAuth();
+  const { formatFromKES } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [playingBeatId, setPlayingBeatId] = useState<string | null>(null);
@@ -277,7 +279,7 @@ export default function BeatsCatalog() {
                       >
                         <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1">
                           <ShoppingCart className="w-3 h-3" />
-                          {beat.is_free ? "Free" : beat.price_lease_kes ? `KES ${beat.price_lease_kes}` : "License"}
+                          {beat.is_free ? "Free" : beat.price_lease_kes ? formatFromKES(beat.price_lease_kes) : "License"}
                         </Button>
                       </BeatLicenseDialog>
                     </div>

@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { DollarSign, TrendingUp, TrendingDown, Users, Wallet, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ReserveData {
   totalBAKInCirculation: number;
@@ -21,6 +22,7 @@ interface ReserveData {
 export default function CashReserve() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const { formatFromKES } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [reserveData, setReserveData] = useState<ReserveData | null>(null);
   const [pendingTasks, setPendingTasks] = useState<any[]>([]);
@@ -257,7 +259,7 @@ export default function CashReserve() {
                 <CardContent>
                   <div className="text-2xl font-bold">{reserveData.totalBAKInCirculation.toFixed(2)} BAK</div>
                   <p className="text-xs text-muted-foreground">
-                    ≈ {reserveData.totalKshReserve.toFixed(0)} KSh reserve needed
+                    ≈ {formatFromKES(reserveData.totalKshReserve)} reserve needed
                   </p>
                 </CardContent>
               </Card>
