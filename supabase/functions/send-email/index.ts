@@ -8,6 +8,21 @@ const corsHeaders = {
 const PRODUCTION_DOMAIN = "https://bak55talent.co.ke";
 const SUPPORT_EMAIL = "support@bak55talent.co.ke";
 const COMPANY_NAME = "BAK55 Talent";
+const LOGO_URL = `${PRODUCTION_DOMAIN}/icons/icon-512x512.png`;
+const BRAND_PRIMARY = "#7C3AED";
+const BRAND_DARK = "#5B21B6";
+const BRAND_LIGHT = "#EDE9FE";
+const BRAND_ACCENT = "#A78BFA";
+const TEXT_DARK = "#1F2937";
+const TEXT_SECONDARY = "#6B7280";
+const TEXT_MUTED = "#9CA3AF";
+const SUCCESS_COLOR = "#059669";
+const WARNING_COLOR = "#D97706";
+const ERROR_COLOR = "#DC2626";
+const BG_BODY = "#F3F4F6";
+const BG_CARD = "#ffffff";
+const BORDER_COLOR = "#E5E7EB";
+const YEAR = new Date().getFullYear();
 
 interface EmailRequest {
   to: string;
@@ -17,134 +32,183 @@ interface EmailRequest {
   html?: string;
 }
 
-// ─── Enterprise Email Wrapper ──────────────────────────────────────
+// ─── Reusable Inline-Style Building Blocks ─────────────────────
+
+const btn = (href: string, label: string, color = BRAND_PRIMARY) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px auto;">
+    <tr><td align="center" style="border-radius:8px;background:${color};">
+      <!--[if mso]><a href="${href}" target="_blank" style="background:${color};color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;padding:14px 40px;text-decoration:none;display:inline-block;border-radius:8px;mso-padding-alt:0;"><![endif]-->
+      <!--[if !mso]><!--><a href="${href}" target="_blank" style="display:inline-block;background:${color};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;padding:14px 40px;text-decoration:none;border-radius:8px;line-height:1.4;"><!--<![endif]-->${label}<!--[if !mso]><!--></a><!--<![endif]-->
+      <!--[if mso]></a><![endif]-->
+    </td></tr>
+  </table>`;
+
+const heading = (text: string) =>
+  `<h1 style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:700;color:${TEXT_DARK};line-height:1.3;">${text}</h1>`;
+
+const subheading = (text: string) =>
+  `<h2 style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:${TEXT_DARK};line-height:1.3;">${text}</h2>`;
+
+const para = (text: string) =>
+  `<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">${text}</p>`;
+
+const greeting = (name: string) =>
+  `<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:${TEXT_DARK};">Hi <strong style="color:${BRAND_PRIMARY};">${name}</strong>,</p>`;
+
+const highlightCard = (label: string, value: string, subtext?: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;">
+    <tr><td style="background:${BRAND_LIGHT};border:1px solid #DDD6FE;border-radius:12px;padding:28px;text-align:center;">
+      <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:${TEXT_MUTED};text-transform:uppercase;letter-spacing:2px;">${label}</p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:28px;font-weight:800;color:${BRAND_PRIMARY};letter-spacing:1px;">${value}</p>
+      ${subtext ? `<p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:${TEXT_MUTED};">${subtext}</p>` : ''}
+    </td></tr>
+  </table>`;
+
+const codeCard = (label: string, code: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;">
+    <tr><td style="background:${BRAND_LIGHT};border:2px dashed ${BRAND_ACCENT};border-radius:12px;padding:28px;text-align:center;">
+      <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:${TEXT_MUTED};text-transform:uppercase;letter-spacing:2px;">${label}</p>
+      <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:800;color:${BRAND_PRIMARY};letter-spacing:6px;">${code}</p>
+    </td></tr>
+  </table>`;
+
+const infoBox = (text: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;">
+    <tr><td style="background:#F9FAFB;border-left:4px solid ${BRAND_PRIMARY};border-radius:0 8px 8px 0;padding:16px 20px;">
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};">${text}</p>
+    </td></tr>
+  </table>`;
+
+const divider = () =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;"><tr><td style="height:1px;background:${BORDER_COLOR};"></td></tr></table>`;
+
+const detailRow = (label: string, value: string, valueColor?: string) =>
+  `<tr>
+    <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:14px;color:${TEXT_MUTED};font-weight:500;border-bottom:1px solid #F3F4F6;width:40%;">${label}</td>
+    <td style="padding:10px 0;font-family:Arial,sans-serif;font-size:14px;color:${valueColor || TEXT_DARK};font-weight:600;text-align:right;border-bottom:1px solid #F3F4F6;">${value}</td>
+  </tr>`;
+
+const detailTable = (rows: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;">${rows}</table>`;
+
+const statusBadge = (text: string, color: string) =>
+  `<span style="display:inline-block;background:${color};color:#ffffff;padding:4px 14px;border-radius:20px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${text}</span>`;
+
+const step = (num: string, text: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
+    <tr>
+      <td style="width:36px;vertical-align:top;">
+        <div style="width:30px;height:30px;background:${BRAND_PRIMARY};color:#ffffff;border-radius:50%;text-align:center;line-height:30px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;">${num}</div>
+      </td>
+      <td style="padding-left:12px;vertical-align:top;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};padding-top:4px;">${text}</p>
+      </td>
+    </tr>
+  </table>`;
+
+const helpFooter = () =>
+  `${divider()}
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td style="text-align:center;padding:8px 0;">
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:${TEXT_MUTED};">Need help? <a href="${PRODUCTION_DOMAIN}/faq" style="color:${BRAND_PRIMARY};text-decoration:none;font-weight:600;">Visit FAQ</a> or email <a href="mailto:${SUPPORT_EMAIL}" style="color:${BRAND_PRIMARY};text-decoration:none;font-weight:600;">${SUPPORT_EMAIL}</a></p>
+    </td></tr>
+  </table>`;
+
+
+// ─── Enterprise Email Wrapper (Table-Based, Inline Styles) ─────
+
 const emailWrapper = (content: string, preheader?: string) => {
   const ph = preheader || '';
-  const year = new Date().getFullYear();
   return [
-    '<!DOCTYPE html>',
-    '<html lang="en">',
+    '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+    '<html xmlns="http://www.w3.org/1999/xhtml" lang="en">',
     '<head>',
-    '<meta charset="UTF-8">',
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
-    '<meta http-equiv="X-UA-Compatible" content="IE=edge">',
+    '<meta charset="UTF-8" />',
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+    '<meta http-equiv="X-UA-Compatible" content="IE=edge" />',
+    '<meta name="color-scheme" content="light" />',
+    '<meta name="supported-color-schemes" content="light" />',
     `<title>${COMPANY_NAME}</title>`,
-    '<style>',
-    'body{margin:0;padding:0;width:100%;',
-    'background-color:#f4f4f8;',
-    'font-family:Arial,Helvetica,sans-serif;',
-    '-webkit-font-smoothing:antialiased;}',
-    'img{border:0;display:block;max-width:100%;}',
-    'table{border-collapse:collapse;}',
-    'td{padding:0;}',
-    '.ec{max-width:600px;margin:0 auto;',
-    'background:#ffffff;border-radius:12px;',
-    'overflow:hidden;}',
-    '.hdr{background:#9333EA;',
-    'padding:32px 24px;text-align:center;}',
-    '.hdr a{color:#ffffff;text-decoration:none;',
-    'font-size:24px;font-weight:bold;}',
-    '.hdr-sub{color:rgba(255,255,255,0.85);',
-    'font-size:13px;margin-top:6px;}',
-    '.bc{padding:36px 28px;background:#ffffff;}',
-    'h1{color:#1a1a2e;font-size:24px;',
-    'font-weight:bold;margin:0 0 16px;}',
-    'h2{color:#1a1a2e;font-size:18px;',
-    'font-weight:bold;margin:0 0 12px;}',
-    'p{color:#4a4a5a;font-size:15px;',
-    'line-height:1.7;margin:0 0 14px;}',
-    '.gr{color:#1a1a2e;font-size:15px;',
-    'margin-bottom:18px;}',
-    '.gr strong{color:#9333EA;}',
-    '.cw{text-align:center;margin:28px 0;}',
-    '.cb{display:inline-block;background:#9333EA;',
-    'color:#ffffff!important;text-decoration:none;',
-    'padding:14px 36px;border-radius:8px;',
-    'font-weight:bold;font-size:15px;}',
-    '.hc{background:#f8f5ff;',
-    'border:1px solid #e0d4f5;',
-    'border-radius:12px;padding:24px;',
-    'margin:20px 0;text-align:center;}',
-    '.hc .lb{font-size:12px;color:#8b8ba0;',
-    'text-transform:uppercase;letter-spacing:2px;',
-    'margin-bottom:8px;font-weight:600;}',
-    '.hc .vl{font-size:32px;font-weight:bold;',
-    'color:#9333EA;letter-spacing:4px;',
-    'font-family:monospace;}',
-    '.hc .vt{font-size:22px;font-weight:bold;',
-    'color:#9333EA;}',
-    '.ic{background:#f8f8fc;border-radius:10px;',
-    'padding:16px 20px;margin:16px 0;',
-    'border-left:4px solid #9333EA;}',
-    '.ic p{margin:0;color:#4a4a5a;font-size:14px;}',
-    '.ic strong{color:#1a1a2e;}',
-    '.dt td{padding:8px 0;font-size:14px;',
-    'border-bottom:1px solid #f0f0f5;}',
-    '.dl{color:#8b8ba0;font-weight:500;width:40%;}',
-    '.dv{color:#1a1a2e;font-weight:600;',
-    'text-align:right;}',
-    '.si{display:flex;align-items:flex-start;',
-    'margin-bottom:14px;}',
-    '.sn{display:inline-block;width:28px;',
-    'height:28px;min-width:28px;',
-    'background:#9333EA;color:#fff;',
-    'border-radius:50%;text-align:center;',
-    'line-height:28px;font-weight:bold;',
-    'font-size:13px;margin-right:12px;}',
-    '.st{color:#4a4a5a;font-size:14px;',
-    'line-height:1.6;padding-top:3px;}',
-    '.dv2{height:1px;',
-    'background:#e2e2ea;margin:24px 0;}',
-    '.sb{display:inline-block;background:#10B981;',
-    'color:#fff;padding:5px 14px;',
-    'border-radius:16px;font-size:12px;',
-    'font-weight:bold;text-transform:uppercase;}',
-    '.wb{display:inline-block;background:#F59E0B;',
-    'color:#fff;padding:5px 14px;',
-    'border-radius:16px;font-size:12px;',
-    'font-weight:bold;text-transform:uppercase;}',
-    '.ftr{background:#1a1a2e;padding:28px 24px;',
-    'text-align:center;}',
-    '.ftr a{color:#9333EA;text-decoration:none;',
-    'font-size:13px;font-weight:500;}',
-    '.ft{color:#9b9baa;font-size:12px;',
-    'line-height:1.8;margin:12px 0 0;}',
-    '.nt{font-size:13px;color:#8b8ba0;',
-    'line-height:1.6;}',
-    '.lt{color:#9333EA;text-decoration:none;',
-    'font-weight:500;}',
+    '<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->',
+    '<style type="text/css">',
+    '#outlook a{padding:0;}',
+    'body{margin:0;padding:0;width:100%;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}',
+    'table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}',
+    'img{-ms-interpolation-mode:bicubic;border:0;display:block;outline:none;text-decoration:none;}',
+    'a{color:' + BRAND_PRIMARY + ';text-decoration:none;}',
     '@media only screen and (max-width:620px){',
-    '.ec{margin:0!important;border-radius:0!important;}',
-    '.bc{padding:24px 16px!important;}',
-    '.hdr{padding:24px 16px!important;}',
+    '.email-container{width:100%!important;max-width:100%!important;}',
+    '.email-body{padding:24px 16px!important;}',
+    '.email-header{padding:24px 16px!important;}',
     'h1{font-size:20px!important;}',
+    '}',
+    '@media (prefers-color-scheme:dark){',
+    '.email-bg{background-color:#1F2937!important;}',
+    '.email-card{background-color:#111827!important;}',
+    '.email-header{background:linear-gradient(135deg,#5B21B6,#7C3AED)!important;}',
+    'h1,h2{color:#F9FAFB!important;}',
+    'p{color:#D1D5DB!important;}',
     '}',
     '</style>',
     '</head>',
-    '<body>',
-    `<div style="display:none!important;font-size:1px;color:#f4f4f8;line-height:1px;max-height:0;overflow:hidden;">${ph}</div>`,
-    '<center style="width:100%;background:#f4f4f8;padding:24px 8px;">',
-    '<div class="ec">',
-    '<div class="hdr">',
-    `<a href="${PRODUCTION_DOMAIN}">&#127925; ${COMPANY_NAME}</a>`,
-    '<div class="hdr-sub">Africa\'s Premier Music Talent Platform</div>',
-    '</div>',
-    '<div class="bc">',
+    `<body style="margin:0;padding:0;width:100%;background-color:${BG_BODY};font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">`,
+    // Preheader
+    `<div style="display:none;font-size:1px;color:${BG_BODY};line-height:1px;max-height:0;overflow:hidden;mso-hide:all;">${ph}${'&zwnj;&nbsp;'.repeat(30)}</div>`,
+    // Outer table
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${BG_BODY};" class="email-bg">`,
+    '<tr><td align="center" style="padding:32px 12px;">',
+    // Container
+    '<!--[if mso]><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"><tr><td><![endif]-->',
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background:${BG_CARD};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);" class="email-container email-card">`,
+    // Header
+    '<tr><td>',
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">`,
+    `<tr><td style="background:linear-gradient(135deg,${BRAND_DARK},${BRAND_PRIMARY});padding:32px 28px;text-align:center;" class="email-header">`,
+    `<img src="${LOGO_URL}" alt="${COMPANY_NAME}" width="48" height="48" style="display:inline-block;width:48px;height:48px;border-radius:12px;margin-bottom:12px;" />`,
+    `<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:0.5px;">&#127925; ${COMPANY_NAME}</p>`,
+    `<p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:2px;">Africa&rsquo;s Premier Music Talent Platform</p>`,
+    '</td></tr>',
+    '</table>',
+    '</td></tr>',
+    // Body
+    `<tr><td style="padding:36px 32px;background:${BG_CARD};" class="email-body">`,
     content,
-    '</div>',
-    '<div class="ftr">',
-    '<div style="margin-bottom:16px;">',
-    `<a href="${PRODUCTION_DOMAIN}">Website</a> &nbsp;|&nbsp; `,
-    `<a href="${PRODUCTION_DOMAIN}/faq">FAQ</a> &nbsp;|&nbsp; `,
-    `<a href="${PRODUCTION_DOMAIN}/contact">Contact</a> &nbsp;|&nbsp; `,
-    `<a href="${PRODUCTION_DOMAIN}/terms">Terms</a>`,
-    '</div>',
-    `<p class="ft">&copy; ${year} ${COMPANY_NAME}. All rights reserved.<br>`,
-    `Nairobi, Kenya &middot; <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>`,
-    '<p class="ft">You\'re receiving this because you have an account on ' + COMPANY_NAME + '.</p>',
-    '</div>',
-    '</div>',
-    '</center>',
+    '</td></tr>',
+    // Footer
+    '<tr><td>',
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#111827;padding:0;">`,
+    '<tr><td style="padding:28px 24px;text-align:center;">',
+    // Social links row
+    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">',
+    '<tr>',
+    `<td style="padding:0 8px;"><a href="https://instagram.com/bak55talent" style="color:${BRAND_ACCENT};font-family:Arial,sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Instagram</a></td>`,
+    `<td style="padding:0 8px;color:#4B5563;">&middot;</td>`,
+    `<td style="padding:0 8px;"><a href="https://twitter.com/bak55talent" style="color:${BRAND_ACCENT};font-family:Arial,sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Twitter</a></td>`,
+    `<td style="padding:0 8px;color:#4B5563;">&middot;</td>`,
+    `<td style="padding:0 8px;"><a href="https://tiktok.com/@bak55talent" style="color:${BRAND_ACCENT};font-family:Arial,sans-serif;font-size:13px;font-weight:600;text-decoration:none;">TikTok</a></td>`,
+    '</tr>',
+    '</table>',
+    // Nav links
+    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;">',
+    '<tr>',
+    `<td style="padding:0 10px;"><a href="${PRODUCTION_DOMAIN}" style="color:#9CA3AF;font-family:Arial,sans-serif;font-size:12px;text-decoration:none;">Website</a></td>`,
+    `<td style="padding:0 10px;"><a href="${PRODUCTION_DOMAIN}/faq" style="color:#9CA3AF;font-family:Arial,sans-serif;font-size:12px;text-decoration:none;">FAQ</a></td>`,
+    `<td style="padding:0 10px;"><a href="${PRODUCTION_DOMAIN}/contact" style="color:#9CA3AF;font-family:Arial,sans-serif;font-size:12px;text-decoration:none;">Contact</a></td>`,
+    `<td style="padding:0 10px;"><a href="${PRODUCTION_DOMAIN}/terms" style="color:#9CA3AF;font-family:Arial,sans-serif;font-size:12px;text-decoration:none;">Terms</a></td>`,
+    `<td style="padding:0 10px;"><a href="${PRODUCTION_DOMAIN}/privacy" style="color:#9CA3AF;font-family:Arial,sans-serif;font-size:12px;text-decoration:none;">Privacy</a></td>`,
+    '</tr>',
+    '</table>',
+    // Copyright
+    `<p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#6B7280;">&copy; ${YEAR} ${COMPANY_NAME}. All rights reserved.</p>`,
+    `<p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;color:#4B5563;">Zanzi Court, Riara Rd &middot; Nairobi, Kenya</p>`,
+    `<p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#4B5563;">You received this because you have a ${COMPANY_NAME} account.</p>`,
+    '</td></tr>',
+    '</table>',
+    '</td></tr>',
+    '</table>',
+    '<!--[if mso]></td></tr></table><![endif]-->',
+    '</td></tr>',
+    '</table>',
     '</body>',
     '</html>',
   ].join('\n');
@@ -155,456 +219,416 @@ const templates: Record<string, (data: any) => string> = {
 
   welcome: (data: any) => {
     const role = data.role || 'fan';
-    const roleTips: Record<string, string> = {
-      artist: [
-        '<div class="si"><span class="sn">1</span><span class="st"><strong>Upload your first track</strong> - share your music</span></div>',
-        '<div class="si"><span class="sn">2</span><span class="st"><strong>Enter competitions</strong> - win BAKCoins</span></div>',
-        '<div class="si"><span class="sn">3</span><span class="st"><strong>Build your fanbase</strong> - get tips and support</span></div>',
-        '<div class="si"><span class="sn">4</span><span class="st"><strong>Collaborate</strong> - work with producers</span></div>',
-      ].join('\n'),
-      producer: [
-        '<div class="si"><span class="sn">1</span><span class="st"><strong>Upload your beats</strong> - showcase your catalog</span></div>',
-        '<div class="si"><span class="sn">2</span><span class="st"><strong>Set licensing tiers</strong> - earn from sales</span></div>',
-        '<div class="si"><span class="sn">3</span><span class="st"><strong>Collaborate with artists</strong> - get work requests</span></div>',
-        '<div class="si"><span class="sn">4</span><span class="st"><strong>Grow your brand</strong> - build your reputation</span></div>',
-      ].join('\n'),
-      brand: [
-        '<div class="si"><span class="sn">1</span><span class="st"><strong>Discover talent</strong> - browse emerging artists</span></div>',
-        '<div class="si"><span class="sn">2</span><span class="st"><strong>Sponsor competitions</strong> - reach music fans</span></div>',
-        '<div class="si"><span class="sn">3</span><span class="st"><strong>Partner with artists</strong> - authentic collabs</span></div>',
-      ].join('\n'),
-      fan: [
-        '<div class="si"><span class="sn">1</span><span class="st"><strong>Explore trending music</strong> - discover new stars</span></div>',
-        '<div class="si"><span class="sn">2</span><span class="st"><strong>Vote in competitions</strong> - help decide winners</span></div>',
-        '<div class="si"><span class="sn">3</span><span class="st"><strong>Tip your favorites</strong> - support artists</span></div>',
-        '<div class="si"><span class="sn">4</span><span class="st"><strong>Earn rewards</strong> - get BAKCoins for activity</span></div>',
-      ].join('\n'),
-    };
     const uname = data.username || 'there';
     const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
     const acctName = (data.username || data.email || 'Member').toUpperCase();
     const dashPath = role === 'fan' ? 'fan' : role;
+
+    const roleTips: Record<string, string> = {
+      artist: [
+        step('1', '<strong>Upload your first track</strong> — share your music with the world'),
+        step('2', '<strong>Enter competitions</strong> — win BAKCoins and get discovered'),
+        step('3', '<strong>Build your fanbase</strong> — earn tips and streaming revenue'),
+        step('4', '<strong>Collaborate</strong> — connect with producers and brands'),
+      ].join(''),
+      producer: [
+        step('1', '<strong>Upload your beats</strong> — showcase your production catalog'),
+        step('2', '<strong>Set licensing tiers</strong> — lease, premium, and exclusive'),
+        step('3', '<strong>Collaborate with artists</strong> — receive work requests'),
+        step('4', '<strong>Grow your brand</strong> — build your reputation on the platform'),
+      ].join(''),
+      brand: [
+        step('1', '<strong>Discover talent</strong> — browse Africa\'s emerging artists'),
+        step('2', '<strong>Sponsor competitions</strong> — reach engaged music fans'),
+        step('3', '<strong>Partner with artists</strong> — authentic brand collaborations'),
+      ].join(''),
+      fan: [
+        step('1', '<strong>Explore trending music</strong> — discover Africa\'s next big stars'),
+        step('2', '<strong>Vote in competitions</strong> — help decide the winners'),
+        step('3', '<strong>Tip your favorites</strong> — support artists you love'),
+        step('4', '<strong>Earn rewards</strong> — get BAKCoins for your activity'),
+      ].join(''),
+    };
+
     return emailWrapper([
-      `<h1>Welcome to ${COMPANY_NAME}! &#127881;</h1>`,
-      `<p class="gr">Hi <strong>${uname}</strong>,</p>`,
-      '<p>We\'re thrilled to have you join Africa\'s premier music talent platform.</p>',
-      '<div class="hc">',
-      '<div class="lb">Your Account</div>',
-      `<div class="vt">${acctName}</div>`,
-      `<p style="margin:8px 0 0;color:#8b8ba0;font-size:13px;">${roleLabel} Account</p>`,
-      '</div>',
-      '<h2>Get started:</h2>',
+      heading(`Welcome to ${COMPANY_NAME}! &#127881;`),
+      greeting(uname),
+      para(`We're thrilled to have you join Africa's premier music talent platform. Your <strong>${roleLabel}</strong> account is ready.`),
+      highlightCard('Your Account', acctName, `${roleLabel} Account &middot; Active`),
+      subheading('Get started in 4 easy steps:'),
       roleTips[role] || roleTips.fan,
-      '<div class="cw">',
-      `<a href="${PRODUCTION_DOMAIN}/${dashPath}/dashboard" class="cb">Go to Your Dashboard</a>`,
-      '</div>',
-      '<div class="dv2"></div>',
-      `<p class="nt">Need help? <a href="${PRODUCTION_DOMAIN}/faq" class="lt">FAQ</a> or <a href="mailto:${SUPPORT_EMAIL}" class="lt">${SUPPORT_EMAIL}</a></p>`,
-    ].join('\n'), `Welcome to ${COMPANY_NAME}! Your ${role} account is ready.`);
+      btn(`${PRODUCTION_DOMAIN}/${dashPath}/dashboard`, 'Go to Your Dashboard'),
+      helpFooter(),
+    ].join(''), `Welcome to ${COMPANY_NAME}! Your ${role} account is ready.`);
   },
 
   activation: (data: any) => emailWrapper([
-    '<h1>Activate Your Account &#128274;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    `<p>Enter the 6-digit code below to activate your account.</p>`,
-    '<div class="hc">',
-    '<div class="lb">Your Activation Code</div>',
-    `<div class="vl">${data.activation_code || '------'}</div>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/verify-account" class="cb">Activate My Account</a>`,
-    '</div>',
-    '<div class="ic">',
-    `<p>This code expires in <strong>24 hours</strong>.</p>`,
-    '</div>',
-  ].join('\n'), `Your activation code: ${data.activation_code || '------'}`),
+    heading('Activate Your Account &#128274;'),
+    greeting(data.username || 'there'),
+    para('Enter the 6-digit code below to activate your account and unlock all features.'),
+    codeCard('Your Activation Code', data.activation_code || '------'),
+    btn(`${PRODUCTION_DOMAIN}/verify-account`, 'Activate My Account'),
+    infoBox(`This code expires in <strong>24 hours</strong>. If you didn't create an account, you can safely ignore this email.`),
+    helpFooter(),
+  ].join(''), `Your activation code: ${data.activation_code || '------'}`),
 
   verification: (data: any) => emailWrapper([
-    '<h1>Verify Your Email &#9993;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    `<p>Please verify your email address to unlock all features.</p>`,
-    '<div class="cw">',
-    `<a href="${data.verification_url || PRODUCTION_DOMAIN}" class="cb">Verify Email Address</a>`,
-    '</div>',
-    '<div class="ic">',
-    `<p style="word-break:break-all;"><a href="${data.verification_url || PRODUCTION_DOMAIN}" class="lt">${data.verification_url || PRODUCTION_DOMAIN}</a></p>`,
-    '</div>',
-    '<div class="dv2"></div>',
-    '<p class="nt">This link expires in 24 hours.</p>',
-  ].join('\n'), 'Verify your email to complete your registration.'),
+    heading('Verify Your Email &#9993;'),
+    greeting(data.username || 'there'),
+    para('Please verify your email address to unlock all platform features.'),
+    btn(data.verification_url || PRODUCTION_DOMAIN, 'Verify Email Address'),
+    infoBox(`Or copy this link: <a href="${data.verification_url || PRODUCTION_DOMAIN}" style="color:${BRAND_PRIMARY};word-break:break-all;">${data.verification_url || PRODUCTION_DOMAIN}</a>`),
+    para(`<span style="color:${TEXT_MUTED};font-size:13px;">This link expires in 24 hours.</span>`),
+    helpFooter(),
+  ].join(''), 'Verify your email to complete your registration.'),
 
   password_reset: (data: any) => emailWrapper([
-    '<h1>Reset Your Password &#128273;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>We received a request to reset your password.</p>',
-    '<div class="cw">',
-    `<a href="${data.reset_url || PRODUCTION_DOMAIN + '/reset-password'}" class="cb">Reset Password</a>`,
-    '</div>',
-    '<div class="ic">',
-    '<p>This link expires in <strong>1 hour</strong>.</p>',
-    '</div>',
-  ].join('\n'), 'Password reset request for your account.'),
+    heading('Reset Your Password &#128273;'),
+    greeting(data.username || 'there'),
+    para('We received a request to reset your password. Click the button below to choose a new one.'),
+    btn(data.reset_url || `${PRODUCTION_DOMAIN}/reset-password`, 'Reset Password'),
+    infoBox(`This link expires in <strong>1 hour</strong>. If you didn't request this, your account is safe — no action needed.`),
+    helpFooter(),
+  ].join(''), 'Password reset request for your account.'),
 
   competition_submission: (data: any) => emailWrapper([
-    '<h1>Submission Received! &#127919;</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    '<p>Your track has been submitted to the competition.</p>',
-    '<div class="hc">',
-    '<div class="lb">Competition</div>',
-    `<div class="vt">${data.competition_title || 'Music Competition'}</div>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Track</td><td class="dv">${data.track_title || 'Your Track'}</td></tr>`,
-    `<tr><td class="dl">Voting Opens</td><td class="dv">${data.voting_start_date || 'TBA'}</td></tr>`,
-    '<tr><td class="dl">Scoring</td><td class="dv">70% Votes + 30% AI</td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/competition/${data.competition_id || ''}" class="cb">View Competition</a>`,
-    '</div>',
-  ].join('\n'), `Your track "${data.track_title}" has been submitted!`),
+    heading('Submission Received! &#127919;'),
+    greeting(data.artist_name || 'Artist'),
+    para('Your track has been successfully submitted to the competition. Here are the details:'),
+    highlightCard('Competition', data.competition_title || 'Music Competition'),
+    detailTable([
+      detailRow('Track', data.track_title || 'Your Track'),
+      detailRow('Voting Opens', data.voting_start_date || 'To Be Announced'),
+      detailRow('Scoring Method', '70% Fan Votes + 30% AI Analysis'),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/competition/${data.competition_id || ''}`, 'View Competition'),
+    infoBox('Share your submission with friends and fans to maximize your votes!'),
+    helpFooter(),
+  ].join(''), `Your track "${data.track_title}" has been submitted!`),
 
   competition_winner: (data: any) => emailWrapper([
-    '<h1>&#127942; Congratulations, You Won!</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    `<p>Your track "<strong>${data.track_title || 'Your Track'}</strong>" placed in the competition!</p>`,
-    '<div class="hc">',
-    `<div class="lb">${data.competition_title || 'Competition'}</div>`,
-    `<div class="vt">${data.position || '1st'} Place &#127942;</div>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Prize</td><td class="dv" style="color:#9333EA;font-size:18px;">${data.prize_amount || 0} BAKCoins</td></tr>`,
-    `<tr><td class="dl">Final Score</td><td class="dv">${data.final_score || 0}/100</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="sb">Prize Credited</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">View Your Wallet</a>`,
-    '</div>',
-  ].join('\n'), `You won ${data.position || ''} place! ${data.prize_amount || 0} BAKCoins credited.`),
+    heading('&#127942; Congratulations, You Won!'),
+    greeting(data.artist_name || 'Artist'),
+    para(`Your track "<strong>${data.track_title || 'Your Track'}</strong>" placed in the competition! Your prize has been credited.`),
+    highlightCard(data.competition_title || 'Competition', `${data.position || '1st'} Place &#127942;`),
+    detailTable([
+      detailRow('Prize', `${data.prize_amount || 0} BAKCoins`, BRAND_PRIMARY),
+      detailRow('Final Score', `${data.final_score || 0}/100`),
+      detailRow('Status', statusBadge('Prize Credited', SUCCESS_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'View Your Wallet'),
+    helpFooter(),
+  ].join(''), `You won ${data.position || ''} place! ${data.prize_amount || 0} BAKCoins credited.`),
 
   withdrawal_request: (data: any) => emailWrapper([
-    '<h1>Withdrawal Request Received &#128176;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'User'}</strong>,</p>`,
-    '<p>We\'ve received your withdrawal request.</p>',
-    '<div class="hc">',
-    '<div class="lb">Withdrawal Amount</div>',
-    `<div class="vt">${data.amount || 0} BAKCoins</div>`,
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">KES ${data.ksh_amount || 0}</p>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">M-PESA Number</td><td class="dv">${data.phone_number || 'N/A'}</td></tr>`,
-    `<tr><td class="dl">Reference</td><td class="dv">${data.reference || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="wb">Processing</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">Track in Wallet</a>`,
-    '</div>',
-  ].join('\n'), `Withdrawal of ${data.amount || 0} BAKCoins is being processed.`),
+    heading('Withdrawal Request Received &#128176;'),
+    greeting(data.username || 'User'),
+    para('We\'ve received your withdrawal request and it\'s being processed.'),
+    highlightCard('Withdrawal Amount', `${data.amount || 0} BAKCoins`, `KES ${data.ksh_amount || 0}`),
+    detailTable([
+      detailRow('M-PESA Number', data.phone_number || 'N/A'),
+      detailRow('Reference', data.reference || 'N/A'),
+      detailRow('Status', statusBadge('Processing', WARNING_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'Track in Wallet'),
+    infoBox('Withdrawals are typically processed within 24-48 hours during business days.'),
+    helpFooter(),
+  ].join(''), `Withdrawal of ${data.amount || 0} BAKCoins is being processed.`),
 
   withdrawal_complete: (data: any) => emailWrapper([
-    '<h1>Withdrawal Successful! &#9989;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'User'}</strong>,</p>`,
-    '<p>Your withdrawal has been processed.</p>',
-    '<div class="hc">',
-    `<div class="vt" style="color:#10B981;">KES ${data.ksh_amount || 0}</div>`,
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">Sent to ${data.phone_number || 'your M-PESA'}</p>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">BAKCoins</td><td class="dv">${data.amount || 0}</td></tr>`,
-    `<tr><td class="dl">Transaction ID</td><td class="dv">${data.transaction_id || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="sb">Complete</span></td></tr>',
-    '</table>',
-  ].join('\n'), `KES ${data.ksh_amount || 0} sent to your M-PESA.`),
+    heading('Withdrawal Successful! &#9989;'),
+    greeting(data.username || 'User'),
+    para('Your withdrawal has been processed and sent to your M-PESA.'),
+    highlightCard('Amount Sent', `KES ${data.ksh_amount || 0}`, `Sent to ${data.phone_number || 'your M-PESA'}`),
+    detailTable([
+      detailRow('BAKCoins Withdrawn', `${data.amount || 0}`),
+      detailRow('Transaction ID', data.transaction_id || 'N/A'),
+      detailRow('Status', statusBadge('Complete', SUCCESS_COLOR)),
+    ].join('')),
+    helpFooter(),
+  ].join(''), `KES ${data.ksh_amount || 0} sent to your M-PESA.`),
 
   tip_received: (data: any) => emailWrapper([
-    '<h1>You Received a Tip! &#128157;</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    '<p>A fan just showed their love for your music!</p>',
-    '<div class="hc">',
-    '<div class="lb">Tip Amount</div>',
-    `<div class="vt" style="color:#9333EA;">${data.amount || 0} BAKCoins</div>`,
-    `<p style="margin:10px 0 0;color:#8b8ba0;font-size:14px;">From <strong style="color:#1a1a2e;">${data.tipper_name || 'A fan'}</strong></p>`,
-    '</div>',
-    data.message ? `<div class="ic"><p style="font-style:italic;">"${data.message}"</p></div>` : '',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">View Wallet</a>`,
-    '</div>',
-  ].join('\n'), `${data.tipper_name || 'A fan'} tipped you ${data.amount || 0} BAKCoins!`),
+    heading('You Received a Tip! &#128157;'),
+    greeting(data.artist_name || 'Artist'),
+    para('A fan just showed their love for your music!'),
+    highlightCard('Tip Amount', `${data.amount || 0} BAKCoins`, `From <strong>${data.tipper_name || 'A fan'}</strong>`),
+    data.message ? infoBox(`<em>"${data.message}"</em>`) : '',
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'View Wallet'),
+    helpFooter(),
+  ].join(''), `${data.tipper_name || 'A fan'} tipped you ${data.amount || 0} BAKCoins!`),
 
   new_follower: (data: any) => emailWrapper([
-    '<h1>New Follower! &#128101;</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    `<p><strong>${data.follower_name || 'Someone'}</strong> started following you!</p>`,
-    '<div class="hc">',
-    '<div class="lb">Total Followers</div>',
-    `<div class="vt">${data.follower_count || '-'}</div>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/artist/dashboard" class="cb">View Dashboard</a>`,
-    '</div>',
-  ].join('\n'), `${data.follower_name || 'Someone'} started following you!`),
+    heading('New Follower! &#128101;'),
+    greeting(data.artist_name || 'Artist'),
+    para(`<strong>${data.follower_name || 'Someone'}</strong> started following you! Keep creating great music to grow your fanbase.`),
+    highlightCard('Total Followers', data.follower_count || '-'),
+    btn(`${PRODUCTION_DOMAIN}/artist/dashboard`, 'View Dashboard'),
+    helpFooter(),
+  ].join(''), `${data.follower_name || 'Someone'} started following you!`),
 
   track_approved: (data: any) => emailWrapper([
-    '<h1>Track Approved! &#9989;</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    `<p>Your track is now live on ${COMPANY_NAME}!</p>`,
-    '<div class="hc">',
-    '<div class="lb">Now Live</div>',
-    `<div class="vt">${data.track_title || 'Your Track'}</div>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/track/${data.track_id || ''}" class="cb">View Your Track</a>`,
-    '</div>',
-    '<div class="ic">',
-    '<p><strong>Pro tip:</strong> Share on social media within 24 hours for 3x more plays!</p>',
-    '</div>',
-  ].join('\n'), `Your track "${data.track_title}" is now live!`),
+    heading('Track Approved! &#9989;'),
+    greeting(data.artist_name || 'Artist'),
+    para(`Your track is now live on ${COMPANY_NAME} and available to fans everywhere!`),
+    highlightCard('Now Live', data.track_title || 'Your Track'),
+    btn(`${PRODUCTION_DOMAIN}/track/${data.track_id || ''}`, 'View Your Track'),
+    infoBox('<strong>Pro tip:</strong> Share on social media within 24 hours for 3x more plays!'),
+    helpFooter(),
+  ].join(''), `Your track "${data.track_title}" is now live!`),
 
   track_rejected: (data: any) => emailWrapper([
-    '<h1>Track Review Update &#9888;</h1>',
-    `<p class="gr">Hi <strong>${data.artist_name || 'Artist'}</strong>,</p>`,
-    '<p>Your track didn\'t pass review this time.</p>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Track</td><td class="dv">${data.track_title || 'Your Track'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv" style="color:#EF4444;">Not Approved</td></tr>',
-    data.reason ? `<tr><td class="dl">Reason</td><td class="dv">${data.reason}</td></tr>` : '',
-    '</table>',
-    '<div class="ic">',
-    `<p>Review our <a href="${PRODUCTION_DOMAIN}/faq" class="lt">guidelines</a>, make adjustments, and re-upload.</p>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/upload" class="cb">Upload Again</a>`,
-    '</div>',
-  ].join('\n'), `Your track "${data.track_title}" needs revision.`),
+    heading('Track Review Update &#9888;'),
+    greeting(data.artist_name || 'Artist'),
+    para('After careful review, your track didn\'t pass moderation this time.'),
+    detailTable([
+      detailRow('Track', data.track_title || 'Your Track'),
+      detailRow('Status', statusBadge('Not Approved', ERROR_COLOR)),
+      ...(data.reason ? [detailRow('Reason', data.reason)] : []),
+    ].join('')),
+    infoBox(`Review our <a href="${PRODUCTION_DOMAIN}/faq" style="color:${BRAND_PRIMARY};font-weight:600;">content guidelines</a>, make adjustments, and re-upload. You can try again anytime!`),
+    btn(`${PRODUCTION_DOMAIN}/upload`, 'Upload Again'),
+    helpFooter(),
+  ].join(''), `Your track "${data.track_title}" needs revision.`),
 
   contact_form: (data: any) => emailWrapper([
-    `<h1>New ${data.type || 'Contact'} Submission &#128231;</h1>`,
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">From</td><td class="dv">${data.name || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Email</td><td class="dv"><a href="mailto:${data.email}" class="lt">${data.email || ''}</a></td></tr>`,
-    `<tr><td class="dl">Subject</td><td class="dv">${data.subject || 'No subject'}</td></tr>`,
-    '</table>',
-    '<div class="dv2"></div>',
-    '<h2>Message:</h2>',
-    '<div class="ic">',
-    `<p>${data.message || 'No message provided.'}</p>`,
-    '</div>',
-  ].join('\n'), `New ${data.type || 'contact'} submission from ${data.name || 'user'}.`),
+    heading(`New ${data.type || 'Contact'} Submission &#128231;`),
+    detailTable([
+      detailRow('From', data.name || 'Unknown'),
+      detailRow('Email', `<a href="mailto:${data.email}" style="color:${BRAND_PRIMARY};">${data.email || ''}</a>`),
+      detailRow('Subject', data.subject || 'No subject'),
+    ].join('')),
+    divider(),
+    subheading('Message:'),
+    infoBox(data.message || 'No message provided.'),
+  ].join(''), `New ${data.type || 'contact'} submission from ${data.name || 'user'}.`),
 
   track_upload_admin: (data: any) => emailWrapper([
-    '<h1>New Track Upload &#127925;</h1>',
-    '<p>A new track requires moderation.</p>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Artist</td><td class="dv">${data.artist_name || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Track</td><td class="dv">${data.track_title || 'Untitled'}</td></tr>`,
-    `<tr><td class="dl">Genre</td><td class="dv">${data.genre || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="wb">Pending</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/admin" class="cb">Review in Admin</a>`,
-    '</div>',
-  ].join('\n'), `New track "${data.track_title}" needs moderation.`),
+    heading('New Track Upload &#127925;'),
+    para('A new track requires moderation review.'),
+    detailTable([
+      detailRow('Artist', data.artist_name || 'Unknown'),
+      detailRow('Track', data.track_title || 'Untitled'),
+      detailRow('Genre', data.genre || 'N/A'),
+      detailRow('Status', statusBadge('Pending', WARNING_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/admin`, 'Review in Admin'),
+  ].join(''), `New track "${data.track_title}" needs moderation.`),
 
   beat_upload_admin: (data: any) => emailWrapper([
-    '<h1>New Beat Upload &#129345;</h1>',
-    '<p>A new beat requires moderation.</p>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Producer</td><td class="dv">${data.producer_name || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Beat</td><td class="dv">${data.beat_title || 'Untitled'}</td></tr>`,
-    `<tr><td class="dl">Genre</td><td class="dv">${data.genre || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="wb">Pending</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/admin" class="cb">Review in Admin</a>`,
-    '</div>',
-  ].join('\n'), `New beat "${data.beat_title}" needs moderation.`),
+    heading('New Beat Upload &#129345;'),
+    para('A new beat requires moderation review.'),
+    detailTable([
+      detailRow('Producer', data.producer_name || 'Unknown'),
+      detailRow('Beat', data.beat_title || 'Untitled'),
+      detailRow('Genre', data.genre || 'N/A'),
+      detailRow('Status', statusBadge('Pending', WARNING_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/admin`, 'Review in Admin'),
+  ].join(''), `New beat "${data.beat_title}" needs moderation.`),
 
   new_signup_admin: (data: any) => emailWrapper([
-    `<h1>New ${data.user_type || 'User'} Signup &#128203;</h1>`,
-    `<p>A new user has signed up for ${COMPANY_NAME}.</p>`,
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Email</td><td class="dv">${data.email || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Type</td><td class="dv">${data.user_type || 'Fan'}</td></tr>`,
-    `<tr><td class="dl">Source</td><td class="dv">${data.source || 'Direct'}</td></tr>`,
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/admin" class="cb">View in Admin</a>`,
-    '</div>',
-  ].join('\n'), `New ${data.user_type || 'user'} signup: ${data.email || 'unknown'}`),
+    heading(`New ${data.user_type || 'User'} Signup &#128203;`),
+    para(`A new user has signed up for ${COMPANY_NAME}.`),
+    detailTable([
+      detailRow('Email', data.email || 'Unknown'),
+      detailRow('Type', data.user_type || 'Fan'),
+      detailRow('Source', data.source || 'Direct'),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/admin`, 'View in Admin'),
+  ].join(''), `New ${data.user_type || 'user'} signup: ${data.email || 'unknown'}`),
 
   early_access_admin: (data: any) => emailWrapper([
-    '<h1>New Early Access Signup &#128640;</h1>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Email</td><td class="dv">${data.email || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Source</td><td class="dv">${data.source || 'Homepage'}</td></tr>`,
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/admin" class="cb">View Signups</a>`,
-    '</div>',
-  ].join('\n'), `New early access signup: ${data.email || ''}`),
+    heading('New Early Access Signup &#128640;'),
+    detailTable([
+      detailRow('Email', data.email || 'Unknown'),
+      detailRow('Source', data.source || 'Homepage'),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/admin`, 'View Signups'),
+  ].join(''), `New early access signup: ${data.email || ''}`),
 
   onboarding_upload: (data: any) => emailWrapper([
-    '<h1>Ready to Share Your Music? &#127908;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>Time to share your first track!</p>',
-    '<h2>Upload in 4 steps:</h2>',
-    '<div class="si"><span class="sn">1</span><span class="st">Click <strong>"Upload Track"</strong></span></div>',
-    '<div class="si"><span class="sn">2</span><span class="st">Add your audio file (MP3, WAV)</span></div>',
-    '<div class="si"><span class="sn">3</span><span class="st">Add cover art and details</span></div>',
-    '<div class="si"><span class="sn">4</span><span class="st">Submit for review</span></div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/upload" class="cb">Upload Your First Track</a>`,
-    '</div>',
-  ].join('\n'), 'Time to upload your first track!'),
+    heading('Ready to Share Your Music? &#127908;'),
+    greeting(data.username || 'there'),
+    para('It\'s time to upload your first track and share your talent with Africa!'),
+    subheading('Upload in 4 simple steps:'),
+    step('1', 'Click <strong>"Upload Track"</strong> from your dashboard'),
+    step('2', 'Add your audio file (MP3 or WAV, up to 50MB)'),
+    step('3', 'Upload cover art and fill in track details'),
+    step('4', 'Submit for review — we\'ll notify you when it\'s live'),
+    btn(`${PRODUCTION_DOMAIN}/upload`, 'Upload Your First Track'),
+    helpFooter(),
+  ].join(''), 'Time to upload your first track!'),
 
   onboarding_competitions: (data: any) => emailWrapper([
-    '<h1>Win Big in Competitions! &#127942;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>Enter music competitions to win BAKCoins and get discovered.</p>',
-    '<div class="hc">',
-    '<div class="lb">Prize Pools Up To</div>',
-    '<div class="vt">1,000+ BAKCoins</div>',
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/competitions" class="cb">View Competitions</a>`,
-    '</div>',
-  ].join('\n'), 'Enter competitions and win BAKCoins!'),
+    heading('Win Big in Competitions! &#127942;'),
+    greeting(data.username || 'there'),
+    para('Enter music competitions to win BAKCoins, get exposure, and climb the leaderboard.'),
+    highlightCard('Prize Pools Up To', '1,000+ BAKCoins'),
+    para('Competitions are scored 70% by fan votes and 30% by AI analysis — so share with your fans for the best chance!'),
+    btn(`${PRODUCTION_DOMAIN}/competitions`, 'View Active Competitions'),
+    helpFooter(),
+  ].join(''), 'Enter competitions and win BAKCoins!'),
 
   onboarding_monetization: (data: any) => emailWrapper([
-    '<h1>Start Earning with Your Music &#128176;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    `<p>${COMPANY_NAME} isn't just exposure - it's real money.</p>`,
-    '<div class="si"><span class="sn">&#128157;</span><span class="st"><strong>Tips</strong> - Fans tip you BAKCoins</span></div>',
-    '<div class="si"><span class="sn">&#127942;</span><span class="st"><strong>Competitions</strong> - Win prizes</span></div>',
-    '<div class="si"><span class="sn">&#127925;</span><span class="st"><strong>Streaming</strong> - Earn per play</span></div>',
-    '<div class="si"><span class="sn">&#129309;</span><span class="st"><strong>Collaborations</strong> - Work with brands</span></div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">View Your Wallet</a>`,
-    '</div>',
-  ].join('\n'), 'Learn how to monetize your music.'),
+    heading('Start Earning with Your Music &#128176;'),
+    greeting(data.username || 'there'),
+    para(`${COMPANY_NAME} isn't just about exposure — it's real money in your pocket.`),
+    step('&#128157;', '<strong>Tips</strong> — Fans tip you BAKCoins directly'),
+    step('&#127942;', '<strong>Competitions</strong> — Win cash prizes'),
+    step('&#127925;', '<strong>Streaming</strong> — Earn per play'),
+    step('&#129309;', '<strong>Collaborations</strong> — Partner with brands'),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'View Your Wallet'),
+    helpFooter(),
+  ].join(''), 'Learn how to monetize your music.'),
 
   profile_reminder: (data: any) => emailWrapper([
-    '<h1>Complete Your Profile &#10024;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>Complete profiles get <strong>5x more engagement</strong>!</p>',
-    '<div class="ic">',
-    `<p>${data.missing_items || '&#128248; Profile photo &middot; Bio &middot; Social links'}</p>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/profile" class="cb">Complete Your Profile</a>`,
-    '</div>',
-  ].join('\n'), 'Complete your profile and get discovered!'),
-
-  custom: (data: any) => emailWrapper(
-    data.html_content || '<p>No content provided.</p>'
-  ),
-
-  contact: (data: any) => emailWrapper([
-    '<h1>New Support Ticket &#127915;</h1>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">From</td><td class="dv">${data.name || 'Unknown'}</td></tr>`,
-    `<tr><td class="dl">Email</td><td class="dv"><a href="mailto:${data.email}" class="lt">${data.email || ''}</a></td></tr>`,
-    `<tr><td class="dl">Type</td><td class="dv">${data.type || 'Support'}</td></tr>`,
-    '</table>',
-    '<div class="dv2"></div>',
-    '<h2>Message:</h2>',
-    '<div class="ic">',
-    `<p>${data.message || 'No message provided.'}</p>`,
-    '</div>',
-  ].join('\n'), `Support ticket from ${data.name || 'user'}.`),
+    heading('Complete Your Profile &#10024;'),
+    greeting(data.username || 'there'),
+    para('Complete profiles get <strong>5x more engagement</strong>! Add the finishing touches to yours.'),
+    infoBox(data.missing_items || '&#128248; Profile photo &middot; Bio &middot; Social links'),
+    btn(`${PRODUCTION_DOMAIN}/profile`, 'Complete Your Profile'),
+    helpFooter(),
+  ].join(''), 'Complete your profile and get discovered!'),
 
   purchase_success: (data: any) => emailWrapper([
-    '<h1>Purchase Successful! &#9989;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>BAKCoins have been credited to your wallet.</p>',
-    '<div class="hc">',
-    '<div class="lb">BAKCoins Credited</div>',
-    `<div class="vt" style="color:#10B981;">${data.bak_amount || 0} BAKCoins</div>`,
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">from KES ${data.amount_kes || 0}</p>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Method</td><td class="dv">${data.payment_method || 'M-Pesa / Selar'}</td></tr>`,
-    `<tr><td class="dl">Reference</td><td class="dv">${data.reference || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="sb">Complete</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">View Your Wallet</a>`,
-    '</div>',
-  ].join('\n'), `${data.bak_amount || 0} BAKCoins credited.`),
+    heading('Purchase Successful! &#9989;'),
+    greeting(data.username || 'there'),
+    para('BAKCoins have been credited to your wallet. Here\'s your receipt:'),
+    highlightCard('BAKCoins Credited', `${data.bak_amount || 0}`, `from KES ${data.amount_kes || 0}`),
+    detailTable([
+      detailRow('Payment Method', data.payment_method || 'M-Pesa / Selar'),
+      detailRow('Reference', data.reference || 'N/A'),
+      detailRow('Status', statusBadge('Complete', SUCCESS_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'View Your Wallet'),
+    helpFooter(),
+  ].join(''), `${data.bak_amount || 0} BAKCoins credited.`),
 
   referral_success: (data: any) => emailWrapper([
-    '<h1>Referral Reward Earned! &#127881;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>Your referral has been completed!</p>',
-    '<div class="hc">',
-    '<div class="lb">Referral Reward</div>',
-    `<div class="vt" style="color:#9333EA;">${data.reward_amount || 0} BAKCoins</div>`,
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">Referred: <strong style="color:#1a1a2e;">${data.referred_username || 'A new user'}</strong></p>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">View Your Wallet</a>`,
-    '</div>',
-  ].join('\n'), `You earned ${data.reward_amount || 0} BAKCoins from a referral!`),
+    heading('Referral Reward Earned! &#127881;'),
+    greeting(data.username || 'there'),
+    para('Your referral has been completed and your reward is ready!'),
+    highlightCard('Referral Reward', `${data.reward_amount || 0} BAKCoins`, `Referred: <strong>${data.referred_username || 'A new user'}</strong>`),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'View Your Wallet'),
+    helpFooter(),
+  ].join(''), `You earned ${data.reward_amount || 0} BAKCoins from a referral!`),
 
   deposit_approved: (data: any) => emailWrapper([
-    '<h1>Deposit Approved! &#9989;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>Your M-Pesa deposit has been verified.</p>',
-    '<div class="hc">',
-    '<div class="lb">Deposit Credited</div>',
-    `<div class="vt" style="color:#10B981;">${data.bak_amount || 0} BAKCoins</div>`,
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">from KES ${data.amount_kes || 0}</p>`,
-    '</div>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Receipt</td><td class="dv">${data.receipt_code || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv"><span class="sb">Approved</span></td></tr>',
-    '</table>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">Go to Wallet</a>`,
-    '</div>',
-  ].join('\n'), `Deposit of KES ${data.amount_kes || 0} approved!`),
+    heading('Deposit Approved! &#9989;'),
+    greeting(data.username || 'there'),
+    para('Your M-Pesa deposit has been verified and BAKCoins credited.'),
+    highlightCard('Deposit Credited', `${data.bak_amount || 0} BAKCoins`, `from KES ${data.amount_kes || 0}`),
+    detailTable([
+      detailRow('Receipt Code', data.receipt_code || 'N/A'),
+      detailRow('Status', statusBadge('Approved', SUCCESS_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'Go to Wallet'),
+    helpFooter(),
+  ].join(''), `Deposit of KES ${data.amount_kes || 0} approved!`),
 
   deposit_rejected: (data: any) => emailWrapper([
-    '<h1>Deposit Request Update &#9888;</h1>',
-    `<p class="gr">Hi <strong>${data.username || 'there'}</strong>,</p>`,
-    '<p>We were unable to verify your deposit.</p>',
-    '<table class="dt" width="100%">',
-    `<tr><td class="dl">Amount</td><td class="dv">KES ${data.amount_kes || 0}</td></tr>`,
-    `<tr><td class="dl">Receipt</td><td class="dv">${data.receipt_code || 'N/A'}</td></tr>`,
-    '<tr><td class="dl">Status</td><td class="dv" style="color:#EF4444;">Rejected</td></tr>',
-    data.reason ? `<tr><td class="dl">Reason</td><td class="dv">${data.reason}</td></tr>` : '',
-    '</table>',
-    '<div class="ic">',
-    '<p>Double-check your receipt code and resubmit.</p>',
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/wallet" class="cb">Try Again</a>`,
-    '</div>',
-  ].join('\n'), `Deposit of KES ${data.amount_kes || 0} was not approved.`),
+    heading('Deposit Request Update &#9888;'),
+    greeting(data.username || 'there'),
+    para('We were unable to verify your deposit. Please review the details below.'),
+    detailTable([
+      detailRow('Amount', `KES ${data.amount_kes || 0}`),
+      detailRow('Receipt Code', data.receipt_code || 'N/A'),
+      detailRow('Status', statusBadge('Rejected', ERROR_COLOR)),
+      ...(data.reason ? [detailRow('Reason', data.reason)] : []),
+    ].join('')),
+    infoBox('Double-check your M-Pesa receipt code and resubmit. If the issue persists, contact support.'),
+    btn(`${PRODUCTION_DOMAIN}/wallet`, 'Try Again'),
+    helpFooter(),
+  ].join(''), `Deposit of KES ${data.amount_kes || 0} was not approved.`),
 
   application_approved: (data: any) => emailWrapper([
-    '<h1>Application Approved! &#127881;</h1>',
-    `<p class="gr">Hi <strong>${data.username || data.full_name || 'Artist'}</strong>,</p>`,
-    `<p>Your application to ${COMPANY_NAME} Founders Season is approved!</p>`,
-    '<div class="hc">',
-    '<div class="lb">Status</div>',
-    '<div class="vt" style="color:#10B981;">Approved &#9989;</div>',
-    `<p style="margin:8px 0 0;color:#8b8ba0;font-size:14px;">Stage: <strong style="color:#1a1a2e;">${data.stage_name || 'N/A'}</strong></p>`,
-    '</div>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/artist/dashboard" class="cb">Go to Dashboard</a>`,
-    '</div>',
-  ].join('\n'), 'Your BAK55 application has been approved!'),
+    heading('Application Approved! &#127881;'),
+    greeting(data.username || data.full_name || 'Artist'),
+    para(`Your application to ${COMPANY_NAME} Founders Season has been approved! Welcome aboard.`),
+    highlightCard('Status', 'Approved &#9989;', `Stage: <strong>${data.stage_name || 'N/A'}</strong>`),
+    btn(`${PRODUCTION_DOMAIN}/artist/dashboard`, 'Go to Dashboard'),
+    helpFooter(),
+  ].join(''), 'Your BAK55 application has been approved!'),
 
   application_rejected: (data: any) => emailWrapper([
-    '<h1>Application Update &#9888;</h1>',
-    `<p class="gr">Hi <strong>${data.username || data.full_name || 'there'}</strong>,</p>`,
-    '<p>After review, we\'re unable to approve your application at this time.</p>',
-    data.review_notes ? `<div class="ic"><p><strong>Notes:</strong> ${data.review_notes}</p></div>` : '',
-    '<p>You can reapply for the next season!</p>',
-    '<div class="cw">',
-    `<a href="${PRODUCTION_DOMAIN}/apply" class="cb">Apply Again</a>`,
-    '</div>',
-  ].join('\n'), 'Update on your BAK55 application.'),
+    heading('Application Update &#9888;'),
+    greeting(data.username || data.full_name || 'there'),
+    para('After careful review, we\'re unable to approve your application at this time.'),
+    data.review_notes ? infoBox(`<strong>Reviewer notes:</strong> ${data.review_notes}`) : '',
+    para('Don\'t be discouraged — you can reapply for the next season with updated material!'),
+    btn(`${PRODUCTION_DOMAIN}/apply`, 'Apply Again'),
+    helpFooter(),
+  ].join(''), 'Update on your BAK55 application.'),
+
+  // ─── New Enterprise Templates ─────────────────────
+
+  subscription_activated: (data: any) => emailWrapper([
+    heading('Subscription Activated! &#127775;'),
+    greeting(data.username || 'there'),
+    para(`Your <strong>${data.plan_name || 'Premium'}</strong> subscription is now active. Enjoy all the benefits!`),
+    highlightCard('Active Plan', data.plan_name || 'Premium', `Expires: ${data.expires_at || 'N/A'}`),
+    detailTable([
+      detailRow('Upload Limit', data.upload_limit || 'Unlimited'),
+      detailRow('Competition Entry', statusBadge('Included', SUCCESS_COLOR)),
+      detailRow('Priority Support', statusBadge('Active', SUCCESS_COLOR)),
+    ].join('')),
+    btn(`${PRODUCTION_DOMAIN}/artist/dashboard`, 'Start Creating'),
+    helpFooter(),
+  ].join(''), `Your ${data.plan_name || 'Premium'} subscription is now active!`),
+
+  subscription_expiring: (data: any) => emailWrapper([
+    heading('Subscription Expiring Soon &#9888;'),
+    greeting(data.username || 'there'),
+    para(`Your <strong>${data.plan_name || 'Premium'}</strong> subscription expires in <strong>${data.days_left || 3} days</strong>. Renew now to keep your benefits.`),
+    highlightCard('Expires On', data.expires_at || 'Soon'),
+    infoBox('After expiration, you\'ll lose access to unlimited uploads, competition entries, and priority support.'),
+    btn(`${PRODUCTION_DOMAIN}/subscribe`, 'Renew Subscription'),
+    helpFooter(),
+  ].join(''), `Your subscription expires in ${data.days_left || 3} days — renew now.`),
+
+  weekly_digest: (data: any) => emailWrapper([
+    heading('Your Weekly Digest &#128202;'),
+    greeting(data.username || 'there'),
+    para('Here\'s a summary of your activity this week:'),
+    detailTable([
+      detailRow('Total Plays', data.total_plays || '0'),
+      detailRow('New Followers', data.new_followers || '0'),
+      detailRow('Tips Received', `${data.tips_received || 0} BAKCoins`),
+      detailRow('Competition Votes', data.competition_votes || '0'),
+    ].join('')),
+    data.top_track ? infoBox(`&#127942; <strong>Top Track:</strong> "${data.top_track}" with ${data.top_track_plays || 0} plays`) : '',
+    btn(`${PRODUCTION_DOMAIN}/artist/dashboard`, 'View Full Analytics'),
+    helpFooter(),
+  ].join(''), `Your weekly summary: ${data.total_plays || 0} plays, ${data.new_followers || 0} new followers.`),
+
+  vote_received: (data: any) => emailWrapper([
+    heading('You Received a Vote! &#128499;'),
+    greeting(data.artist_name || 'Artist'),
+    para(`Your track "<strong>${data.track_title || 'Your Track'}</strong>" just received a vote in the Rising Stars competition!`),
+    highlightCard('Current Vote Count', `${data.vote_count || 1}`, data.competition_title || 'Rising Stars'),
+    para('Share your track with more fans to climb the leaderboard!'),
+    btn(`${PRODUCTION_DOMAIN}/rising-stars/voting`, 'View Leaderboard'),
+    helpFooter(),
+  ].join(''), `Your track received a vote! Total: ${data.vote_count || 1}`),
+
+  // ─── Aliases ─────────────────────
+
+  contact: (data: any) => emailWrapper([
+    heading('New Support Ticket &#127915;'),
+    detailTable([
+      detailRow('From', data.name || 'Unknown'),
+      detailRow('Email', `<a href="mailto:${data.email}" style="color:${BRAND_PRIMARY};">${data.email || ''}</a>`),
+      detailRow('Type', data.type || 'Support'),
+    ].join('')),
+    divider(),
+    subheading('Message:'),
+    infoBox(data.message || 'No message provided.'),
+  ].join(''), `Support ticket from ${data.name || 'user'}.`),
+
+  custom: (data: any) => emailWrapper(
+    data.html_content || para('No content provided.')
+  ),
 
   first_upload_guide: (data: any) => templates.onboarding_upload(data),
   competition_guide: (data: any) => templates.onboarding_competitions(data),
@@ -677,12 +701,10 @@ async function loadTemplateFromDB(templateName: string, data: Record<string, any
 
     if (error || !tmpl) return null;
 
-    // Replace variables in DB template
     let html = tmpl.html_content;
     for (const [key, value] of Object.entries(data)) {
       html = html.replaceAll(`{{${key}}}`, String(value ?? ''));
     }
-    // Also replace common links
     html = html.replaceAll("{{dashboard_link}}", `${PRODUCTION_DOMAIN}/dashboard`);
     html = html.replaceAll("{{profile_link}}", `${PRODUCTION_DOMAIN}/profile`);
     html = html.replaceAll("{{upload_link}}", `${PRODUCTION_DOMAIN}/upload`);
@@ -725,18 +747,15 @@ serve(async (req) => {
 
     let emailHtml: string;
 
-    // Support custom HTML emails from admin
     if (template === 'custom' && html) {
       emailHtml = emailWrapper(html);
     } else if (html && !template) {
       emailHtml = emailWrapper(html);
     } else if (template) {
-      // Priority 1: Check database for latest template (no caching — always fresh)
       const dbHtml = await loadTemplateFromDB(template, data || {});
       if (dbHtml) {
         emailHtml = dbHtml;
       } else if (templates[template]) {
-        // Priority 2: Fall back to hardcoded templates
         emailHtml = templates[template](data || {});
       } else {
         console.warn(`Unknown template: ${template}, falling back to custom wrapper`);
@@ -745,7 +764,7 @@ serve(async (req) => {
     } else {
       emailHtml = emailWrapper(html || `<p>${JSON.stringify(data || {})}</p>`);
     }
-    
+
     const result = await sendEmailViaSMTP(to, subject, emailHtml);
 
     if (result.success) {
