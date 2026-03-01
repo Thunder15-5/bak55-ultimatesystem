@@ -26,7 +26,7 @@ const FAQ = () => {
         },
         {
           question: "Is BAK55 available outside Kenya?",
-          answer: "Currently, BAK55 is exclusively available in Kenya. We're working on expanding to more African countries soon! Sign up for our newsletter to be notified when we launch in your region."
+          answer: "BAK55 is available across Africa! We support multiple currencies including KES, NGN, GHS, UGX, TZS, RWF, ETB, ZAR, and CFA francs. Your currency is auto-detected or can be changed in settings."
         }
       ]
     },
@@ -36,7 +36,7 @@ const FAQ = () => {
       items: [
         {
           question: "What are BAKCoins?",
-          answer: "BAKCoins are our platform's utility tokens used for voting, tipping artists, entering competitions, and purchasing subscriptions. 1 BAKCoin = $0.20 USD (approximately 26 KES at current exchange rates)."
+          answer: "BAKCoins are our platform's utility tokens used for voting, tipping artists, entering competitions, and purchasing subscriptions. 1 BAKCoin = $0.20 USD. The equivalent in your local currency is shown automatically based on your selected currency."
         },
         {
           question: "How do I buy BAKCoins?",

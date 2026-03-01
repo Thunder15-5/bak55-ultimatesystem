@@ -70,7 +70,7 @@ const PaymentSuccess = () => {
         <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Amount Paid:</span>
-            <span className="font-bold">100 KES</span>
+            <span className="font-bold">5.00 BAK</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">BAKCoins Received:</span>

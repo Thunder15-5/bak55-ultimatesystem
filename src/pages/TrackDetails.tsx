@@ -39,7 +39,7 @@ export default function TrackDetails() {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useMusicPlayer();
   const { trackActivity } = useFanActivity();
   const [track, setTrack] = useState<Track | null>(null);
-  const [bakRate, setBakRate] = useState(1); // 1 BAK = 1 KES default
+  const [bakRate, setBakRate] = useState(1); // BAK to KES rate
   const [loading, setLoading] = useState(true);
   const [tipDialogOpen, setTipDialogOpen] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);

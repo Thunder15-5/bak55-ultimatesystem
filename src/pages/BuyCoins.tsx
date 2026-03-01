@@ -219,7 +219,7 @@ const BuyCoins = () => {
                       {formatFromKES(pkg.priceKES)}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Rate: {BAK_RATE} KES = 1 BAK
+                      Rate: {formatFromKES(BAK_RATE)} = 1 BAK
                     </div>
                   </CardContent>
                 </Card>

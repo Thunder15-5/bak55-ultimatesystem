@@ -30,7 +30,7 @@ const PaymentPending = () => {
         <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Package:</span>
-            <span className="font-bold">100 KES → 5.00 BAK</span>
+            <span className="font-bold">5.00 BAK</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Payment Provider:</span>
