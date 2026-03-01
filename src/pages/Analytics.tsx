@@ -206,11 +206,13 @@ export default function Analytics() {
     try {
       setLoadingInsights(true);
       
+      const { data: session } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('analytics-insights', {
         body: { 
           artistId: user?.id,
           analyticsData
-        }
+        },
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
       });
 
       if (error) {

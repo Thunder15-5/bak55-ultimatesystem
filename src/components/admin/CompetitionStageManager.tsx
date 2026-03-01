@@ -84,8 +84,10 @@ export function CompetitionStageManager() {
   const handleProgressStage = async (stageId: string) => {
     setProgressing(stageId);
     try {
+      const { data: session } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('progress-competition-stage', {
-        body: { stageId }
+        body: { stageId },
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
       });
 
       if (error) throw error;

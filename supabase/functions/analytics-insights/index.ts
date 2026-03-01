@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -11,9 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    const { artistId, analyticsData } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
+    // Authenticate user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: corsHeaders });
+    }
+
+    const { artistId, analyticsData } = await req.json();
+
+    if (!artistId || typeof artistId !== 'string' || !analyticsData || typeof analyticsData !== 'object') {
+      return new Response(JSON.stringify({ error: 'Invalid input' }), { status: 400, headers: corsHeaders });
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -24,14 +48,24 @@ serve(async (req) => {
 Analyze artist performance data and provide actionable insights to help them grow their career.
 Be specific, data-driven, and culturally aware of East African music trends.`;
 
+    const safeData = {
+      tracks: Number(analyticsData.tracks) || 0,
+      totalPlays: Number(analyticsData.totalPlays) || 0,
+      totalEarnings: Number(analyticsData.totalEarnings) || 0,
+      followers: Number(analyticsData.followers) || 0,
+      avgPlaysPerTrack: Number(analyticsData.avgPlaysPerTrack) || 0,
+      genres: Array.isArray(analyticsData.genres) ? analyticsData.genres.slice(0, 10).map(String) : [],
+      topLocations: typeof analyticsData.topLocations === 'object' ? analyticsData.topLocations : {},
+    };
+
     const userPrompt = `Analyze this artist's performance data:
-- Total Tracks: ${analyticsData.tracks}
-- Total Plays: ${analyticsData.totalPlays}
-- Total Earnings: ${analyticsData.totalEarnings} BAKCoins
-- Followers: ${analyticsData.followers}
-- Average Plays per Track: ${analyticsData.avgPlaysPerTrack}
-- Genres: ${analyticsData.genres.join(', ')}
-- Top Locations: ${JSON.stringify(analyticsData.topLocations)}
+- Total Tracks: ${safeData.tracks}
+- Total Plays: ${safeData.totalPlays}
+- Total Earnings: ${safeData.totalEarnings} BAKCoins
+- Followers: ${safeData.followers}
+- Average Plays per Track: ${safeData.avgPlaysPerTrack}
+- Genres: ${safeData.genres.join(', ')}
+- Top Locations: ${JSON.stringify(safeData.topLocations)}
 
 Provide insights in this exact JSON structure:
 {
@@ -64,20 +98,11 @@ Provide insights in this exact JSON structure:
               type: "object",
               properties: {
                 overallPerformance: { type: "string" },
-                strengths: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                growthOpportunities: {
-                  type: "array",
-                  items: { type: "string" }
-                },
+                strengths: { type: "array", items: { type: "string" } },
+                growthOpportunities: { type: "array", items: { type: "string" } },
                 demographicInsights: { type: "string" },
                 genreRecommendations: { type: "string" },
-                nextSteps: {
-                  type: "array",
-                  items: { type: "string" }
-                }
+                nextSteps: { type: "array", items: { type: "string" } },
               },
               required: ["overallPerformance", "strengths", "growthOpportunities", "demographicInsights", "genreRecommendations", "nextSteps"],
               additionalProperties: false
@@ -107,8 +132,6 @@ Provide insights in this exact JSON structure:
     }
 
     const aiResponse = await response.json();
-    console.log("AI Response received");
-
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
       throw new Error("No tool call in AI response");
@@ -118,20 +141,13 @@ Provide insights in this exact JSON structure:
 
     return new Response(
       JSON.stringify(insights),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: any) {
     console.error("Error in analytics-insights:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to generate insights" }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      JSON.stringify({ error: "Failed to generate insights" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
