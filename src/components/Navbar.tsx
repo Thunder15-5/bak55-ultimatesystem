@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Vote } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "@/assets/bak55-logo.png";
@@ -51,6 +51,10 @@ export const Navbar = () => {
             </Link>
             <Link to="/about" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
               About
+            </Link>
+            <Link to="/rising-stars/voting" className="inline-flex items-center gap-1.5 text-sm font-bold text-secondary hover:text-secondary/80 transition-colors px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 hover:bg-secondary/20">
+              <Vote className="w-4 h-4" />
+              Vote Now
             </Link>
           </div>
 
@@ -132,6 +136,14 @@ export const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               About
+            </Link>
+            <Link
+              to="/rising-stars/voting"
+              className="flex items-center gap-2 mx-4 px-4 py-3 text-base font-bold text-secondary bg-secondary/10 border border-secondary/20 rounded-lg hover:bg-secondary/20 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <Vote className="w-5 h-5" />
+              🔥 Vote Now — Rising Stars
             </Link>
             <div className="pt-2 space-y-2">
               {user ? (
