@@ -182,6 +182,29 @@ export function EmailTemplatesPanel() {
     } catch (error: any) { toast.error('Failed to process queue'); }
   };
 
+  const handleRetryFailed = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-email-queue', {
+        body: { action: 'retry_failed' },
+      });
+      if (error) throw error;
+      toast.success(data.message || 'Failed emails reset to pending');
+      fetchData();
+    } catch (error: any) { toast.error('Failed to retry'); }
+  };
+
+  const handleClearStale = async () => {
+    if (!confirm('This will delete pending queue items older than 7 days. Continue?')) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('process-email-queue', {
+        body: { action: 'clear_stale' },
+      });
+      if (error) throw error;
+      toast.success(data.message || 'Stale items cleared');
+      fetchData();
+    } catch (error: any) { toast.error('Failed to clear stale items'); }
+  };
+
   const handleSendBulkWelcome = async () => {
     if (!confirm('This will send the welcome email to ALL registered users. Continue?')) return;
     setSendingBulkWelcome(true);
@@ -199,6 +222,8 @@ export function EmailTemplatesPanel() {
   const totalDelivered = sentLogs.filter(l => l.status === 'sent' || l.status === 'delivered').length;
   const totalFailed = sentLogs.filter(l => l.status === 'failed').length;
   const pendingInQueue = queue.filter(q => q.status === 'pending').length;
+  const failedInQueue = queue.filter(q => q.status === 'failed').length;
+  const staleInQueue = queue.filter(q => q.status === 'pending' && new Date(q.scheduled_for) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length;
 
   const filteredQueue = queueFilter === 'all' ? queue : queue.filter(q => q.status === queueFilter);
   const filteredLogs = logSearch
@@ -434,7 +459,7 @@ export function EmailTemplatesPanel() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <CardTitle className="text-base">Email Queue</CardTitle>
-                  <CardDescription className="text-xs">{pendingInQueue} pending · {queue.length} total</CardDescription>
+                  <CardDescription className="text-xs">{pendingInQueue} pending · {failedInQueue} failed · {staleInQueue > 0 ? `${staleInQueue} stale · ` : ''}{queue.length} total</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={queueFilter} onValueChange={setQueueFilter}>
@@ -446,6 +471,8 @@ export function EmailTemplatesPanel() {
                       <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button variant="outline" size="sm" onClick={handleRetryFailed}><RefreshCw className="w-3.5 h-3.5 mr-1.5" />Retry Failed</Button>
+                  <Button variant="outline" size="sm" onClick={handleClearStale}><Trash2 className="w-3.5 h-3.5 mr-1.5" />Clear Stale</Button>
                   <Button variant="outline" size="sm" onClick={handleProcessQueue}><Send className="w-3.5 h-3.5 mr-1.5" />Process</Button>
                 </div>
               </div>
