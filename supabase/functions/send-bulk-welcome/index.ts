@@ -48,7 +48,19 @@ serve(async (req) => {
       });
     }
 
-    // Fetch all users with their roles
+    // ─── Deduplication: get user IDs who already received welcome ───
+    const { data: alreadySent } = await supabase
+      .from("email_sent_log")
+      .select("user_id")
+      .eq("template_name", "welcome");
+
+    const alreadySentIds = new Set<string>(
+      (alreadySent || []).map((r: any) => r.user_id).filter(Boolean)
+    );
+
+    console.log(`Dedup: ${alreadySentIds.size} users already received welcome email`);
+
+    // Fetch all users
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id, email, username, display_name");
@@ -60,6 +72,10 @@ serve(async (req) => {
       });
     }
 
+    // Filter out already-sent users
+    const eligibleProfiles = profiles.filter((p: any) => !alreadySentIds.has(p.id));
+    console.log(`Eligible: ${eligibleProfiles.length} out of ${profiles.length} total profiles`);
+
     // Get roles for all users
     const { data: allRoles } = await supabase
       .from("user_roles")
@@ -68,7 +84,6 @@ serve(async (req) => {
     const roleMap: Record<string, string> = {};
     if (allRoles) {
       for (const r of allRoles) {
-        // Keep first role found (priority doesn't matter much for welcome email)
         if (!roleMap[r.user_id]) {
           roleMap[r.user_id] = r.role;
         }
@@ -77,10 +92,10 @@ serve(async (req) => {
 
     let sent = 0;
     let failed = 0;
+    let skipped = alreadySentIds.size;
     const errors: string[] = [];
 
-    // Send welcome emails in batches with delay to avoid SMTP rate limits
-    for (const profile of profiles) {
+    for (const profile of eligibleProfiles) {
       try {
         const role = roleMap[profile.id] || "fan";
         const username = profile.display_name || profile.username || "Member";
@@ -90,11 +105,7 @@ serve(async (req) => {
             to: profile.email,
             subject: "Welcome to BAK55 Talent — Africa's Premier Music Platform! 🎵",
             template: "welcome",
-            data: {
-              username,
-              role,
-              email: profile.email,
-            },
+            data: { username, role, email: profile.email },
           },
         });
 
@@ -105,7 +116,7 @@ serve(async (req) => {
           sent++;
         }
 
-        // Small delay between emails to avoid SMTP throttling
+        // 500ms throttle
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (err: any) {
         failed++;
@@ -113,7 +124,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Bulk welcome email complete: ${sent} sent, ${failed} failed out of ${profiles.length}`);
+    console.log(`Bulk welcome complete: ${sent} sent, ${failed} failed, ${skipped} skipped (already sent)`);
 
     return new Response(
       JSON.stringify({
@@ -121,6 +132,7 @@ serve(async (req) => {
         total: profiles.length,
         sent,
         failed,
+        skipped,
         errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
