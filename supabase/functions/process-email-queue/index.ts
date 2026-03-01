@@ -176,12 +176,14 @@ serve(async (req) => {
     }
 
     // ─── Process Queue ─────────────────────────────────────────
+    // Fetch pending emails: include NULL scheduled_for (immediate) and those scheduled in the past
+    const now = new Date().toISOString();
     const { data: pendingEmails, error: fetchError } = await supabase
       .from("email_queue")
       .select("*")
       .eq("status", "pending")
-      .lte("scheduled_for", new Date().toISOString())
-      .order("scheduled_for", { ascending: true })
+      .or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
+      .order("created_at", { ascending: true })
       .limit(50);
 
     if (fetchError) throw fetchError;
