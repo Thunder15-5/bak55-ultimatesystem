@@ -10,7 +10,6 @@ const ARTIST_SHARE = 0.65; // 65% to artist
 const PLATFORM_SHARE = 0.35; // 35% to platform
 
 // BAK55 Platform Operations Wallet (admin@bak55talent.co.ke)
-// Used for: voting fees (35%), withdrawal fees, hosting & maintenance
 const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 
 interface VoteRequest {
@@ -35,15 +34,12 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Create client with user's auth token
     const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Create admin client for wallet operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get current user
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       return new Response(
@@ -61,7 +57,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get submission details including artist_id and competition info
+    // Get submission details
     const { data: submission, error: subError } = await supabaseAdmin
       .from('submissions')
       .select(`
@@ -70,6 +66,7 @@ Deno.serve(async (req) => {
         competition_id,
         voting_enabled,
         moderation_status,
+        status,
         competitions (
           id,
           voting_start_date,
@@ -87,7 +84,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if voting is enabled for this submission
+    // Check voting is enabled and submission is approved
     if (!(submission as any).voting_enabled) {
       return new Response(
         JSON.stringify({ error: 'Voting is disabled for this submission' }),
@@ -95,7 +92,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if submission is approved
     if ((submission as any).moderation_status !== 'approved') {
       return new Response(
         JSON.stringify({ error: 'This submission has not been approved yet' }),
@@ -103,62 +99,39 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Reject if submission was rejected
+    if ((submission as any).status === 'rejected') {
+      return new Response(
+        JSON.stringify({ error: 'This submission has been rejected' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const competition = (submission as any).competitions;
 
-    // Check if voting is currently open
-    if (!competition?.voting_start_date || !competition?.voting_end_date) {
-      return new Response(
-        JSON.stringify({ error: 'Voting dates not set for this competition' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Check voting window
+    if (competition?.voting_start_date && competition?.voting_end_date) {
+      const now = new Date();
+      const votingStart = new Date(competition.voting_start_date);
+      const votingEnd = new Date(competition.voting_end_date);
+
+      if (now < votingStart) {
+        return new Response(
+          JSON.stringify({ error: 'Voting has not started yet', voting_starts: competition.voting_start_date }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (now > votingEnd) {
+        return new Response(
+          JSON.stringify({ error: 'Voting has ended', voting_ended: competition.voting_end_date }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    const now = new Date();
-    const votingStart = new Date(competition.voting_start_date);
-    const votingEnd = new Date(competition.voting_end_date);
-
-    if (now < votingStart) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Voting has not started yet',
-          voting_starts: competition.voting_start_date 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (now > votingEnd) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Voting has ended',
-          voting_ended: competition.voting_end_date 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Prevent self-voting
-    if (submission.artist_id === user.id) {
-      return new Response(
-        JSON.stringify({ error: 'You cannot vote for your own submission' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check if user already voted for this submission
-    const { data: existingVote } = await supabaseAdmin
-      .from('votes')
-      .select('id')
-      .eq('submission_id', submission_id)
-      .eq('voter_id', user.id)
-      .maybeSingle();
-
-    if (existingVote) {
-      return new Response(
-        JSON.stringify({ error: 'You have already voted for this submission' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // NO self-voting restriction — artists can vote for themselves
+    // NO duplicate vote restriction — unlimited voting allowed
 
     // Get voter's wallet
     const { data: voterWallet, error: voterWalletError } = await supabaseAdmin
@@ -177,11 +150,12 @@ Deno.serve(async (req) => {
     if (voterWallet.balance < VOTE_COST) {
       return new Response(
         JSON.stringify({ 
-          error: `Insufficient balance. You need ${VOTE_COST} BAK to vote. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
+          error: `Insufficient BAKCoins. You need ${VOTE_COST} BAK to vote. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
+          code: 'INSUFFICIENT_BALANCE',
           required: VOTE_COST,
           current_balance: voterWallet.balance
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -214,26 +188,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Calculate distribution
     const artistAmount = VOTE_COST * ARTIST_SHARE;
     const platformAmount = VOTE_COST * PLATFORM_SHARE;
 
     // === START TRANSACTION ===
-    
+
     // 1. Deduct from voter's wallet with optimistic locking
-    const { error: voterDeductError } = await supabaseAdmin
+    const { data: deductResult, error: voterDeductError } = await supabaseAdmin
       .from('wallets')
       .update({ 
         balance: voterWallet.balance - VOTE_COST,
         updated_at: new Date().toISOString()
       })
       .eq('id', voterWallet.id)
-      .eq('balance', voterWallet.balance); // Optimistic lock
+      .eq('balance', voterWallet.balance) // Optimistic lock
+      .select('balance')
+      .single();
 
-    if (voterDeductError) {
+    if (voterDeductError || !deductResult) {
       return new Response(
-        JSON.stringify({ error: 'Failed to process payment. Please try again.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Failed to process payment. Your balance may have changed — please try again.',
+          code: 'TRANSACTION_CONFLICT'
+        }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -247,12 +225,7 @@ Deno.serve(async (req) => {
       .eq('id', artistWallet.id);
 
     if (artistCreditError) {
-      // Rollback voter deduction
-      await supabaseAdmin
-        .from('wallets')
-        .update({ balance: voterWallet.balance })
-        .eq('id', voterWallet.id);
-      
+      await supabaseAdmin.from('wallets').update({ balance: voterWallet.balance }).eq('id', voterWallet.id);
       return new Response(
         JSON.stringify({ error: 'Failed to credit artist. Transaction rolled back.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -260,18 +233,13 @@ Deno.serve(async (req) => {
     }
 
     // 3. Credit platform wallet (35%)
-    const { error: platformCreditError } = await supabaseAdmin
+    await supabaseAdmin
       .from('wallets')
       .update({ 
         balance: platformWallet.balance + platformAmount,
         updated_at: new Date().toISOString()
       })
       .eq('id', platformWallet.id);
-
-    if (platformCreditError) {
-      console.error('Platform credit failed:', platformCreditError);
-      // Non-critical, continue but log
-    }
 
     // 4. Record the vote
     const { error: voteError } = await supabaseAdmin
@@ -286,77 +254,53 @@ Deno.serve(async (req) => {
 
     if (voteError) {
       console.error('Vote record error:', voteError);
-      // Critical - rollback all wallet changes
-      await supabaseAdmin
-        .from('wallets')
-        .update({ balance: voterWallet.balance })
-        .eq('id', voterWallet.id);
-      await supabaseAdmin
-        .from('wallets')
-        .update({ balance: artistWallet.balance })
-        .eq('id', artistWallet.id);
-      
+      // Rollback
+      await supabaseAdmin.from('wallets').update({ balance: voterWallet.balance }).eq('id', voterWallet.id);
+      await supabaseAdmin.from('wallets').update({ balance: artistWallet.balance }).eq('id', artistWallet.id);
       return new Response(
         JSON.stringify({ error: 'Failed to record vote. Transaction rolled back.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 5. Create transaction records
+    // 5. Transaction records
     await Promise.all([
-      // Voter's debit transaction
       supabaseAdmin.from('transactions').insert({
         wallet_id: voterWallet.id,
         amount: -VOTE_COST,
         type: 'purchase',
         description: `Vote for competition submission`,
         reference_id: submission_id,
-        metadata: { 
-          type: 'vote_payment',
-          competition_id: submission.competition_id 
-        }
+        metadata: { type: 'vote_payment', competition_id: submission.competition_id, artist_id: submission.artist_id }
       }),
-      // Artist's credit transaction
       supabaseAdmin.from('transactions').insert({
         wallet_id: artistWallet.id,
         amount: artistAmount,
         type: 'earning',
         description: `Vote revenue (65% of ${VOTE_COST} BAK)`,
         reference_id: submission_id,
-        metadata: { 
-          type: 'vote_earning',
-          voter_id: user.id,
-          competition_id: submission.competition_id
-        }
+        metadata: { type: 'vote_earning', voter_id: user.id, competition_id: submission.competition_id }
       }),
-      // Platform's credit transaction
       supabaseAdmin.from('transactions').insert({
         wallet_id: platformWallet.id,
         amount: platformAmount,
         type: 'earning',
         description: `Platform vote fee (35% of ${VOTE_COST} BAK)`,
         reference_id: submission_id,
-        metadata: { 
-          type: 'platform_vote_fee',
-          voter_id: user.id,
-          artist_id: submission.artist_id,
-          competition_id: submission.competition_id
-        }
+        metadata: { type: 'platform_vote_fee', voter_id: user.id, artist_id: submission.artist_id, competition_id: submission.competition_id }
       })
     ]);
 
-    // 6. Create notification for artist
+    // 6. Notify artist
     await supabaseAdmin.from('notifications').insert({
       user_id: submission.artist_id,
       type: 'vote_received',
       title: '🗳️ New Vote!',
       message: `Someone voted for your competition entry! +${artistAmount.toFixed(2)} BAK earned.`,
-      link: `/competition/${submission.competition_id}`,
+      link: `/rising-stars/voting`,
       priority: 'normal',
       category: 'competition'
     });
-
-    // === END TRANSACTION ===
 
     return new Response(
       JSON.stringify({ 
@@ -365,7 +309,7 @@ Deno.serve(async (req) => {
         vote_cost: VOTE_COST,
         artist_earned: artistAmount,
         platform_fee: platformAmount,
-        new_balance: voterWallet.balance - VOTE_COST
+        new_balance: deductResult.balance
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
