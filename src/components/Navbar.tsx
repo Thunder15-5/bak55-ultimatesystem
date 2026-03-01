@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, LayoutDashboard, Vote } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import logo from "@/assets/bak55-logo.png";
+const logo = "/bak55-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { CurrencySelector } from "@/components/CurrencySelector";
 

@@ -8,7 +8,7 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 import { Menu, X, LogOut, User, Wallet, History, ListMusic, BarChart3, TrendingUp, Trophy, Radio, Headphones } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoImage from "@/assets/bak55-logo.png";
+const logoImage = "/bak55-logo.png";
 
 export function Navigation() {
   const { user, signOut, userRole } = useAuth();

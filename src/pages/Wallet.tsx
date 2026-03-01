@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, ArrowDownRight, Loader2, DollarSign, ShoppingBag } from "lucide-react";
 import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
 
 interface Transaction {
   id: string;
@@ -418,6 +419,9 @@ export default function Wallet() {
             </CardContent>
           </Card>
         )}
+
+        {/* Exchange Rates */}
+        <ExchangeRatesTable variant="compact" className="mb-8" />
 
         {/* Transaction History */}
         <Card>

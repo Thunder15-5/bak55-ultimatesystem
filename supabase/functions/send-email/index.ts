@@ -324,7 +324,7 @@ const templates: Record<string, (data: any) => string> = {
     heading('Withdrawal Request Received &#128176;'),
     greeting(data.username || 'User'),
     para('We\'ve received your withdrawal request and it\'s being processed.'),
-    highlightCard('Withdrawal Amount', `${data.amount || 0} BAKCoins`, `KES ${data.ksh_amount || 0}`),
+    highlightCard('Withdrawal Amount', `${data.amount || 0} BAKCoins`, `≈ $${((data.amount || 0) * 0.16).toFixed(2)} USD`),
     detailTable([
       detailRow('M-PESA Number', data.phone_number || 'N/A'),
       detailRow('Reference', data.reference || 'N/A'),
@@ -339,14 +339,14 @@ const templates: Record<string, (data: any) => string> = {
     heading('Withdrawal Successful! &#9989;'),
     greeting(data.username || 'User'),
     para('Your withdrawal has been processed and sent to your M-PESA.'),
-    highlightCard('Amount Sent', `KES ${data.ksh_amount || 0}`, `Sent to ${data.phone_number || 'your M-PESA'}`),
+    highlightCard('Amount Sent', `${data.amount || 0} BAKCoins`, `Sent to ${data.phone_number || 'your account'}`),
     detailTable([
       detailRow('BAKCoins Withdrawn', `${data.amount || 0}`),
       detailRow('Transaction ID', data.transaction_id || 'N/A'),
       detailRow('Status', statusBadge('Complete', SUCCESS_COLOR)),
     ].join('')),
     helpFooter(),
-  ].join(''), `KES ${data.ksh_amount || 0} sent to your M-PESA.`),
+  ].join(''), `${data.amount || 0} BAKCoins sent to your account.`),
 
   tip_received: (data: any) => emailWrapper([
     heading('You Received a Tip! &#128157;'),
@@ -495,7 +495,7 @@ const templates: Record<string, (data: any) => string> = {
     heading('Purchase Successful! &#9989;'),
     greeting(data.username || 'there'),
     para('BAKCoins have been credited to your wallet. Here\'s your receipt:'),
-    highlightCard('BAKCoins Credited', `${data.bak_amount || 0}`, `from KES ${data.amount_kes || 0}`),
+    highlightCard('BAKCoins Credited', `${data.bak_amount || 0}`, `≈ $${((data.bak_amount || 0) * 0.16).toFixed(2)} USD`),
     detailTable([
       detailRow('Payment Method', data.payment_method || 'M-Pesa / Selar'),
       detailRow('Reference', data.reference || 'N/A'),
@@ -518,21 +518,21 @@ const templates: Record<string, (data: any) => string> = {
     heading('Deposit Approved! &#9989;'),
     greeting(data.username || 'there'),
     para('Your M-Pesa deposit has been verified and BAKCoins credited.'),
-    highlightCard('Deposit Credited', `${data.bak_amount || 0} BAKCoins`, `from KES ${data.amount_kes || 0}`),
+    highlightCard('Deposit Credited', `${data.bak_amount || 0} BAKCoins`, `≈ $${((data.bak_amount || 0) * 0.16).toFixed(2)} USD`),
     detailTable([
       detailRow('Receipt Code', data.receipt_code || 'N/A'),
       detailRow('Status', statusBadge('Approved', SUCCESS_COLOR)),
     ].join('')),
     btn(`${PRODUCTION_DOMAIN}/wallet`, 'Go to Wallet'),
     helpFooter(),
-  ].join(''), `Deposit of KES ${data.amount_kes || 0} approved!`),
+  ].join(''), `Deposit of ${data.bak_amount || 0} BAKCoins approved!`),
 
   deposit_rejected: (data: any) => emailWrapper([
     heading('Deposit Request Update &#9888;'),
     greeting(data.username || 'there'),
     para('We were unable to verify your deposit. Please review the details below.'),
     detailTable([
-      detailRow('Amount', `KES ${data.amount_kes || 0}`),
+      detailRow('Amount', `${data.bak_amount || data.amount_kes || 0} BAK`),
       detailRow('Receipt Code', data.receipt_code || 'N/A'),
       detailRow('Status', statusBadge('Rejected', ERROR_COLOR)),
       ...(data.reason ? [detailRow('Reason', data.reason)] : []),
@@ -540,7 +540,7 @@ const templates: Record<string, (data: any) => string> = {
     infoBox('Double-check your M-Pesa receipt code and resubmit. If the issue persists, contact support.'),
     btn(`${PRODUCTION_DOMAIN}/wallet`, 'Try Again'),
     helpFooter(),
-  ].join(''), `Deposit of KES ${data.amount_kes || 0} was not approved.`),
+  ].join(''), `Deposit of ${data.bak_amount || 0} BAKCoins was not approved.`),
 
   application_approved: (data: any) => emailWrapper([
     heading('Application Approved! &#127881;'),

@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     question: "What is the exchange rate for BAKCoins?",
-    answer: "1 BAKCoin = $0.20 USD. This rate is fixed and transparent across the platform."
+    answer: "1 BAKCoin = $0.16 USD. This rate is fixed and transparent across the platform."
   },
   {
     question: "How do competitions work?",

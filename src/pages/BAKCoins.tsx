@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Coins, ArrowRightLeft, TrendingUp, Shield, DollarSign, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
 
 const BAKCoinsPage = () => {
   return (
@@ -31,8 +32,15 @@ const BAKCoinsPage = () => {
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-primary/20">
             <span className="text-2xl font-bold">1 BAKCoin</span>
             <ArrowRightLeft className="w-5 h-5 text-muted-foreground" />
-            <span className="text-2xl font-bold text-gradient">$0.20 USD</span>
+            <span className="text-2xl font-bold text-gradient">$0.16 USD</span>
           </div>
+        </div>
+      </section>
+
+      {/* Exchange Rates Table */}
+      <section className="pb-10 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <ExchangeRatesTable />
         </div>
       </section>
 
