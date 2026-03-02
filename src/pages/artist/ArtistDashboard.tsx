@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistCollaboration } from "@/components/ArtistCollaboration";
+import { useFeaturedCompetition } from "@/hooks/useFeaturedCompetition";
 
 export default function ArtistDashboard() {
   const { user } = useAuth();
@@ -35,12 +36,11 @@ export default function ArtistDashboard() {
     monthlyGrowth: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
+  const featuredCompetition = useFeaturedCompetition(user?.id);
 
   useEffect(() => {
     if (user) {
       fetchStats();
-      fetchFeaturedCompetition();
       
       // Subscribe to wallet changes
       const walletChannel = supabase
@@ -74,20 +74,6 @@ export default function ArtistDashboard() {
       };
     }
   }, [user]);
-
-  const fetchFeaturedCompetition = async () => {
-    const { data } = await supabase
-      .from('competitions')
-      .select('*, submissions(count)')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    if (data) {
-      setFeaturedCompetition(data);
-    }
-  };
 
   const fetchStats = async () => {
     try {
