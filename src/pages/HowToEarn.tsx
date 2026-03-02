@@ -16,8 +16,8 @@ const earningMethods = [
   {
     icon: Heart,
     title: "Fan Tips",
-    amount: "100% to Artist",
-    description: "Receive direct tips from fans. You keep everything (minus 10% platform fee).",
+    amount: "90% to Artist",
+    description: "Receive direct tips from fans. 90% goes to you, 10% platform fee to keep BAK55 running.",
     color: "from-accent to-primary",
   },
   {

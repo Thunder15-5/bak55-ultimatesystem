@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,83 +14,81 @@ interface LeaderboardArtist {
   id: string;
   username: string;
   avatar_url: string | null;
-  artist_profiles: {
-    stage_name: string | null;
-    verified: boolean;
-  } | null;
-  follower_count?: number;
-  total_plays?: number;
-  total_earnings?: number;
-  track_count?: number;
+  stage_name: string | null;
+  verified: boolean;
+  follower_count: number;
+  total_plays: number;
+  total_earnings: number;
 }
 
 export default function Leaderboard() {
-  const [followerLeaders, setFollowerLeaders] = useState<LeaderboardArtist[]>([]);
-  const [playsLeaders, setPlaysLeaders] = useState<LeaderboardArtist[]>([]);
-  const [earningsLeaders, setEarningsLeaders] = useState<LeaderboardArtist[]>([]);
+  const [artists, setArtists] = useState<LeaderboardArtist[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLeaderboards();
+    fetchLeaderboard();
   }, []);
 
-  const fetchLeaderboards = async () => {
+  const fetchLeaderboard = async () => {
     try {
-      // Get all artists with profiles
-      const { data: artists, error } = await supabase
-        .from("profiles")
+      // Single efficient query: get artists with their profiles
+      const { data: artistProfiles, error } = await supabase
+        .from("artist_profiles")
         .select(`
-          id,
-          username,
-          avatar_url,
-          artist_profiles (
-            stage_name,
-            verified,
-            total_earnings
+          user_id,
+          stage_name,
+          verified,
+          total_earnings,
+          profiles!artist_profiles_user_id_fkey (
+            username,
+            avatar_url
           )
         `)
-        .not("artist_profiles", "is", null);
+        .eq('hidden', false)
+        .limit(50);
 
       if (error) throw error;
+      if (!artistProfiles?.length) { setLoading(false); return; }
 
-      // Fetch follower counts and play counts
-      const artistsWithStats = await Promise.all(
-        artists.map(async (artist) => {
-          const [followersResult, tracksData] = await Promise.all([
-            supabase
-              .from("followers")
-              .select("id", { count: "exact", head: true })
-              .eq("artist_id", artist.id),
-            supabase
-              .from("tracks")
-              .select("plays, id")
-              .eq("artist_id", artist.id)
-              .eq("moderation_status", "approved"),
-          ]);
+      // Batch fetch follower counts and play counts
+      const artistIds = artistProfiles.map(a => a.user_id);
+      
+      const [followersRes, tracksRes] = await Promise.all([
+        supabase
+          .from("followers")
+          .select("artist_id")
+          .in("artist_id", artistIds),
+        supabase
+          .from("tracks")
+          .select("artist_id, plays")
+          .in("artist_id", artistIds),
+      ]);
 
-          const totalPlays = tracksData.data?.reduce((sum, track) => sum + (track.plays || 0), 0) || 0;
-          const trackCount = tracksData.data?.length || 0;
+      // Aggregate counts
+      const followerCounts: Record<string, number> = {};
+      followersRes.data?.forEach(f => {
+        followerCounts[f.artist_id] = (followerCounts[f.artist_id] || 0) + 1;
+      });
 
-          return {
-            ...artist,
-            follower_count: followersResult.count || 0,
-            total_plays: totalPlays,
-            total_earnings: artist.artist_profiles?.total_earnings || 0,
-            track_count: trackCount,
-          };
-        })
-      );
+      const playCounts: Record<string, number> = {};
+      tracksRes.data?.forEach(t => {
+        playCounts[t.artist_id] = (playCounts[t.artist_id] || 0) + (t.plays || 0);
+      });
 
-      // Sort by different metrics
-      const byFollowers = [...artistsWithStats].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 50);
-      const byPlays = [...artistsWithStats].sort((a, b) => (b.total_plays || 0) - (a.total_plays || 0)).slice(0, 50);
-      const byEarnings = [...artistsWithStats].sort((a, b) => (b.total_earnings || 0) - (a.total_earnings || 0)).slice(0, 50);
+      const mapped: LeaderboardArtist[] = artistProfiles.map(a => ({
+        id: a.user_id,
+        username: (a.profiles as any)?.username || 'Unknown',
+        avatar_url: (a.profiles as any)?.avatar_url || null,
+        stage_name: a.stage_name,
+        verified: a.verified || false,
+        follower_count: followerCounts[a.user_id] || 0,
+        total_plays: playCounts[a.user_id] || 0,
+        total_earnings: Number(a.total_earnings) || 0,
+      }));
 
-      setFollowerLeaders(byFollowers);
-      setPlaysLeaders(byPlays);
-      setEarningsLeaders(byEarnings);
+      setArtists(mapped);
     } catch (error) {
-      console.error("Failed to fetch leaderboards:", error);
+      console.error("Failed to fetch leaderboard:", error);
     } finally {
       setLoading(false);
     }
@@ -102,9 +101,19 @@ export default function Leaderboard() {
     return <span className="text-muted-foreground font-bold">#{rank}</span>;
   };
 
-  const renderLeaderboardList = (artists: LeaderboardArtist[], metric: 'followers' | 'plays' | 'earnings') => (
+  const sortedBy = (metric: 'followers' | 'plays' | 'earnings') => {
+    return [...artists].sort((a, b) => {
+      if (metric === 'followers') return b.follower_count - a.follower_count;
+      if (metric === 'plays') return b.total_plays - a.total_plays;
+      return b.total_earnings - a.total_earnings;
+    });
+  };
+
+  const renderLeaderboardList = (sorted: LeaderboardArtist[], metric: 'followers' | 'plays' | 'earnings') => (
     <div className="space-y-3">
-      {artists.map((artist, index) => (
+      {sorted.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">No artists yet. Be the first to join!</p>
+      ) : sorted.map((artist, index) => (
         <Link key={artist.id} to={`/artist/${artist.id}`}>
           <Card className="group hover:shadow-lg hover:border-primary/50 transition-all duration-300">
             <CardContent className="p-4">
@@ -115,15 +124,15 @@ export default function Leaderboard() {
                 <Avatar className="h-14 w-14 border-2 border-primary/20 group-hover:border-primary transition-colors">
                   <AvatarImage src={artist.avatar_url || undefined} />
                   <AvatarFallback className="text-lg font-bold">
-                    {(artist.artist_profiles?.stage_name || artist.username).substring(0, 2).toUpperCase()}
+                    {(artist.stage_name || artist.username).substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-lg truncate">
-                      {artist.artist_profiles?.stage_name || artist.username}
+                      {artist.stage_name || artist.username}
                     </h3>
-                    {artist.artist_profiles?.verified && (
+                    {artist.verified && (
                       <Badge variant="default" className="h-5 px-1.5 text-xs">✓</Badge>
                     )}
                   </div>
@@ -131,9 +140,9 @@ export default function Leaderboard() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary">
-                    {metric === 'followers' && (artist.follower_count || 0).toLocaleString()}
-                    {metric === 'plays' && (artist.total_plays || 0).toLocaleString()}
-                    {metric === 'earnings' && `${(artist.total_earnings || 0).toLocaleString()} BAK`}
+                    {metric === 'followers' && artist.follower_count.toLocaleString()}
+                    {metric === 'plays' && artist.total_plays.toLocaleString()}
+                    {metric === 'earnings' && `${artist.total_earnings.toLocaleString()} BAK`}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {metric === 'followers' && 'followers'}
@@ -171,7 +180,6 @@ export default function Leaderboard() {
         <Navigation />
         
         <div className="container mx-auto px-4 py-8 pt-24">
-          {/* Header */}
           <div className="text-center mb-12">
             <Trophy className="inline-block h-12 w-12 text-primary mb-4" />
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
@@ -182,7 +190,6 @@ export default function Leaderboard() {
             </p>
           </div>
 
-          {/* Leaderboard Tabs */}
           <Tabs defaultValue="followers" className="max-w-6xl mx-auto">
             <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="followers" className="gap-2">
@@ -206,12 +213,10 @@ export default function Leaderboard() {
                     <TrendingUp className="h-5 w-5 text-primary" />
                     Top Artists by Followers
                   </CardTitle>
-                  <CardDescription>
-                    Artists with the most loyal fanbase
-                  </CardDescription>
+                  <CardDescription>Artists with the most loyal fanbase</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {renderLeaderboardList(followerLeaders, 'followers')}
+                  {renderLeaderboardList(sortedBy('followers'), 'followers')}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -223,12 +228,10 @@ export default function Leaderboard() {
                     <Music className="h-5 w-5 text-primary" />
                     Top Artists by Plays
                   </CardTitle>
-                  <CardDescription>
-                    Artists with the most track plays
-                  </CardDescription>
+                  <CardDescription>Artists with the most track plays</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {renderLeaderboardList(playsLeaders, 'plays')}
+                  {renderLeaderboardList(sortedBy('plays'), 'plays')}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -240,17 +243,16 @@ export default function Leaderboard() {
                     <DollarSign className="h-5 w-5 text-primary" />
                     Top Earning Artists
                   </CardTitle>
-                  <CardDescription>
-                    Artists earning the most BAKCoins
-                  </CardDescription>
+                  <CardDescription>Artists earning the most BAKCoins</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {renderLeaderboardList(earningsLeaders, 'earnings')}
+                  {renderLeaderboardList(sortedBy('earnings'), 'earnings')}
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
+        <Footer />
       </div>
     </>
   );
