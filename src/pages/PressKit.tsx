@@ -6,7 +6,16 @@ import { Download, FileText, Image, Music } from "lucide-react";
 import { toast } from "sonner";
 
 const PressKit = () => {
-  const handleDownload = (assetName: string) => {
+  const handleDownload = (assetName: string, url?: string) => {
+    if (url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = assetName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
     toast.info(`${assetName} download will be available soon. Contact press@bak55talent.co.ke for immediate access.`);
   };
 
@@ -105,7 +114,7 @@ const PressKit = () => {
                     <p className="text-sm text-muted-foreground">PNG, SVG - Multiple variations</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleDownload("Logo Pack")}>
+                <Button variant="outline" size="sm" onClick={() => handleDownload("bak55-logo.png", "/bak55-logo.png")}>
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>

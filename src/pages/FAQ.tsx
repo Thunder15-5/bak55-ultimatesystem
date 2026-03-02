@@ -18,15 +18,15 @@ const FAQ = () => {
         },
         {
           question: "How do I create an account?",
-          answer: "Click 'Get Started' on the homepage, choose your role (Fan, Artist, or Brand), and fill out the registration form. Currently, BAK55 is available only in Kenya, so you'll need to confirm you're based there. After registration, you'll receive a verification email."
+          answer: "Click 'Get Started' on the homepage, choose your role (Fan, Artist, Producer, or Brand), and fill out the registration form. After registration, you'll receive a verification email to activate your account."
         },
         {
-          question: "What's the difference between Fan, Artist, and Brand accounts?",
-          answer: "Fans can stream music, vote in competitions, and earn rewards. Artists can upload music, enter competitions, and earn from streams and tips. Brands can sponsor competitions, discover talent, and partner with artists for marketing campaigns."
+          question: "What's the difference between Fan, Artist, Producer, and Brand accounts?",
+          answer: "Fans can stream music, vote in competitions, and earn rewards. Artists can upload music, enter competitions, and earn from streams and tips. Producers can upload beats, license them, and collaborate with artists. Brands can sponsor competitions, discover talent, and partner with artists for marketing campaigns."
         },
         {
-          question: "Is BAK55 available outside Kenya?",
-          answer: "BAK55 is available across Africa! We support multiple currencies including KES, NGN, GHS, UGX, TZS, RWF, ETB, ZAR, and CFA francs. Your currency is auto-detected or can be changed in settings."
+          question: "Where is BAK55 available?",
+          answer: "BAK55 is available across Africa! We support multiple currencies including KES, NGN, GHS, UGX, TZS, RWF, ETB, ZAR, and CFA francs. Your currency is auto-detected or can be changed in settings. We launched first in Kenya and are expanding continent-wide."
         }
       ]
     },

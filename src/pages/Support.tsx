@@ -8,6 +8,7 @@ import { HelpCircle, Mail, MessageSquare, Book, ChevronDown } from "lucide-react
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const faqs = [
@@ -121,11 +122,13 @@ const Support = () => {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary-glow flex items-center justify-center mx-auto mb-4">
                 <Book className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Documentation</h3>
+              <h3 className="text-xl font-bold mb-2">Full FAQ</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Detailed guides and tutorials
+                Comprehensive answers organized by category
               </p>
-              <Button variant="outline" size="sm" disabled>Coming Soon</Button>
+              <Link to="/faq">
+                <Button variant="outline" size="sm">View All FAQs</Button>
+              </Link>
             </Card>
 
             <Card className="p-8 text-center bg-card/50 backdrop-blur-sm border-accent/10 hover:border-accent/30 transition-all">
@@ -140,11 +143,11 @@ const Support = () => {
             </Card>
           </div>
 
-          {/* FAQ Section */}
+          {/* Quick FAQ - Top 4 most common */}
           <Card id="faq-section" className="p-8 md:p-12 bg-card/50 backdrop-blur-sm border-primary/10 mb-16">
-            <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold mb-8 text-center">Quick Answers</h2>
             <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
+              {faqs.slice(0, 4).map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
                   <AccordionTrigger className="text-left font-semibold hover:text-primary">
                     {faq.question}
@@ -155,6 +158,11 @@ const Support = () => {
                 </AccordionItem>
               ))}
             </Accordion>
+            <div className="text-center mt-6">
+              <Link to="/faq">
+                <Button variant="outline">View All FAQs →</Button>
+              </Link>
+            </div>
           </Card>
 
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10">
