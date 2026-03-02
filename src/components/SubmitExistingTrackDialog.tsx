@@ -157,37 +157,26 @@ export function SubmitExistingTrackDialog({
         return;
       }
 
-      // Handle entry fee
+      // Handle entry fee via secure RPC
       if (competition.entry_fee > 0) {
         if (!wallet || wallet.balance < competition.entry_fee) {
           toast.error(`Insufficient balance. You need ${competition.entry_fee} BAK to enter this competition.`);
           return;
         }
 
-        // Deduct entry fee with optimistic locking
-        const { error: walletError, count: walletCount } = await supabase
-          .from('wallets')
-          .update({ balance: wallet.balance - competition.entry_fee })
-          .eq('id', wallet.id)
-          .eq('balance', wallet.balance);
+        const { data: rawResult, error: rpcError } = await supabase
+          .rpc('deduct_wallet', {
+            p_user_id: user?.id,
+            p_amount: competition.entry_fee,
+            p_description: `Entry fee for ${competition.title}`,
+            p_reference_id: finalCompetitionId,
+          });
 
-        if (walletCount === 0 && !walletError) {
-          toast.error("Concurrent modification detected — please try again");
+        const result = rawResult as any;
+        if (rpcError || !result?.success) {
+          toast.error(result?.error || "Failed to deduct entry fee — please try again");
           return;
         }
-
-        if (walletError) throw walletError;
-
-        // Record transaction
-        await supabase
-          .from('transactions')
-          .insert({
-            wallet_id: wallet.id,
-            type: 'spending',
-            amount: -competition.entry_fee,
-            description: `Entry fee for ${competition.title}`,
-            reference_id: finalCompetitionId,
-          });
       }
 
       // Get track details
