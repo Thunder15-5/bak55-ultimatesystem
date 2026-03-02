@@ -97,7 +97,7 @@ export default function FanDashboard() {
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-bold mb-2">Welcome Back, Fan! 🎵</h1>
+            <h1 className="text-4xl font-bold mb-2">Welcome Back, {user?.user_metadata?.username || user?.email?.split("@")[0] || 'Fan'}! 🎵</h1>
             <p className="text-muted-foreground">
               Discover, engage, and support your favorite artists
             </p>
@@ -267,7 +267,7 @@ export default function FanDashboard() {
                 <Play className="mr-2 h-4 w-4" />
                 Discover Music
               </Button>
-              <Button onClick={() => navigate('/competitions/active')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/competitions')} variant="outline" className="w-full">
                 <Trophy className="mr-2 h-4 w-4" />
                 Vote in Competitions
               </Button>
@@ -275,11 +275,11 @@ export default function FanDashboard() {
                 <Headphones className="mr-2 h-4 w-4" />
                 Browse Beats
               </Button>
-              <Button onClick={() => navigate('/wallet')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/wallet/buy-coins')} variant="outline" className="w-full">
                 <Wallet className="mr-2 h-4 w-4" />
                 Buy BAKCoins
               </Button>
-              <Button onClick={() => navigate('/playlists')} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/fan/playlists')} variant="outline" className="w-full">
                 <Music className="mr-2 h-4 w-4" />
                 My Playlists
               </Button>

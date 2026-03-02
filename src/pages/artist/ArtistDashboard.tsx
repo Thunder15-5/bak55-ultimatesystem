@@ -91,65 +91,30 @@ export default function ArtistDashboard() {
 
   const fetchStats = async () => {
     try {
-      // Fetch wallet balance
-      const walletData = await supabase.from("wallets").select("balance").eq("user_id", user?.id).single();
-      
-      // Fetch tracks with plays
-      const tracksData = await supabase.from("tracks").select("id, title, plays").eq("artist_id", user?.id).order("plays", { ascending: false });
-      
-      // Fetch artist profile
-      const artistProfile = await supabase.from("artist_profiles").select("total_earnings").eq("user_id", user?.id).single();
-      
-      // Fetch followers count
-      const { count: followersCount } = await supabase
-        .from("followers")
-        .select("*", { count: "exact", head: true })
-        .eq("artist_id", user?.id);
-      
-      // Fetch total likes across all tracks
+      // Parallel fetch for all stats
+      const [walletData, tracksData, artistProfile, followersResult, competitionsResult] = await Promise.all([
+        supabase.from("wallets").select("id, balance").eq("user_id", user?.id).maybeSingle(),
+        supabase.from("tracks").select("id, title, plays").eq("artist_id", user?.id).order("plays", { ascending: false }),
+        supabase.from("artist_profiles").select("total_earnings").eq("user_id", user?.id).maybeSingle(),
+        supabase.from("followers").select("*", { count: "exact", head: true }).eq("artist_id", user?.id),
+        supabase.from("submissions").select("*", { count: "exact", head: true }).eq("artist_id", user?.id),
+      ]);
+
       const trackIds = tracksData.data?.map(t => t.id) || [];
-      let totalLikes = 0;
-      let totalComments = 0;
       
-      if (trackIds.length > 0) {
-        const { count: likesCount } = await supabase
-          .from("track_likes")
-          .select("*", { count: "exact", head: true })
-          .in("track_id", trackIds);
-        totalLikes = likesCount || 0;
-        
-        const { count: commentsCount } = await supabase
-          .from("comments")
-          .select("*", { count: "exact", head: true })
-          .in("track_id", trackIds);
-        totalComments = commentsCount || 0;
-      }
-      
-      // Fetch competition submissions
-      const { count: competitionsCount } = await supabase
-        .from("submissions")
-        .select("*", { count: "exact", head: true })
-        .eq("artist_id", user?.id);
-      
-      // Fetch recent transactions
-      const { data: walletForTransactions } = await supabase
-        .from("wallets")
-        .select("id")
-        .eq("user_id", user?.id)
-        .single();
-      
-      let recentActivity: any[] = [];
-      if (walletForTransactions) {
-        const { data: transactions } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("wallet_id", walletForTransactions.id)
-          .order("created_at", { ascending: false })
-          .limit(5);
-        recentActivity = transactions || [];
-      }
-      
-      // Get top track
+      // Second parallel batch for track-dependent and wallet-dependent queries
+      const [likesResult, commentsResult, transactionsResult] = await Promise.all([
+        trackIds.length > 0
+          ? supabase.from("track_likes").select("*", { count: "exact", head: true }).in("track_id", trackIds)
+          : Promise.resolve({ count: 0 }),
+        trackIds.length > 0
+          ? supabase.from("comments").select("*", { count: "exact", head: true }).in("track_id", trackIds)
+          : Promise.resolve({ count: 0 }),
+        walletData.data?.id
+          ? supabase.from("transactions").select("*").eq("wallet_id", walletData.data.id).order("created_at", { ascending: false }).limit(5)
+          : Promise.resolve({ data: [] }),
+      ]);
+
       const topTrack = tracksData.data?.[0] || null;
 
       setStats({
@@ -157,14 +122,14 @@ export default function ArtistDashboard() {
         tracksCount: tracksData.data?.length || 0,
         totalPlays: tracksData.data?.reduce((sum, track) => sum + (track.plays || 0), 0) || 0,
         totalEarnings: artistProfile.data?.total_earnings || 0,
-        followers: followersCount || 0,
-        likes: totalLikes,
-        comments: totalComments,
-        competitions: competitionsCount || 0,
+        followers: followersResult.count || 0,
+        likes: (likesResult as any).count || 0,
+        comments: (commentsResult as any).count || 0,
+        competitions: competitionsResult.count || 0,
         avgPlayDuration: 0,
         topTrack,
-        recentActivity,
-        monthlyGrowth: 12.5,
+        recentActivity: (transactionsResult as any).data || [],
+        monthlyGrowth: 0,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -174,14 +139,14 @@ export default function ArtistDashboard() {
   };
 
   const statCards = [
-    { icon: Wallet, value: stats.balance.toFixed(2), label: "BAKCoins Balance", color: "from-primary to-primary-glow", link: "/artist/wallet", trend: "+12%" },
+    { icon: Wallet, value: stats.balance.toFixed(2), label: "BAKCoins Balance", color: "from-primary to-primary-glow", link: "/artist/wallet", trend: null },
     { icon: Music, value: stats.tracksCount, label: "Total Tracks", color: "from-secondary to-secondary-glow", link: "/artist/catalog", trend: null },
-    { icon: TrendingUp, value: stats.totalPlays.toLocaleString(), label: "Total Plays", color: "from-accent to-accent-glow", link: "/analytics", trend: `+${stats.monthlyGrowth.toFixed(1)}%` },
-    { icon: DollarSign, value: stats.totalEarnings.toFixed(2), label: "Lifetime Earnings", color: "from-primary via-accent to-secondary", link: "/artist/wallet", trend: "+8%" },
-    { icon: Users, value: stats.followers, label: "Followers", color: "from-blue-500 to-cyan-500", link: "/artist/profile", trend: "+5%" },
-    { icon: Heart, value: stats.likes, label: "Total Likes", color: "from-red-500 to-pink-500", link: "/artist/catalog", trend: "+15%" },
-    { icon: Trophy, value: stats.competitions, label: "Competitions", color: "from-yellow-500 to-amber-500", link: "/competitions", trend: null },
-    { icon: MessageCircle, value: stats.comments, label: "Comments", color: "from-green-500 to-emerald-500", link: "/catalog", trend: "+10%" },
+    { icon: TrendingUp, value: stats.totalPlays.toLocaleString(), label: "Total Plays", color: "from-accent to-accent-glow", link: "/artist/analytics", trend: null },
+    { icon: DollarSign, value: stats.totalEarnings.toFixed(2), label: "Lifetime Earnings", color: "from-primary via-accent to-secondary", link: "/artist/wallet", trend: null },
+    { icon: Users, value: stats.followers, label: "Followers", color: "from-blue-500 to-cyan-500", link: "/artist/profile", trend: null },
+    { icon: Heart, value: stats.likes, label: "Total Likes", color: "from-red-500 to-pink-500", link: "/artist/catalog", trend: null },
+    { icon: Trophy, value: stats.competitions, label: "Competitions", color: "from-yellow-500 to-amber-500", link: "/artist/competitions", trend: null },
+    { icon: MessageCircle, value: stats.comments, label: "Comments", color: "from-green-500 to-emerald-500", link: "/artist/catalog", trend: null },
   ];
 
   return (
@@ -380,25 +345,25 @@ export default function ArtistDashboard() {
                 <CardDescription>Jump right into what you need</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <Link to="/upload" className="group">
+                <Link to="/artist/upload" className="group">
                   <Button variant="hero" className="w-full h-14 text-base font-semibold">
                     <Upload className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Upload Track
                   </Button>
                 </Link>
-                <Link to="/analytics" className="group">
+                <Link to="/artist/analytics" className="group">
                   <Button variant="outline" className="w-full h-14 text-base font-semibold border-2">
                     <BarChart3 className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Analytics
                   </Button>
                 </Link>
-                <Link to="/wallet" className="group">
+                <Link to="/artist/wallet" className="group">
                   <Button variant="secondary" className="w-full h-14 text-base font-semibold">
                     <Wallet className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Wallet
                   </Button>
                 </Link>
-                <Link to="/competitions" className="group">
+                <Link to="/artist/competitions" className="group">
                   <Button variant="outline" className="w-full h-14 text-base font-semibold border-2">
                     <Trophy className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Competitions

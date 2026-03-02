@@ -301,7 +301,7 @@ export default function Wallet() {
                 <Plus className="mr-2 h-5 w-5" />
                 Buy BAKCoins
               </Button>
-              {userRole === "artist" && (
+              {(userRole === "artist" || userRole === "producer") && (
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full sm:w-auto">
