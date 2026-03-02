@@ -164,11 +164,17 @@ export function SubmitExistingTrackDialog({
           return;
         }
 
-        // Deduct entry fee
-        const { error: walletError } = await supabase
+        // Deduct entry fee with optimistic locking
+        const { error: walletError, count: walletCount } = await supabase
           .from('wallets')
           .update({ balance: wallet.balance - competition.entry_fee })
-          .eq('id', wallet.id);
+          .eq('id', wallet.id)
+          .eq('balance', wallet.balance);
+
+        if (walletCount === 0 && !walletError) {
+          toast.error("Concurrent modification detected — please try again");
+          return;
+        }
 
         if (walletError) throw walletError;
 

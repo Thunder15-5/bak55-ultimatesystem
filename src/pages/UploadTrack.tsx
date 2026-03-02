@@ -257,11 +257,18 @@ export default function UploadTrack() {
             return;
           }
 
-          // Deduct entry fee
-          await supabase
+          // Deduct entry fee with optimistic locking
+          const { error: deductError, count: deductCount } = await supabase
             .from('wallets')
             .update({ balance: wallet.balance - competition.entry_fee })
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .eq('balance', wallet.balance);
+
+          if (deductError || deductCount === 0) {
+            toast.error("Failed to deduct entry fee — please try again");
+            setUploading(false);
+            return;
+          }
 
           // Record transaction
           await supabase
