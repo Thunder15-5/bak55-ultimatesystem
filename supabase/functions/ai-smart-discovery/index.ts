@@ -8,6 +8,11 @@ const corsHeaders = {
 
 const DAILY_LIMIT = 10;
 const CACHE_HOURS = 24;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function sanitize(val: unknown, maxLen = 200): string {
+  return String(val ?? '').slice(0, maxLen).replace(/[{}"\\]/g, '');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,20 +27,39 @@ serve(async (req) => {
 
     // JWT auth
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error("Unauthorized");
-    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !caller) throw new Error("Unauthorized");
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const { data, error: authError } = await supabase.auth.getClaims(authHeader.replace('Bearer ', ''));
+    if (authError || !data?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const userId = data.claims.sub;
+
+    // Role check
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', userId);
+    if (!roles?.some(r => ['artist', 'producer', 'admin'].includes(r.role))) {
+      return new Response(JSON.stringify({ error: 'AI Intelligence is available for artists and producers only.' }), { status: 403, headers: corsHeaders });
+    }
 
     const { trackId } = await req.json();
-    if (!trackId) throw new Error("trackId required");
-    const userId = caller.id;
+    if (!trackId || !UUID_RE.test(trackId)) {
+      return new Response(JSON.stringify({ error: 'Valid trackId (UUID) required' }), { status: 400, headers: corsHeaders });
+    }
+
+    // Cleanup orphaned processing records
+    await supabase.from('ai_track_analyses').update({ status: 'failed' })
+      .eq('user_id', userId).eq('status', 'processing')
+      .lt('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
 
     // Rate limit
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count: todayCount } = await supabase
       .from('ai_track_analyses').select('*', { count: 'exact', head: true })
       .eq('user_id', userId).gte('created_at', since);
-    if ((todayCount || 0) >= DAILY_LIMIT) throw new Error(`Daily limit of ${DAILY_LIMIT} analyses reached.`);
+    if ((todayCount || 0) >= DAILY_LIMIT) {
+      return new Response(JSON.stringify({ error: `Daily limit of ${DAILY_LIMIT} analyses reached.` }), { status: 429, headers: corsHeaders });
+    }
 
     // Cache check
     const cacheThreshold = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
@@ -53,11 +77,10 @@ serve(async (req) => {
       );
     }
 
-    // Get track + artist data
     const { data: track } = await supabase
       .from('tracks').select('*, profiles:artist_id(username, display_name, location, bio)')
       .eq('id', trackId).single();
-    if (!track) throw new Error("Track not found");
+    if (!track) return new Response(JSON.stringify({ error: 'Track not found' }), { status: 404, headers: corsHeaders });
 
     const [artistProfileRes, listenersRes, genreTracksRes] = await Promise.all([
       supabase.from('artist_profiles').select('stage_name, genres, verified').eq('user_id', track.artist_id).maybeSingle(),
@@ -75,32 +98,32 @@ serve(async (req) => {
       .select().single();
 
     const listenerLocations = listeners?.reduce((acc: any, l: any) => {
-      const loc = l.profiles?.location || 'Unknown';
+      const loc = sanitize(l.profiles?.location || 'Unknown', 50);
       acc[loc] = (acc[loc] || 0) + 1;
       return acc;
     }, {});
 
     const prompt = `You are a music discovery strategist for African music. Analyze this track's audience potential.
 
-TRACK: "${track.title}" by ${artistProfile?.stage_name || track.profiles?.username}
-Genre: ${track.genre || 'Unknown'}
-Description: ${track.description || 'None'}
-Artist Location: ${track.profiles?.location || 'Unknown'}
-Artist Genres: ${artistProfile?.genres?.join(', ') || track.genre || 'Unknown'}
+TRACK: "${sanitize(track.title)}" by ${sanitize(artistProfile?.stage_name || track.profiles?.username)}
+Genre: ${sanitize(track.genre || 'Unknown')}
+Description: ${sanitize(track.description || 'None', 500)}
+Artist Location: ${sanitize(track.profiles?.location || 'Unknown')}
+Artist Genres: ${sanitize(artistProfile?.genres?.join(', ') || track.genre || 'Unknown')}
 Current Plays: ${track.plays || 0}
 Listener Locations: ${JSON.stringify(listenerLocations)}
-Similar Genre Top Tracks: ${JSON.stringify(genreTracks?.slice(0, 5).map(t => ({ title: t.title, plays: t.plays })))}
+Similar Genre Top Tracks: ${JSON.stringify(genreTracks?.slice(0, 5).map(t => ({ title: sanitize(t.title, 60), plays: t.plays })))}
 
 Provide audience discovery analysis in EXACT JSON:
 {
   "targetCountries": [{"country": "<country>", "adoptionLikelihood": <0-100>, "reason": "<why>"}],
-  "listenerPersona": {"ageRange": "<e.g. 18-25>", "gender": "<primary gender split>", "lifestyle": "<lifestyle description>", "listeningHabits": "<when/how they listen>", "otherGenres": ["<genre>"]},
-  "platformStrategy": [{"platform": "<name>", "strategy": "<what to do>", "expectedImpact": "<high/medium/low>"}],
-  "fanGrowthPrediction": {"thirtyDays": <number>, "ninetyDays": <number>, "sixMonths": <number>, "growthStrategy": "<key strategy>"},
+  "listenerPersona": {"ageRange": "<e.g. 18-25>", "gender": "<split>", "lifestyle": "<desc>", "listeningHabits": "<habits>", "otherGenres": ["<genre>"]},
+  "platformStrategy": [{"platform": "<name>", "strategy": "<action>", "expectedImpact": "<high/medium/low>"}],
+  "fanGrowthPrediction": {"thirtyDays": <number>, "ninetyDays": <number>, "sixMonths": <number>, "growthStrategy": "<strategy>"},
   "genreCrossovers": [{"genre": "<genre>", "fitScore": <0-100>, "approach": "<how>"}],
   "discoveryScore": <0-100>,
   "viralPotential": <0-100>,
-  "summary": "<2-3 sentence discovery strategy>"
+  "summary": "<discovery strategy>"
 }`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -117,8 +140,8 @@ Provide audience discovery analysis in EXACT JSON:
 
     if (!aiResponse.ok) {
       await supabase.from('ai_track_analyses').update({ status: 'failed' }).eq('id', analysisRecord!.id);
-      if (aiResponse.status === 429) throw new Error('Rate limit exceeded.');
-      if (aiResponse.status === 402) throw new Error('AI credits depleted.');
+      if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'AI rate limit exceeded.' }), { status: 429, headers: corsHeaders });
+      if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'AI credits depleted.' }), { status: 402, headers: corsHeaders });
       throw new Error(`AI failed: ${aiResponse.status}`);
     }
 

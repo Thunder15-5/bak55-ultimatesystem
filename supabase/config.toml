@@ -98,3 +98,15 @@ verify_jwt = false
 
 [functions.download-track]
 verify_jwt = false
+
+[functions.ai-talent-scout]
+verify_jwt = false
+
+[functions.ai-smart-discovery]
+verify_jwt = false
+
+[functions.ai-content-enhance]
+verify_jwt = false
+
+[functions.trend-forecast]
+verify_jwt = false
