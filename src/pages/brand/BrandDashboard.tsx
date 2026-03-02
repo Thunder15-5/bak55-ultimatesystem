@@ -29,36 +29,39 @@ export default function BrandDashboard() {
   }, [user]);
 
   const fetchStats = async () => {
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', user?.id)
-      .single();
+    // Parallel fetch for independent queries
+    const [walletResult, competitionsResult] = await Promise.all([
+      supabase.from('wallets').select('balance').eq('user_id', user?.id).single(),
+      supabase.from('competitions').select('id, prize_amount', { count: 'exact' }).eq('created_by', user?.id).eq('status', 'active'),
+    ]);
 
-    const { data: competitions, count } = await supabase
-      .from('competitions')
-      .select('id, prize_amount', { count: 'exact' })
-      .eq('created_by', user?.id)
-      .eq('status', 'active');
+    const competitions = competitionsResult.data;
+    const compIds = competitions?.map(c => c.id) || [];
 
-    const { data: submissions } = await supabase
-      .from('submissions')
-      .select('id, competition_id')
-      .in('competition_id', competitions?.map(c => c.id) || []);
+    // Second batch - depends on competition IDs
+    const [submissionsResult] = await Promise.all([
+      compIds.length > 0
+        ? supabase.from('submissions').select('id, competition_id').in('competition_id', compIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
-    const { data: votes } = await supabase
-      .from('votes')
-      .select('id')
-      .in('submission_id', submissions?.map(s => s.id) || []);
+    const submissions = submissionsResult.data || [];
+    const subIds = submissions.map(s => s.id);
+
+    const [votesResult] = await Promise.all([
+      subIds.length > 0
+        ? supabase.from('votes').select('id').in('submission_id', subIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
     const totalBudget = competitions?.reduce((sum, c) => sum + Number(c.prize_amount), 0) || 0;
 
     setStats({
-      balance: wallet?.balance || 0,
-      activeCompetitions: count || 0,
+      balance: walletResult.data?.balance || 0,
+      activeCompetitions: competitionsResult.count || 0,
       totalBudget,
-      totalSubmissions: submissions?.length || 0,
-      totalVotes: votes?.length || 0,
+      totalSubmissions: submissions.length,
+      totalVotes: votesResult.data?.length || 0,
     });
   };
 
@@ -175,7 +178,7 @@ export default function BrandDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-4">
-              <Button onClick={() => navigate('/admin/create-competition')} variant="hero" className="w-full">
+              <Button onClick={() => navigate('/brand/competitions/create')} variant="hero" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Competition
               </Button>
@@ -221,7 +224,7 @@ export default function BrandDashboard() {
                   <div className="text-center py-8 text-muted-foreground">
                     <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>No competitions yet</p>
-                    <Button onClick={() => navigate('/admin/create-competition')} variant="outline" size="sm" className="mt-3">
+                    <Button onClick={() => navigate('/brand/competitions/create')} variant="outline" size="sm" className="mt-3">
                       Create Your First
                     </Button>
                   </div>

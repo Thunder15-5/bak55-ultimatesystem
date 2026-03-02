@@ -14,11 +14,13 @@ import { ForYouSection } from '@/components/ForYouSection';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { useFeaturedCompetition } from '@/hooks/useFeaturedCompetition';
 import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle, Headphones } from 'lucide-react';
 
 export default function FanDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const featuredCompetition = useFeaturedCompetition(user?.id);
   const [stats, setStats] = useState({
     balance: 0,
     votesCast: 0,
@@ -26,67 +28,28 @@ export default function FanDashboard() {
     artistsFollowing: 0,
     playlistsCreated: 0,
   });
-  const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
       fetchStats();
-      fetchFeaturedCompetition();
     }
   }, [user]);
 
-  const fetchFeaturedCompetition = async () => {
-    const { data } = await supabase
-      .from('competitions')
-      .select('*, submissions(count)')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    if (data) {
-      setFeaturedCompetition(data);
-    }
-  };
-
   const fetchStats = async () => {
-    // Fetch wallet balance
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', user?.id)
-      .single();
-
-    // Fetch votes cast
-    const { count: votesCount } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('voter_id', user?.id);
-
-    // Fetch tracks liked
-    const { count: likesCount } = await supabase
-      .from('track_likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user?.id);
-
-    // Fetch artists following
-    const { count: followsCount } = await supabase
-      .from('followers')
-      .select('*', { count: 'exact', head: true })
-      .eq('follower_id', user?.id);
-
-    // Fetch playlists created
-    const { count: playlistsCount } = await supabase
-      .from('playlists')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user?.id);
+    const [walletResult, votesResult, likesResult, followsResult, playlistsResult] = await Promise.all([
+      supabase.from('wallets').select('balance').eq('user_id', user?.id).single(),
+      supabase.from('votes').select('*', { count: 'exact', head: true }).eq('voter_id', user?.id),
+      supabase.from('track_likes').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
+      supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', user?.id),
+      supabase.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
+    ]);
 
     setStats({
-      balance: wallet?.balance || 0,
-      votesCast: votesCount || 0,
-      tracksLiked: likesCount || 0,
-      artistsFollowing: followsCount || 0,
-      playlistsCreated: playlistsCount || 0,
+      balance: walletResult.data?.balance || 0,
+      votesCast: votesResult.count || 0,
+      tracksLiked: likesResult.count || 0,
+      artistsFollowing: followsResult.count || 0,
+      playlistsCreated: playlistsResult.count || 0,
     });
   };
 
