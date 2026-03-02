@@ -52,9 +52,9 @@ export function BottomNavigation() {
       case "admin":
         return [
           { icon: Home, label: "Home", href: "/admin" },
-          { icon: Search, label: "Stream", href: "/admin/streaming" },
-          { icon: Wallet, label: "Wallet", href: "/admin/wallet" },
-          { icon: User, label: "Profile", href: "/admin/profile" },
+          { icon: Search, label: "Catalog", href: "/catalog" },
+          { icon: Trophy, label: "Comps", href: "/competitions" },
+          { icon: User, label: "Profile", href: "/admin" },
         ];
       default:
         return [];

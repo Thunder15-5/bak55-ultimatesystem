@@ -239,8 +239,10 @@ export default function Admin() {
       const feeAmount = request.metadata?.withdrawal_fee || (Math.abs(request.amount) * 0.05 / 0.95);
       const { data: platformWallet } = await supabase
         .from("wallets").select("id, balance").eq("user_id", PLATFORM_USER_ID).single();
-      if (platformWallet) {
-        await supabase.from("wallets").update({ balance: Math.max(0, platformWallet.balance - feeAmount) }).eq("id", platformWallet.id);
+      if (platformWallet && platformWallet.balance >= feeAmount) {
+        await supabase.from("wallets").update({ balance: platformWallet.balance - feeAmount }).eq("id", platformWallet.id);
+      } else if (platformWallet) {
+        console.warn(`Platform wallet balance (${platformWallet.balance}) insufficient to refund fee (${feeAmount}). Skipping fee refund.`);
       }
 
       const { error } = await supabase
