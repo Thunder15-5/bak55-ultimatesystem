@@ -26,6 +26,11 @@ interface Track {
 
 type AnalysisModule = 'talent_scout' | 'discovery' | 'content_enhance';
 
+interface TrendForecast {
+  data: any;
+  forecast: any;
+}
+
 export default function AIIntelligence() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
@@ -35,11 +40,15 @@ export default function AIIntelligence() {
   const [analyses, setAnalyses] = useState<Record<string, any>>({});
   const [runningModules, setRunningModules] = useState<Set<string>>(new Set());
   const [history, setHistory] = useState<any[]>([]);
+  const [trendForecast, setTrendForecast] = useState<TrendForecast | null>(null);
+  const [loadingTrends, setLoadingTrends] = useState(false);
+  const [dailyUsage, setDailyUsage] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     fetchTracks();
     fetchHistory();
+    fetchDailyUsage();
 
     // Realtime updates for analysis results
     const channel = supabase
@@ -88,6 +97,16 @@ export default function AIIntelligence() {
     setHistory(data || []);
   };
 
+  const fetchDailyUsage = async () => {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('ai_track_analyses')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user!.id)
+      .gte('created_at', since);
+    setDailyUsage(count || 0);
+  };
+
   const loadExistingAnalyses = async (trackId: string) => {
     const { data } = await supabase
       .from('ai_track_analyses')
@@ -123,7 +142,7 @@ export default function AIIntelligence() {
 
     try {
       const { data, error } = await supabase.functions.invoke(functionMap[module], {
-        body: { trackId: selectedTrack, userId: user.id }
+        body: { trackId: selectedTrack }
       });
 
       if (error) throw error;
@@ -135,8 +154,10 @@ export default function AIIntelligence() {
         }));
       }
       
-      toast.success(`${moduleNames[module]} analysis complete!`);
+      const isCached = data?.cached;
+      toast.success(`${moduleNames[module]} ${isCached ? '(cached)' : 'analysis complete'}!`);
       fetchHistory();
+      fetchDailyUsage();
     } catch (err: any) {
       console.error(`${module} error:`, err);
       toast.error(err.message || `${moduleNames[module]} failed`);
@@ -158,6 +179,24 @@ export default function AIIntelligence() {
     // Stagger to avoid rate limits
     setTimeout(() => runModule('discovery'), 3000);
     setTimeout(() => runModule('content_enhance'), 6000);
+  };
+
+  const runTrendForecast = async () => {
+    if (!user) return;
+    setLoadingTrends(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('trend-forecast', {
+        body: {}
+      });
+      if (error) throw error;
+      setTrendForecast(data);
+      toast.success("Trend forecast generated!");
+    } catch (err: any) {
+      console.error('Trend forecast error:', err);
+      toast.error(err.message || "Failed to generate forecast");
+    } finally {
+      setLoadingTrends(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -189,9 +228,14 @@ export default function AIIntelligence() {
               AI Intelligence Suite
             </h1>
           </div>
-          <p className="text-muted-foreground">
-            Real-time AI analysis for your music. Select a track to begin.
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-muted-foreground">
+              Real-time AI analysis for your music. Select a track to begin.
+            </p>
+            <Badge variant="outline" className="whitespace-nowrap">
+              {dailyUsage}/10 analyses today
+            </Badge>
+          </div>
         </div>
 
         {/* Track Selector */}
@@ -254,7 +298,7 @@ export default function AIIntelligence() {
           </Card>
         ) : (
           <Tabs defaultValue="talent" className="space-y-6">
-            <TabsList className="w-full grid grid-cols-4">
+            <TabsList className="w-full grid grid-cols-5">
               <TabsTrigger value="talent" className="gap-1">
                 <Brain className="h-4 w-4" /> Scout
               </TabsTrigger>
@@ -263,6 +307,9 @@ export default function AIIntelligence() {
               </TabsTrigger>
               <TabsTrigger value="content" className="gap-1">
                 <Palette className="h-4 w-4" /> Content
+              </TabsTrigger>
+              <TabsTrigger value="trends" className="gap-1">
+                <TrendingUp className="h-4 w-4" /> Trends
               </TabsTrigger>
               <TabsTrigger value="history" className="gap-1">
                 <Clock className="h-4 w-4" /> History
@@ -311,6 +358,149 @@ export default function AIIntelligence() {
               />
               {analyses.content_enhance?.raw_analysis && (
                 <ContentResults data={analyses.content_enhance.raw_analysis} onCopy={copyToClipboard} />
+              )}
+            </TabsContent>
+
+            {/* TRENDS TAB */}
+            <TabsContent value="trends" className="space-y-4">
+              <Card className="border-primary/10">
+                <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Predictive Analytics</h3>
+                      <p className="text-sm text-muted-foreground">Platform-wide trend forecasts and release timing</p>
+                    </div>
+                  </div>
+                  <Button onClick={runTrendForecast} disabled={loadingTrends} size="sm" variant={trendForecast ? "outline" : "default"}>
+                    {loadingTrends ? (
+                      <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Forecasting...</>
+                    ) : trendForecast ? (
+                      <><Sparkles className="mr-1 h-4 w-4" /> Refresh</>
+                    ) : (
+                      <><Zap className="mr-1 h-4 w-4" /> Generate Forecast</>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {trendForecast && (
+                <div className="space-y-4">
+                  {/* Overall Forecast */}
+                  <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-accent" /> Overall Forecast
+                      </h4>
+                      <p className="text-sm text-muted-foreground">{trendForecast.forecast?.overallForecast}</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Platform Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <Music className="h-6 w-6 mx-auto mb-2 text-primary" />
+                        <div className="text-2xl font-bold">{trendForecast.data?.totalTracks || 0}</div>
+                        <p className="text-xs text-muted-foreground">New Tracks (90d)</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <Target className="h-6 w-6 mx-auto mb-2 text-secondary" />
+                        <div className="text-2xl font-bold">{trendForecast.data?.activeCompetitions || 0}</div>
+                        <p className="text-xs text-muted-foreground">Active Competitions</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <Users className="h-6 w-6 mx-auto mb-2 text-accent" />
+                        <div className="text-2xl font-bold">{trendForecast.data?.topRegions?.length || 0}</div>
+                        <p className="text-xs text-muted-foreground">Active Regions</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Emerging Genres */}
+                  {trendForecast.forecast?.emergingGenres?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-base">🔥 Emerging Genres</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {trendForecast.forecast.emergingGenres.map((g: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                              <div>
+                                <p className="font-medium text-sm">{g.genre}</p>
+                                <p className="text-xs text-muted-foreground">{g.reasoning}</p>
+                              </div>
+                              <Badge variant={g.growthPotential === 'high' ? 'default' : 'secondary'}>{g.growthPotential}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Regional Trends */}
+                  {trendForecast.forecast?.regionalTrends?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-base">🌍 Regional Trends</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {trendForecast.forecast.regionalTrends.map((r: any, i: number) => (
+                            <div key={i} className="p-3 rounded-lg border">
+                              <p className="font-medium text-sm">{r.region}</p>
+                              <p className="text-xs text-muted-foreground mb-1">{r.trend}</p>
+                              <p className="text-xs text-primary">💡 {r.opportunity}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Seasonal Predictions */}
+                  {trendForecast.forecast?.seasonalPredictions?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-base">📅 Seasonal Predictions</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {trendForecast.forecast.seasonalPredictions.map((s: any, i: number) => (
+                            <div key={i} className="p-3 rounded-lg border">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline">{s.period}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{s.prediction}</p>
+                              <p className="text-xs text-primary mt-1">→ {s.recommendation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Release Windows */}
+                  {trendForecast.forecast?.releaseWindows?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-base">⏰ Optimal Release Windows</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {trendForecast.forecast.releaseWindows.map((w: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                              <div>
+                                <p className="font-medium text-sm">{w.window}</p>
+                                <p className="text-xs text-muted-foreground">{w.reason}</p>
+                              </div>
+                              <Badge variant="secondary">{w.genre}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               )}
             </TabsContent>
 

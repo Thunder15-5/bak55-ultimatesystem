@@ -6,37 +6,66 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const DAILY_LIMIT = 10;
+const CACHE_HOURS = 24;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { trackId, userId } = await req.json();
-    if (!trackId || !userId) throw new Error("trackId and userId required");
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // JWT auth
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error("Unauthorized");
+    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !caller) throw new Error("Unauthorized");
+
+    const { trackId } = await req.json();
+    if (!trackId) throw new Error("trackId required");
+    const userId = caller.id;
+
+    // Rate limit
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: todayCount } = await supabase
+      .from('ai_track_analyses').select('*', { count: 'exact', head: true })
+      .eq('user_id', userId).gte('created_at', since);
+    if ((todayCount || 0) >= DAILY_LIMIT) throw new Error(`Daily limit of ${DAILY_LIMIT} analyses reached.`);
+
+    // Cache check
+    const cacheThreshold = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
+    const { data: cached } = await supabase
+      .from('ai_track_analyses').select('*')
+      .eq('track_id', trackId).eq('user_id', userId)
+      .eq('analysis_type', 'content_enhance').eq('status', 'completed')
+      .gte('created_at', cacheThreshold)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (cached) {
+      return new Response(
+        JSON.stringify({ success: true, analysisId: cached.id, analysis: cached.raw_analysis, cached: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { data: track } = await supabase
-      .from('tracks')
-      .select('*, profiles:artist_id(username, display_name, bio)')
+      .from('tracks').select('*, profiles:artist_id(username, display_name, bio)')
       .eq('id', trackId).single();
     if (!track) throw new Error("Track not found");
 
     const { data: artistProfile } = await supabase
-      .from('artist_profiles')
-      .select('stage_name, genres')
+      .from('artist_profiles').select('stage_name, genres')
       .eq('user_id', track.artist_id).maybeSingle();
 
     const { data: analysisRecord } = await supabase
       .from('ai_track_analyses')
-      .insert({
-        track_id: trackId, user_id: userId,
-        analysis_type: 'content_enhance', status: 'processing',
-      }).select().single();
+      .insert({ track_id: trackId, user_id: userId, analysis_type: 'content_enhance', status: 'processing' })
+      .select().single();
 
     const prompt = `You are a creative director for African music marketing. Generate promotional content for this track.
 
@@ -55,31 +84,9 @@ Generate COMPLETE promotional content package in EXACT JSON:
     "tiktok": ["<caption 1>", "<caption 2>"],
     "whatsapp": ["<message for WhatsApp status/story>"]
   },
-  "campaignIdeas": [
-    {
-      "name": "<campaign name>",
-      "platform": "<primary platform>",
-      "duration": "<timeframe>",
-      "description": "<detailed plan>",
-      "steps": ["<step 1>", "<step 2>", "<step 3>"],
-      "expectedOutcome": "<what to expect>"
-    }
-  ],
-  "coverArtConcepts": [
-    {
-      "style": "<art style>",
-      "description": "<detailed visual description for an AI image generator>",
-      "colorPalette": ["<color 1>", "<color 2>", "<color 3>"],
-      "mood": "<visual mood>"
-    }
-  ],
-  "visualizerConcepts": [
-    {
-      "type": "<visualizer type>",
-      "description": "<how the visualizer should look and behave>",
-      "elements": ["<element 1>", "<element 2>"]
-    }
-  ],
+  "campaignIdeas": [{"name": "<campaign name>", "platform": "<primary platform>", "duration": "<timeframe>", "description": "<detailed plan>", "steps": ["<step 1>", "<step 2>", "<step 3>"], "expectedOutcome": "<what to expect>"}],
+  "coverArtConcepts": [{"style": "<art style>", "description": "<detailed visual description for an AI image generator>", "colorPalette": ["<color 1>", "<color 2>", "<color 3>"], "mood": "<visual mood>"}],
+  "visualizerConcepts": [{"type": "<visualizer type>", "description": "<how the visualizer should look and behave>", "elements": ["<element 1>", "<element 2>"]}],
   "pressRelease": "<short press release paragraph>",
   "bioUpdate": "<suggested artist bio update incorporating this track>",
   "hashtagStrategy": ["<hashtag 1>", "<hashtag 2>", "<hashtag 3>", "<hashtag 4>", "<hashtag 5>"]
@@ -87,10 +94,7 @@ Generate COMPLETE promotional content package in EXACT JSON:
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-3-flash-preview',
         messages: [
