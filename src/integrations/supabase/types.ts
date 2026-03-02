@@ -3940,6 +3940,15 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      deduct_wallet: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_reference_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       get_primary_role: { Args: { user_id_param: string }; Returns: string }
       get_public_artists: {
         Args: { limit_count?: number }

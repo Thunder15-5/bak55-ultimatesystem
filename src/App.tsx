@@ -7,6 +7,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
 import { CookieConsent } from "@/components/CookieConsent";
 import { BottomNavigation } from "@/components/BottomNavigation";
@@ -140,6 +141,7 @@ const App = () => (
             <MusicPlayerProvider>
               <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
+                {/* Per-route ErrorBoundary wrapping via RouteErrorBoundary */}
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
@@ -165,7 +167,7 @@ const App = () => (
                 <Route path="/install" element={<InstallApp />} />
                 
                 {/* Legacy routes - redirect to role-specific paths */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary><Dashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><RoleBasedRedirect to="profile" /></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><RoleBasedRedirect to="wallet" /></ProtectedRoute>} />
                 <Route path="/wallet/buy-coins" element={<ProtectedRoute><RoleBasedRedirect to="wallet/buy-coins" /></ProtectedRoute>} />
@@ -180,7 +182,7 @@ const App = () => (
                 <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
                 
                 {/* Fan Routes */}
-                <Route path="/fan/dashboard" element={<ProtectedRoute requiredRole="fan"><FanDashboard /></ProtectedRoute>} />
+                <Route path="/fan/dashboard" element={<ProtectedRoute requiredRole="fan"><RouteErrorBoundary><FanDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/fan/discover" element={<ProtectedRoute requiredRole="fan"><FanDiscover /></ProtectedRoute>} />
                 <Route path="/fan/playlists" element={<ProtectedRoute requiredRole="fan"><Playlists /></ProtectedRoute>} />
                 <Route path="/fan/playlist/:id" element={<ProtectedRoute requiredRole="fan"><PlaylistDetails /></ProtectedRoute>} />
@@ -198,7 +200,7 @@ const App = () => (
                 <Route path="/fan/leaderboard" element={<ProtectedRoute requiredRole="fan"><Leaderboard /></ProtectedRoute>} />
 
                 {/* Artist Routes */}
-                <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><ArtistDashboard /></ProtectedRoute>} />
+                <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/artist/upload" element={<ProtectedRoute requiredRole="artist"><UploadTrack /></ProtectedRoute>} />
                 <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><ArtistCatalog /></ProtectedRoute>} />
                 <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><ArtistDiscover /></ProtectedRoute>} />
@@ -222,7 +224,7 @@ const App = () => (
                 <Route path="/artist/course" element={<ProtectedRoute requiredRole="artist"><ArtistCourse /></ProtectedRoute>} />
 
                 {/* Brand Routes */}
-                <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><BrandDashboard /></ProtectedRoute>} />
+                <Route path="/brand/dashboard" element={<ProtectedRoute requiredRole="brand"><RouteErrorBoundary><BrandDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/brand/discover" element={<ProtectedRoute requiredRole="brand"><BrandDiscover /></ProtectedRoute>} />
                 <Route path="/brand/artist/:id" element={<ProtectedRoute requiredRole="brand"><ArtistProfile /></ProtectedRoute>} />
                 <Route path="/brand/track/:id" element={<ProtectedRoute requiredRole="brand"><TrackDetails /></ProtectedRoute>} />
@@ -239,7 +241,7 @@ const App = () => (
                 <Route path="/brand/profile" element={<ProtectedRoute requiredRole="brand"><Profile /></ProtectedRoute>} />
 
                 {/* Producer Routes */}
-                <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><ProducerDashboard /></ProtectedRoute>} />
+                <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><RouteErrorBoundary><ProducerDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/producer/upload" element={<ProtectedRoute requiredRole="producer"><ProducerUploadBeat /></ProtectedRoute>} />
                 <Route path="/producer/catalog" element={<ProtectedRoute requiredRole="producer"><ProducerCatalog /></ProtectedRoute>} />
                 <Route path="/producer/discover" element={<ProtectedRoute requiredRole="producer"><ProducerDiscover /></ProtectedRoute>} />
@@ -269,7 +271,7 @@ const App = () => (
                 <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
 
                 {/* Admin Routes */}
-                <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><RouteErrorBoundary><Admin /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/admin/streaming" element={<ProtectedRoute requiredRole="admin"><Streaming /></ProtectedRoute>} />
                 <Route path="/admin/profile" element={<ProtectedRoute requiredRole="admin"><Profile /></ProtectedRoute>} />
                 <Route path="/admin/wallet" element={<ProtectedRoute requiredRole="admin"><Wallet /></ProtectedRoute>} />

@@ -246,39 +246,19 @@ export default function UploadTrack() {
         
         // Check entry fee and deduct from wallet
         if (competition?.entry_fee > 0) {
-          const { data: wallet } = await supabase
-            .from('wallets')
-            .select('balance, id')
-            .eq('user_id', user.id)
-            .single();
+          const { data: rawResult, error: rpcError } = await supabase
+            .rpc('deduct_wallet', {
+              p_user_id: user.id,
+              p_amount: competition.entry_fee,
+              p_description: `Entry fee for ${competition.title}`,
+            });
 
-          if (!wallet || wallet.balance < competition.entry_fee) {
-            toast.error("Insufficient balance for entry fee");
-            return;
-          }
-
-          // Deduct entry fee with optimistic locking
-          const { error: deductError, count: deductCount } = await supabase
-            .from('wallets')
-            .update({ balance: wallet.balance - competition.entry_fee })
-            .eq('user_id', user.id)
-            .eq('balance', wallet.balance);
-
-          if (deductError || deductCount === 0) {
-            toast.error("Failed to deduct entry fee — please try again");
+          const result = rawResult as any;
+          if (rpcError || !result?.success) {
+            toast.error(result?.error || "Failed to deduct entry fee — please try again");
             setUploading(false);
             return;
           }
-
-          // Record transaction
-          await supabase
-            .from('transactions')
-            .insert([{
-              wallet_id: wallet.id,
-              type: 'spending',
-              amount: -competition.entry_fee, // Negative for deduction
-              description: `Entry fee for ${competition.title}`,
-            }]);
         }
 
         // Create submission
