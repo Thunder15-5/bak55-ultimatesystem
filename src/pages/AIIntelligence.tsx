@@ -175,10 +175,10 @@ export default function AIIntelligence() {
       toast.error("Select a track first");
       return;
     }
-    runModule('talent_scout');
-    // Stagger to avoid rate limits
-    setTimeout(() => runModule('discovery'), 3000);
-    setTimeout(() => runModule('content_enhance'), 6000);
+    // Run sequentially to avoid overwhelming the backend
+    await runModule('talent_scout');
+    await runModule('discovery');
+    await runModule('content_enhance');
   };
 
   const runTrendForecast = async () => {
@@ -212,7 +212,24 @@ export default function AIIntelligence() {
 
   const selectedTrackData = tracks.find(t => t.id === selectedTrack);
 
+  // Role gate — only artists/producers/admins
+  const isAllowed = userRole === 'artist' || userRole === 'producer' || userRole === 'admin';
+
   if (!user) return null;
+
+  if (!isAllowed) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-7xl text-center">
+          <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
+          <h1 className="text-2xl font-bold mb-2">AI Intelligence Suite</h1>
+          <p className="text-muted-foreground mb-4">This feature is available for artists and producers only.</p>
+          <Button onClick={() => navigate('/upgrade')} variant="default">Upgrade to Artist</Button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

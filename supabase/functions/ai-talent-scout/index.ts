@@ -8,6 +8,12 @@ const corsHeaders = {
 
 const DAILY_LIMIT = 10;
 const CACHE_HOURS = 24;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function sanitize(val: unknown, maxLen = 200): string {
+  const s = String(val ?? '').slice(0, maxLen);
+  return s.replace(/[{}"\\]/g, '');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,16 +26,39 @@ serve(async (req) => {
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // JWT auth - verify caller identity
+    // JWT auth
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error("Unauthorized");
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !caller) throw new Error("Unauthorized");
+    const { data, error: authError } = await supabase.auth.getClaims(token);
+    if (authError || !data?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const userId = data.claims.sub;
+
+    // Role check — only artists and producers
+    const { data: roles } = await supabase
+      .from('user_roles').select('role')
+      .eq('user_id', userId);
+    const userRoles = roles?.map(r => r.role) || [];
+    if (!userRoles.some(r => ['artist', 'producer', 'admin'].includes(r))) {
+      return new Response(JSON.stringify({ error: 'AI Intelligence is available for artists and producers only.' }), { status: 403, headers: corsHeaders });
+    }
 
     const { trackId } = await req.json();
-    if (!trackId) throw new Error("trackId required");
-    const userId = caller.id; // Use authenticated user, not request body
+    if (!trackId || !UUID_RE.test(trackId)) {
+      return new Response(JSON.stringify({ error: 'Valid trackId (UUID) required' }), { status: 400, headers: corsHeaders });
+    }
+
+    // Cleanup orphaned processing records older than 10 min
+    await supabase
+      .from('ai_track_analyses')
+      .update({ status: 'failed' })
+      .eq('user_id', userId)
+      .eq('status', 'processing')
+      .lt('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
 
     // Rate limit check
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -39,25 +68,19 @@ serve(async (req) => {
       .eq('user_id', userId)
       .gte('created_at', since);
     if ((todayCount || 0) >= DAILY_LIMIT) {
-      throw new Error(`Daily limit of ${DAILY_LIMIT} analyses reached. Try again tomorrow.`);
+      return new Response(JSON.stringify({ error: `Daily limit of ${DAILY_LIMIT} analyses reached. Try again tomorrow.` }), { status: 429, headers: corsHeaders });
     }
 
-    // Cache check - return existing if analyzed within CACHE_HOURS
+    // Cache check
     const cacheThreshold = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
     const { data: cached } = await supabase
-      .from('ai_track_analyses')
-      .select('*')
-      .eq('track_id', trackId)
-      .eq('user_id', userId)
-      .eq('analysis_type', 'talent_scout')
-      .eq('status', 'completed')
+      .from('ai_track_analyses').select('*')
+      .eq('track_id', trackId).eq('user_id', userId)
+      .eq('analysis_type', 'talent_scout').eq('status', 'completed')
       .gte('created_at', cacheThreshold)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
     if (cached) {
-      console.log(`Returning cached talent_scout analysis for track ${trackId}`);
       return new Response(
         JSON.stringify({ success: true, analysisId: cached.id, analysis: cached.raw_analysis, cached: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -68,9 +91,10 @@ serve(async (req) => {
     const { data: track, error: trackError } = await supabase
       .from('tracks')
       .select('*, profiles:artist_id(username, display_name, location)')
-      .eq('id', trackId)
-      .single();
-    if (trackError || !track) throw new Error("Track not found");
+      .eq('id', trackId).single();
+    if (trackError || !track) {
+      return new Response(JSON.stringify({ error: 'Track not found' }), { status: 404, headers: corsHeaders });
+    }
 
     // Parallel data fetch
     const [artistProfileRes, playCountRes, likeCountRes, commentCountRes, otherTracksRes, followerCountRes] = await Promise.all([
@@ -83,11 +107,6 @@ serve(async (req) => {
     ]);
 
     const artistProfile = artistProfileRes.data;
-    const playCount = playCountRes.count;
-    const likeCount = likeCountRes.count;
-    const commentCount = commentCountRes.count;
-    const otherTracks = otherTracksRes.data;
-    const followerCount = followerCountRes.count;
 
     // Create analysis record
     const { data: analysisRecord, error: insertError } = await supabase
@@ -96,29 +115,30 @@ serve(async (req) => {
       .select().single();
     if (insertError) throw insertError;
 
+    // Sanitized prompt — prevents prompt injection from user-controlled fields
     const prompt = `You are an elite AI music talent scout for BAK55, an African music platform. Analyze this track and artist comprehensively.
 
 TRACK DATA:
-- Title: "${track.title}"
-- Genre: ${track.genre || 'Unknown'}
-- Description: ${track.description || 'None'}
-- Total Plays: ${playCount || 0}
-- Likes: ${likeCount || 0}
-- Comments: ${commentCount || 0}
+- Title: "${sanitize(track.title)}"
+- Genre: ${sanitize(track.genre || 'Unknown')}
+- Description: ${sanitize(track.description || 'None', 500)}
+- Total Plays: ${playCountRes.count || 0}
+- Likes: ${likeCountRes.count || 0}
+- Comments: ${commentCountRes.count || 0}
 - Days Since Upload: ${Math.floor((Date.now() - new Date(track.created_at).getTime()) / 86400000)}
 - Is Paid Download: ${track.is_paid_download || false}
 - Price: ${track.price_in_bak || 0} BAK
 
 ARTIST DATA:
-- Name: ${artistProfile?.stage_name || track.profiles?.username || 'Unknown'}
-- Location: ${track.profiles?.location || 'Unknown'}
-- Genres: ${artistProfile?.genres?.join(', ') || 'Unknown'}
+- Name: ${sanitize(artistProfile?.stage_name || track.profiles?.username || 'Unknown')}
+- Location: ${sanitize(track.profiles?.location || 'Unknown')}
+- Genres: ${sanitize(artistProfile?.genres?.join(', ') || 'Unknown')}
 - Verified: ${artistProfile?.verified || false}
-- Followers: ${followerCount || 0}
-- Total Tracks: ${otherTracks?.length || 0}
-- Top Tracks: ${JSON.stringify(otherTracks?.slice(0, 5).map(t => ({ title: t.title, plays: t.plays })))}
+- Followers: ${followerCountRes.count || 0}
+- Total Tracks: ${otherTracksRes.data?.length || 0}
+- Top Tracks: ${JSON.stringify(otherTracksRes.data?.slice(0, 5).map(t => ({ title: sanitize(t.title, 60), plays: t.plays })))}
 
-Provide a thorough analysis with these EXACT numerical scores (0-100) and insights. Use the track metrics, artist metrics, and genre context to produce UNIQUE scores for this specific track:
+Provide a thorough analysis with EXACT numerical scores (0-100) and insights.
 
 Return ONLY valid JSON:
 {
@@ -130,15 +150,11 @@ Return ONLY valid JSON:
   "emotionalTone": "<dominant emotion>",
   "successProbability": <0-100>,
   "marketReadiness": <0-100>,
-  "comparableArtists": [
-    {"name": "<African artist name>", "similarity": <0-100>, "reason": "<why similar>"}
-  ],
-  "recommendations": [
-    {"category": "<production|marketing|audience|career>", "title": "<short title>", "description": "<actionable advice>", "priority": "<high|medium|low>"}
-  ],
-  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
-  "weaknesses": ["<weakness 1>", "<weakness 2>"],
-  "overallAssessment": "<2-3 sentence comprehensive assessment>"
+  "comparableArtists": [{"name": "<artist>", "similarity": <0-100>, "reason": "<why>"}],
+  "recommendations": [{"category": "<production|marketing|audience|career>", "title": "<title>", "description": "<advice>", "priority": "<high|medium|low>"}],
+  "strengths": ["<strength>"],
+  "weaknesses": ["<weakness>"],
+  "overallAssessment": "<assessment>"
 }`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -147,7 +163,7 @@ Return ONLY valid JSON:
       body: JSON.stringify({
         model: 'google/gemini-3-flash-preview',
         messages: [
-          { role: 'system', content: 'You are an expert music talent scout. Always return valid JSON. Scores must vary based on actual data provided — no two tracks should get identical scores.' },
+          { role: 'system', content: 'You are an expert music talent scout. Always return valid JSON. Scores must vary based on actual data provided.' },
           { role: 'user', content: prompt }
         ],
       }),
@@ -157,8 +173,8 @@ Return ONLY valid JSON:
       const errText = await aiResponse.text();
       console.error('AI error:', aiResponse.status, errText);
       await supabase.from('ai_track_analyses').update({ status: 'failed' }).eq('id', analysisRecord.id);
-      if (aiResponse.status === 429) throw new Error('Rate limit exceeded. Please try again later.');
-      if (aiResponse.status === 402) throw new Error('AI credits depleted.');
+      if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'AI rate limit exceeded. Try again later.' }), { status: 429, headers: corsHeaders });
+      if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'AI credits depleted.' }), { status: 402, headers: corsHeaders });
       throw new Error(`AI analysis failed: ${aiResponse.status}`);
     }
 
@@ -190,7 +206,7 @@ Return ONLY valid JSON:
       completed_at: new Date().toISOString(),
     }).eq('id', analysisRecord.id);
 
-    console.log(`Talent Scout complete for "${track.title}". Score: ${analysis.talentScore}`);
+    console.log(`Talent Scout complete for track ${trackId}. Score: ${analysis.talentScore}`);
 
     return new Response(
       JSON.stringify({ success: true, analysisId: analysisRecord.id, analysis }),

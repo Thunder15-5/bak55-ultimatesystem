@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const DAILY_LIMIT = 5; // Trend forecasts are expensive — tighter limit
+const CACHE_HOURS = 6; // Cache for 6 hours since trends don't change fast
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -19,9 +22,47 @@ serve(async (req) => {
 
     // JWT auth
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error("Unauthorized");
-    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !caller) throw new Error("Unauthorized");
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const { data, error: authError } = await supabase.auth.getClaims(authHeader.replace('Bearer ', ''));
+    if (authError || !data?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const userId = data.claims.sub;
+
+    // Role check
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', userId);
+    if (!roles?.some(r => ['artist', 'producer', 'admin'].includes(r.role))) {
+      return new Response(JSON.stringify({ error: 'AI Intelligence is available for artists and producers only.' }), { status: 403, headers: corsHeaders });
+    }
+
+    // Rate limit — check trend_forecast analyses in last 24h
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: todayCount } = await supabase
+      .from('ai_track_analyses').select('*', { count: 'exact', head: true })
+      .eq('user_id', userId).eq('analysis_type', 'trend_forecast')
+      .gte('created_at', since);
+    if ((todayCount || 0) >= DAILY_LIMIT) {
+      return new Response(JSON.stringify({ error: `Trend forecast limit (${DAILY_LIMIT}/day) reached.` }), { status: 429, headers: corsHeaders });
+    }
+
+    // Cache check — return recent forecast if available
+    const cacheThreshold = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
+    const { data: cached } = await supabase
+      .from('ai_track_analyses').select('raw_analysis, id')
+      .eq('user_id', userId).eq('analysis_type', 'trend_forecast')
+      .eq('status', 'completed').gte('created_at', cacheThreshold)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (cached?.raw_analysis) {
+      console.log('Returning cached trend forecast');
+      const cachedResult = cached.raw_analysis as any;
+      return new Response(
+        JSON.stringify({ data: cachedResult._platformData || {}, forecast: cachedResult._forecast || cachedResult, cached: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log('Fetching platform trends...');
 
@@ -56,13 +97,12 @@ serve(async (req) => {
       return acc;
     }, {});
 
-    const trendData = {
+    // Aggregated summary — no raw data exposed to client
+    const trendSummary = {
       totalTracks: recentTracks?.length || 0,
-      genreDistribution: genreStats,
       topGenres: Object.entries(genreStats || {})
         .sort((a: any, b: any) => b[1].avgPlays - a[1].avgPlays)
-        .slice(0, 5).map(([genre, stats]: any) => ({ genre, ...stats })),
-      regionalActivity: regionalStats,
+        .slice(0, 5).map(([genre, stats]: any) => ({ genre, count: stats.count, avgPlays: Math.round(stats.avgPlays) })),
       topRegions: Object.entries(regionalStats || {})
         .sort((a: any, b: any) => (b[1] as number) - (a[1] as number))
         .slice(0, 5).map(([region, listens]) => ({ region, listens })),
@@ -81,10 +121,10 @@ serve(async (req) => {
           { role: 'user', content: `Analyze these African music platform trends and provide forecasts:
 
 Platform Data (Last 90 days):
-- Total New Tracks: ${trendData.totalTracks}
-- Top Genres: ${JSON.stringify(trendData.topGenres)}
-- Top Regions: ${JSON.stringify(trendData.topRegions)}
-- Active Competitions: ${trendData.activeCompetitions}
+- Total New Tracks: ${trendSummary.totalTracks}
+- Top Genres: ${JSON.stringify(trendSummary.topGenres)}
+- Top Regions: ${JSON.stringify(trendSummary.topRegions)}
+- Active Competitions: ${trendSummary.activeCompetitions}
 
 Provide forecast in this exact JSON format:
 {
@@ -101,6 +141,8 @@ Provide forecast in this exact JSON format:
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI API error:', aiResponse.status, errorText);
+      if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'AI rate limit exceeded.' }), { status: 429, headers: corsHeaders });
+      if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'AI credits depleted.' }), { status: 402, headers: corsHeaders });
       throw new Error(`Trend forecast failed: ${errorText}`);
     }
 
@@ -122,8 +164,17 @@ Provide forecast in this exact JSON format:
       };
     }
 
+    // Store forecast for caching
+    await supabase.from('ai_track_analyses').insert({
+      user_id: userId,
+      analysis_type: 'trend_forecast',
+      status: 'completed',
+      raw_analysis: { _platformData: trendSummary, _forecast: forecast },
+      completed_at: new Date().toISOString(),
+    });
+
     return new Response(
-      JSON.stringify({ data: trendData, forecast }),
+      JSON.stringify({ data: trendSummary, forecast }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
