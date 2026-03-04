@@ -14,9 +14,10 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { DailyStreak } from "@/components/DailyStreak";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap } from "lucide-react";
+import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistCollaboration } from "@/components/ArtistCollaboration";
+import { toast } from "sonner";
 import { useFeaturedCompetition } from "@/hooks/useFeaturedCompetition";
 
 export default function ArtistDashboard() {
@@ -151,9 +152,28 @@ export default function ArtistDashboard() {
               {user?.user_metadata?.username || user?.email?.split("@")[0]}
             </span>
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Ready to create amazing music today?
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-lg text-muted-foreground">
+              Ready to create amazing music today?
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const url = `${window.location.origin}/artist/${user?.id}`;
+                const text = `Check out my music on BAK55 Talent! 🎶🔥`;
+                if (navigator.share) {
+                  navigator.share({ title: "My BAK55 Profile", text, url });
+                } else {
+                  navigator.clipboard.writeText(`${text}\n${url}`);
+                  toast.success("Profile link copied!");
+                }
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Share Profile
+            </Button>
+          </div>
         </div>
 
         <EmailVerificationBanner />
@@ -231,6 +251,33 @@ export default function ArtistDashboard() {
             </Link>
           ))}
         </div>
+
+        {/* Revenue Split Info */}
+        <Card className="mb-8 border-primary/20 bg-card/60 backdrop-blur-xl">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" />
+              <CardTitle className="font-heading text-lg">Revenue Split</CardTitle>
+            </div>
+            <CardDescription>How you earn on BAK55 Talent</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">90%</p>
+                <p className="text-xs text-muted-foreground">Fan Tips</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">65%</p>
+                <p className="text-xs text-muted-foreground">Competition Votes</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">70%</p>
+                <p className="text-xs text-muted-foreground">Track Sales</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Subscription Status */}
         <div className="mb-8">

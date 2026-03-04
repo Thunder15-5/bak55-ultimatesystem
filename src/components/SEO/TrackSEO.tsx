@@ -1,6 +1,7 @@
 import { SEOHead } from "./SEOHead";
 import { TrackSEOData } from "@/lib/seo/seoConfig";
 import { generateTrackSchema, generateBreadcrumbSchema } from "@/lib/seo/structuredData";
+import { getOgImageUrl } from "@/lib/ogImage";
 
 interface TrackSEOProps {
   track: TrackSEOData;
@@ -23,7 +24,7 @@ export function TrackSEO({ track }: TrackSEOProps) {
     <SEOHead
       title={title}
       description={description}
-      image={track.coverImage}
+      image={getOgImageUrl("track", track.id)}
       url={`/track/${track.id}`}
       type="music.song"
       keywords={[

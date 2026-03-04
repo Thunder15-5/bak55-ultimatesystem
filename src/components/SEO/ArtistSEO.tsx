@@ -1,6 +1,7 @@
 import { SEOHead } from "./SEOHead";
 import { ArtistSEOData } from "@/lib/seo/seoConfig";
 import { generateArtistSchema, generateBreadcrumbSchema } from "@/lib/seo/structuredData";
+import { getOgImageUrl } from "@/lib/ogImage";
 
 interface ArtistSEOProps {
   artist: ArtistSEOData;
@@ -17,6 +18,9 @@ export function ArtistSEO({ artist }: ArtistSEOProps) {
     ? `${artist.bio.substring(0, 140)}...` 
     : `🎤 Follow ${displayName}${locationText} on BAK55 Talent. ${artist.followerCount?.toLocaleString() || 0} followers • ${artist.trackCount || 0} tracks • ${genreText}. Discover the future of African music.`;
   
+  // Use dynamic OG image from edge function
+  const ogImage = getOgImageUrl("artist", artist.id);
+
   const breadcrumbs = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
     { name: "Artists", url: "/catalog" },
@@ -27,7 +31,7 @@ export function ArtistSEO({ artist }: ArtistSEOProps) {
     <SEOHead
       title={title}
       description={description}
-      image={artist.avatarUrl}
+      image={ogImage}
       url={`/artist/${artist.id}`}
       type="profile"
       keywords={[

@@ -173,10 +173,10 @@ export default function RisingStarsVoting() {
   };
 
   const handleShare = (submission: VotingSubmission) => {
-    const url = `${window.location.origin}/rising-stars/voting`;
+    const url = `${window.location.origin}/artist/${submission.artist_id}`;
     const text = `Vote for "${submission.title}" by ${submission.artist_username} on BAK55 Rising Stars! 🌟`;
     if (navigator.share) {
-      navigator.share({ title: 'BAK55 Rising Stars', text, url });
+      navigator.share({ title: `${submission.title} - BAK55 Rising Stars`, text, url });
     } else {
       navigator.clipboard.writeText(`${text}\n${url}`);
       toast({ title: "Link copied!", description: "Share it with friends to support this artist." });

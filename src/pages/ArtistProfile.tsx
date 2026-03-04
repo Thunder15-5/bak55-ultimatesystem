@@ -12,7 +12,7 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { toast } from "sonner";
 import { 
   UserPlus, UserMinus, Music, Users, TrendingUp,
-  MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock, Trophy
+  MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Lock, Trophy, Share2
 } from "lucide-react";
 import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
 import { ArtistBadges } from "@/components/ArtistBadges";
@@ -377,6 +377,25 @@ export default function ArtistProfile() {
                       </Button>
                     </>
                   )}
+
+                  {/* Share Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const displayName = artist.artist_profiles?.stage_name || artist.username;
+                      const url = `${window.location.origin}/artist/${id}`;
+                      const text = `Check out ${displayName} on BAK55 Talent! 🎤🔥`;
+                      if (navigator.share) {
+                        navigator.share({ title: `${displayName} - BAK55 Talent`, text, url });
+                      } else {
+                        navigator.clipboard.writeText(`${text}\n${url}`);
+                        toast.success("Link copied to clipboard!");
+                      }
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
 
                   {socialLinks.twitter && (
                     <Button variant="outline" size="icon" asChild>
