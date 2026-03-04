@@ -252,6 +252,33 @@ export default function ArtistDashboard() {
           ))}
         </div>
 
+        {/* Revenue Split Info */}
+        <Card className="mb-8 border-primary/20 bg-card/60 backdrop-blur-xl">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" />
+              <CardTitle className="font-heading text-lg">Revenue Split</CardTitle>
+            </div>
+            <CardDescription>How you earn on BAK55 Talent</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">90%</p>
+                <p className="text-xs text-muted-foreground">Fan Tips</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">65%</p>
+                <p className="text-xs text-muted-foreground">Competition Votes</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                <p className="text-2xl font-bold text-primary">70%</p>
+                <p className="text-xs text-muted-foreground">Track Sales</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Subscription Status */}
         <div className="mb-8">
           <SubscriptionStatusCard />
