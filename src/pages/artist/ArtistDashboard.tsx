@@ -152,9 +152,28 @@ export default function ArtistDashboard() {
               {user?.user_metadata?.username || user?.email?.split("@")[0]}
             </span>
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Ready to create amazing music today?
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-lg text-muted-foreground">
+              Ready to create amazing music today?
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const url = `${window.location.origin}/artist/${user?.id}`;
+                const text = `Check out my music on BAK55 Talent! 🎶🔥`;
+                if (navigator.share) {
+                  navigator.share({ title: "My BAK55 Profile", text, url });
+                } else {
+                  navigator.clipboard.writeText(`${text}\n${url}`);
+                  toast.success("Profile link copied!");
+                }
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Share Profile
+            </Button>
+          </div>
         </div>
 
         <EmailVerificationBanner />
