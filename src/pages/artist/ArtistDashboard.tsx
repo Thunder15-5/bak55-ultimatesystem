@@ -14,9 +14,10 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { DailyStreak } from "@/components/DailyStreak";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap } from "lucide-react";
+import { Music, Wallet, TrendingUp, Upload, Sparkles, BarChart3, DollarSign, Users, Heart, MessageCircle, Trophy, Clock, Play, Award, Headphones, GraduationCap, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistCollaboration } from "@/components/ArtistCollaboration";
+import { toast } from "sonner";
 import { useFeaturedCompetition } from "@/hooks/useFeaturedCompetition";
 
 export default function ArtistDashboard() {

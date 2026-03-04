@@ -551,6 +551,44 @@ export default function CompetitionDetails() {
               </Card>
             )}
 
+            {/* Scoring Model */}
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+              <CardHeader>
+                <CardTitle>How Scoring Works</CardTitle>
+                <CardDescription>Results are determined by a combined score</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Heart className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">Fan Voting — 70%</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Fans vote using BAKCoins (1 BAK per vote). Unlimited votes allowed. 
+                      Revenue split: <strong className="text-foreground">65% to Artist</strong>, 35% to Platform.
+                    </p>
+                    {competition.voting_start_date && competition.voting_end_date && (
+                      <Badge variant={isVotingOpen() ? "default" : "outline"} className="mt-2">
+                        {isVotingOpen() ? "🗳️ Voting Live" : `Opens ${new Date(competition.voting_start_date).toLocaleDateString()}`}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-4 rounded-lg bg-accent/5 border border-accent/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="h-5 w-5 text-accent" />
+                      <span className="font-semibold">AI Judge — 30%</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      AI analyzes production quality, vocal strength, commercial readiness, and originality. 
+                      Scored automatically after admin review.
+                    </p>
+                    <Badge variant="outline" className="mt-2">Automated</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
               <CardHeader>
                 <CardTitle>Competition Rules</CardTitle>
@@ -558,8 +596,9 @@ export default function CompetitionDetails() {
               <CardContent className="prose prose-sm dark:prose-invert">
                 <ul className="space-y-2">
                   <li>Submit your original track during the submission period</li>
-                  <li>Each vote costs 1 BAKCoin</li>
-                  <li>Artists advance based on votes and AI scores</li>
+                  <li>Each vote costs 1 BAKCoin — 65% goes directly to the artist</li>
+                  <li>Results: 70% fan votes + 30% AI judge score</li>
+                  <li>Voting is only active during the official voting period</li>
                   <li>Follow community guidelines for submissions</li>
                 </ul>
               </CardContent>
