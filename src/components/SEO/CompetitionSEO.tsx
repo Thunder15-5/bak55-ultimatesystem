@@ -1,6 +1,7 @@
 import { SEOHead } from "./SEOHead";
 import { CompetitionSEOData } from "@/lib/seo/seoConfig";
 import { generateCompetitionSchema, generateBreadcrumbSchema } from "@/lib/seo/structuredData";
+import { getOgImageUrl } from "@/lib/ogImage";
 
 interface CompetitionSEOProps {
   competition: CompetitionSEOData;
@@ -29,7 +30,7 @@ export function CompetitionSEO({ competition }: CompetitionSEOProps) {
     <SEOHead
       title={title}
       description={description}
-      image={competition.coverImage}
+      image={getOgImageUrl("competition", competition.id)}
       url={`/competition/${competition.id}`}
       type="website"
       keywords={[
