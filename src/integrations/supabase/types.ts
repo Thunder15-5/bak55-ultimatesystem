@@ -449,6 +449,45 @@ export type Database = {
           },
         ]
       }
+      artist_level_config: {
+        Row: {
+          badge_icon: string | null
+          can_withdraw: boolean
+          created_at: string | null
+          id: string
+          level_name: string
+          level_number: number
+          min_followers: number
+          min_streams: number
+          perks: Json | null
+          requires_kyc: boolean
+        }
+        Insert: {
+          badge_icon?: string | null
+          can_withdraw?: boolean
+          created_at?: string | null
+          id?: string
+          level_name: string
+          level_number: number
+          min_followers?: number
+          min_streams?: number
+          perks?: Json | null
+          requires_kyc?: boolean
+        }
+        Update: {
+          badge_icon?: string | null
+          can_withdraw?: boolean
+          created_at?: string | null
+          id?: string
+          level_name?: string
+          level_number?: number
+          min_followers?: number
+          min_streams?: number
+          perks?: Json | null
+          requires_kyc?: boolean
+        }
+        Relationships: []
+      }
       artist_profiles: {
         Row: {
           banner_url: string | null
@@ -456,6 +495,7 @@ export type Database = {
           genres: string[] | null
           hidden: boolean
           id: string
+          level_override: number | null
           social_links: Json | null
           stage_name: string | null
           talent_score: number | null
@@ -470,6 +510,7 @@ export type Database = {
           genres?: string[] | null
           hidden?: boolean
           id?: string
+          level_override?: number | null
           social_links?: Json | null
           stage_name?: string | null
           talent_score?: number | null
@@ -484,6 +525,7 @@ export type Database = {
           genres?: string[] | null
           hidden?: boolean
           id?: string
+          level_override?: number | null
           social_links?: Json | null
           stage_name?: string | null
           talent_score?: number | null
@@ -1014,6 +1056,67 @@ export type Database = {
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_escrow: {
+        Row: {
+          amount: number
+          competition_id: string
+          created_at: string | null
+          fraud_notes: string | null
+          fraud_review_status: string | null
+          hold_until: string
+          id: string
+          released_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          competition_id: string
+          created_at?: string | null
+          fraud_notes?: string | null
+          fraud_review_status?: string | null
+          hold_until: string
+          id?: string
+          released_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          competition_id?: string
+          created_at?: string | null
+          fraud_notes?: string | null
+          fraud_review_status?: string | null
+          hold_until?: string
+          id?: string
+          released_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_escrow_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_escrow_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_escrow_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1873,6 +1976,132 @@ export type Database = {
         }
         Relationships: []
       }
+      fan_club_memberships: {
+        Row: {
+          artist_id: string
+          auto_renew: boolean | null
+          created_at: string | null
+          expires_at: string
+          fan_id: string
+          id: string
+          started_at: string | null
+          status: string
+          tier_id: string
+        }
+        Insert: {
+          artist_id: string
+          auto_renew?: boolean | null
+          created_at?: string | null
+          expires_at: string
+          fan_id: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          tier_id: string
+        }
+        Update: {
+          artist_id?: string
+          auto_renew?: boolean | null
+          created_at?: string | null
+          expires_at?: string
+          fan_id?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_club_memberships_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_club_memberships_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_club_memberships_fan_id_fkey"
+            columns: ["fan_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_club_memberships_fan_id_fkey"
+            columns: ["fan_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_club_memberships_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "fan_club_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fan_club_tiers: {
+        Row: {
+          artist_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          perks: Json | null
+          price_bak: number
+          tier_level: number
+          tier_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          perks?: Json | null
+          price_bak?: number
+          tier_level?: number
+          tier_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          perks?: Json | null
+          price_bak?: number
+          tier_level?: number
+          tier_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_club_tiers_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fan_club_tiers_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fan_rewards_tiers: {
         Row: {
           badge_icon: string | null
@@ -1979,6 +2208,157 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      fraud_flags: {
+        Row: {
+          created_at: string | null
+          description: string
+          flag_type: string
+          id: string
+          metadata: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          flag_type: string
+          id?: string
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          flag_type?: string
+          id?: string
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_flags_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_flags_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kyc_verifications: {
+        Row: {
+          created_at: string | null
+          document_url: string | null
+          full_legal_name: string | null
+          id: string
+          id_number_hash: string | null
+          id_type: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_url?: string | null
+          full_legal_name?: string | null
+          id?: string
+          id_number_hash?: string | null
+          id_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          document_url?: string | null
+          full_legal_name?: string | null
+          id?: string
+          id_number_hash?: string | null
+          id_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_verifications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_verifications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listening_history: {
         Row: {
@@ -3893,6 +4273,48 @@ export type Database = {
           },
         ]
       }
+      withdrawal_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          description: string | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       profiles_public: {
@@ -3940,6 +4362,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      check_withdrawal_eligibility: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       deduct_wallet: {
         Args: {
           p_amount: number
@@ -3949,6 +4375,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_artist_level: { Args: { p_user_id: string }; Returns: Json }
       get_primary_role: { Args: { user_id_param: string }; Returns: string }
       get_public_artists: {
         Args: { limit_count?: number }
