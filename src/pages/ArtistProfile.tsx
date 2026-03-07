@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
 import { ArtistBadges } from "@/components/ArtistBadges";
+import { ArtistLevelCard } from "@/components/ArtistLevelCard";
+import { FanClubSection } from "@/components/FanClubSection";
 
 interface ArtistData {
   id: string;
@@ -439,6 +441,16 @@ export default function ArtistProfile() {
             totalPlays={tracks.reduce((sum, track) => sum + (track.plays || 0), 0)}
             trackCount={tracks.length}
           />
+        </div>
+
+        {/* Artist Level */}
+        <div className="mb-8">
+          <ArtistLevelCard userId={id!} />
+        </div>
+
+        {/* Fan Club */}
+        <div className="mb-8">
+          <FanClubSection artistId={id!} isOwner={user?.id === id} />
         </div>
 
         {/* Competition Journey */}
