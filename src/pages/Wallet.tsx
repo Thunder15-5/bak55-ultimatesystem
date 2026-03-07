@@ -13,6 +13,7 @@ import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, Arr
 import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
+import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
 
 interface Transaction {
   id: string;
@@ -418,6 +419,13 @@ export default function Wallet() {
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Withdrawal Eligibility - Artists/Producers */}
+        {(userRole === 'artist' || userRole === 'producer') && user && (
+          <div className="mb-8">
+            <WithdrawalEligibilityCard userId={user.id} />
+          </div>
         )}
 
         {/* Exchange Rates */}
