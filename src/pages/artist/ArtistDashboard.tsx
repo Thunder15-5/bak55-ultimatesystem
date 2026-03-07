@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
 import { TrackRecommendations } from "@/components/TrackRecommendations";
 import { SubscriptionStatusCard } from "@/components/SubscriptionStatusCard";
+import { ArtistLevelCard } from "@/components/ArtistLevelCard";
+import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -278,6 +280,12 @@ export default function ArtistDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Artist Level & Withdrawal Eligibility */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {user && <ArtistLevelCard userId={user.id} />}
+          {user && <WithdrawalEligibilityCard userId={user.id} />}
+        </div>
 
         {/* Subscription Status */}
         <div className="mb-8">
