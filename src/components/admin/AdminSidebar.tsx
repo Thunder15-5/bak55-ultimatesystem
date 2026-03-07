@@ -74,6 +74,13 @@ const navGroups = [
     ],
   },
   {
+    label: "Configuration",
+    items: [
+      { id: "withdrawal-config", label: "Withdrawal Config", icon: ShieldAlert },
+      { id: "artist-levels", label: "Artist Levels", icon: Award },
+    ],
+  },
+  {
     label: "System",
     items: [
       { id: "referrals", label: "Referrals", icon: Gift },

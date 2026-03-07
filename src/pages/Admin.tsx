@@ -17,6 +17,8 @@ import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
 import { ProducersPanel } from "@/components/admin/ProducersPanel";
 import { SalesPanel } from "@/components/admin/SalesPanel";
 import { VotingControlsPanel } from "@/components/admin/VotingControlsPanel";
+import { WithdrawalConfigPanel } from "@/components/admin/WithdrawalConfigPanel";
+import { ArtistLevelsPanel } from "@/components/admin/ArtistLevelsPanel";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -380,6 +382,10 @@ export default function Admin() {
         return <SalesPanel />;
       case "voting":
         return <VotingControlsPanel />;
+      case "withdrawal-config":
+        return <WithdrawalConfigPanel />;
+      case "artist-levels":
+        return <ArtistLevelsPanel />;
       default:
         return null;
     }
