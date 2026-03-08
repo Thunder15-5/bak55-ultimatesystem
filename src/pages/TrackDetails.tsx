@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart, Download, ShoppingCart, CheckCircle, AlertCircle } from "lucide-react";
+import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart, Download, ShoppingCart, CheckCircle, AlertCircle, Lock } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
