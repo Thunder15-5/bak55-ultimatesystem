@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
+import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles, Share2 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { JudgeCompetition } from "@/components/JudgeCompetition";
 import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
