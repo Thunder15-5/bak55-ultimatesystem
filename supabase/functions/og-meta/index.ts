@@ -144,7 +144,7 @@ async function resolveCompetition(id: string): Promise<Meta | null> {
   return {
     title: `${comp.title} | ${SITE_NAME}`,
     description: desc,
-    image: comp.cover_image || ogImageUrl("competition", id),
+    image: absImage(comp.cover_image) || ogImageUrl("competition", id),
     url: `${SITE_URL}/competition/${id}`,
     type: "website",
   };
