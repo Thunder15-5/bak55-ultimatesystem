@@ -14,6 +14,7 @@ interface NavItem {
 export function BottomNavigation() {
   const { user, userRole } = useAuth();
   const location = useLocation();
+  const unreadCount = useUnreadMessages(user?.id);
 
   if (!user) return null;
 
