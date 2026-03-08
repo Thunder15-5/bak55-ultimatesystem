@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getArtistShareUrl } from "@/lib/shareUrl";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -173,7 +174,7 @@ export default function RisingStarsVoting() {
   };
 
   const handleShare = (submission: VotingSubmission) => {
-    const url = `${window.location.origin}/artist/${submission.artist_id}`;
+    const url = getArtistShareUrl(submission.artist_id);
     const text = `Vote for "${submission.title}" by ${submission.artist_username} on BAK55 Rising Stars! 🌟`;
     if (navigator.share) {
       navigator.share({ title: `${submission.title} - BAK55 Rising Stars`, text, url });
