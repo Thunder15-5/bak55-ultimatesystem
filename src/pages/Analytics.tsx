@@ -17,6 +17,7 @@ import {
   TrendingUp, TrendingDown, Users, Music, DollarSign, 
   Clock, MapPin, Lightbulb, Calendar, Loader2, Sparkles
 } from "lucide-react";
+import { RevenueBreakdown } from "@/components/RevenueBreakdown";
 
 interface AnalyticsData {
   tracks: number;
