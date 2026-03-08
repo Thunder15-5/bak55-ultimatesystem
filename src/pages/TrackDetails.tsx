@@ -352,6 +352,65 @@ export default function TrackDetails() {
     }
   };
 
+  const fetchLikeStatus = async () => {
+    if (!user || !track?.id) return;
+    const { data } = await supabase
+      .from('track_likes')
+      .select('id')
+      .eq('track_id', track.id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setIsLiked(!!data);
+  };
+
+  const fetchLikeCount = async () => {
+    if (!track?.id) return;
+    const { count } = await supabase
+      .from('track_likes')
+      .select('id', { count: 'exact', head: true })
+      .eq('track_id', track.id);
+    setLikeCount(count || 0);
+  };
+
+  const handleLikeToggle = async () => {
+    if (!user) {
+      toast.error("Please log in to like tracks");
+      navigate("/login");
+      return;
+    }
+    if (!track?.id) return;
+
+    setLikeLoading(true);
+    // Optimistic update
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+
+    try {
+      if (wasLiked) {
+        const { error } = await supabase
+          .from('track_likes')
+          .delete()
+          .eq('track_id', track.id)
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('track_likes')
+          .insert({ track_id: track.id, user_id: user.id });
+        if (error) throw error;
+        await trackActivity('track_like', { track_id: track.id });
+      }
+    } catch (error: any) {
+      // Revert optimistic update
+      setIsLiked(wasLiked);
+      setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
+      toast.error("Failed to update like");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   const isCurrentTrack = currentTrack?.id === track?.id;
   const isThisPlaying = isCurrentTrack && isPlaying;
 
