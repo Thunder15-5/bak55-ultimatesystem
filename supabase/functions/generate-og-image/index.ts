@@ -58,33 +58,37 @@ ${extra}
 }
 
 /**
- * Convert SVG string to PNG using resvg-js WASM.
+ * Convert SVG string to PNG using resvg-js.
  * Falls back to SVG if conversion fails.
  */
 async function svgToPng(svgString: string): Promise<{ data: Uint8Array; contentType: string }> {
   try {
-    // Use resvg WASM for SVG -> PNG conversion
-    const { Resvg } = await import("npm:@resvg/resvg-wasm@2.6.2");
+    // Use resvg-wasm for SVG → PNG conversion in Deno
+    const { Resvg, initWasm } = await import("npm:@resvg/resvg-wasm@2.6.2");
     
-    // Initialize WASM (only needed once, but safe to call multiple times)
-    try {
-      const wasmUrl = "https://unpkg.com/@aspect-build/rules_js@2.2.0/resvg_wasm_bg.wasm";
-      // Use inline initialization approach
-      const resvg = new Resvg(svgString, {
-        fitTo: { mode: "width", value: 1200 },
-      });
-      const pngData = resvg.render();
-      const pngBuffer = pngData.asPng();
-      return { data: pngBuffer, contentType: "image/png" };
-    } catch {
-      // If resvg WASM fails, try alternative approach
-      console.warn("resvg WASM init failed, trying alternative");
+    // Fetch and initialize WASM binary
+    const wasmResponse = await fetch("https://unpkg.com/@aspect-build/rules_js@2.2.0/resvg_wasm_bg.wasm");
+    if (wasmResponse.ok) {
+      const wasmBinary = await wasmResponse.arrayBuffer();
+      try {
+        await initWasm(wasmBinary);
+      } catch {
+        // Already initialized - this is fine
+      }
     }
+    
+    const resvg = new Resvg(svgString, {
+      fitTo: { mode: "width", value: 1200 },
+      font: { loadSystemFonts: false },
+    });
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
+    return { data: pngBuffer, contentType: "image/png" };
   } catch (e) {
-    console.warn("resvg import failed:", e);
+    console.warn("resvg PNG conversion failed, falling back to SVG:", e);
   }
 
-  // Fallback: return SVG with correct content type
+  // Fallback: return SVG
   return { 
     data: new TextEncoder().encode(svgString), 
     contentType: "image/svg+xml" 

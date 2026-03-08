@@ -14,6 +14,7 @@ import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
+import { WithdrawalHistory } from "@/components/WithdrawalHistory";
 
 interface Transaction {
   id: string;
@@ -425,6 +426,13 @@ export default function Wallet() {
         {(userRole === 'artist' || userRole === 'producer') && user && (
           <div className="mb-8">
             <WithdrawalEligibilityCard userId={user.id} />
+          </div>
+        )}
+
+        {/* Withdrawal History - Artists/Producers */}
+        {(userRole === 'artist' || userRole === 'producer') && user && (
+          <div className="mb-8">
+            <WithdrawalHistory userId={user.id} />
           </div>
         )}
 
