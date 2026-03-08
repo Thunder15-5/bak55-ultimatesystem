@@ -80,6 +80,13 @@ function ogImageUrl(type: string, id: string): string {
   return `${base}/functions/v1/generate-og-image?type=${type}&id=${id}`;
 }
 
+/** Ensure image URLs are absolute */
+function absImage(url: string): string {
+  if (!url) return `${SITE_URL}/og-image.png?v=4`;
+  if (url.startsWith("http")) return url;
+  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 /* ── meta resolvers ──────────────────────── */
 
 interface Meta {
