@@ -108,6 +108,18 @@ export default function BrandDashboard() {
             </p>
           </div>
 
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="inline-flex h-10 p-1 bg-muted/50">
+              <TabsTrigger value="overview" className="gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="campaigns" className="gap-1.5">
+                <Target className="h-3.5 w-3.5" /> Campaigns
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-8">
+
           {/* Main Stats Grid */}
           <div className="grid gap-4 md:grid-cols-5">
             <Card className="bg-gradient-card border-primary/20">
