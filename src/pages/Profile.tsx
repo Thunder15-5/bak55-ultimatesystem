@@ -649,6 +649,16 @@ export default function Profile() {
             </div>
           </TabsContent>
 
+          <TabsContent value="messages">
+            <DirectChat />
+          </TabsContent>
+
+          {(userRole === "artist" || userRole === "producer") && (
+            <TabsContent value="kyc">
+              <KYCVerification />
+            </TabsContent>
+          )}
+
           <TabsContent value="achievements">
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader>
