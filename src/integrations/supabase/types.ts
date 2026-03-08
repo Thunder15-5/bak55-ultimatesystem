@@ -69,6 +69,7 @@ export type Database = {
           related_id: string | null
           status: string | null
           task_type: string
+          withdrawal_status: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -79,6 +80,7 @@ export type Database = {
           related_id?: string | null
           status?: string | null
           task_type: string
+          withdrawal_status?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           related_id?: string | null
           status?: string | null
           task_type?: string
+          withdrawal_status?: string | null
         }
         Relationships: []
       }
@@ -3708,6 +3711,7 @@ export type Database = {
           duration: number | null
           genre: string | null
           id: string
+          is_exclusive: boolean | null
           is_paid_download: boolean
           moderated_at: string | null
           moderated_by: string | null
@@ -3716,6 +3720,7 @@ export type Database = {
           plays: number | null
           price_in_bak: number | null
           price_kes: number | null
+          required_tier_level: number | null
           title: string
           updated_at: string | null
         }
@@ -3727,6 +3732,7 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          is_exclusive?: boolean | null
           is_paid_download?: boolean
           moderated_at?: string | null
           moderated_by?: string | null
@@ -3735,6 +3741,7 @@ export type Database = {
           plays?: number | null
           price_in_bak?: number | null
           price_kes?: number | null
+          required_tier_level?: number | null
           title: string
           updated_at?: string | null
         }
@@ -3746,6 +3753,7 @@ export type Database = {
           duration?: number | null
           genre?: string | null
           id?: string
+          is_exclusive?: boolean | null
           is_paid_download?: boolean
           moderated_at?: string | null
           moderated_by?: string | null
@@ -3754,6 +3762,7 @@ export type Database = {
           plays?: number | null
           price_in_bak?: number | null
           price_kes?: number | null
+          required_tier_level?: number | null
           title?: string
           updated_at?: string | null
         }
