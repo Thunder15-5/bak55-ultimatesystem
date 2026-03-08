@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -15,7 +13,7 @@ interface OGData {
   stats?: string;
   badge?: string;
   cta?: string;
-  type: string;
+  ogType: string;
 }
 
 function esc(s: string): string {
@@ -30,13 +28,44 @@ function getFlag(location: string): string {
   if (l.includes("nigeria") || l.includes("lagos")) return "NG";
   if (l.includes("south africa")) return "ZA";
   if (l.includes("ghana")) return "GH";
-  if (l.includes("ethiopia")) return "ET";
-  if (l.includes("rwanda")) return "RW";
   return "AF";
 }
 
+async function dbQuery(table: string, select: string, filters: Record<string, string>, single = false, count = false) {
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  let queryUrl = `${url}/rest/v1/${table}?select=${encodeURIComponent(select)}`;
+  for (const [k, v] of Object.entries(filters)) {
+    queryUrl += `&${k}=eq.${encodeURIComponent(v)}`;
+  }
+
+  const headers: Record<string, string> = {
+    "apikey": key,
+    "Authorization": `Bearer ${key}`,
+  };
+
+  if (count) {
+    headers["Prefer"] = "count=exact";
+    headers["Range"] = "0-0";
+  } else if (single) {
+    headers["Accept"] = "application/vnd.pgrst.object+json";
+  }
+
+  const res = await fetch(queryUrl, { headers });
+
+  if (count) {
+    const range = res.headers.get("content-range");
+    const total = range ? parseInt(range.split("/")[1] || "0") : 0;
+    return total;
+  }
+
+  if (!res.ok) return null;
+  return res.json();
+}
+
 function generateSVG(data: OGData): string {
-  const accent = data.type === "competition" ? "#EA580C" : "#D946EF";
+  const accent = data.ogType === "competition" ? "#EA580C" : "#D946EF";
   const fontSize = data.title.length > 25 ? 42 : data.title.length > 15 ? 52 : 62;
 
   const img = data.imageUrl
@@ -116,32 +145,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     let ogData: OGData;
 
     if (type === "artist") {
-      const [profileRes, artistRes, followersRes, tracksRes] = await Promise.all([
-        supabase.from("profiles").select("username, display_name, avatar_url, location, bio").eq("id", id).single(),
-        supabase.from("artist_profiles").select("stage_name, genres, verified").eq("user_id", id).maybeSingle(),
-        supabase.from("followers").select("*", { count: "exact", head: true }).eq("artist_id", id),
-        supabase.from("tracks").select("*", { count: "exact", head: true }).eq("artist_id", id),
+      const [profile, artistProfile, followers, tracks] = await Promise.all([
+        dbQuery("profiles", "username,display_name,avatar_url,location,bio", { id }, true),
+        dbQuery("artist_profiles", "stage_name,genres,verified", { user_id: id }, true),
+        dbQuery("followers", "id", { artist_id: id }, false, true),
+        dbQuery("tracks", "id", { artist_id: id }, false, true),
       ]);
-
-      const profile = profileRes.data;
-      const artistProfile = artistRes.data;
-      const followers = followersRes.count || 0;
-      const tracks = tracksRes.count || 0;
-
-      const activeCompRes = await supabase
-        .from("submissions")
-        .select("competition_id")
-        .eq("artist_id", id)
-        .eq("voting_enabled", true)
-        .limit(1)
-        .maybeSingle();
 
       const name = artistProfile?.stage_name || profile?.display_name || profile?.username || "Artist";
       const genre = artistProfile?.genres?.slice(0, 2).join(" | ") || "";
@@ -149,40 +161,35 @@ Deno.serve(async (req: Request) => {
 
       ogData = {
         title: name,
-        subtitle: profile?.bio?.substring(0, 80) || (genre ? genre + " artist on BAK55" : "African artist on BAK55 Talent"),
+        subtitle: profile?.bio?.substring(0, 80) || (genre ? genre + " artist" : "African artist on BAK55 Talent"),
         imageUrl: profile?.avatar_url || undefined,
         genre: genre || undefined,
         location: getFlag(location) + " " + location,
-        stats: followers + " Followers | " + tracks + " Tracks",
+        stats: (followers || 0) + " Followers | " + (tracks || 0) + " Tracks",
         badge: artistProfile?.verified ? "Verified" : undefined,
-        cta: activeCompRes.data ? "VOTE NOW" : undefined,
-        type: "artist",
+        ogType: "artist",
       };
     } else if (type === "track") {
-      const { data: track } = await supabase
-        .from("tracks").select("title, cover_image, genre, plays, artist_id").eq("id", id).single();
+      const track = await dbQuery("tracks", "title,cover_image,genre,plays,artist_id", { id }, true);
 
       if (!track) {
-        ogData = { title: "Track", subtitle: "on BAK55 Talent", type: "track" };
+        ogData = { title: "Track", subtitle: "on BAK55 Talent", ogType: "track" };
       } else {
-        const { data: profile } = await supabase
-          .from("profiles").select("username, display_name").eq("id", track.artist_id).single();
-
+        const profile = await dbQuery("profiles", "username,display_name", { id: track.artist_id }, true);
         ogData = {
           title: track.title,
           subtitle: "by " + (profile?.display_name || profile?.username || "Unknown"),
           imageUrl: track.cover_image || undefined,
           genre: track.genre || undefined,
           stats: (track.plays || 0) + " Plays",
-          type: "track",
+          ogType: "track",
         };
       }
     } else if (type === "competition") {
-      const { data: comp } = await supabase
-        .from("competitions").select("title, description, cover_image, prize_amount, status").eq("id", id).single();
+      const comp = await dbQuery("competitions", "title,description,cover_image,prize_amount,status", { id }, true);
 
       if (!comp) {
-        ogData = { title: "Competition", subtitle: "on BAK55 Talent", type: "competition" };
+        ogData = { title: "Competition", subtitle: "on BAK55 Talent", ogType: "competition" };
       } else {
         ogData = {
           title: comp.title,
@@ -190,11 +197,11 @@ Deno.serve(async (req: Request) => {
           imageUrl: comp.cover_image || undefined,
           stats: comp.prize_amount + " BAK Prize",
           cta: comp.status === "active" ? "VOTE NOW" : undefined,
-          type: "competition",
+          ogType: "competition",
         };
       }
     } else {
-      ogData = { title: "BAK55 Talent", subtitle: "African Music Platform", type: "default" };
+      ogData = { title: "BAK55 Talent", subtitle: "African Music Platform", ogType: "default" };
     }
 
     return new Response(generateSVG(ogData), {
