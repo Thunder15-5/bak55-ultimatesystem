@@ -16,6 +16,8 @@ import { TipDialog } from "@/components/TipDialog";
 import { Badge } from "@/components/ui/badge";
 import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
 import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
+import { CommentSection } from "@/components/CommentSection";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
   interface Track {
   id: string;
@@ -55,6 +57,9 @@ export default function TrackDetails() {
   const [purchasing, setPurchasing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [isInCompetition, setIsInCompetition] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   // Exclusive content access check
   const { hasAccess: hasExclusiveAccess, loading: exclusiveLoading } = useExclusiveAccess(
@@ -91,6 +96,12 @@ export default function TrackDetails() {
     if (user && track?.id) {
       checkPurchaseStatus();
       checkCompetitionStatus();
+      if (isFeatureEnabled('LIKES_ENABLED')) {
+        fetchLikeStatus();
+      }
+    }
+    if (track?.id && isFeatureEnabled('LIKES_ENABLED')) {
+      fetchLikeCount();
     }
   }, [user, track?.artist_id, track?.id]);
 
@@ -341,6 +352,65 @@ export default function TrackDetails() {
     }
   };
 
+  const fetchLikeStatus = async () => {
+    if (!user || !track?.id) return;
+    const { data } = await supabase
+      .from('track_likes')
+      .select('id')
+      .eq('track_id', track.id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setIsLiked(!!data);
+  };
+
+  const fetchLikeCount = async () => {
+    if (!track?.id) return;
+    const { count } = await supabase
+      .from('track_likes')
+      .select('id', { count: 'exact', head: true })
+      .eq('track_id', track.id);
+    setLikeCount(count || 0);
+  };
+
+  const handleLikeToggle = async () => {
+    if (!user) {
+      toast.error("Please log in to like tracks");
+      navigate("/login");
+      return;
+    }
+    if (!track?.id) return;
+
+    setLikeLoading(true);
+    // Optimistic update
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+
+    try {
+      if (wasLiked) {
+        const { error } = await supabase
+          .from('track_likes')
+          .delete()
+          .eq('track_id', track.id)
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('track_likes')
+          .insert({ track_id: track.id, user_id: user.id });
+        if (error) throw error;
+        await trackActivity('track_like', { track_id: track.id });
+      }
+    } catch (error: any) {
+      // Revert optimistic update
+      setIsLiked(wasLiked);
+      setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
+      toast.error("Failed to update like");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   const isCurrentTrack = currentTrack?.id === track?.id;
   const isThisPlaying = isCurrentTrack && isPlaying;
 
@@ -514,6 +584,16 @@ export default function TrackDetails() {
                     <Play className="h-4 w-4" />
                     <span className="font-medium">{track.plays} plays</span>
                   </div>
+                  {isFeatureEnabled('LIKES_ENABLED') && (
+                    <button
+                      onClick={handleLikeToggle}
+                      disabled={likeLoading}
+                      className="flex items-center gap-2 hover:text-primary transition-colors disabled:opacity-50"
+                    >
+                      <Heart className={`h-4 w-4 ${isLiked ? 'fill-primary text-primary' : ''}`} />
+                      <span className="font-medium">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>
+                    </button>
+                  )}
                 </div>
                </div>
 
@@ -750,6 +830,13 @@ export default function TrackDetails() {
     </div>
   </div>
 </div>
+
+      {/* Comments Section */}
+      {isFeatureEnabled('COMMENTS_ENABLED') && id && (
+        <div className="container mx-auto px-4 py-8">
+          <CommentSection trackId={id} />
+        </div>
+      )}
 
       {track && (
         <TipDialog
