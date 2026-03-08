@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TipDialog } from "@/components/TipDialog";
 import { Badge } from "@/components/ui/badge";
+import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
+import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
 
   interface Track {
   id: string;
