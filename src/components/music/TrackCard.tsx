@@ -131,11 +131,19 @@ export function TrackCard({ track, showActions = true, viewMode = "fan" }: Track
         <p className="text-xs sm:text-sm text-muted-foreground truncate break-words">
           {track.artist_profiles?.stage_name || "Unknown Artist"}
         </p>
-        {track.genre && (
-          <span className="inline-block mt-2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full truncate max-w-full">
-            {track.genre}
-          </span>
-        )}
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {track.genre && (
+            <span className="inline-block text-xs px-2 py-1 bg-primary/10 text-primary rounded-full truncate max-w-full">
+              {track.genre}
+            </span>
+          )}
+          {track.is_exclusive && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-accent/20 text-accent-foreground rounded-full">
+              <Lock className="w-3 h-3" />
+              Exclusive
+            </span>
+          )}
+        </div>
 
         {showActions && (
           <div className="flex items-center justify-end mt-4">
