@@ -23,7 +23,8 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB limit
         globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
-        globIgnores: ["**/covers/**", "**/tracks/**"], // Exclude large media files
+        globIgnores: ["**/covers/**", "**/tracks/**", "**/firebase-messaging-sw.js"],
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/firebase-messaging-sw\.js/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
