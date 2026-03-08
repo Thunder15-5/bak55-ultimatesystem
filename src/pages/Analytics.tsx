@@ -414,6 +414,11 @@ export default function Analytics() {
             )}
           </TabsContent>
 
+          {/* Revenue Breakdown */}
+          <TabsContent value="revenue" className="space-y-6">
+            <RevenueBreakdown />
+          </TabsContent>
+
           {/* AI Insights */}
           <TabsContent value="insights" className="space-y-6">
             {!insights ? (
