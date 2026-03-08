@@ -1,9 +1,11 @@
-import { Play, Pause, MoreVertical } from "lucide-react";
+import { Play, Pause, MoreVertical, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
+import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,8 @@ interface TrackCardProps {
     cover_image?: string;
     genre?: string;
     artist_id: string;
+    is_exclusive?: boolean;
+    required_tier_level?: number;
     artist_profiles?: {
       stage_name?: string;
       user_id: string;
