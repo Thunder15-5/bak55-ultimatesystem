@@ -157,8 +157,6 @@ export default function ListeningHistory() {
 
         <ListeningInsights />
 
-        <div className="mt-8">
-        </div>
 
         {history.length === 0 ? (
           <Card>
