@@ -16,6 +16,8 @@ import { TipDialog } from "@/components/TipDialog";
 import { Badge } from "@/components/ui/badge";
 import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
 import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
+import { CommentSection } from "@/components/CommentSection";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
   interface Track {
   id: string;
