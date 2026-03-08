@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Radio, Calendar, Users, Play } from "lucide-react";
+import { Radio, Calendar, Users, Play, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { StreamViewer } from "@/components/StreamViewer";
 
 interface LiveStream {
   id: string;
