@@ -28,6 +28,8 @@ import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
   is_paid_download?: boolean;
   price_kes?: number | null;
   price_in_bak?: number | null;
+  is_exclusive?: boolean;
+  required_tier_level?: number;
   profiles: {
     username: string;
     avatar_url: string | null;
