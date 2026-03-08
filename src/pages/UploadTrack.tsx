@@ -29,6 +29,8 @@ export default function UploadTrack() {
   });
   const [isPaidDownload, setIsPaidDownload] = useState(false);
   const [priceBak, setPriceBak] = useState("");
+  const [isExclusive, setIsExclusive] = useState(false);
+  const [requiredTierLevel, setRequiredTierLevel] = useState(1);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [submitToCompetition, setSubmitToCompetition] = useState(false);
