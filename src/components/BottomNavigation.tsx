@@ -8,6 +8,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   href: string;
+  badge?: number;
 }
 
 export function BottomNavigation() {
