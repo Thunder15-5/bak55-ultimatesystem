@@ -8,12 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFanActivity } from "@/hooks/useFanActivity";
 import { toast } from "sonner";
-import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart, Download, ShoppingCart, CheckCircle, AlertCircle } from "lucide-react";
+import { Music, Play, Pause, ArrowLeft, ListPlus, Share2, Loader2, Trash2, UserPlus, Heart, Download, ShoppingCart, CheckCircle, AlertCircle, Lock } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TipDialog } from "@/components/TipDialog";
 import { Badge } from "@/components/ui/badge";
+import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
+import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
 
   interface Track {
   id: string;
@@ -26,6 +28,8 @@ import { Badge } from "@/components/ui/badge";
   is_paid_download?: boolean;
   price_kes?: number | null;
   price_in_bak?: number | null;
+  is_exclusive?: boolean;
+  required_tier_level?: number;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -51,6 +55,14 @@ export default function TrackDetails() {
   const [purchasing, setPurchasing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [isInCompetition, setIsInCompetition] = useState(false);
+
+  // Exclusive content access check
+  const { hasAccess: hasExclusiveAccess, loading: exclusiveLoading } = useExclusiveAccess(
+    track?.artist_id,
+    track?.is_exclusive || false,
+    track?.required_tier_level || 0,
+    user?.id
+  );
 
   useEffect(() => {
     if (id) {
@@ -458,7 +470,14 @@ export default function TrackDetails() {
 
           <div className="grid md:grid-cols-2 gap-8 items-end">
             {/* Cover Image */}
-            <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl border border-primary/20">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl border border-primary/20">
+              {track.is_exclusive && !hasExclusiveAccess && (
+                <ExclusiveContentOverlay
+                  artistId={track.artist_id}
+                  requiredTierLevel={track.required_tier_level || 1}
+                  artistName={track.profiles.username}
+                />
+              )}
               {track.cover_image ? (
                 <img
                   src={track.cover_image}
@@ -499,6 +518,25 @@ export default function TrackDetails() {
                </div>
 
               <div className="flex gap-3 flex-wrap">
+                {/* Exclusive badge */}
+                {track.is_exclusive && (
+                  <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Fan Club Exclusive
+                  </Badge>
+                )}
+
+                {track.is_exclusive && !hasExclusiveAccess ? (
+                  <Button
+                    size="lg"
+                    variant="hero"
+                    className="flex-1 min-w-[140px] h-14 text-lg"
+                    onClick={() => navigate(`/artist/${track.artist_id}`)}
+                  >
+                    <Lock className="mr-2 h-5 w-5" />
+                    Join Fan Club to Play
+                  </Button>
+                ) : (
                 <Button onClick={handlePlayPause} size="lg" variant="hero" className="flex-1 min-w-[140px] h-14 text-lg">
                   {isThisPlaying ? (
                     <>
@@ -512,6 +550,7 @@ export default function TrackDetails() {
                     </>
                   )}
                 </Button>
+                )}
 
                 {/* Purchase / Download Button */}
                 {track.is_paid_download && (track.price_in_bak || track.price_kes) && !isInCompetition && user?.id !== track.artist_id && (
