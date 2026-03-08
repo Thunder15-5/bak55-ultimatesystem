@@ -27,16 +27,18 @@ export default function Blog() {
   }, [user]);
 
   const handleShare = async (post: any) => {
+    const { getBlogShareUrl } = await import('@/lib/shareUrl');
+    const shareUrl = getBlogShareUrl(post.id, post.title, post.excerpt, post.image);
     try {
       if (navigator.share) {
         await navigator.share({
           title: post.title,
           text: post.excerpt,
-          url: `${window.location.origin}/blog/${post.id}`
+          url: shareUrl
         });
         toast.success('Shared successfully!');
       } else {
-        await navigator.clipboard.writeText(`${window.location.origin}/blog/${post.id}`);
+        await navigator.clipboard.writeText(shareUrl);
         toast.success('Link copied to clipboard!');
       }
     } catch (error) {

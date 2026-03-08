@@ -45,16 +45,17 @@ export default function BlogPost() {
   const IconComponent = post.icon;
 
   const handleShare = async () => {
+    const shareUrl = getBlogShareUrl(post.id, post.title, post.excerpt, post.image);
     try {
       if (navigator.share) {
         await navigator.share({
           title: post.title,
           text: post.excerpt,
-          url: window.location.href
+          url: shareUrl
         });
         toast.success('Shared successfully!');
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
         toast.success('Link copied to clipboard!');
       }
     } catch (error) {
