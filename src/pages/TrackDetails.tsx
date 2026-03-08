@@ -518,6 +518,25 @@ export default function TrackDetails() {
                </div>
 
               <div className="flex gap-3 flex-wrap">
+                {/* Exclusive badge */}
+                {track.is_exclusive && (
+                  <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Fan Club Exclusive
+                  </Badge>
+                )}
+
+                {track.is_exclusive && !hasExclusiveAccess ? (
+                  <Button
+                    size="lg"
+                    variant="hero"
+                    className="flex-1 min-w-[140px] h-14 text-lg"
+                    onClick={() => navigate(`/artist/${track.artist_id}`)}
+                  >
+                    <Lock className="mr-2 h-5 w-5" />
+                    Join Fan Club to Play
+                  </Button>
+                ) : (
                 <Button onClick={handlePlayPause} size="lg" variant="hero" className="flex-1 min-w-[140px] h-14 text-lg">
                   {isThisPlaying ? (
                     <>
@@ -531,6 +550,7 @@ export default function TrackDetails() {
                     </>
                   )}
                 </Button>
+                )}
 
                 {/* Purchase / Download Button */}
                 {track.is_paid_download && (track.price_in_bak || track.price_kes) && !isInCompetition && user?.id !== track.artist_id && (
