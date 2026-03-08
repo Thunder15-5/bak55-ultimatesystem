@@ -1,189 +1,209 @@
-# BAK55 Platform Development Plan
+# BAK55 — Complete Partially Finished Features Plan
 **Created:** March 8, 2026  
-**Status:** Active  
-**Goal:** Launch-ready platform with complete monetization, scalability, and user growth systems
+**Objective:** Bring every partially-built feature to production-ready status  
+**Estimated Timeline:** 6 weeks (3 sprints × 2 weeks)
 
 ---
 
-## Phase 1: Critical Fixes & Launch Readiness (Weeks 1–2)
+## Summary of Partially Built Features
 
-### 1.1 OG Image — PNG Conversion
-- Convert SVG output to PNG using canvas rendering in edge function
-- Test on WhatsApp, Facebook, Instagram, X (Twitter)
-- Ensure fallback image works for missing data
-- **Priority:** 🔴 Critical — social sharing drives organic growth
-
-### 1.2 Fix Known Bugs
-- [ ] Fan club content gating — implement actual access control on tier-exclusive content
-- [ ] Add database indexes on hot queries: `votes(submission_id)`, `tracks(artist_id, moderation_status)`, `followers(artist_id)`
-- [ ] Fix 1000-row query limit — add pagination to leaderboard, catalog, and admin panels
-- [ ] Verify Selar/PesaPal webhook signature validation
-
-### 1.3 Security Hardening
-- [ ] Audit all edge functions for proper CORS headers
-- [ ] Verify all RLS policies cover edge cases
-- [ ] Add rate limiting to voting endpoint (prevent bot abuse)
-- [ ] Validate webhook signatures on payment callbacks
+| # | Feature | Current State | What's Missing |
+|---|---------|--------------|----------------|
+| 1 | Fan Club Content Gating | Tiers & memberships exist, subscription works | No actual content access control; no exclusive upload flow; no auto-billing |
+| 2 | Live Streaming | UI + DB tables exist (create/list streams) | No WebRTC/video infrastructure; no actual streaming; no live tipping |
+| 3 | Artist Course / Education | UI + `course_lessons` table exist | Table is empty — zero lessons populated; no completion certificates |
+| 4 | KYC Verification | `kyc_verifications` table exists; manual review only | No automated ID verification provider; no selfie matching; no document upload UI |
+| 5 | Withdrawal Pipeline | Wallet + withdrawal request UI exists | M-Pesa integration is simulated; no status tracking UI for users; no automated payouts |
+| 6 | Brand Dashboard | Basic stats + competition creation works | No campaign management; no sponsorship tracking; no artist discovery filters; no ROI metrics |
+| 7 | OG Image Generation | Edge function generates SVG | SVG not supported by social crawlers — needs PNG conversion |
+| 8 | Push Notifications | In-app notification bell works | No native push (FCM/APNs); no background notifications; no preference controls |
+| 9 | Direct Messaging | `conversations` + `messages` tables exist | Chat UI exists but is basic; no read receipts; no typing indicators; no fan club group chat |
+| 10 | Listening History Analytics | History page fetches data | No insights/stats (top genres, time spent, streak); no recommendations based on history |
+| 11 | Payment Webhook Validation | Selar + PesaPal callbacks exist | Signature verification is incomplete/untested |
+| 12 | Artist Analytics | Basic play counts shown | No revenue breakdown by source; no follower growth chart; no export capability |
 
 ---
 
-## Phase 2: Revenue & Monetization (Weeks 3–4)
+## Sprint 1: Revenue-Critical Features (Weeks 1–2)
 
-### 2.1 Complete Withdrawal Pipeline
-- [ ] Integrate automated KYC provider (Smile ID recommended for Africa)
-- [ ] Build withdrawal request UI with status tracking
-- [ ] Admin withdrawal approval dashboard with fraud checks
-- [ ] M-Pesa payout testing with PesaPal production credentials
-- **Revenue Impact:** Unblocks artist payouts — critical for retention
+### 1.1 Fan Club Content Gating ✦ HIGH PRIORITY
+**Goal:** Artists can upload exclusive content; only paying members see it.
 
-### 2.2 Fan Club Content Gating
-- [ ] Implement tier-based content access control on track pages
-- [ ] Create exclusive content upload flow for artists
-- [ ] Add "Members Only" badge/lock UI on gated content
-- [ ] Recurring subscription billing (auto-deduct BAKCoins monthly)
+- [ ] Add `is_exclusive` and `required_tier_level` columns to `tracks` table
+- [ ] Create RLS policies: block track access if user lacks active membership at required tier
+- [ ] Build "Upload Exclusive Content" flow on artist dashboard (select tier level)
+- [ ] Add "Members Only" lock overlay on gated tracks in UI
+- [ ] Implement auto-renewal: edge function that runs daily, deducts BAKCoins for active memberships, expires lapsed ones
+- [ ] Add membership expiry notifications (3 days before, on expiry)
 
-### 2.3 Payment Reconciliation
-- [ ] Build financial dashboard for admin showing all money flows
-- [ ] Track platform revenue vs artist payouts vs escrow holds
-- [ ] Export transaction reports (CSV)
+**Database changes:**
+```sql
+ALTER TABLE tracks ADD COLUMN is_exclusive boolean DEFAULT false;
+ALTER TABLE tracks ADD COLUMN required_tier_level integer DEFAULT 0;
+```
 
----
+### 1.2 Complete Withdrawal Pipeline ✦ HIGH PRIORITY
+**Goal:** Artists can request withdrawals and track status; admins approve with real M-Pesa payouts.
 
-## Phase 3: User Growth & Engagement (Weeks 5–8)
+- [ ] Build user-facing withdrawal status tracker (pending → approved → processing → completed/failed)
+- [ ] Add withdrawal history page showing all past requests with statuses
+- [ ] Integrate real M-Pesa B2C API in `mpesa-withdraw` edge function (replace simulation)
+- [ ] Add PesaPal production credentials and test end-to-end
+- [ ] Add admin withdrawal details view: user KYC status, transaction history, fraud flags
+- [ ] Email notifications on withdrawal status changes
 
-### 3.1 Social Login
-- [ ] Add Google OAuth via Lovable Cloud Auth
-- [ ] Add Apple Sign-In
-- [ ] Merge existing email accounts with social logins
-- **Growth Impact:** Reduces signup friction by ~40%
+### 1.3 OG Image PNG Conversion ✦ HIGH PRIORITY
+**Goal:** Social sharing images render correctly on WhatsApp, Facebook, Instagram, X.
 
-### 3.2 Push Notifications
-- [ ] Configure Capacitor Push plugin with FCM
-- [ ] Trigger notifications for: new followers, tips, competition updates, track approvals
-- [ ] Notification preferences UI (opt-in/out per category)
+- [ ] Install `@vercel/og` or use Satori + resvg-js in edge function for SVG→PNG rendering
+- [ ] Update `generate-og-image` to return `image/png` content type
+- [ ] Test with Facebook Sharing Debugger, X Card Validator, WhatsApp link preview
+- [ ] Add fallback default image for tracks/artists without cover art
 
-### 3.3 Real-Time Chat
-- [ ] Build artist↔fan messaging system using Lovable Cloud realtime
-- [ ] Fan club group chat per tier
-- [ ] Message moderation tools for artists
-- [ ] Notification integration
+### 1.4 Payment Webhook Hardening
+**Goal:** Verify all payment callbacks are authentic.
 
-### 3.4 Artist Course Content
-- [ ] Populate 10 onboarding lessons in `course_lessons` table
-- [ ] Topics: uploading music, growing followers, entering competitions, earning BAKCoins, KYC process
-- [ ] Track completion progress with certificates/badges
+- [ ] Implement HMAC signature validation in `selar-callback` edge function using `SELAR_WEBHOOK_SECRET`
+- [ ] Implement PesaPal IPN signature validation using `PESAPAL_IPN_SECRET`
+- [ ] Add replay attack prevention (check transaction ID uniqueness)
+- [ ] Log all webhook events to `admin_activity_log` for audit
 
 ---
 
-## Phase 4: Platform Polish & Analytics (Weeks 9–10)
+## Sprint 2: Engagement & Growth Features (Weeks 3–4)
 
-### 4.1 Advanced Analytics Dashboard
-- [ ] Artist: revenue breakdown by source (tips, votes, sales)
-- [ ] Artist: follower growth chart over time
-- [ ] Fan: listening history insights, spending breakdown
-- [ ] Admin: daily active users, revenue trends, competition participation rates
-- [ ] Export capabilities for all reports
+### 2.1 Artist Course Content Population ✦ MEDIUM PRIORITY
+**Goal:** 10 onboarding lessons live and trackable.
 
-### 4.2 Brand Dashboard Upgrade
-- [ ] Campaign management — brands can sponsor competitions
-- [ ] Artist discovery filters for brand partnerships
-- [ ] Sponsorship placement tracking and ROI metrics
+- [ ] Write and insert 10 lessons into `course_lessons` table via migration:
+  1. Welcome to BAK55 — Platform overview
+  2. Setting Up Your Artist Profile — Bio, photos, social links
+  3. Uploading Your First Track — Audio specs, cover art, metadata
+  4. Understanding BAKCoins — Earning, spending, withdrawing
+  5. Entering Competitions — How to submit and win
+  6. Growing Your Fanbase — Followers, engagement, sharing
+  7. Fan Clubs & Exclusive Content — Monetize your superfans
+  8. Understanding Analytics — Reads your stats, make decisions
+  9. KYC & Withdrawals — Getting verified and cashing out
+  10. Collaboration & Networking — Working with other artists
+- [ ] Add completion badge: "BAK55 Graduate" to `artist_badges` table
+- [ ] Auto-award badge when all 10 lessons completed
+- [ ] Add course completion certificate UI (shareable card)
 
-### 4.3 UI/UX Polish
-- [ ] Consistent 8px spacing grid across all pages
-- [ ] Loading skeleton states for all data-fetching pages
-- [ ] Error boundary improvements with retry buttons
-- [ ] Mobile-first responsive audit (all pages)
-- [ ] Accessibility audit (ARIA labels, keyboard navigation)
+### 2.2 KYC Verification Upgrade ✦ MEDIUM PRIORITY
+**Goal:** Document upload + admin review flow (automated provider deferred to Phase 6).
 
----
+- [ ] Create `kyc_documents` storage bucket (private)
+- [ ] Build KYC document upload UI: ID front/back + selfie
+- [ ] Store documents in storage bucket with user_id folder structure
+- [ ] Update `kyc_verifications` table: add `document_urls`, `selfie_url`, `rejection_reason`
+- [ ] Admin KYC review panel: view documents, approve/reject with notes
+- [ ] Notifications on KYC status changes
+- [ ] Block withdrawal requests if KYC not approved
 
-## Phase 5: Scale & Performance (Weeks 11–12)
+### 2.3 Direct Messaging Completion ✦ MEDIUM PRIORITY
+**Goal:** Functional artist↔fan messaging with real-time updates.
 
-### 5.1 Database Optimization
-- [ ] Add composite indexes based on query patterns
-- [ ] Implement materialized views for leaderboard data
-- [ ] Set up connection pooling for high-traffic periods
-- [ ] Archive old transactions/votes (> 6 months)
+- [ ] Build full chat UI component with message list, input, send button
+- [ ] Add real-time message subscription using Supabase Realtime
+- [ ] Add read receipts (update `read_at` timestamp on message view)
+- [ ] Add unread message count badge on navigation
+- [ ] Fan club group chat: create conversation per tier, auto-add members
+- [ ] Message notification integration (in-app + future push)
 
-### 5.2 CDN & Media
-- [ ] Move audio file serving to CDN
-- [ ] Image optimization pipeline (WebP, responsive sizes)
-- [ ] Lazy load all images and audio players
+### 2.4 Artist Analytics Enhancement ✦ MEDIUM PRIORITY
+**Goal:** Artists get actionable revenue and growth insights.
 
-### 5.3 Caching Strategy
-- [ ] Cache leaderboard data (refresh every 5 min)
-- [ ] Cache exchange rates (refresh every hour)
-- [ ] Cache public artist/track data at edge
-
-### 5.4 Monitoring
-- [ ] Error tracking and alerting
-- [ ] Database query performance monitoring
-- [ ] Edge function execution time tracking
-
----
-
-## Phase 6: Future Vision (Month 4+)
-
-### 6.1 Content Distribution
-- [ ] DistroKid/TuneCore integration for external streaming
-- [ ] Automatic royalty tracking
-
-### 6.2 Advanced AI
-- [ ] ML-based fraud detection
-- [ ] AI playlist curation
-- [ ] Personalized artist growth recommendations
-
-### 6.3 Live Streaming
-- [ ] WebRTC live streaming infrastructure
-- [ ] Live tipping during streams
-- [ ] Virtual concert ticketing
-
-### 6.4 Marketplace
-- [ ] Artist merch store
-- [ ] Event ticketing
-- [ ] Collaboration marketplace
-
-### 6.5 Multi-Language
-- [ ] Swahili (primary market)
-- [ ] French (West Africa)
-- [ ] i18n framework
+- [ ] Revenue breakdown chart: tips vs competition winnings vs track sales vs fan club
+- [ ] Follower growth line chart (daily/weekly/monthly)
+- [ ] Top tracks by plays/revenue table
+- [ ] Geographic listener distribution (if data available)
+- [ ] CSV export for all analytics data
+- [ ] Compare periods: this week vs last week
 
 ---
 
-## Success Metrics
+## Sprint 3: Platform Polish & Remaining Features (Weeks 5–6)
 
-| Metric | 3-Month Target | 6-Month Target |
-|--------|---------------|----------------|
-| Registered users | 5,000 | 25,000 |
-| Active artists | 500 | 2,000 |
-| Monthly active users | 2,000 | 10,000 |
-| Tracks uploaded | 1,000 | 5,000 |
-| Monthly BAKCoin txns | 10,000 | 50,000 |
-| Competition participation | 100/comp | 500/comp |
-| Platform revenue | $500/mo | $5,000/mo |
+### 3.1 Push Notifications ✦ MEDIUM PRIORITY
+**Goal:** Native push notifications on mobile (PWA + Capacitor).
+
+- [ ] Configure Capacitor Push Notifications plugin
+- [ ] Create `push_tokens` table to store device tokens per user
+- [ ] Edge function to send push via FCM
+- [ ] Trigger push for: new followers, tips received, track approved, competition updates
+- [ ] Notification preferences UI: toggle per category (follows, tips, competitions, messages)
+- [ ] Update PWA service worker for background notification handling
+
+### 3.2 Brand Dashboard Completion ✦ LOW PRIORITY
+**Goal:** Brands can manage sponsorships and discover artists.
+
+- [ ] Campaign management: create/edit sponsored competitions with budget tracking
+- [ ] Artist discovery with filters: genre, location, follower count, verified status
+- [ ] Sponsorship placement tracking: views, clicks, engagement
+- [ ] ROI dashboard: cost per engagement, artist performance metrics
+- [ ] Brand↔Artist partnership request system
+
+### 3.3 Live Streaming Foundation ✦ LOW PRIORITY
+**Goal:** Basic streaming capability using third-party infrastructure.
+
+- [ ] Integrate with a streaming provider (e.g., Mux, Agora, or LiveKit)
+- [ ] Artist "Go Live" flow: create stream → get stream key → broadcast
+- [ ] Viewer page: watch stream with live chat sidebar
+- [ ] Live tipping: fans send BAKCoins during stream (real-time balance deduction)
+- [ ] Auto-notify followers when artist goes live
+- [ ] Stream recording and replay capability
+
+### 3.4 Listening History Insights ✦ LOW PRIORITY
+**Goal:** Fans get personalized listening stats.
+
+- [ ] "Your Top Artists" section (most listened in 30 days)
+- [ ] "Your Top Genres" breakdown chart
+- [ ] Total listening time stat
+- [ ] Listening streak tracker (consecutive days)
+- [ ] "Based on your history" recommendations section
+- [ ] Shareable "My BAK55 Wrapped" style card
 
 ---
 
-## Technical Debt Tracker
+## Implementation Order (Recommended)
 
-| Item | Priority | Phase |
-|------|----------|-------|
-| OG images return SVG not PNG | 🔴 High | 1 |
-| KYC is manual only | 🔴 High | 2 |
-| No payment reconciliation | 🔴 High | 2 |
-| Fan club content not gated | 🟡 Medium | 2 |
-| No push notifications | 🟡 Medium | 3 |
-| No social login | 🟡 Medium | 3 |
-| Artist course empty | 🟡 Medium | 3 |
-| 1000-row query limit | 🟡 Medium | 1 |
-| Live Streams UI-only | 🟢 Low | 6 |
-| No multi-language | 🟢 Low | 6 |
-| No offline PWA | 🟢 Low | 6 |
+| Priority | Feature | Sprint | Est. Effort |
+|----------|---------|--------|-------------|
+| 🔴 P0 | Fan Club Content Gating | 1 | 3 days |
+| 🔴 P0 | Withdrawal Pipeline | 1 | 3 days |
+| 🔴 P0 | OG Image PNG | 1 | 1 day |
+| 🔴 P0 | Webhook Validation | 1 | 1 day |
+| 🟡 P1 | Artist Course Content | 2 | 2 days |
+| 🟡 P1 | KYC Document Upload | 2 | 3 days |
+| 🟡 P1 | Direct Messaging | 2 | 3 days |
+| 🟡 P1 | Artist Analytics | 2 | 2 days |
+| 🟢 P2 | Push Notifications | 3 | 3 days |
+| 🟢 P2 | Brand Dashboard | 3 | 3 days |
+| 🟢 P2 | Live Streaming | 3 | 4 days |
+| 🟢 P2 | Listening Insights | 3 | 1 day |
 
 ---
 
-## Domain Issue Notes
+## Dependencies & Blockers
 
-### Meta In-App Browser 404 (Previously Diagnosed)
-The custom domain `bak55talent.co.ke` may show 404 in Facebook/Instagram browsers. This is a CDN binding issue, not a code bug. Fix: re-publish, verify domain in Settings → Domains, clear Meta cache via [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/).
+| Feature | Dependency | Notes |
+|---------|-----------|-------|
+| Withdrawal Pipeline | M-Pesa B2C production credentials | Need PesaPal production API access |
+| Push Notifications | FCM server key | Need Firebase project + secret |
+| Live Streaming | Streaming provider account | Mux/Agora/LiveKit API key needed |
+| KYC (automated) | Smile ID or similar | Deferred — manual review first |
+| OG Image PNG | Edge function runtime | Verify Deno supports resvg-js WASM |
+
+---
+
+## Success Criteria
+
+- [ ] Fan club members can ONLY access tier-gated content
+- [ ] Withdrawals flow end-to-end: request → admin approve → M-Pesa payout → user notified
+- [ ] OG images render as PNG on all social platforms
+- [ ] All 10 course lessons accessible and completable
+- [ ] KYC documents uploadable and reviewable by admin
+- [ ] Real-time chat works between artists and fans
+- [ ] Artist analytics show revenue breakdown and follower growth
+- [ ] Payment webhooks reject invalid signatures
