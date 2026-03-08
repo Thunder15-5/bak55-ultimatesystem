@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Radio, Calendar, Users, Play, ArrowLeft } from "lucide-react";
+import { Radio, Calendar, Users, Play, ArrowLeft, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { StreamViewer } from "@/components/StreamViewer";
@@ -33,6 +33,7 @@ export default function LiveStreams() {
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeStream, setActiveStream] = useState<LiveStream | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -91,6 +92,41 @@ export default function LiveStreams() {
     }
   };
 
+  const goLive = async (stream: LiveStream) => {
+    try {
+      const { error } = await supabase
+        .from("live_streams")
+        .update({ status: "live", actual_start: new Date().toISOString() })
+        .eq("id", stream.id);
+
+      if (error) throw error;
+
+      toast.success("You're live! 🎤");
+      setActiveStream({ ...stream, status: "live" });
+      fetchStreams();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const endStream = async () => {
+    if (!activeStream) return;
+    try {
+      const { error } = await supabase
+        .from("live_streams")
+        .update({ status: "ended", ended_at: new Date().toISOString() })
+        .eq("id", activeStream.id);
+
+      if (error) throw error;
+
+      toast.success("Stream ended");
+      setActiveStream(null);
+      fetchStreams();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "live": return "destructive";
@@ -98,6 +134,37 @@ export default function LiveStreams() {
       default: return "secondary";
     }
   };
+
+  // If viewing a stream
+  if (activeStream) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" size="sm" onClick={() => setActiveStream(null)}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Streams
+            </Button>
+            {user?.id === activeStream.artist_id && activeStream.status === "live" && (
+              <Button variant="destructive" size="sm" onClick={endStream}>
+                End Stream
+              </Button>
+            )}
+          </div>
+
+          <StreamViewer
+            streamId={activeStream.id}
+            streamTitle={activeStream.title}
+            artistName={activeStream.artist_profiles?.stage_name || "Artist"}
+            artistId={activeStream.artist_id}
+            isLive={activeStream.status === "live"}
+            viewerCount={activeStream.viewer_count || 0}
+          />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -169,7 +236,7 @@ export default function LiveStreams() {
             </div>
           ) : (
             streams.map((stream) => (
-              <Card key={stream.id} className="hover:shadow-lg transition-shadow">
+              <Card key={stream.id} className="hover:shadow-lg transition-shadow border-border/50">
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
                     <Badge variant={getStatusColor(stream.status)}>
@@ -177,14 +244,14 @@ export default function LiveStreams() {
                       {stream.status.toUpperCase()}
                     </Badge>
                     {stream.status === "live" && (
-                      <div className="flex items-center gap-1 text-sm">
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
                         {stream.viewer_count}
                       </div>
                     )}
                   </div>
                   <CardTitle className="line-clamp-2">{stream.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">by {stream.artist_profiles.stage_name}</p>
+                  <p className="text-sm text-muted-foreground">by {stream.artist_profiles?.stage_name}</p>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
@@ -194,13 +261,20 @@ export default function LiveStreams() {
                     <Calendar className="h-4 w-4" />
                     {new Date(stream.scheduled_start).toLocaleString()}
                   </div>
-                  <Button 
-                    className="w-full" 
-                    variant={stream.status === "live" ? "default" : "outline"}
-                    disabled={stream.status !== "live"}
-                  >
-                    {stream.status === "live" ? "Watch Live" : "Coming Soon"}
-                  </Button>
+                  
+                  {stream.status === "live" ? (
+                    <Button className="w-full" onClick={() => setActiveStream(stream)}>
+                      <Play className="h-4 w-4 mr-2" /> Watch Live
+                    </Button>
+                  ) : user?.id === stream.artist_id ? (
+                    <Button className="w-full" variant="default" onClick={() => goLive(stream)}>
+                      <Zap className="h-4 w-4 mr-2" /> Go Live Now
+                    </Button>
+                  ) : (
+                    <Button className="w-full" variant="outline" disabled>
+                      Coming Soon
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))
