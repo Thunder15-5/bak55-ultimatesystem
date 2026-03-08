@@ -56,16 +56,18 @@ export function RevenueBreakdown() {
         const rev: RevenueData = { tips: 0, competitions: 0, trackSales: 0, fanClub: 0 };
         txns?.forEach((t) => {
           const amt = Number(t.amount);
-          if (t.type === "tip" || t.description?.toLowerCase().includes("tip")) {
+          const desc = t.description?.toLowerCase() || "";
+          const type = t.type as string;
+          if (desc.includes("tip")) {
             rev.tips += amt;
-          } else if (t.type === "competition_prize" || t.description?.toLowerCase().includes("competition")) {
+          } else if (type === "prize" || desc.includes("competition")) {
             rev.competitions += amt;
-          } else if (t.type === "sale" || t.description?.toLowerCase().includes("sale") || t.description?.toLowerCase().includes("purchase")) {
+          } else if (type === "purchase" || desc.includes("sale") || desc.includes("purchase")) {
             rev.trackSales += amt;
-          } else if (t.description?.toLowerCase().includes("fan club") || t.description?.toLowerCase().includes("membership")) {
+          } else if (desc.includes("fan club") || desc.includes("membership")) {
             rev.fanClub += amt;
-          } else if (t.type === "earning" || t.type === "income") {
-            rev.tips += amt; // Default earnings to tips
+          } else if (type === "earning" || type === "income") {
+            rev.tips += amt;
           }
         });
         setRevenue(rev);
