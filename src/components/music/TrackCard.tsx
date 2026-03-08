@@ -35,9 +35,16 @@ interface TrackCardProps {
 export function TrackCard({ track, showActions = true, viewMode = "fan" }: TrackCardProps) {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useMusicPlayer();
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { user, userRole } = useAuth();
 
-  const isCurrentTrack = currentTrack?.id === track.id;
+  const { hasAccess: hasExclusiveAccess } = useExclusiveAccess(
+    track.artist_id,
+    track.is_exclusive || false,
+    track.required_tier_level || 0,
+    user?.id
+  );
+
+  const isLocked = track.is_exclusive && !hasExclusiveAccess;
   const isThisPlaying = isCurrentTrack && isPlaying;
 
   const handlePlayPause = (e: React.MouseEvent) => {
