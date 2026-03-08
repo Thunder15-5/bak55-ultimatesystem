@@ -1,17 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Upload, Wallet, User, Trophy } from "lucide-react";
+import { Home, Search, Upload, Wallet, User, Trophy, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
   icon: React.ElementType;
   label: string;
   href: string;
+  badge?: number;
 }
 
 export function BottomNavigation() {
   const { user, userRole } = useAuth();
   const location = useLocation();
+  const unreadCount = useUnreadMessages(user?.id);
 
   if (!user) return null;
 
@@ -81,16 +84,23 @@ export function BottomNavigation() {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full px-1 transition-colors",
+                "relative flex flex-col items-center justify-center flex-1 h-full px-1 transition-colors",
                 active 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className={cn(
-                "w-5 h-5 mb-1 transition-transform",
-                active && "scale-110"
-              )} />
+              <div className="relative">
+                <Icon className={cn(
+                  "w-5 h-5 mb-1 transition-transform",
+                  active && "scale-110"
+                )} />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold">
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </div>
               <span className={cn(
                 "text-[10px] font-medium",
                 active && "font-semibold"
