@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
 import { CookieConsent } from "@/components/CookieConsent";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { lazy, Suspense } from "react";
 import { PageLoader } from "@/components/PageLoader";
@@ -329,6 +330,7 @@ const App = () => (
               <BottomNavigation />
               <InstallPrompt />
               <CookieConsent />
+              <PushNotificationPrompt />
             </MusicPlayerProvider>
             </CurrencyProvider>
           </AuthProvider>
