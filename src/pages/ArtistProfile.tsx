@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getArtistShareUrl } from "@/lib/shareUrl";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArtistSEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
