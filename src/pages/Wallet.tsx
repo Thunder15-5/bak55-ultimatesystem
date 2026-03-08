@@ -429,6 +429,13 @@ export default function Wallet() {
           </div>
         )}
 
+        {/* Withdrawal History - Artists/Producers */}
+        {(userRole === 'artist' || userRole === 'producer') && user && (
+          <div className="mb-8">
+            <WithdrawalHistory userId={user.id} />
+          </div>
+        )}
+
         {/* Exchange Rates */}
         <ExchangeRatesTable variant="compact" className="mb-8" />
 
