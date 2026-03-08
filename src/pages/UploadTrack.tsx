@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Upload, Music, Sparkles, DollarSign, Info } from "lucide-react";
+import { Loader2, Upload, Music, Sparkles, DollarSign, Info, Crown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
