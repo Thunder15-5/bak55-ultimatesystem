@@ -688,6 +688,10 @@ export default function Profile() {
           <TabsContent value="referrals">
             <ReferralSystem />
           </TabsContent>
+
+          <TabsContent value="notifications">
+            <NotificationPreferences />
+          </TabsContent>
         </Tabs>
       </div>
     </div>

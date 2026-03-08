@@ -155,6 +155,11 @@ export default function ListeningHistory() {
           </p>
         </div>
 
+        <ListeningInsights />
+
+        <div className="mt-8">
+        </div>
+
         {history.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
