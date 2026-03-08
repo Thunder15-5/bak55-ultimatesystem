@@ -57,6 +57,9 @@ export default function TrackDetails() {
   const [purchasing, setPurchasing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [isInCompetition, setIsInCompetition] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   // Exclusive content access check
   const { hasAccess: hasExclusiveAccess, loading: exclusiveLoading } = useExclusiveAccess(
