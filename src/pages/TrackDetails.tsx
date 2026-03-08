@@ -56,6 +56,14 @@ export default function TrackDetails() {
   const [downloading, setDownloading] = useState(false);
   const [isInCompetition, setIsInCompetition] = useState(false);
 
+  // Exclusive content access check
+  const { hasAccess: hasExclusiveAccess, loading: exclusiveLoading } = useExclusiveAccess(
+    track?.artist_id,
+    track?.is_exclusive || false,
+    track?.required_tier_level || 0,
+    user?.id
+  );
+
   useEffect(() => {
     if (id) {
       fetchTrack();
