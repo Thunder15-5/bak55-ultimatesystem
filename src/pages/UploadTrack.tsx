@@ -219,6 +219,8 @@ export default function UploadTrack() {
             moderation_status: 'pending',
             is_paid_download: isPaidDownload && !submitToCompetition,
             price_in_bak: isPaidDownload && !submitToCompetition ? parseFloat(priceBak) || null : null,
+            is_exclusive: isExclusive,
+            required_tier_level: isExclusive ? requiredTierLevel : 0,
           } as any)
           .select()
           .single();
