@@ -233,6 +233,7 @@ export default function ListeningHistory() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

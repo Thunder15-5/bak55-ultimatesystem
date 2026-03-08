@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3 } from 'lucide-react';
+import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3, Target } from 'lucide-react';
+import { BrandCampaignManager } from '@/components/BrandCampaignManager';
 
 export default function BrandDashboard() {
   const { user } = useAuth();
