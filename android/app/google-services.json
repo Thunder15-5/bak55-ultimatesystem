@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1051483476412",
+    "project_id": "bak55-c5816",
+    "storage_bucket": "bak55-c5816.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051483476412:android:8dbb470150604cc8585bb9",
+        "android_client_info": {
+          "package_name": "app.lovable.a8bd0078057114d218969876511759db0"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAp1y7K3_0JqP4BmV4Aq0xBl4xbeYqEpHo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
