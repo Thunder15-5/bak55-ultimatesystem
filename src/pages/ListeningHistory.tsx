@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { History, Play, Loader2, Clock } from "lucide-react";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { ListeningInsights } from "@/components/ListeningInsights";
 
 interface HistoryEntry {
   id: string;
@@ -153,6 +154,9 @@ export default function ListeningHistory() {
             Your recently played tracks
           </p>
         </div>
+
+        <ListeningInsights />
+
 
         {history.length === 0 ? (
           <Card>

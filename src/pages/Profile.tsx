@@ -25,6 +25,8 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { KYCVerification } from "@/components/KYCVerification";
 import { DirectChat } from "@/components/DirectChat";
+import { NotificationPreferences } from "@/components/NotificationPreferences";
+import { Bell } from "lucide-react";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -422,7 +424,7 @@ export default function Profile() {
       {/* Main Content Tabs */}
       <div className="container mx-auto px-4 sm:px-6">
         <Tabs defaultValue="about" className="space-y-6">
-          <TabsList className="w-full sm:w-auto grid grid-cols-6 sm:inline-flex h-auto sm:h-10 p-1 bg-muted/50">
+          <TabsList className="w-full sm:w-auto grid grid-cols-7 sm:inline-flex h-auto sm:h-10 p-1 bg-muted/50">
             <TabsTrigger value="about" className="gap-1.5 text-xs sm:text-sm py-2">
               <User className="h-3.5 w-3.5 hidden sm:inline" /> About
             </TabsTrigger>
@@ -442,6 +444,9 @@ export default function Profile() {
             </TabsTrigger>
             <TabsTrigger value="referrals" className="gap-1.5 text-xs sm:text-sm py-2">
               <Users className="h-3.5 w-3.5 hidden sm:inline" /> Referrals
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-1.5 text-xs sm:text-sm py-2">
+              <Bell className="h-3.5 w-3.5 hidden sm:inline" /> Alerts
             </TabsTrigger>
           </TabsList>
 
@@ -682,6 +687,10 @@ export default function Profile() {
 
           <TabsContent value="referrals">
             <ReferralSystem />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <NotificationPreferences />
           </TabsContent>
         </Tabs>
       </div>

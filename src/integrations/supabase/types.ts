@@ -839,6 +839,79 @@ export type Database = {
           },
         ]
       }
+      brand_campaigns: {
+        Row: {
+          brand_id: string
+          budget: number | null
+          competition_id: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          metrics: Json | null
+          spent: number | null
+          start_date: string | null
+          status: string | null
+          target_genres: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id: string
+          budget?: number | null
+          competition_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          metrics?: Json | null
+          spent?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_genres?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string
+          budget?: number | null
+          competition_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          metrics?: Json | null
+          spent?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_genres?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_campaigns_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_profiles: {
         Row: {
           company_name: string
@@ -2501,13 +2574,16 @@ export type Database = {
           artist_id: string
           created_at: string
           description: string | null
+          ended_at: string | null
           id: string
           max_viewers: number | null
           scheduled_start: string
           status: string
+          stream_key: string | null
           stream_url: string | null
           thumbnail_url: string | null
           title: string
+          total_tips: number | null
           viewer_count: number | null
         }
         Insert: {
@@ -2516,13 +2592,16 @@ export type Database = {
           artist_id: string
           created_at?: string
           description?: string | null
+          ended_at?: string | null
           id?: string
           max_viewers?: number | null
           scheduled_start: string
           status?: string
+          stream_key?: string | null
           stream_url?: string | null
           thumbnail_url?: string | null
           title: string
+          total_tips?: number | null
           viewer_count?: number | null
         }
         Update: {
@@ -2531,13 +2610,16 @@ export type Database = {
           artist_id?: string
           created_at?: string
           description?: string | null
+          ended_at?: string | null
           id?: string
           max_viewers?: number | null
           scheduled_start?: string
           status?: string
+          stream_key?: string | null
           stream_url?: string | null
           thumbnail_url?: string | null
           title?: string
+          total_tips?: number | null
           viewer_count?: number | null
         }
         Relationships: [
@@ -2547,6 +2629,60 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "artist_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          competitions: boolean | null
+          created_at: string | null
+          follows: boolean | null
+          id: string
+          marketing: boolean | null
+          messages: boolean | null
+          tips: boolean | null
+          track_updates: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          competitions?: boolean | null
+          created_at?: string | null
+          follows?: boolean | null
+          id?: string
+          marketing?: boolean | null
+          messages?: boolean | null
+          tips?: boolean | null
+          track_updates?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          competitions?: boolean | null
+          created_at?: string | null
+          follows?: boolean | null
+          id?: string
+          marketing?: boolean | null
+          messages?: boolean | null
+          tips?: boolean | null
+          track_updates?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3044,6 +3180,48 @@ export type Database = {
         }
         Relationships: []
       }
+      push_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform?: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           created_at: string
@@ -3473,6 +3651,58 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_tip: boolean | null
+          stream_id: string
+          tip_amount: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_tip?: boolean | null
+          stream_id: string
+          tip_amount?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_tip?: boolean | null
+          stream_id?: string
+          tip_amount?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_chat_messages_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]

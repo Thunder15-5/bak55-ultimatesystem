@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3 } from 'lucide-react';
+import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3, Target } from 'lucide-react';
+import { BrandCampaignManager } from '@/components/BrandCampaignManager';
 
 export default function BrandDashboard() {
   const { user } = useAuth();
@@ -105,6 +107,18 @@ export default function BrandDashboard() {
               Discover talent, create competitions, and grow your brand
             </p>
           </div>
+
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="inline-flex h-10 p-1 bg-muted/50">
+              <TabsTrigger value="overview" className="gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="campaigns" className="gap-1.5">
+                <Target className="h-3.5 w-3.5" /> Campaigns
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-8">
 
           {/* Main Stats Grid */}
           <div className="grid gap-4 md:grid-cols-5">
@@ -290,6 +304,12 @@ export default function BrandDashboard() {
               </div>
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="campaigns">
+              <BrandCampaignManager />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
