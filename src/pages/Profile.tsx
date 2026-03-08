@@ -25,7 +25,6 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { KYCVerification } from "@/components/KYCVerification";
 import { DirectChat } from "@/components/DirectChat";
-import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
