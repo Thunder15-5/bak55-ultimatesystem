@@ -593,7 +593,51 @@ export default function UploadTrack() {
                 )}
               </div>
 
-              {competitions.length > 0 && (
+              {/* Exclusive Content Toggle */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="exclusiveContent" className="text-base font-semibold flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-primary" />
+                      Fan Club Exclusive
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Only fan club members can listen to this track
+                    </p>
+                  </div>
+                  <Switch
+                    id="exclusiveContent"
+                    checked={isExclusive}
+                    onCheckedChange={setIsExclusive}
+                  />
+                </div>
+
+                {isExclusive && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="tierLevel">Minimum Tier Level</Label>
+                      <Select value={String(requiredTierLevel)} onValueChange={(v) => setRequiredTierLevel(Number(v))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tier level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Tier 1 (Basic)</SelectItem>
+                          <SelectItem value="2">Tier 2 (Premium)</SelectItem>
+                          <SelectItem value="3">Tier 3 (VIP)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-primary/10 border border-primary/20">
+                      <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground">
+                        Only fans subscribed at Tier {requiredTierLevel} or higher in your Fan Club can access this track.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+
                 <div className="space-y-4 p-4 border rounded-lg">
                   <div className="flex items-center gap-2">
                     <input
