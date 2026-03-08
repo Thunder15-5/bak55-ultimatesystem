@@ -96,6 +96,12 @@ export default function TrackDetails() {
     if (user && track?.id) {
       checkPurchaseStatus();
       checkCompetitionStatus();
+      if (isFeatureEnabled('LIKES_ENABLED')) {
+        fetchLikeStatus();
+      }
+    }
+    if (track?.id && isFeatureEnabled('LIKES_ENABLED')) {
+      fetchLikeCount();
     }
   }, [user, track?.artist_id, track?.id]);
 
