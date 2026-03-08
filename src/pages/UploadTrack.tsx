@@ -310,6 +310,8 @@ export default function UploadTrack() {
       setUploadMode('new');
       setIsPaidDownload(false);
       setPriceBak("");
+      setIsExclusive(false);
+      setRequiredTierLevel(1);
     } catch (error: any) {
       toast.error(error.message || "Failed to upload track");
     } finally {
