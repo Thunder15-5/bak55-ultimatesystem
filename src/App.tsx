@@ -330,6 +330,7 @@ const App = () => (
               <BottomNavigation />
               <InstallPrompt />
               <CookieConsent />
+              <PushNotificationPrompt />
             </MusicPlayerProvider>
             </CurrencyProvider>
           </AuthProvider>
