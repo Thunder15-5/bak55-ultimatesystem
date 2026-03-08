@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { getCompetitionShareUrl } from "@/lib/shareUrl";
 import { CompetitionSEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles } from "lucide-react";
+import { Trophy, Calendar, Coins, Music, Heart, ArrowLeft, Sparkles, Share2 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { JudgeCompetition } from "@/components/JudgeCompetition";
 import { SubmitExistingTrackDialog } from "@/components/SubmitExistingTrackDialog";
@@ -508,6 +509,24 @@ export default function CompetitionDetails() {
                   </Button>
                 </div>
               )}
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const url = getCompetitionShareUrl(id!);
+                  const text = `🏆 Check out "${competition.title}" on BAK55 Talent! Win ${competition.prize_amount} BAK!`;
+                  if (navigator.share) {
+                    navigator.share({ title: `${competition.title} - BAK55 Talent`, text, url });
+                  } else {
+                    navigator.clipboard.writeText(`${text}\n${url}`);
+                    toast({ title: "Link copied!", description: "Share it to bring more participants!" });
+                  }
+                }}
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Competition
+              </Button>
             </CardContent>
           </Card>
         </div>

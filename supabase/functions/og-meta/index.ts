@@ -198,14 +198,29 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.searchParams.get("path") || "/";
 
+    // Support custom meta override via query params (for static content like blogs)
+    const customTitle = url.searchParams.get("title");
+    const customDesc = url.searchParams.get("desc");
+    const customImage = url.searchParams.get("image");
+
     // Parse the path to determine content type
     const artistMatch = path.match(/\/artist\/([^/?#]+)/);
     const trackMatch = path.match(/\/track\/([^/?#]+)/);
     const competitionMatch = path.match(/\/competition\/([^/?#]+)/);
+    const blogMatch = path.match(/\/blog\/([^/?#]+)/);
 
     let meta: Meta | null = null;
 
-    if (artistMatch) {
+    if (customTitle) {
+      // Custom meta passed via query params (used for static pages like blogs)
+      meta = {
+        title: `${customTitle} | ${SITE_NAME}`,
+        description: customDesc || `Read more on ${SITE_NAME}`,
+        image: customImage ? absImage(customImage) : `${SITE_URL}/og-image.png?v=4`,
+        url: `${SITE_URL}${path}`,
+        type: blogMatch ? "article" : "website",
+      };
+    } else if (artistMatch) {
       meta = await resolveArtist(artistMatch[1]);
     } else if (trackMatch) {
       meta = await resolveTrack(trackMatch[1]);

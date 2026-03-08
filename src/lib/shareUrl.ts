@@ -7,9 +7,12 @@
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-export function getShareUrl(path: string): string {
-  // The og-meta function serves crawler-friendly HTML with a redirect for humans
-  return `${SUPABASE_URL}/functions/v1/og-meta?path=${encodeURIComponent(path)}`;
+export function getShareUrl(path: string, customMeta?: { title?: string; desc?: string; image?: string }): string {
+  const params = new URLSearchParams({ path });
+  if (customMeta?.title) params.set("title", customMeta.title);
+  if (customMeta?.desc) params.set("desc", customMeta.desc);
+  if (customMeta?.image) params.set("image", customMeta.image);
+  return `${SUPABASE_URL}/functions/v1/og-meta?${params.toString()}`;
 }
 
 export function getArtistShareUrl(artistId: string): string {
@@ -22,4 +25,12 @@ export function getTrackShareUrl(trackId: string): string {
 
 export function getCompetitionShareUrl(competitionId: string): string {
   return getShareUrl(`/competition/${competitionId}`);
+}
+
+export function getBlogShareUrl(blogId: string | number, title: string, excerpt: string, image?: string): string {
+  return getShareUrl(`/blog/${blogId}`, {
+    title,
+    desc: excerpt.substring(0, 150),
+    image,
+  });
 }
