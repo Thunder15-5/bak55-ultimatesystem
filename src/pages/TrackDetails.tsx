@@ -584,6 +584,16 @@ export default function TrackDetails() {
                     <Play className="h-4 w-4" />
                     <span className="font-medium">{track.plays} plays</span>
                   </div>
+                  {isFeatureEnabled('LIKES_ENABLED') && (
+                    <button
+                      onClick={handleLikeToggle}
+                      disabled={likeLoading}
+                      className="flex items-center gap-2 hover:text-primary transition-colors disabled:opacity-50"
+                    >
+                      <Heart className={`h-4 w-4 ${isLiked ? 'fill-primary text-primary' : ''}`} />
+                      <span className="font-medium">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>
+                    </button>
+                  )}
                 </div>
                </div>
 
