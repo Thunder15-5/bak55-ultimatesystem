@@ -493,7 +493,7 @@ export default function TrackDetails() {
     );
   }
 
-  const shareUrl = `${window.location.origin}/track/${id}`;
+  const shareUrl = getTrackShareUrl(id!);
   const shareTitle = `${track.title} by ${track.profiles.username}`;
   const shareDescription = `🎵 Stream ${track.title} now on BAK55 Talent • ${track.plays} plays • ${track.genre || 'Music'}`;
 

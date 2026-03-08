@@ -387,7 +387,7 @@ export default function ArtistProfile() {
                     size="icon"
                     onClick={() => {
                       const displayName = artist.artist_profiles?.stage_name || artist.username;
-                      const url = `${window.location.origin}/artist/${id}`;
+                      const url = getArtistShareUrl(id!);
                       const text = `Check out ${displayName} on BAK55 Talent! 🎤🔥`;
                       if (navigator.share) {
                         navigator.share({ title: `${displayName} - BAK55 Talent`, text, url });

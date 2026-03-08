@@ -174,7 +174,7 @@ export default function RisingStarsVoting() {
   };
 
   const handleShare = (submission: VotingSubmission) => {
-    const url = `${window.location.origin}/artist/${submission.artist_id}`;
+    const url = getArtistShareUrl(submission.artist_id);
     const text = `Vote for "${submission.title}" by ${submission.artist_username} on BAK55 Rising Stars! 🌟`;
     if (navigator.share) {
       navigator.share({ title: `${submission.title} - BAK55 Rising Stars`, text, url });

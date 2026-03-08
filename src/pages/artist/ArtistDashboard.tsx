@@ -163,7 +163,7 @@ export default function ArtistDashboard() {
               variant="outline"
               size="sm"
               onClick={() => {
-                const url = `${window.location.origin}/artist/${user?.id}`;
+                const url = getArtistShareUrl(user?.id || "");
                 const text = `Check out my music on BAK55 Talent! 🎶🔥`;
                 if (navigator.share) {
                   navigator.share({ title: "My BAK55 Profile", text, url });
