@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Upload, Wallet, User, Trophy } from "lucide-react";
+import { Home, Search, Upload, Wallet, User, Trophy, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
