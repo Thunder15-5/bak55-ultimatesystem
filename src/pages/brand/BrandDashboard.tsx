@@ -304,6 +304,12 @@ export default function BrandDashboard() {
               </div>
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="campaigns">
+              <BrandCampaignManager />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
