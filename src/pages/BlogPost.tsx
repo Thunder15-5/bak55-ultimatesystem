@@ -1,4 +1,5 @@
 import { Navigation } from '@/components/Navigation';
+import { getBlogShareUrl } from '@/lib/shareUrl';
 import { BlogSEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
