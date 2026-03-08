@@ -638,6 +638,7 @@ export default function UploadTrack() {
               </div>
 
 
+              {competitions.length > 0 && (
                 <div className="space-y-4 p-4 border rounded-lg">
                   <div className="flex items-center gap-2">
                     <input
