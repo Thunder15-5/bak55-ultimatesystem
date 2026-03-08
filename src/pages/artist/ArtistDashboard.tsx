@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getArtistShareUrl } from "@/lib/shareUrl";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
