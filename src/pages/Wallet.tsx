@@ -14,6 +14,7 @@ import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
+import { WithdrawalHistory } from "@/components/WithdrawalHistory";
 
 interface Transaction {
   id: string;
