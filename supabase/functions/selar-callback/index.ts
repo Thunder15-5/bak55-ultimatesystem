@@ -19,6 +19,37 @@ const PACKAGES: Record<string, { priceKES: number; bakAmount: number }> = {
   '7167167f11': { priceKES: 5000, bakAmount: 250 },
 };
 
+/**
+ * Verify HMAC-SHA256 webhook signature
+ */
+async function verifySignature(rawBody: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+    
+    // Try hex comparison
+    const expectedHex = Array.from(new Uint8Array(signatureBytes))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Try base64 comparison
+    const expectedBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+    
+    // Compare both formats (Selar may use either)
+    return signature === expectedHex || signature === expectedBase64;
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,30 +76,46 @@ serve(async (req) => {
     
     console.log('Selar webhook received:', JSON.stringify(payload));
 
-    // Verify webhook signature if configured
-    const selarApiKey = Deno.env.get('SELAR_API_KEY');
+    // ===== WEBHOOK SIGNATURE VERIFICATION =====
+    const webhookSecret = Deno.env.get('SELAR_WEBHOOK_SECRET');
     const signature = req.headers.get('x-selar-signature') || req.headers.get('x-webhook-signature');
 
-    if (selarApiKey && signature) {
-      try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(rawBody);
-        const key = await crypto.subtle.importKey(
-          'raw',
-          encoder.encode(selarApiKey),
-          { name: 'HMAC', hash: 'SHA-256' },
-          false,
-          ['sign']
-        );
-        const signatureBytes = await crypto.subtle.sign('HMAC', key, data);
-        const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+    if (webhookSecret) {
+      if (!signature) {
+        console.error('Missing webhook signature header');
+        // Log for audit
+        await supabaseClient.from('admin_activity_log').insert({
+          event_type: 'webhook_missing_signature',
+          event_category: 'security',
+          description: 'Selar webhook received without signature',
+          metadata: { headers: Object.fromEntries([...req.headers.entries()].filter(([k]) => k.startsWith('x-'))), ip: req.headers.get('x-forwarded-for') },
+        }).catch(() => {});
         
-        if (signature !== expectedSignature) {
-          console.warn('Webhook signature mismatch - logging but proceeding');
-        }
-      } catch (sigError) {
-        console.warn('Signature verification failed:', sigError);
+        return new Response(
+          JSON.stringify({ error: 'Missing signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+
+      const isValid = await verifySignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        // Log for audit
+        await supabaseClient.from('admin_activity_log').insert({
+          event_type: 'webhook_invalid_signature',
+          event_category: 'security',
+          description: 'Selar webhook signature verification failed',
+          metadata: { signature_received: signature.substring(0, 20) + '...' },
+        }).catch(() => {});
+        
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('Webhook signature verified successfully');
+    } else {
+      console.warn('SELAR_WEBHOOK_SECRET not configured - skipping signature verification');
     }
 
     // Parse Selar webhook payload
@@ -87,7 +134,6 @@ serve(async (req) => {
     
     // Try from metadata
     if (!productCode && payload.metadata?.package_id) {
-      // Extract from package_id like 'pkg_250'
       const amountMatch = payload.metadata.package_id.match(/pkg_(\d+)/);
       if (amountMatch) {
         const amountKES = parseInt(amountMatch[1]);
@@ -108,14 +154,12 @@ serve(async (req) => {
       priceKES = PACKAGES[productCode].priceKES;
       bakAmount = PACKAGES[productCode].bakAmount;
     } else if (payload.total_amount || payload.amount) {
-      // Fallback: Calculate from amount
       priceKES = parseFloat(payload.total_amount || payload.amount);
       bakAmount = priceKES / BAK_RATE;
     } else if (payload.metadata?.amount_kes) {
       priceKES = parseFloat(payload.metadata.amount_kes);
       bakAmount = parseFloat(payload.metadata.bak_amount) || priceKES / BAK_RATE;
     } else {
-      // Default to legacy package
       priceKES = 100;
       bakAmount = 5;
     }
@@ -171,15 +215,24 @@ serve(async (req) => {
     const userId = profile.id;
     const txRef = transactionId || reference || `selar_${Date.now()}_${email}`;
 
-    // Check for duplicate transaction
+    // ===== REPLAY ATTACK PREVENTION =====
+    // Check for duplicate transaction using unique index
     const { data: existingTx } = await supabaseClient
       .from('payment_transactions')
       .select('id')
       .eq('payment_reference', txRef)
-      .single();
+      .maybeSingle();
 
     if (existingTx) {
-      console.log('Transaction already processed:', txRef);
+      console.log('Duplicate transaction blocked (replay prevention):', txRef);
+      // Log audit event
+      await supabaseClient.from('admin_activity_log').insert({
+        event_type: 'webhook_duplicate_blocked',
+        event_category: 'security',
+        description: `Duplicate Selar webhook blocked: ${txRef}`,
+        metadata: { tx_ref: txRef, email, user_id: userId },
+      }).catch(() => {});
+      
       return new Response(
         JSON.stringify({ success: true, message: 'Already processed' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -244,7 +297,8 @@ serve(async (req) => {
         bak_credited: bakAmount,
         bak_rate: BAK_RATE,
         product_code: productCode,
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
+        signature_verified: !!webhookSecret,
       }
     });
 
@@ -323,6 +377,15 @@ serve(async (req) => {
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
     }
+
+    // Log webhook audit event
+    await supabaseClient.from('admin_activity_log').insert({
+      user_id: userId,
+      event_type: 'selar_payment_processed',
+      event_category: 'payment',
+      description: `Selar payment processed: ${bakAmount.toFixed(2)} BAK for ${email}`,
+      metadata: { tx_ref: txRef, amount_kes: priceKES, bak_amount: bakAmount, signature_verified: !!webhookSecret },
+    }).catch(() => {});
 
     return new Response(
       JSON.stringify({ 

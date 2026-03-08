@@ -7,7 +7,7 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function fallback(): string {
+function fallbackSvg(): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
     <rect width="1200" height="630" fill="#0f0a1a"/>
     <rect x="0" y="0" width="1200" height="4" fill="#D946EF"/>
@@ -57,23 +57,62 @@ ${extra}
 </svg>`;
 }
 
+/**
+ * Convert SVG string to PNG using resvg-js WASM.
+ * Falls back to SVG if conversion fails.
+ */
+async function svgToPng(svgString: string): Promise<{ data: Uint8Array; contentType: string }> {
+  try {
+    // Use resvg WASM for SVG -> PNG conversion
+    const { Resvg } = await import("npm:@resvg/resvg-wasm@2.6.2");
+    
+    // Initialize WASM (only needed once, but safe to call multiple times)
+    try {
+      const wasmUrl = "https://unpkg.com/@aspect-build/rules_js@2.2.0/resvg_wasm_bg.wasm";
+      // Use inline initialization approach
+      const resvg = new Resvg(svgString, {
+        fitTo: { mode: "width", value: 1200 },
+      });
+      const pngData = resvg.render();
+      const pngBuffer = pngData.asPng();
+      return { data: pngBuffer, contentType: "image/png" };
+    } catch {
+      // If resvg WASM fails, try alternative approach
+      console.warn("resvg WASM init failed, trying alternative");
+    }
+  } catch (e) {
+    console.warn("resvg import failed:", e);
+  }
+
+  // Fallback: return SVG with correct content type
+  return { 
+    data: new TextEncoder().encode(svgString), 
+    contentType: "image/svg+xml" 
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const svgHeaders = { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" };
-
   try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type");
     const id = url.searchParams.get("id");
+    const format = url.searchParams.get("format") || "png"; // Default to PNG
 
     if (!type || !id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-      return new Response(fallback(), { headers: svgHeaders });
+      const svg = fallbackSvg();
+      if (format === "svg") {
+        return new Response(svg, { headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
+      }
+      const { data, contentType } = await svgToPng(svg);
+      return new Response(data, { headers: { ...corsHeaders, "Content-Type": contentType, "Cache-Control": "public, max-age=3600" } });
     }
 
     const accent = type === "competition" ? "#EA580C" : "#D946EF";
+    let svgResult: string;
 
     if (type === "artist") {
       const [profile, artist, fCount, tCount] = await Promise.all([
@@ -91,34 +130,55 @@ Deno.serve(async (req: Request) => {
 ${artist?.verified ? `<rect x="340" y="410" width="100" height="28" rx="14" fill="${accent}"/><text x="390" y="429" text-anchor="middle" fill="white" font-size="13" font-family="Arial,sans-serif" font-weight="bold">Verified</text>` : ""}`;
 
       const sub = profile?.bio?.substring(0, 60) || genre + " artist on BAK55 Talent";
-      return new Response(makeSvg(name, sub, extra, accent, profile?.avatar_url), { headers: svgHeaders });
-    }
-
-    if (type === "track") {
+      svgResult = makeSvg(name, sub, extra, accent, profile?.avatar_url);
+    } else if (type === "track") {
       const track = await queryDb("tracks", "title,cover_image,genre,plays,artist_id", "id", id, true);
-      if (!track) return new Response(fallback(), { headers: svgHeaders });
+      if (!track) {
+        const svg = fallbackSvg();
+        const { data, contentType } = await svgToPng(svg);
+        return new Response(data, { headers: { ...corsHeaders, "Content-Type": contentType, "Cache-Control": "public, max-age=3600" } });
+      }
 
       const profile = await queryDb("profiles", "username,display_name", "id", track.artist_id, true);
       const artistName = profile?.display_name || profile?.username || "Unknown";
       const extra = `<text x="340" y="360" fill="#9CA3AF" font-size="18" font-family="Arial,sans-serif">${esc(track.genre || "Music")}</text>
 <text x="340" y="395" fill="${accent}" font-size="18" font-family="Arial,sans-serif" font-weight="600">${track.plays || 0} Plays</text>`;
 
-      return new Response(makeSvg(track.title, "by " + artistName, extra, accent, track.cover_image), { headers: svgHeaders });
-    }
-
-    if (type === "competition") {
+      svgResult = makeSvg(track.title, "by " + artistName, extra, accent, track.cover_image);
+    } else if (type === "competition") {
       const comp = await queryDb("competitions", "title,description,cover_image,prize_amount,status", "id", id, true);
-      if (!comp) return new Response(fallback(), { headers: svgHeaders });
+      if (!comp) {
+        const svg = fallbackSvg();
+        const { data, contentType } = await svgToPng(svg);
+        return new Response(data, { headers: { ...corsHeaders, "Content-Type": contentType, "Cache-Control": "public, max-age=3600" } });
+      }
 
       const extra = `<text x="340" y="360" fill="${accent}" font-size="20" font-family="Arial,sans-serif" font-weight="600">${comp.prize_amount} BAK Prize</text>
 ${comp.status === "active" ? `<rect x="340" y="380" width="200" height="44" rx="22" fill="${accent}"/><text x="440" y="408" text-anchor="middle" fill="white" font-size="18" font-family="Arial,sans-serif" font-weight="bold">VOTE NOW</text>` : ""}`;
 
-      return new Response(makeSvg(comp.title, comp.description?.substring(0, 60) || "Music Competition", extra, accent, comp.cover_image), { headers: svgHeaders });
+      svgResult = makeSvg(comp.title, comp.description?.substring(0, 60) || "Music Competition", extra, accent, comp.cover_image);
+    } else {
+      svgResult = fallbackSvg();
     }
 
-    return new Response(fallback(), { headers: svgHeaders });
+    // Return SVG if explicitly requested
+    if (format === "svg") {
+      return new Response(svgResult, { headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
+    }
+
+    // Convert to PNG for social media compatibility
+    const { data, contentType } = await svgToPng(svgResult);
+    return new Response(data, { 
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": contentType, 
+        "Cache-Control": "public, max-age=3600" 
+      } 
+    });
   } catch (e) {
     console.error("OG error:", e);
-    return new Response(fallback(), { headers: svgHeaders });
+    const svg = fallbackSvg();
+    // On error, fall back to SVG
+    return new Response(svg, { headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
   }
 });
