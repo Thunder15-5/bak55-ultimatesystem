@@ -130,7 +130,7 @@ async function resolveTrack(id: string): Promise<Meta | null> {
   return {
     title: `${track.title} by ${artistName} | ${SITE_NAME}`,
     description: desc,
-    image: track.cover_image || ogImageUrl("track", id),
+    image: absImage(track.cover_image) || ogImageUrl("track", id),
     url: `${SITE_URL}/track/${id}`,
     type: "music.song",
   };
