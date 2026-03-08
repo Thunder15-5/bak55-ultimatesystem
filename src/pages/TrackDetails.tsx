@@ -831,6 +831,13 @@ export default function TrackDetails() {
   </div>
 </div>
 
+      {/* Comments Section */}
+      {isFeatureEnabled('COMMENTS_ENABLED') && id && (
+        <div className="container mx-auto px-4 py-8">
+          <CommentSection trackId={id} />
+        </div>
+      )}
+
       {track && (
         <TipDialog
           open={tipDialogOpen}

@@ -3,8 +3,8 @@
 
 export const FEATURES = {
   // Engagement features - disabled until more fans join
-  LIKES_ENABLED: false,
-  COMMENTS_ENABLED: false,
+  LIKES_ENABLED: true,
+  COMMENTS_ENABLED: true,
   
   // Geographic restrictions - DISABLED: Now open to all Africa
   KENYA_ONLY_SIGNUP: false,
