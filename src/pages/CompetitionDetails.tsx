@@ -509,6 +509,24 @@ export default function CompetitionDetails() {
                   </Button>
                 </div>
               )}
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const url = getCompetitionShareUrl(id!);
+                  const text = `🏆 Check out "${competition.title}" on BAK55 Talent! Win ${competition.prize_amount} BAK!`;
+                  if (navigator.share) {
+                    navigator.share({ title: `${competition.title} - BAK55 Talent`, text, url });
+                  } else {
+                    navigator.clipboard.writeText(`${text}\n${url}`);
+                    toast({ title: "Link copied!", description: "Share it to bring more participants!" });
+                  }
+                }}
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Competition
+              </Button>
             </CardContent>
           </Card>
         </div>
