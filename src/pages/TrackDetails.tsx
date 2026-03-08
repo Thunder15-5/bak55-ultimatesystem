@@ -470,7 +470,14 @@ export default function TrackDetails() {
 
           <div className="grid md:grid-cols-2 gap-8 items-end">
             {/* Cover Image */}
-            <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl border border-primary/20">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl border border-primary/20">
+              {track.is_exclusive && !hasExclusiveAccess && (
+                <ExclusiveContentOverlay
+                  artistId={track.artist_id}
+                  requiredTierLevel={track.required_tier_level || 1}
+                  artistName={track.profiles.username}
+                />
+              )}
               {track.cover_image ? (
                 <img
                   src={track.cover_image}
