@@ -17,6 +17,7 @@ import {
   TrendingUp, TrendingDown, Users, Music, DollarSign, 
   Clock, MapPin, Lightbulb, Calendar, Loader2, Sparkles
 } from "lucide-react";
+import { RevenueBreakdown } from "@/components/RevenueBreakdown";
 
 interface AnalyticsData {
   tracks: number;
@@ -312,6 +313,7 @@ export default function Analytics() {
         <Tabs defaultValue="performance" className="space-y-6">
           <TabsList className="w-full">
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
             <TabsTrigger value="insights">AI Insights</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="timing">Release Timing</TabsTrigger>
@@ -410,6 +412,11 @@ export default function Analytics() {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          {/* Revenue Breakdown */}
+          <TabsContent value="revenue" className="space-y-6">
+            <RevenueBreakdown />
           </TabsContent>
 
           {/* AI Insights */}

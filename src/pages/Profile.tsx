@@ -23,6 +23,8 @@ import { FanRewards } from "@/components/FanRewards";
 import { RoleBadge } from "@/components/ui/role-badge";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { KYCVerification } from "@/components/KYCVerification";
+import { DirectChat } from "@/components/DirectChat";
 
 export default function Profile() {
   const { user, userRole } = useAuth();
@@ -420,10 +422,18 @@ export default function Profile() {
       {/* Main Content Tabs */}
       <div className="container mx-auto px-4 sm:px-6">
         <Tabs defaultValue="about" className="space-y-6">
-          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex h-auto sm:h-10 p-1 bg-muted/50">
+          <TabsList className="w-full sm:w-auto grid grid-cols-6 sm:inline-flex h-auto sm:h-10 p-1 bg-muted/50">
             <TabsTrigger value="about" className="gap-1.5 text-xs sm:text-sm py-2">
               <User className="h-3.5 w-3.5 hidden sm:inline" /> About
             </TabsTrigger>
+            <TabsTrigger value="messages" className="gap-1.5 text-xs sm:text-sm py-2">
+              <Mail className="h-3.5 w-3.5 hidden sm:inline" /> Messages
+            </TabsTrigger>
+            {(userRole === "artist" || userRole === "producer") && (
+              <TabsTrigger value="kyc" className="gap-1.5 text-xs sm:text-sm py-2">
+                <Shield className="h-3.5 w-3.5 hidden sm:inline" /> KYC
+              </TabsTrigger>
+            )}
             <TabsTrigger value="achievements" className="gap-1.5 text-xs sm:text-sm py-2">
               <Trophy className="h-3.5 w-3.5 hidden sm:inline" /> Badges
             </TabsTrigger>
@@ -638,6 +648,16 @@ export default function Profile() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="messages">
+            <DirectChat />
+          </TabsContent>
+
+          {(userRole === "artist" || userRole === "producer") && (
+            <TabsContent value="kyc">
+              <KYCVerification />
+            </TabsContent>
+          )}
 
           <TabsContent value="achievements">
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
