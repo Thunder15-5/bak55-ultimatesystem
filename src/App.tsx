@@ -113,6 +113,7 @@ const InstallApp = lazyRetry(() => import("./pages/InstallApp"));
 const Careers = lazyRetry(() => import("./pages/Careers"));
 const BeatsCatalog = lazyRetry(() => import("./pages/BeatsCatalog"));
 const ProducerProfile = lazyRetry(() => import("./pages/ProducerProfile"));
+const Portfolio = lazyRetry(() => import("./pages/Portfolio"));
 const RisingStarsVoting = lazyRetry(() => import("./pages/RisingStarsVoting"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
