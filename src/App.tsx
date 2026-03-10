@@ -317,6 +317,7 @@ const App = () => (
                 <Route path="/success-stories" element={<SuccessStories />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="/careers" element={<Careers />} />
+                <Route path="/portfolio" element={<Suspense fallback={<PageLoader />}><Portfolio /></Suspense>} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
