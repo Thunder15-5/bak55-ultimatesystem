@@ -62,7 +62,7 @@ export function useAudioEngine(options: UseAudioEngineOptions = {}) {
   const rafIdRef = useRef<number | null>(null);
   const currentSrcRef = useRef<string | null>(null);
   const retryCountRef = useRef(0);
-  const seekingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const seekingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRetries = 3;
 
   // Update time in animation frame for smooth progress

@@ -115,6 +115,11 @@ const BeatsCatalog = lazyRetry(() => import("./pages/BeatsCatalog"));
 const ProducerProfile = lazyRetry(() => import("./pages/ProducerProfile"));
 const Portfolio = lazyRetry(() => import("./pages/Portfolio"));
 const RisingStarsVoting = lazyRetry(() => import("./pages/RisingStarsVoting"));
+const MerchStore = lazyRetry(() => import("./pages/merch/MerchStore"));
+const MerchProduct = lazyRetry(() => import("./pages/merch/MerchProduct"));
+const MerchCart = lazyRetry(() => import("./pages/merch/MerchCart"));
+const MerchCheckout = lazyRetry(() => import("./pages/merch/MerchCheckout"));
+const MerchOrders = lazyRetry(() => import("./pages/merch/MerchOrders"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 const AuthCallback = lazyRetry(() => import("./pages/AuthCallback"));
@@ -319,6 +324,11 @@ const App = () => (
                 <Route path="/support" element={<Support />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/merch" element={<MerchStore />} />
+                <Route path="/merch/product/:id" element={<MerchProduct />} />
+                <Route path="/merch/cart" element={<MerchCart />} />
+                <Route path="/merch/checkout" element={<ProtectedRoute><MerchCheckout /></ProtectedRoute>} />
+                <Route path="/merch/orders" element={<ProtectedRoute><MerchOrders /></ProtectedRoute>} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
