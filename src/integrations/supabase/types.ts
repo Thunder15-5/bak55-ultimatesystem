@@ -2632,6 +2632,178 @@ export type Database = {
           },
         ]
       }
+      merch_cart_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          quantity: number
+          user_id: string
+          variant: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          quantity?: number
+          user_id: string
+          variant?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          quantity?: number
+          user_id?: string
+          variant?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merch_cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "merch_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_cart_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_cart_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merch_orders: {
+        Row: {
+          created_at: string | null
+          currency: string
+          id: string
+          items: Json
+          notes: string | null
+          payment_method: string | null
+          shipping_info: Json | null
+          status: string
+          total: number
+          tracking_number: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string | null
+          shipping_info?: Json | null
+          status?: string
+          total?: number
+          tracking_number?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string | null
+          shipping_info?: Json | null
+          status?: string
+          total?: number
+          tracking_number?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merch_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merch_products: {
+        Row: {
+          category: string
+          colors: string[] | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_featured: boolean | null
+          is_limited: boolean | null
+          limited_drop_end: string | null
+          price_max: number
+          price_min: number
+          sizes: string[] | null
+          sort_order: number | null
+          stock_status: string | null
+          title: string
+          updated_at: string | null
+          variants: Json | null
+        }
+        Insert: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_limited?: boolean | null
+          limited_drop_end?: string | null
+          price_max?: number
+          price_min?: number
+          sizes?: string[] | null
+          sort_order?: number | null
+          stock_status?: string | null
+          title: string
+          updated_at?: string | null
+          variants?: Json | null
+        }
+        Update: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_limited?: boolean | null
+          limited_drop_end?: string | null
+          price_max?: number
+          price_min?: number
+          sizes?: string[] | null
+          sort_order?: number | null
+          stock_status?: string | null
+          title?: string
+          updated_at?: string | null
+          variants?: Json | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           competitions: boolean | null
