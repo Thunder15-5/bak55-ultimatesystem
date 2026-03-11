@@ -324,6 +324,11 @@ const App = () => (
                 <Route path="/support" element={<Support />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/merch" element={<MerchStore />} />
+                <Route path="/merch/product/:id" element={<MerchProduct />} />
+                <Route path="/merch/cart" element={<MerchCart />} />
+                <Route path="/merch/checkout" element={<ProtectedRoute><MerchCheckout /></ProtectedRoute>} />
+                <Route path="/merch/orders" element={<ProtectedRoute><MerchOrders /></ProtectedRoute>} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
