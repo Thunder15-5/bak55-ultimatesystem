@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEO/SEOHead";
-import { ShoppingBag, Crown, Star, Timer, ArrowRight } from "lucide-react";
+import { ShoppingBag, Crown, Star, Timer, ArrowRight, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -41,9 +41,9 @@ export default function MerchStore() {
     <>
       <SEOHead
         title="Born African Royalty — Merch Store"
-        description="Premium Afrocentric streetwear celebrating African creativity, power, and talent. Shop hoodies, tees, caps, and art."
+        description="Premium Afrocentric streetwear celebrating African creativity, power, and talent. Shop hoodies, tees, caps, phone cases, and art."
         url="/merch"
-        keywords={["African merch", "Born African Royalty", "BAK55 merch", "African streetwear"]}
+        keywords={["African merch", "Born African Royalty", "BAK55 merch", "African streetwear", "Afrocentric fashion"]}
       />
       <div className="min-h-screen bg-black text-white">
         <Navbar />
@@ -66,9 +66,10 @@ export default function MerchStore() {
             <p className="text-gray-400 max-w-xl mx-auto mb-8 text-sm md:text-base">
               Wear your heritage. Celebrate African creativity, power, and talent with premium streetwear.
             </p>
-            <div className="flex items-center justify-center gap-6 text-xs text-gray-500 uppercase tracking-wider">
+            <div className="flex items-center justify-center gap-6 text-xs text-gray-500 uppercase tracking-wider flex-wrap">
               <span className="flex items-center gap-1"><Star className="w-3 h-3 text-[#D4AF37]" /> Premium Quality</span>
               <span className="flex items-center gap-1"><ShoppingBag className="w-3 h-3 text-[#D4AF37]" /> Limited Drops</span>
+              <span className="flex items-center gap-1"><Coins className="w-3 h-3 text-amber-400" /> Pay with BAKCoins</span>
             </div>
           </div>
         </section>
@@ -98,9 +99,9 @@ export default function MerchStore() {
             <div className="relative rounded-2xl overflow-hidden border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/5 via-black to-[#C1121F]/5 p-6 md:p-10">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <img
-                  src="/merch/born-african-royalty-logo.png"
-                  alt="Born African Royalty"
-                  className="w-32 h-32 md:w-40 md:h-40 object-contain"
+                  src={featured[0]?.images?.[0] || "/merch/born-african-royalty-logo.png"}
+                  alt={featured[0]?.title || "Featured product"}
+                  className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-xl"
                 />
                 <div className="text-center md:text-left flex-1">
                   <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/30 mb-2">
@@ -134,55 +135,63 @@ export default function MerchStore() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {filtered.map((product: any) => (
-                <Link
-                  key={product.id}
-                  to={`/merch/product/${product.id}`}
-                  className="group relative bg-gray-950 border border-gray-800/50 rounded-xl overflow-hidden hover:border-[#D4AF37]/30 transition-all duration-300"
-                >
-                  {product.is_limited && (
-                    <Badge className="absolute top-3 left-3 z-10 bg-[#C1121F] text-white text-[10px]">
-                      LIMITED DROP
-                    </Badge>
-                  )}
-                  <div className="aspect-square bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-6 group-hover:scale-105 transition-transform duration-500">
-                    <img
-                      src={product.images?.[0] || "/merch/born-african-royalty-logo.png"}
-                      alt={product.title}
-                      className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(212,175,55,0.15)]"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-sm md:text-base mb-1 group-hover:text-[#D4AF37] transition-colors">
-                      {product.title}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#D4AF37] font-bold text-sm">
-                        ${product.price_min}
-                        {product.price_max > product.price_min && ` – $${product.price_max}`}
-                      </span>
-                    </div>
-                    {product.colors?.length > 1 && (
-                      <div className="flex gap-1 mt-2">
-                        {product.colors.map((color: string) => (
-                          <span
-                            key={color}
-                            className="w-3 h-3 rounded-full border border-gray-700"
-                            style={{
-                              backgroundColor:
-                                color === "Black" ? "#111" :
-                                color === "Red" ? "#C1121F" :
-                                color === "Green" ? "#2E7D32" :
-                                color === "White" ? "#eee" :
-                                color === "Gold" ? "#D4AF37" : "#666",
-                            }}
-                          />
-                        ))}
-                      </div>
+              {filtered.map((product: any) => {
+                const bakPrice = (product as any).price_bak_min || Math.round(product.price_min / 0.16);
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/merch/product/${product.id}`}
+                    className="group relative bg-gray-950 border border-gray-800/50 rounded-xl overflow-hidden hover:border-[#D4AF37]/30 transition-all duration-300"
+                  >
+                    {product.is_limited && (
+                      <Badge className="absolute top-3 left-3 z-10 bg-[#C1121F] text-white text-[10px]">
+                        LIMITED DROP
+                      </Badge>
                     )}
-                  </div>
-                </Link>
-              ))}
+                    <div className="aspect-square bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                      <img
+                        src={product.images?.[0] || "/merch/born-african-royalty-logo.png"}
+                        alt={`${product.title} - Born African Royalty merchandise`}
+                        className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(212,175,55,0.15)]"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-sm md:text-base mb-1 group-hover:text-[#D4AF37] transition-colors line-clamp-2">
+                        {product.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#D4AF37] font-bold text-sm">
+                          ${product.price_min}
+                          {product.price_max > product.price_min && ` – $${product.price_max}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-amber-400/60 mt-0.5">
+                        <Coins className="w-3 h-3" />
+                        <span>{bakPrice} BAK</span>
+                      </div>
+                      {product.colors?.length > 1 && (
+                        <div className="flex gap-1 mt-2">
+                          {product.colors.map((color: string) => (
+                            <span
+                              key={color}
+                              className="w-3 h-3 rounded-full border border-gray-700"
+                              style={{
+                                backgroundColor:
+                                  color === "Black" ? "#111" :
+                                  color === "Red" ? "#C1121F" :
+                                  color === "Green" ? "#2E7D32" :
+                                  color === "White" ? "#eee" :
+                                  color === "Gold" ? "#D4AF37" : "#666",
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

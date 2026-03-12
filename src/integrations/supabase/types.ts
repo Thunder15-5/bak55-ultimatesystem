@@ -2692,6 +2692,7 @@ export type Database = {
           shipping_info: Json | null
           status: string
           total: number
+          total_bak: number | null
           tracking_number: string | null
           updated_at: string | null
           user_id: string
@@ -2706,6 +2707,7 @@ export type Database = {
           shipping_info?: Json | null
           status?: string
           total?: number
+          total_bak?: number | null
           tracking_number?: string | null
           updated_at?: string | null
           user_id: string
@@ -2720,6 +2722,7 @@ export type Database = {
           shipping_info?: Json | null
           status?: string
           total?: number
+          total_bak?: number | null
           tracking_number?: string | null
           updated_at?: string | null
           user_id?: string
@@ -2753,6 +2756,8 @@ export type Database = {
           is_featured: boolean | null
           is_limited: boolean | null
           limited_drop_end: string | null
+          price_bak_max: number | null
+          price_bak_min: number | null
           price_max: number
           price_min: number
           sizes: string[] | null
@@ -2773,6 +2778,8 @@ export type Database = {
           is_featured?: boolean | null
           is_limited?: boolean | null
           limited_drop_end?: string | null
+          price_bak_max?: number | null
+          price_bak_min?: number | null
           price_max?: number
           price_min?: number
           sizes?: string[] | null
@@ -2793,6 +2800,8 @@ export type Database = {
           is_featured?: boolean | null
           is_limited?: boolean | null
           limited_drop_end?: string | null
+          price_bak_max?: number | null
+          price_bak_min?: number | null
           price_max?: number
           price_min?: number
           sizes?: string[] | null
