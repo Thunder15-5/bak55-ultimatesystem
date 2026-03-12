@@ -9,7 +9,7 @@ import { SEOHead } from "@/components/SEO/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ArrowLeft, Crown, Package, CheckCircle } from "lucide-react";
+import { ArrowLeft, Crown, Package, CheckCircle, Coins } from "lucide-react";
 
 export default function MerchCheckout() {
   const { user } = useAuth();
@@ -17,6 +17,7 @@ export default function MerchCheckout() {
   const queryClient = useQueryClient();
   const [placing, setPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"usd" | "bak">("usd");
 
   const [form, setForm] = useState({
     fullName: "", email: "", phone: "",
@@ -37,8 +38,23 @@ export default function MerchCheckout() {
     enabled: !!user,
   });
 
-  const total = cartItems.reduce((sum: number, item: any) => {
+  const { data: wallet } = useQuery({
+    queryKey: ["wallet-balance", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const totalUsd = cartItems.reduce((sum: number, item: any) => {
     return sum + (item.merch_products?.price_min || 0) * item.quantity;
+  }, 0);
+
+  const totalBak = cartItems.reduce((sum: number, item: any) => {
+    const bakPrice = (item.merch_products as any)?.price_bak_min || Math.round((item.merch_products?.price_min || 0) / 0.16);
+    return sum + bakPrice * item.quantity;
   }, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +65,13 @@ export default function MerchCheckout() {
       return;
     }
 
+    if (paymentMethod === "bak") {
+      if (!wallet || (wallet.balance || 0) < totalBak) {
+        toast.error("Insufficient BAKCoin balance");
+        return;
+      }
+    }
+
     setPlacing(true);
     try {
       const items = cartItems.map((item: any) => ({
@@ -57,25 +80,40 @@ export default function MerchCheckout() {
         variant: item.variant,
         quantity: item.quantity,
         price: item.merch_products?.price_min,
+        price_bak: (item.merch_products as any)?.price_bak_min || Math.round((item.merch_products?.price_min || 0) / 0.16),
       }));
+
+      // If paying with BAK, deduct from wallet
+      if (paymentMethod === "bak") {
+        const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet", {
+          p_user_id: user.id,
+          p_amount: totalBak,
+          p_description: `Merch purchase: ${items.map((i: any) => i.title).join(", ")}`,
+        });
+        if (deductError) throw deductError;
+        const result = deductResult as any;
+        if (!result?.success) throw new Error(result?.error || "Payment failed");
+      }
 
       const { error: orderError } = await supabase.from("merch_orders").insert({
         user_id: user.id,
-        total,
+        total: totalUsd,
         items,
         shipping_info: form,
-        status: "pending",
+        status: paymentMethod === "bak" ? "confirmed" : "pending",
+        payment_method: paymentMethod === "bak" ? "bakcoin" : "pending",
+        total_bak: paymentMethod === "bak" ? totalBak : 0,
       });
       if (orderError) throw orderError;
 
-      // Clear cart
       await supabase.from("merch_cart_items").delete().eq("user_id", user.id);
       queryClient.invalidateQueries({ queryKey: ["merch-cart"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
 
       setOrderPlaced(true);
-      toast.success("Order placed successfully!");
-    } catch {
-      toast.error("Failed to place order. Please try again.");
+      toast.success(paymentMethod === "bak" ? `Order paid with ${totalBak} BAKCoins!` : "Order placed successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to place order. Please try again.");
     } finally {
       setPlacing(false);
     }
@@ -155,55 +193,55 @@ export default function MerchCheckout() {
                   required
                 />
                 <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Email *"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                    required
-                  />
-                  <Input
-                    placeholder="Phone *"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                    required
-                  />
+                  <Input placeholder="Email *" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" required />
+                  <Input placeholder="Phone *" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" required />
                 </div>
-                <Input
-                  placeholder="Street Address *"
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                  required
-                />
+                <Input placeholder="Street Address *" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" required />
                 <div className="grid grid-cols-3 gap-3">
-                  <Input
-                    placeholder="City *"
-                    value={form.city}
-                    onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                    required
-                  />
-                  <Input
-                    placeholder="Country"
-                    value={form.country}
-                    onChange={(e) => setForm({ ...form, country: e.target.value })}
-                    className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                  />
-                  <Input
-                    placeholder="Postal Code"
-                    value={form.postalCode}
-                    onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-                    className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600"
-                  />
+                  <Input placeholder="City *" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" required />
+                  <Input placeholder="Country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" />
+                  <Input placeholder="Postal Code" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} className="bg-gray-950 border-gray-800 focus:border-[#D4AF37] text-white placeholder:text-gray-600" />
                 </div>
 
+                {/* Payment Method Selection */}
                 <div className="pt-4">
-                  <p className="text-xs text-gray-500 mb-3">
-                    Payment will be arranged after order confirmation. We'll contact you with payment details.
-                  </p>
+                  <h2 className="font-semibold text-sm uppercase tracking-wider text-gray-400 mb-3">Payment Method</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("usd")}
+                      className={`p-4 rounded-xl border text-left transition-all ${
+                        paymentMethod === "usd"
+                          ? "border-[#D4AF37] bg-[#D4AF37]/5"
+                          : "border-gray-800 hover:border-gray-600"
+                      }`}
+                    >
+                      <div className="text-lg mb-1">💵</div>
+                      <div className="text-sm font-semibold">USD Payment</div>
+                      <div className="text-xs text-gray-500">Pay after confirmation</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("bak")}
+                      className={`p-4 rounded-xl border text-left transition-all ${
+                        paymentMethod === "bak"
+                          ? "border-amber-500 bg-amber-500/5"
+                          : "border-gray-800 hover:border-gray-600"
+                      }`}
+                    >
+                      <div className="text-lg mb-1"><Coins className="w-5 h-5 text-amber-400" /></div>
+                      <div className="text-sm font-semibold">BAKCoins</div>
+                      <div className="text-xs text-gray-500">
+                        Balance: {wallet?.balance?.toFixed(2) || 0} BAK
+                      </div>
+                    </button>
+                  </div>
+                  {paymentMethod === "bak" && wallet && (wallet.balance || 0) < totalBak && (
+                    <p className="text-xs text-red-400 mt-2">
+                      Insufficient balance. You need {totalBak} BAK but have {wallet.balance?.toFixed(2) || 0} BAK.{" "}
+                      <Link to="/buy-coins" className="text-[#D4AF37] underline">Top up</Link>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -220,21 +258,26 @@ export default function MerchCheckout() {
                           {item.merch_products?.title} ×{item.quantity}
                         </span>
                         <span className="text-white flex-shrink-0">
-                          ${((item.merch_products?.price_min || 0) * item.quantity).toFixed(2)}
+                          {paymentMethod === "bak"
+                            ? `${((item.merch_products as any)?.price_bak_min || Math.round((item.merch_products?.price_min || 0) / 0.16)) * item.quantity} BAK`
+                            : `$${((item.merch_products?.price_min || 0) * item.quantity).toFixed(2)}`
+                          }
                         </span>
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-gray-800 pt-3 flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-[#D4AF37]">${total.toFixed(2)}</span>
+                    <span className="text-[#D4AF37]">
+                      {paymentMethod === "bak" ? `${totalBak} BAK` : `$${totalUsd.toFixed(2)}`}
+                    </span>
                   </div>
                   <Button
                     type="submit"
-                    disabled={placing}
+                    disabled={placing || (paymentMethod === "bak" && (!wallet || (wallet.balance || 0) < totalBak))}
                     className="w-full mt-4 bg-[#D4AF37] hover:bg-[#B8962E] text-black font-bold py-5"
                   >
-                    {placing ? "Placing Order..." : "Place Order"}
+                    {placing ? "Processing..." : paymentMethod === "bak" ? `Pay ${totalBak} BAK` : "Place Order"}
                   </Button>
                 </div>
               </div>

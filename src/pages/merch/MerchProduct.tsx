@@ -9,7 +9,7 @@ import { SEOHead } from "@/components/SEO/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ShoppingBag, Share2, ArrowLeft, Crown, Check, Minus, Plus } from "lucide-react";
+import { ShoppingBag, Share2, ArrowLeft, Crown, Check, Minus, Plus, Coins } from "lucide-react";
 
 export default function MerchProduct() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +18,8 @@ export default function MerchProduct() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [payWithBak, setPayWithBak] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["merch-product", id],
@@ -35,12 +37,26 @@ export default function MerchProduct() {
     enabled: !!id,
   });
 
+  const { data: wallet } = useQuery({
+    queryKey: ["wallet-balance", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const addToCart = async () => {
     if (!user) {
       toast.error("Please log in to add items to your cart");
       return;
     }
-    if (!selectedSize) {
+    if (product?.sizes?.length && !selectedSize) {
       toast.error("Please select a size");
       return;
     }
@@ -49,7 +65,7 @@ export default function MerchProduct() {
       const { error } = await supabase.from("merch_cart_items").insert({
         user_id: user.id,
         product_id: id!,
-        variant: { color: selectedColor, size: selectedSize },
+        variant: { color: selectedColor, size: selectedSize, payWithBak },
         quantity,
       });
       if (error) throw error;
@@ -105,34 +121,53 @@ export default function MerchProduct() {
     );
   }
 
+  const images = product.images?.length ? product.images : ["/merch/born-african-royalty-logo.png"];
+  const bakPrice = (product as any).price_bak_min || Math.round(product.price_min / 0.16);
+
   return (
     <>
       <SEOHead
-        title={product.title}
+        title={`${product.title} — Born African Royalty Merch`}
         description={product.description || "Born African Royalty premium merchandise"}
-        image={product.images?.[0]}
+        image={images[0]}
         url={`/merch/product/${id}`}
       />
       <div className="min-h-screen bg-black text-white">
         <Navbar />
         <div className="pt-20 max-w-6xl mx-auto px-4 pb-20">
-          {/* Breadcrumb */}
           <Link to="/merch" className="inline-flex items-center gap-2 text-gray-400 hover:text-[#D4AF37] text-sm mb-8 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Store
           </Link>
 
           <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-            {/* Product Image */}
+            {/* Product Images */}
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl border border-gray-800/50 flex items-center justify-center p-10 md:p-16">
+              <div className="aspect-square bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl border border-gray-800/50 flex items-center justify-center p-6 md:p-10 overflow-hidden">
                 <img
-                  src={product.images?.[0] || "/merch/born-african-royalty-logo.png"}
-                  alt={product.title}
-                  className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.2)]"
+                  src={images[selectedImage]}
+                  alt={`${product.title} - ${selectedColor || "product"} view`}
+                  className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.2)] transition-all duration-300"
+                  loading="lazy"
                 />
               </div>
               {product.is_limited && (
                 <Badge className="absolute top-4 left-4 bg-[#C1121F] text-white">LIMITED DROP</Badge>
+              )}
+              {/* Thumbnail strip */}
+              {images.length > 1 && (
+                <div className="flex gap-2 mt-3">
+                  {images.map((img: string, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
+                      className={`w-16 h-16 rounded-lg border-2 overflow-hidden bg-gray-900 flex-shrink-0 transition-all ${
+                        selectedImage === i ? "border-[#D4AF37]" : "border-gray-800 hover:border-gray-600"
+                      }`}
+                    >
+                      <img src={img} alt={`${product.title} thumbnail ${i + 1}`} className="w-full h-full object-contain p-1" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -149,9 +184,15 @@ export default function MerchProduct() {
 
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.title}</h1>
 
-              <div className="text-2xl font-bold text-[#D4AF37] mb-4">
-                ${product.price_min}
-                {product.price_max > product.price_min && <span className="text-lg text-gray-500"> – ${product.price_max}</span>}
+              <div className="mb-4">
+                <div className="text-2xl font-bold text-[#D4AF37]">
+                  ${product.price_min}
+                  {product.price_max > product.price_min && <span className="text-lg text-gray-500"> – ${product.price_max}</span>}
+                </div>
+                <div className="flex items-center gap-1 text-sm text-amber-400/70 mt-1">
+                  <Coins className="w-3.5 h-3.5" />
+                  <span>{bakPrice} BAK</span>
+                </div>
               </div>
 
               <p className="text-gray-400 text-sm leading-relaxed mb-6">{product.description}</p>
@@ -171,6 +212,7 @@ export default function MerchProduct() {
                           selectedColor === color ? "border-[#D4AF37] scale-110" : "border-gray-700 hover:border-gray-500"
                         }`}
                         style={{ backgroundColor: colorMap[color] || "#666" }}
+                        aria-label={`Select ${color}`}
                       >
                         {selectedColor === color && <Check className="w-4 h-4 text-[#D4AF37]" />}
                       </button>
@@ -201,6 +243,34 @@ export default function MerchProduct() {
                 </div>
               )}
 
+              {/* Payment Method */}
+              <div className="mb-5">
+                <label className="text-xs uppercase tracking-wider text-gray-500 mb-2 block">Pay With</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPayWithBak(false)}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 ${
+                      !payWithBak ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-transparent text-gray-300 border-gray-700 hover:border-[#D4AF37]/50"
+                    }`}
+                  >
+                    💵 USD (${product.price_min})
+                  </button>
+                  <button
+                    onClick={() => setPayWithBak(true)}
+                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 ${
+                      payWithBak ? "bg-amber-500 text-black border-amber-500" : "bg-transparent text-gray-300 border-gray-700 hover:border-amber-500/50"
+                    }`}
+                  >
+                    <Coins className="w-4 h-4" /> {bakPrice} BAK
+                  </button>
+                </div>
+                {payWithBak && wallet && (
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    Your balance: <span className={`font-semibold ${(wallet.balance || 0) >= bakPrice * quantity ? "text-green-400" : "text-red-400"}`}>{wallet.balance?.toFixed(2) || 0} BAK</span>
+                  </p>
+                )}
+              </div>
+
               {/* Quantity */}
               <div className="mb-6">
                 <label className="text-xs uppercase tracking-wider text-gray-500 mb-2 block">Quantity</label>
@@ -228,7 +298,7 @@ export default function MerchProduct() {
                 className="w-full bg-[#D4AF37] hover:bg-[#B8962E] text-black font-bold py-6 text-base rounded-xl"
               >
                 <ShoppingBag className="w-5 h-5 mr-2" />
-                {adding ? "Adding..." : "Add to Cart"}
+                {adding ? "Adding..." : payWithBak ? `Add to Cart — ${bakPrice * quantity} BAK` : `Add to Cart — $${product.price_min * quantity}`}
               </Button>
 
               <Link to="/merch/cart" className="mt-3">
