@@ -121,8 +121,14 @@ export default function MerchProduct() {
     );
   }
 
+  const colorImages = (product as any).color_images as Record<string, string> | null;
   const images = product.images?.length ? product.images : ["/merch/born-african-royalty-logo.png"];
   const bakPrice = (product as any).price_bak_min || Math.round(product.price_min / 0.16);
+
+  // When color changes, show the matching image
+  const activeImage = (selectedColor && colorImages?.[selectedColor])
+    ? colorImages[selectedColor]
+    : images[selectedImage];
 
   return (
     <>
