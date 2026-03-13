@@ -213,7 +213,14 @@ export default function MerchProduct() {
                     {product.colors.map((color: string) => (
                       <button
                         key={color}
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() => {
+                          setSelectedColor(color);
+                          // If there's a color-specific image, find its index in images array
+                          if (colorImages?.[color]) {
+                            const idx = images.indexOf(colorImages[color]);
+                            if (idx >= 0) setSelectedImage(idx);
+                          }
+                        }}
                         className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedColor === color ? "border-[#D4AF37] scale-110" : "border-gray-700 hover:border-gray-500"
                         }`}
