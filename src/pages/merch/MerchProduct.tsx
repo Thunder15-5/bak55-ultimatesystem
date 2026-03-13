@@ -150,7 +150,7 @@ export default function MerchProduct() {
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl border border-gray-800/50 flex items-center justify-center p-6 md:p-10 overflow-hidden">
                 <img
-                  src={images[selectedImage]}
+                  src={activeImage}
                   alt={`${product.title} - ${selectedColor || "product"} view`}
                   className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.2)] transition-all duration-300"
                   loading="lazy"
