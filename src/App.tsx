@@ -11,6 +11,7 @@ import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { PersistentMusicPlayer } from "@/components/PersistentMusicPlayer";
 import { CookieConsent } from "@/components/CookieConsent";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { lazy, Suspense } from "react";
 import { PageLoader } from "@/components/PageLoader";
