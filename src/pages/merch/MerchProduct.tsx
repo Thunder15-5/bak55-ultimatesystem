@@ -121,8 +121,14 @@ export default function MerchProduct() {
     );
   }
 
+  const colorImages = (product as any).color_images as Record<string, string> | null;
   const images = product.images?.length ? product.images : ["/merch/born-african-royalty-logo.png"];
   const bakPrice = (product as any).price_bak_min || Math.round(product.price_min / 0.16);
+
+  // When color changes, show the matching image
+  const activeImage = (selectedColor && colorImages?.[selectedColor])
+    ? colorImages[selectedColor]
+    : images[selectedImage];
 
   return (
     <>
@@ -144,7 +150,7 @@ export default function MerchProduct() {
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl border border-gray-800/50 flex items-center justify-center p-6 md:p-10 overflow-hidden">
                 <img
-                  src={images[selectedImage]}
+                  src={activeImage}
                   alt={`${product.title} - ${selectedColor || "product"} view`}
                   className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.2)] transition-all duration-300"
                   loading="lazy"
@@ -207,7 +213,14 @@ export default function MerchProduct() {
                     {product.colors.map((color: string) => (
                       <button
                         key={color}
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() => {
+                          setSelectedColor(color);
+                          // If there's a color-specific image, find its index in images array
+                          if (colorImages?.[color]) {
+                            const idx = images.indexOf(colorImages[color]);
+                            if (idx >= 0) setSelectedImage(idx);
+                          }
+                        }}
                         className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedColor === color ? "border-[#D4AF37] scale-110" : "border-gray-700 hover:border-gray-500"
                         }`}

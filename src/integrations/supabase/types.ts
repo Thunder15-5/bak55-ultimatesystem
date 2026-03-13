@@ -202,6 +202,35 @@ export type Database = {
           },
         ]
       }
+      announcement_dismissals: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_dismissals_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "platform_announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_applications: {
         Row: {
           age: number
@@ -2747,6 +2776,7 @@ export type Database = {
       merch_products: {
         Row: {
           category: string
+          color_images: Json | null
           colors: string[] | null
           created_at: string | null
           currency: string
@@ -2769,6 +2799,7 @@ export type Database = {
         }
         Insert: {
           category?: string
+          color_images?: Json | null
           colors?: string[] | null
           created_at?: string | null
           currency?: string
@@ -2791,6 +2822,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          color_images?: Json | null
           colors?: string[] | null
           created_at?: string | null
           currency?: string
@@ -2975,6 +3007,57 @@ export type Database = {
           {
             foreignKeyName: "paystack_transactions_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_announcements: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          priority: string | null
+          title: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message: string
+          priority?: string | null
+          title: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          priority?: string | null
+          title?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_announcements_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles_public"
             referencedColumns: ["id"]
