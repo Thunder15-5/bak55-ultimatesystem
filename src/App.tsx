@@ -148,6 +148,7 @@ const App = () => (
             <CurrencyProvider>
             <MusicPlayerProvider>
               <ErrorBoundary>
+              <AnnouncementBanner />
               <Suspense fallback={<PageLoader />}>
                 {/* Per-route ErrorBoundary wrapping via RouteErrorBoundary */}
                 <Routes>
