@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { CompetitionBanner } from '@/components/CompetitionBanner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BadgeCollection } from '@/components/competition/BadgeCollection';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { DailyStreak } from '@/components/DailyStreak';
@@ -11,11 +10,12 @@ import { WeeklyChallenges } from '@/components/WeeklyChallenges';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { TrendingTracks } from '@/components/TrendingTracks';
 import { ForYouSection } from '@/components/ForYouSection';
+import { StatsCard, DashboardHeader, QuickActions, DashboardSkeleton } from '@/components/dashboard';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { isFeatureEnabled } from '@/lib/featureFlags';
 import { useFeaturedCompetition } from '@/hooks/useFeaturedCompetition';
-import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, MessageCircle, Headphones } from 'lucide-react';
+import { Music, Trophy, Heart, Users, Wallet, TrendingUp, Play, Sparkles, Headphones } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function FanDashboard() {
   const { user } = useAuth();
@@ -28,242 +28,151 @@ export default function FanDashboard() {
     artistsFollowing: 0,
     playlistsCreated: 0,
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchStats();
+
+      // Real-time wallet updates
+      const channel = supabase
+        .channel('fan_wallet_realtime')
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, () => fetchStats())
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
     }
   }, [user]);
 
   const fetchStats = async () => {
-    const [walletResult, votesResult, likesResult, followsResult, playlistsResult] = await Promise.all([
-      supabase.from('wallets').select('balance').eq('user_id', user?.id).single(),
-      supabase.from('votes').select('*', { count: 'exact', head: true }).eq('voter_id', user?.id),
-      supabase.from('track_likes').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
-      supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', user?.id),
-      supabase.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
-    ]);
+    try {
+      const [walletResult, votesResult, likesResult, followsResult, playlistsResult] = await Promise.all([
+        supabase.from('wallets').select('balance').eq('user_id', user?.id).maybeSingle(),
+        supabase.from('votes').select('*', { count: 'exact', head: true }).eq('voter_id', user?.id),
+        supabase.from('track_likes').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
+        supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', user?.id),
+        supabase.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', user?.id),
+      ]);
 
-    setStats({
-      balance: walletResult.data?.balance || 0,
-      votesCast: votesResult.count || 0,
-      tracksLiked: likesResult.count || 0,
-      artistsFollowing: followsResult.count || 0,
-      playlistsCreated: playlistsResult.count || 0,
-    });
+      setStats({
+        balance: walletResult.data?.balance || 0,
+        votesCast: votesResult.count || 0,
+        tracksLiked: likesResult.count || 0,
+        artistsFollowing: followsResult.count || 0,
+        playlistsCreated: playlistsResult.count || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching fan stats:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const username = user?.user_metadata?.username || user?.email?.split("@")[0] || 'Fan';
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Welcome Back, {user?.user_metadata?.username || user?.email?.split("@")[0] || 'Fan'}! 🎵</h1>
-            <p className="text-muted-foreground">
-              Discover, engage, and support your favorite artists
-            </p>
-          </div>
-
-          {/* Daily Streak */}
-          <DailyStreak />
-
-          {/* Onboarding Checklist */}
-          <OnboardingChecklist />
-
-          {/* Premium Subscription Card */}
-          <Card className="border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-amber-500" />
-                    Fan Premium
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Get voting bonuses, ad-free streaming, and exclusive badges. From just 1 BAK/day!
-                  </p>
-                </div>
-                <Button onClick={() => navigate('/fan/subscribe')} variant="hero" size="lg">
-                  View Plans
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upgrade to Artist Banner */}
-          <Card className="border-primary/50 bg-gradient-to-r from-primary/10 to-secondary/10">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Become an Artist</h3>
-                  <p className="text-muted-foreground">
-                    Upload your own music, earn BAKCoins, and access analytics
-                  </p>
-                </div>
-                <Button onClick={() => navigate('/upgrade')} variant="outline" size="lg">
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Upgrade Now
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Featured Competition Banner */}
-          {featuredCompetition && (
-            <div className="animate-fade-in-up">
-              <CompetitionBanner
-                competitionId={featuredCompetition.id}
-                title={featuredCompetition.title}
-                coverImage={featuredCompetition.cover_image}
-                prizeAmount={featuredCompetition.prize_amount}
-                endDate={featuredCompetition.end_date}
-                maxSubmissions={featuredCompetition.max_submissions}
-                currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
-                ctaText="Vote Now"
-                ctaLink={`/competition/${featuredCompetition.id}`}
+      <main className="container mx-auto px-4 pt-20 md:pt-24 pb-24">
+        <div className="max-w-6xl mx-auto">
+          {loading ? (
+            <DashboardSkeleton statsCount={5} />
+          ) : (
+            <div className="space-y-6">
+              <DashboardHeader
+                greeting="Welcome Back"
+                username={username}
+                subtitle="Discover, engage, and support your favorite artists"
               />
+
+              {/* Daily Streak */}
+              <DailyStreak />
+
+              {/* Onboarding */}
+              <OnboardingChecklist />
+
+              {/* Stats Grid */}
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+                <StatsCard icon={Wallet} label="BAKCoins" value={stats.balance.toFixed(0)} variant="primary" link="/fan/wallet/buy-coins" />
+                <StatsCard icon={Trophy} label="Votes Cast" value={stats.votesCast} variant="secondary" link="/competitions" />
+                <StatsCard icon={Heart} label="Tracks Liked" value={stats.tracksLiked} variant="destructive" link="/fan/discover" />
+                <StatsCard icon={Users} label="Following" value={stats.artistsFollowing} variant="accent" link="/fan/discover" />
+                <StatsCard icon={Music} label="Playlists" value={stats.playlistsCreated} variant="default" link="/fan/playlists" />
+              </div>
+
+              {/* Quick Actions */}
+              <QuickActions
+                columns={5}
+                actions={[
+                  { icon: Play, label: "Discover", link: "/fan/discover" },
+                  { icon: Trophy, label: "Vote", link: "/competitions" },
+                  { icon: Headphones, label: "Beats", link: "/beats" },
+                  { icon: Wallet, label: "Buy BAK", link: "/fan/wallet/buy-coins" },
+                  { icon: Music, label: "Playlists", link: "/fan/playlists" },
+                ]}
+              />
+
+              {/* Upgrade Banners */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="border-warning/30 bg-gradient-to-r from-warning/5 to-secondary/5">
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className="p-2.5 rounded-lg bg-warning/10 flex-shrink-0">
+                      <Sparkles className="h-5 w-5 text-warning" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">Fan Premium</p>
+                      <p className="text-xs text-muted-foreground">Voting bonuses, ad-free streaming, exclusive badges</p>
+                    </div>
+                    <Button onClick={() => navigate('/fan/subscribe')} variant="outline" size="sm" className="flex-shrink-0">Upgrade</Button>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className="p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">Become an Artist</p>
+                      <p className="text-xs text-muted-foreground">Upload music, earn BAKCoins, access analytics</p>
+                    </div>
+                    <Button onClick={() => navigate('/upgrade')} variant="outline" size="sm" className="flex-shrink-0">Apply</Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Featured Competition */}
+              {featuredCompetition && (
+                <CompetitionBanner
+                  competitionId={featuredCompetition.id}
+                  title={featuredCompetition.title}
+                  coverImage={featuredCompetition.cover_image}
+                  prizeAmount={featuredCompetition.prize_amount}
+                  endDate={featuredCompetition.end_date}
+                  maxSubmissions={featuredCompetition.max_submissions}
+                  currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
+                  ctaText="Vote Now"
+                  ctaLink={`/competition/${featuredCompetition.id}`}
+                />
+              )}
+
+              {/* Discovery & Gamification */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <ForYouSection />
+                </div>
+                <WeeklyChallenges />
+              </div>
+
+              {/* Activity & Trending */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TrendingTracks limit={5} />
+                <ActivityFeed limit={5} />
+              </div>
             </div>
           )}
-
-          {/* What's New Card - Only show enabled features */}
-          <Card className="border-green-500/50 bg-green-500/10">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Music className="h-5 w-5 text-green-500" />
-                Fan Features
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-green-500" />
-                  <span>Vote in competitions</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-green-500" />
-                  <span>Follow artists</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Music className="h-4 w-4 text-green-500" />
-                  <span>Create playlists</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span>Upgrade to artist anytime</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Stats Grid */}
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Wallet className="h-4 w-4" />
-                  BAKCoins
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.balance.toFixed(0)}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Trophy className="h-4 w-4" />
-                  Votes Cast
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.votesCast}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
-                  Tracks Liked
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.tracksLiked}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Following
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.artistsFollowing}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Music className="h-4 w-4" />
-                  Playlists
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.playlistsCreated}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-5">
-              <Button onClick={() => navigate('/fan/discover')} variant="outline" className="w-full">
-                <Play className="mr-2 h-4 w-4" />
-                Discover Music
-              </Button>
-              <Button onClick={() => navigate('/fan/competitions')} variant="outline" className="w-full">
-                <Trophy className="mr-2 h-4 w-4" />
-                Vote in Competitions
-              </Button>
-              <Button onClick={() => navigate('/beats')} variant="outline" className="w-full">
-                <Headphones className="mr-2 h-4 w-4" />
-                Browse Beats
-              </Button>
-              <Button onClick={() => navigate('/fan/wallet/buy-coins')} variant="outline" className="w-full">
-                <Wallet className="mr-2 h-4 w-4" />
-                Buy BAKCoins
-              </Button>
-              <Button onClick={() => navigate('/fan/playlists')} variant="outline" className="w-full">
-                <Music className="mr-2 h-4 w-4" />
-                My Playlists
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Gamification & Discovery Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <ForYouSection />
-            </div>
-            <div className="space-y-6">
-              <WeeklyChallenges />
-            </div>
-          </div>
-
-          {/* Activity & Trending */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TrendingTracks limit={5} />
-            <ActivityFeed limit={5} />
-          </div>
         </div>
       </main>
     </div>

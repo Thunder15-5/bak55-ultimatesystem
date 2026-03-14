@@ -20,6 +20,7 @@ import { VotingControlsPanel } from "@/components/admin/VotingControlsPanel";
 import { WithdrawalConfigPanel } from "@/components/admin/WithdrawalConfigPanel";
 import { ArtistLevelsPanel } from "@/components/admin/ArtistLevelsPanel";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { StatsCard } from "@/components/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +28,14 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { 
-  DollarSign, Check, X, Loader2, Users, Trophy, 
-  BarChart3, ShieldAlert, ShieldCheck, Edit, Trash2,
+import {
+  DollarSign, Check, X, Loader2, Users, Trophy,
+  ShieldAlert, ShieldCheck, Edit, Trash2,
   TrendingUp, Music, Coins, Wallet, Music2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { DashboardSkeleton } from "@/components/dashboard";
 
 interface WithdrawalRequest {
   id: string;
@@ -105,6 +107,36 @@ export default function Admin() {
       return;
     }
     fetchAllData();
+
+    // Real-time subscriptions for admin metrics
+    const paymentsChannel = supabase
+      .channel('admin_payments_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_transactions' }, () => {
+        fetchMetrics();
+        fetchCoinPurchases();
+      })
+      .subscribe();
+
+    const transactionsChannel = supabase
+      .channel('admin_transactions_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        fetchMetrics();
+        fetchWithdrawalRequests();
+      })
+      .subscribe();
+
+    const usersChannel = supabase
+      .channel('admin_users_rt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
+        fetchMetrics();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(transactionsChannel);
+      supabase.removeChannel(usersChannel);
+    };
   }, [userRole]);
 
   const fetchAllData = async () => {
@@ -207,7 +239,6 @@ export default function Admin() {
         .update({ metadata: { ...request.metadata, status: "approved", processed_at: new Date().toISOString() } })
         .eq("id", request.id);
       if (error) throw error;
-
       const userId = request.wallets?.user_id || request.metadata?.user_id;
       if (userId) {
         await supabase.from('notifications').insert({
@@ -232,27 +263,21 @@ export default function Admin() {
       const { data: walletData } = await supabase
         .from("wallets").select("balance").eq("id", request.wallet_id).single();
       if (!walletData) throw new Error("Wallet not found");
-
       const { error: updateError } = await supabase
         .from("wallets").update({ balance: walletData.balance + Math.abs(request.amount) }).eq("id", request.wallet_id);
       if (updateError) throw updateError;
-
       const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
       const feeAmount = request.metadata?.withdrawal_fee || (Math.abs(request.amount) * 0.05 / 0.95);
       const { data: platformWallet } = await supabase
         .from("wallets").select("id, balance").eq("user_id", PLATFORM_USER_ID).single();
       if (platformWallet && platformWallet.balance >= feeAmount) {
         await supabase.from("wallets").update({ balance: platformWallet.balance - feeAmount }).eq("id", platformWallet.id);
-      } else if (platformWallet) {
-        console.warn(`Platform wallet balance (${platformWallet.balance}) insufficient to refund fee (${feeAmount}). Skipping fee refund.`);
       }
-
       const { error } = await supabase
         .from("transactions")
         .update({ metadata: { ...request.metadata, status: "rejected", processed_at: new Date().toISOString() } })
         .eq("id", request.id);
       if (error) throw error;
-
       const userId = request.wallets?.user_id || request.metadata?.user_id;
       if (userId) {
         await supabase.from('notifications').insert({
@@ -276,20 +301,16 @@ export default function Admin() {
     try {
       const { error: txError } = await supabase.from("payment_transactions").update({ status: "success" }).eq("id", purchase.id);
       if (txError) throw txError;
-
       const { data: wallet, error: walletError } = await supabase.from("wallets").select("*").eq("user_id", purchase.user_id).single();
       if (walletError || !wallet) throw new Error("Wallet not found");
-
       const bakAmount = purchase.metadata.bak_amount;
       const { error: balanceError } = await supabase.from("wallets").update({ balance: parseFloat(wallet.balance.toString()) + bakAmount }).eq("id", wallet.id);
       if (balanceError) throw balanceError;
-
       await supabase.from("transactions").insert({
         wallet_id: wallet.id, amount: bakAmount, type: "earning",
         description: `Purchased ${bakAmount} BAKCoins`, reference_id: purchase.id,
         metadata: { payment_method: "manual_approval", amount_paid_ksh: purchase.amount },
       });
-
       toast.success("Coin purchase approved and credited!");
       fetchAllData();
     } catch (error: any) {
@@ -404,13 +425,11 @@ export default function Admin() {
               pendingPurchases={coinPurchases.length}
             />
             <div className="flex-1 flex flex-col min-w-0">
-              <header className="h-14 flex items-center gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
+              <header className="h-12 flex items-center gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
                 <SidebarTrigger />
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-heading font-bold capitalize">
-                    {activeTab === "metrics" ? "Dashboard" : activeTab.replace("-", " ")}
-                  </h1>
-                </div>
+                <h1 className="text-sm font-heading font-bold capitalize">
+                  {activeTab === "metrics" ? "Dashboard" : activeTab.replace("-", " ")}
+                </h1>
               </header>
               <main className="flex-1 p-4 md:p-6 overflow-auto">
                 {renderContent()}
@@ -423,42 +442,22 @@ export default function Admin() {
   );
 }
 
-// ── Sub-panels extracted for readability ──
+// ── Sub-panels ──
 
 function MetricsPanel({ metrics, withdrawalRequests, navigate }: { metrics: Metrics; withdrawalRequests: WithdrawalRequest[]; navigate: any }) {
-  const statCards = [
-    { label: "Total Users", value: metrics.totalUsers, sub: `${metrics.totalArtists} artists, ${metrics.totalBrands} brands, ${metrics.totalProducers} producers`, icon: Users, color: "text-primary" },
-    { label: "Total Tracks", value: metrics.totalTracks, sub: "Uploaded by artists", icon: Music, color: "text-secondary" },
-    { label: "Total Beats", value: metrics.totalBeats, sub: "Uploaded by producers", icon: Music2, color: "text-accent" },
-    { label: "Competitions", value: metrics.totalCompetitions, sub: `${metrics.activeCompetitions} active`, icon: Trophy, color: "text-warning" },
-    { label: "Total Revenue", value: `${metrics.totalRevenue.toFixed(0)} KES`, sub: "From coin purchases", icon: Wallet, color: "text-success" },
-    { label: "Pending Withdrawals", value: `${metrics.pendingWithdrawals.toFixed(0)} BAK`, sub: `${withdrawalRequests.length} requests`, icon: TrendingUp, color: "text-destructive" },
-  ];
-
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label} className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
-                <div className={`p-2 rounded-lg bg-muted/50 ${stat.color}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <StatsCard icon={Users} label="Total Users" value={metrics.totalUsers} subtitle={`${metrics.totalArtists} artists, ${metrics.totalBrands} brands, ${metrics.totalProducers} producers`} variant="primary" />
+        <StatsCard icon={Music} label="Total Tracks" value={metrics.totalTracks} subtitle="Uploaded by artists" variant="secondary" />
+        <StatsCard icon={Music2} label="Total Beats" value={metrics.totalBeats} subtitle="Uploaded by producers" variant="accent" />
+        <StatsCard icon={Trophy} label="Competitions" value={metrics.totalCompetitions} subtitle={`${metrics.activeCompetitions} active`} variant="warning" />
+        <StatsCard icon={Wallet} label="Total Revenue" value={`${metrics.totalRevenue.toFixed(0)} KES`} subtitle="From coin purchases" variant="success" />
+        <StatsCard icon={TrendingUp} label="Pending Withdrawals" value={`${metrics.pendingWithdrawals.toFixed(0)} BAK`} subtitle={`${withdrawalRequests.length} requests`} variant="destructive" />
       </div>
 
       <Card className="border-border/50">
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
@@ -488,36 +487,36 @@ function MetricsPanel({ metrics, withdrawalRequests, navigate }: { metrics: Metr
 
 function WithdrawalsPanel({ requests, processing, onApprove, onReject }: { requests: WithdrawalRequest[]; processing: string | null; onApprove: (r: WithdrawalRequest) => void; onReject: (r: WithdrawalRequest) => void }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Pending Withdrawal Requests</CardTitle>
-        <CardDescription>Review and process artist withdrawal requests</CardDescription>
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Pending Withdrawal Requests</CardTitle>
+        <CardDescription className="text-xs">Review and process artist withdrawal requests</CardDescription>
       </CardHeader>
       <CardContent>
         {requests.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No pending withdrawal requests</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">No pending withdrawal requests</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {requests.map((request) => (
-              <Card key={request.id} className="border-2">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="space-y-1.5 flex-1 min-w-0">
+              <Card key={request.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-primary flex-shrink-0" />
-                        <h3 className="text-xl font-bold">{Math.abs(request.amount).toFixed(2)} BAK</h3>
+                        <DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
+                        <h3 className="text-lg font-bold">{Math.abs(request.amount).toFixed(2)} BAK</h3>
                       </div>
-                      <p className="text-sm text-muted-foreground"><strong>Artist:</strong> {request.metadata?.username || request.wallets?.profiles?.username || 'Unknown'} ({request.metadata?.email || request.wallets?.profiles?.email || ''})</p>
-                      <p className="text-sm text-muted-foreground"><strong>Phone:</strong> {request.metadata?.phone_number || request.metadata?.account_number || 'N/A'}</p>
-                      <p className="text-sm text-muted-foreground"><strong>Net Amount:</strong> {(request.metadata?.net_amount || Math.abs(request.amount) * 0.95).toFixed(2)} BAK (after 5% fee)</p>
-                      <p className="text-xs text-muted-foreground">Requested: {new Date(request.created_at).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground"><strong>Artist:</strong> {request.metadata?.username || request.wallets?.profiles?.username || 'Unknown'} ({request.metadata?.email || request.wallets?.profiles?.email || ''})</p>
+                      <p className="text-xs text-muted-foreground"><strong>Phone:</strong> {request.metadata?.phone_number || request.metadata?.account_number || 'N/A'}</p>
+                      <p className="text-xs text-muted-foreground"><strong>Net:</strong> {(request.metadata?.net_amount || Math.abs(request.amount) * 0.95).toFixed(2)} BAK</p>
+                      <p className="text-[10px] text-muted-foreground">Requested: {new Date(request.created_at).toLocaleString()}</p>
                     </div>
-                    <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                      <Button variant="default" size="sm" onClick={() => onApprove(request)} disabled={processing === request.id} className="min-h-[36px] flex-1 sm:flex-initial">
-                        {processing === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-4 w-4" /> Approve</>}
+                    <div className="flex gap-2">
+                      <Button variant="default" size="sm" onClick={() => onApprove(request)} disabled={processing === request.id}>
+                        {processing === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-3 w-3" /> Approve</>}
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => onReject(request)} disabled={processing === request.id} className="min-h-[36px] flex-1 sm:flex-initial">
-                        {processing === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><X className="mr-1 h-4 w-4" /> Reject</>}
+                      <Button variant="destructive" size="sm" onClick={() => onReject(request)} disabled={processing === request.id}>
+                        {processing === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><X className="mr-1 h-3 w-3" /> Reject</>}
                       </Button>
                     </div>
                   </div>
@@ -533,23 +532,20 @@ function WithdrawalsPanel({ requests, processing, onApprove, onReject }: { reque
 
 function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetchAllData }: { purchases: CoinPurchase[]; processing: string | null; onApprove: (p: CoinPurchase) => void; setProcessing: (id: string | null) => void; fetchAllData: () => void }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Pending Coin Purchase Requests</CardTitle>
-        <CardDescription>Pesapal payments are processed automatically. Use manual verification only if needed.</CardDescription>
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Pending Coin Purchases</CardTitle>
+        <CardDescription className="text-xs">Pesapal payments are processed automatically. Use manual verification only if needed.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <Card className="border-warning/50 bg-warning/5">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-warning" />
-              Manual Payment Verification
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <CardContent className="space-y-4">
+        <Card className="border-warning/30 bg-warning/5">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-warning mb-2 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5" /> Manual Verification
+            </p>
             <div className="flex gap-2">
-              <Input placeholder="Enter Transaction ID or OrderTrackingId" id="verify-payment-id" className="flex-1" />
-              <Button onClick={async () => {
+              <Input placeholder="Transaction ID or OrderTrackingId" id="verify-payment-id" className="flex-1 h-9 text-sm" />
+              <Button size="sm" onClick={async () => {
                 const input = document.getElementById('verify-payment-id') as HTMLInputElement;
                 const id = input?.value?.trim();
                 if (!id) { toast.error('Please enter a Transaction ID'); return; }
@@ -564,42 +560,41 @@ function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetch
                 } catch (error: any) { toast.error(error.message || 'Failed to verify'); }
                 finally { setProcessing(null); }
               }} disabled={!!processing}>
-                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-4 w-4" /> Verify</>}
+                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-3 w-3" /> Verify</>}
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {purchases.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No pending coin purchase requests</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">No pending purchases</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {purchases.map((purchase) => (
-              <Card key={purchase.id} className="border-2">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="space-y-1.5 flex-1 min-w-0">
+              <Card key={purchase.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <Coins className="h-5 w-5 text-primary flex-shrink-0" />
-                        <h3 className="text-xl font-bold">{(purchase.amount / 20).toFixed(2)} BAK</h3>
+                        <Coins className="h-4 w-4 text-primary flex-shrink-0" />
+                        <h3 className="text-lg font-bold">{(purchase.amount / 20).toFixed(2)} BAK</h3>
                       </div>
-                      <p className="text-sm text-muted-foreground"><strong>User:</strong> {purchase.profiles?.username} ({purchase.email})</p>
-                      <p className="text-sm text-muted-foreground"><strong>Amount Paid:</strong> {purchase.amount} {purchase.currency}</p>
-                      <p className="text-sm text-muted-foreground font-mono text-xs truncate"><strong>Ref:</strong> {purchase.reference}</p>
-                      {purchase.payment_reference && <p className="text-sm text-muted-foreground font-mono text-xs truncate"><strong>OrderTrackingId:</strong> {purchase.payment_reference}</p>}
-                      <p className="text-xs text-muted-foreground">{new Date(purchase.created_at).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground"><strong>User:</strong> {purchase.profiles?.username} ({purchase.email})</p>
+                      <p className="text-xs text-muted-foreground"><strong>Paid:</strong> {purchase.amount} {purchase.currency}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate"><strong>Ref:</strong> {purchase.reference}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(purchase.created_at).toLocaleString()}</p>
                     </div>
                     <Button variant="outline" size="sm" onClick={async () => {
                       setProcessing(purchase.id);
                       try {
                         const { data, error } = await supabase.functions.invoke('pesapal-verify', { body: { transaction_id: purchase.id } });
                         if (error) throw error;
-                        if (data?.success) { toast.success(data.message || 'Payment verified'); fetchAllData(); }
-                        else toast.error(data?.error || 'Verification failed');
+                        if (data?.success) { toast.success(data.message || 'Verified'); fetchAllData(); }
+                        else toast.error(data?.error || 'Failed');
                       } catch (error: any) { toast.error(error.message || 'Failed to verify'); }
                       finally { setProcessing(null); }
-                    }} disabled={processing === purchase.id} className="min-h-[36px]">
-                      {processing === purchase.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-4 w-4" /> Verify</>}
+                    }} disabled={processing === purchase.id}>
+                      {processing === purchase.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1 h-3 w-3" /> Verify</>}
                     </Button>
                   </div>
                 </CardContent>
@@ -614,39 +609,37 @@ function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetch
 
 function CompetitionsPanel({ competitions, processing, navigate, onEnd, onDelete }: { competitions: Competition[]; processing: string | null; navigate: any; onEnd: (id: string) => void; onDelete: (id: string) => void }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Competition Management</CardTitle>
-        <CardDescription>Manage all platform competitions</CardDescription>
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Competition Management</CardTitle>
+        <CardDescription className="text-xs">Manage all platform competitions</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {competitions.map((comp) => (
-            <div key={comp.id} className="space-y-4">
-              <Card className="border-2">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                    <div className="space-y-1.5 flex-1 min-w-0">
+            <div key={comp.id} className="space-y-3">
+              <Card className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
-                        <h3 className="text-lg font-bold break-words">{comp.title}</h3>
-                        <Badge variant={comp.status === "active" ? "default" : "secondary"}>{comp.status}</Badge>
+                        <Trophy className="h-4 w-4 text-primary flex-shrink-0" />
+                        <h3 className="text-sm font-bold break-words">{comp.title}</h3>
+                        <Badge variant={comp.status === "active" ? "default" : "secondary"} className="text-[10px]">{comp.status}</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground"><strong>Prize:</strong> {comp.prize_amount} BAK</p>
-                      <p className="text-sm text-muted-foreground"><strong>Submissions:</strong> {comp.submissions?.length || 0}</p>
-                      <p className="text-sm text-muted-foreground"><strong>Dates:</strong> {new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}</p>
-                      {comp.voting_start_date && <p className="text-sm text-muted-foreground"><strong>Voting:</strong> {new Date(comp.voting_start_date).toLocaleDateString()} - {new Date(comp.voting_end_date).toLocaleDateString()}</p>}
+                      <p className="text-xs text-muted-foreground">Prize: {comp.prize_amount} BAK • {comp.submissions?.length || 0} submissions</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/edit-competition/${comp.id}`)} className="min-h-[36px]"><Edit className="mr-1 h-4 w-4" /> Edit</Button>
-                      <Button variant="secondary" size="sm" onClick={() => navigate(`/competition/${comp.id}`)} className="min-h-[36px]">View</Button>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}><Edit className="mr-1 h-3 w-3" /> Edit</Button>
+                      <Button variant="secondary" size="sm" onClick={() => navigate(`/competition/${comp.id}`)}>View</Button>
                       {comp.status === "active" && (
-                        <Button variant="default" size="sm" onClick={() => onEnd(comp.id)} disabled={processing === comp.id} className="min-h-[36px]">
-                          {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "End Early"}
+                        <Button variant="default" size="sm" onClick={() => onEnd(comp.id)} disabled={processing === comp.id}>
+                          {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "End"}
                         </Button>
                       )}
-                      <Button variant="destructive" size="sm" onClick={() => onDelete(comp.id)} disabled={processing === comp.id} className="min-h-[36px]">
-                        {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      <Button variant="destructive" size="sm" onClick={() => onDelete(comp.id)} disabled={processing === comp.id}>
+                        {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                       </Button>
                     </div>
                   </div>
