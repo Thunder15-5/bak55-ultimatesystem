@@ -50,7 +50,7 @@ export function CompetitionReportPanel() {
         comp_id: selectedCompetition
       });
       if (error) throw error;
-      return data as VoteAnalysis;
+      return data as unknown as VoteAnalysis;
     },
     enabled: !!selectedCompetition,
   });
