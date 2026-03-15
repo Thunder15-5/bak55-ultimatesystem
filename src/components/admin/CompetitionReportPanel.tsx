@@ -188,7 +188,7 @@ export function CompetitionReportPanel() {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-500">{analysis.fan_votes}</div>
+                <div className="text-2xl font-bold text-primary">{analysis.fan_votes}</div>
                 <div className="text-xs text-muted-foreground">Fan Votes</div>
               </CardContent>
             </Card>
