@@ -404,6 +404,8 @@ export default function Admin() {
         return <SalesPanel />;
       case "voting":
         return <VotingControlsPanel />;
+      case "competition-report":
+        return <CompetitionReportPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":
