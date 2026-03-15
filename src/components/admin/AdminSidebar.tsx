@@ -55,6 +55,7 @@ const navGroups = [
       { id: "competitions", label: "Competitions", icon: Trophy },
       { id: "stages", label: "Stages", icon: Target },
       { id: "voting", label: "Voting", icon: Vote },
+      { id: "competition-report", label: "Reports", icon: BarChart3 },
       { id: "badges", label: "Badges", icon: Award },
     ],
   },

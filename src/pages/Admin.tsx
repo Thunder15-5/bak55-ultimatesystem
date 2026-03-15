@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CompetitionReportPanel } from "@/components/admin/CompetitionReportPanel";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
 import { MessagesPanel } from "@/components/MessagesPanel";
@@ -403,6 +404,8 @@ export default function Admin() {
         return <SalesPanel />;
       case "voting":
         return <VotingControlsPanel />;
+      case "competition-report":
+        return <CompetitionReportPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":

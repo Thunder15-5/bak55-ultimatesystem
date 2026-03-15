@@ -3393,6 +3393,9 @@ export type Database = {
           phone_number: string | null
           preferred_currency: string | null
           signup_bonus_awarded: boolean | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           updated_at: string
           username: string
         }
@@ -3416,6 +3419,9 @@ export type Database = {
           phone_number?: string | null
           preferred_currency?: string | null
           signup_bonus_awarded?: boolean | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           username: string
         }
@@ -3439,6 +3445,9 @@ export type Database = {
           phone_number?: string | null
           preferred_currency?: string | null
           signup_bonus_awarded?: boolean | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           username?: string
         }
@@ -4692,6 +4701,42 @@ export type Database = {
           },
         ]
       }
+      vote_audit_log: {
+        Row: {
+          competition_id: string
+          created_at: string | null
+          flag_reason: string | null
+          flagged: boolean | null
+          id: string
+          is_self_vote: boolean | null
+          submission_id: string
+          vote_number_in_session: number | null
+          voter_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string | null
+          flag_reason?: string | null
+          flagged?: boolean | null
+          id?: string
+          is_self_vote?: boolean | null
+          submission_id: string
+          vote_number_in_session?: number | null
+          voter_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string | null
+          flag_reason?: string | null
+          flagged?: boolean | null
+          id?: string
+          is_self_vote?: boolean | null
+          submission_id?: string
+          vote_number_in_session?: number | null
+          voter_id?: string
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           created_at: string
@@ -4954,6 +4999,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_invalidate_votes: {
+        Args: {
+          p_reason?: string
+          p_submission_id?: string
+          p_voter_id: string
+        }
+        Returns: Json
+      }
+      admin_suspend_user: {
+        Args: { p_reason?: string; p_target_user_id: string }
+        Returns: Json
+      }
       auto_select_competition_winners: { Args: never; Returns: undefined }
       calculate_submission_final_scores: {
         Args: { competition_uuid: string }
@@ -4981,6 +5038,10 @@ export type Database = {
         Returns: Json
       }
       get_artist_level: { Args: { p_user_id: string }; Returns: Json }
+      get_competition_vote_analysis: {
+        Args: { comp_id: string }
+        Returns: Json
+      }
       get_primary_role: { Args: { user_id_param: string }; Returns: string }
       get_public_artists: {
         Args: { limit_count?: number }

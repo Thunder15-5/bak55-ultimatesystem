@@ -8,8 +8,10 @@ const corsHeaders = {
 const VOTE_COST = 1; // 1 BAKCoin per vote
 const ARTIST_SHARE = 0.65; // 65% to artist
 const PLATFORM_SHARE = 0.35; // 35% to platform
+const MAX_VOTES_PER_SUBMISSION_PER_HOUR = 50; // Rate limit per user per submission per hour
+const SELF_VOTE_LIMIT_PER_DAY = 10; // Max self-votes per day
 
-// BAK55 Platform Operations Wallet (admin@bak55talent.co.ke)
+// BAK55 Platform Operations Wallet
 const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 
 interface VoteRequest {
@@ -45,6 +47,20 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Invalid user session' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user is banned/suspended
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('banned, suspended_at')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.banned || profile?.suspended_at) {
+      return new Response(
+        JSON.stringify({ error: 'Your account has been suspended. Contact support for assistance.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -84,7 +100,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check voting is enabled and submission is approved
     if (!(submission as any).voting_enabled) {
       return new Response(
         JSON.stringify({ error: 'Voting is disabled for this submission' }),
@@ -99,7 +114,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Reject if submission was rejected
     if ((submission as any).status === 'rejected') {
       return new Response(
         JSON.stringify({ error: 'This submission has been rejected' }),
@@ -130,8 +144,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    // NO self-voting restriction — artists can vote for themselves
-    // NO duplicate vote restriction — unlimited voting allowed
+    const isSelfVote = user.id === submission.artist_id;
+
+    // === RATE LIMITING ===
+    
+    // Check votes per submission per hour
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: recentVotes } = await supabaseAdmin
+      .from('votes')
+      .select('id', { count: 'exact', head: true })
+      .eq('voter_id', user.id)
+      .eq('submission_id', submission_id)
+      .gte('created_at', oneHourAgo);
+
+    if ((recentVotes || 0) >= MAX_VOTES_PER_SUBMISSION_PER_HOUR) {
+      return new Response(
+        JSON.stringify({ 
+          error: `You've reached the maximum of ${MAX_VOTES_PER_SUBMISSION_PER_HOUR} votes per hour for this submission. Please try again later.`,
+          code: 'RATE_LIMITED'
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Self-vote daily limit
+    if (isSelfVote) {
+      const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+      const { count: selfVotesToday } = await supabaseAdmin
+        .from('votes')
+        .select('id', { count: 'exact', head: true })
+        .eq('voter_id', user.id)
+        .eq('submission_id', submission_id)
+        .gte('created_at', oneDayAgo);
+
+      if ((selfVotesToday || 0) >= SELF_VOTE_LIMIT_PER_DAY) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Self-voting is limited to ${SELF_VOTE_LIMIT_PER_DAY} votes per day. Ask your fans to vote for you!`,
+            code: 'SELF_VOTE_LIMIT'
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     // Get voter's wallet
     const { data: voterWallet, error: voterWalletError } = await supabaseAdmin
@@ -181,7 +236,6 @@ Deno.serve(async (req) => {
       .single();
 
     if (platformWalletError || !platformWallet) {
-      console.error('Platform wallet not found:', platformWalletError);
       return new Response(
         JSON.stringify({ error: 'Platform wallet configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -201,7 +255,7 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', voterWallet.id)
-      .eq('balance', voterWallet.balance) // Optimistic lock
+      .eq('balance', voterWallet.balance)
       .select('balance')
       .single();
 
@@ -242,19 +296,20 @@ Deno.serve(async (req) => {
       .eq('id', platformWallet.id);
 
     // 4. Record the vote
+    const voteData: any = {
+      submission_id,
+      voter_id: user.id,
+      stage_id: stage_id || null,
+      vote_weight: 1,
+      voted_at: new Date().toISOString()
+    };
+
     const { error: voteError } = await supabaseAdmin
       .from('votes')
-      .insert({
-        submission_id,
-        voter_id: user.id,
-        stage_id: stage_id || null,
-        vote_weight: 1,
-        voted_at: new Date().toISOString()
-      });
+      .insert(voteData);
 
     if (voteError) {
       console.error('Vote record error:', voteError);
-      // Rollback
       await supabaseAdmin.from('wallets').update({ balance: voterWallet.balance }).eq('id', voterWallet.id);
       await supabaseAdmin.from('wallets').update({ balance: artistWallet.balance }).eq('id', artistWallet.id);
       return new Response(
@@ -263,7 +318,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. Transaction records
+    // 5. Record vote in audit log
+    await supabaseAdmin.from('vote_audit_log').insert({
+      competition_id: submission.competition_id,
+      voter_id: user.id,
+      submission_id,
+      is_self_vote: isSelfVote,
+      vote_number_in_session: (recentVotes || 0) + 1,
+      flagged: isSelfVote && (recentVotes || 0) > 20,
+      flag_reason: isSelfVote && (recentVotes || 0) > 20 ? 'High-frequency self-voting' : null
+    }).then(() => {}).catch(e => console.error('Audit log error:', e));
+
+    // 6. Transaction records
     await Promise.all([
       supabaseAdmin.from('transactions').insert({
         wallet_id: voterWallet.id,
@@ -271,7 +337,7 @@ Deno.serve(async (req) => {
         type: 'purchase',
         description: `Vote for competition submission`,
         reference_id: submission_id,
-        metadata: { type: 'vote_payment', competition_id: submission.competition_id, artist_id: submission.artist_id }
+        metadata: { type: 'vote_payment', competition_id: submission.competition_id, artist_id: submission.artist_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: artistWallet.id,
@@ -279,7 +345,7 @@ Deno.serve(async (req) => {
         type: 'earning',
         description: `Vote revenue (65% of ${VOTE_COST} BAK)`,
         reference_id: submission_id,
-        metadata: { type: 'vote_earning', voter_id: user.id, competition_id: submission.competition_id }
+        metadata: { type: 'vote_earning', voter_id: user.id, competition_id: submission.competition_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: platformWallet.id,
@@ -291,16 +357,23 @@ Deno.serve(async (req) => {
       })
     ]);
 
-    // 6. Notify artist
-    await supabaseAdmin.from('notifications').insert({
-      user_id: submission.artist_id,
-      type: 'vote_received',
-      title: '🗳️ New Vote!',
-      message: `Someone voted for your competition entry! +${artistAmount.toFixed(2)} BAK earned.`,
-      link: `/rising-stars/voting`,
-      priority: 'normal',
-      category: 'competition'
-    });
+    // 7. Notify artist (throttled - only every 10th vote)
+    const { count: totalVotesForSubmission } = await supabaseAdmin
+      .from('votes')
+      .select('id', { count: 'exact', head: true })
+      .eq('submission_id', submission_id);
+
+    if ((totalVotesForSubmission || 0) % 10 === 0) {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: submission.artist_id,
+        type: 'vote_received',
+        title: '🗳️ Votes Update!',
+        message: `Your submission has reached ${totalVotesForSubmission} votes! +${artistAmount.toFixed(2)} BAK earned.`,
+        link: `/rising-stars/voting`,
+        priority: 'normal',
+        category: 'competition'
+      });
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -309,7 +382,8 @@ Deno.serve(async (req) => {
         vote_cost: VOTE_COST,
         artist_earned: artistAmount,
         platform_fee: platformAmount,
-        new_balance: deductResult.balance
+        new_balance: deductResult.balance,
+        is_self_vote: isSelfVote
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
