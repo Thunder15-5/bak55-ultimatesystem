@@ -284,7 +284,7 @@ export function CompetitionReportPanel() {
                         <TableCell>{sub.username}</TableCell>
                         <TableCell className="text-right font-bold">{sub.vote_count}</TableCell>
                         <TableCell className="text-right text-destructive">{sub.self_votes}</TableCell>
-                        <TableCell className="text-right text-green-500">{sub.genuine_votes}</TableCell>
+                        <TableCell className="text-right text-primary">{sub.genuine_votes}</TableCell>
                         <TableCell className="text-right">
                           <Badge variant={selfPct > 80 ? 'destructive' : selfPct > 50 ? 'secondary' : 'default'}>
                             {selfPct.toFixed(0)}%
