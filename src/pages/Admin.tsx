@@ -96,6 +96,7 @@ export default function Admin() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
   const [coinPurchases, setCoinPurchases] = useState<CoinPurchase[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [pendingMerchOrders, setPendingMerchOrders] = useState(0);
   const [metrics, setMetrics] = useState<Metrics>({
     totalUsers: 0, totalArtists: 0, totalBrands: 0, totalProducers: 0,
     totalTracks: 0, totalBeats: 0, totalCompetitions: 0, activeCompetitions: 0,
