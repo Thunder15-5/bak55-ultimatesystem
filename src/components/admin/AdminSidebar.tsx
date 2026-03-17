@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Users, DollarSign, Coins, Trophy, Target, Award, Star,
   ShieldAlert, MessageSquare, Bell, FileText, UserPlus, Gift, Mail,
-  Music2, ShoppingBag, Vote, ShieldCheck, Wallet,
+  Music2, ShoppingBag, Vote, ShieldCheck, Wallet, Package, Truck,
 } from "lucide-react";
 
 interface AdminSidebarProps {
