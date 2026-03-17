@@ -150,8 +150,16 @@ export default function Admin() {
       fetchCoinPurchases(),
       fetchCompetitions(),
       fetchMetrics(),
+      fetchPendingMerchOrders(),
     ]);
     setLoading(false);
+  };
+
+  const fetchPendingMerchOrders = async () => {
+    try {
+      const { count } = await supabase.from("merch_orders").select("*", { count: "exact", head: true }).eq("status", "pending");
+      setPendingMerchOrders(count || 0);
+    } catch {}
   };
 
   const fetchWithdrawalRequests = async () => {
