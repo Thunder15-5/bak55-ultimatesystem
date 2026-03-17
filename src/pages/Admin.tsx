@@ -441,6 +441,7 @@ export default function Admin() {
               onTabChange={setActiveTab}
               pendingWithdrawals={withdrawalRequests.length}
               pendingPurchases={coinPurchases.length}
+              pendingMerchOrders={pendingMerchOrders}
             />
             <div className="flex-1 flex flex-col min-w-0">
               <header className="h-12 flex items-center gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
