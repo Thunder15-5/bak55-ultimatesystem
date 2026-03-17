@@ -75,6 +75,13 @@ const navGroups = [
     ],
   },
   {
+    label: "Merch Store",
+    items: [
+      { id: "merch-products", label: "Products", icon: ShoppingBag },
+      { id: "merch-orders", label: "Orders", icon: Package, badge: "pendingMerchOrders" },
+    ],
+  },
+  {
     label: "Configuration",
     items: [
       { id: "withdrawal-config", label: "Withdrawal Config", icon: ShieldAlert },
