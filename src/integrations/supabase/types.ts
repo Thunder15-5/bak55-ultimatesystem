@@ -2712,12 +2712,20 @@ export type Database = {
       }
       merch_orders: {
         Row: {
+          cancelled_at: string | null
           created_at: string | null
           currency: string
+          delivered_at: string | null
+          delivery_fee: number | null
           id: string
           items: Json
           notes: string | null
           payment_method: string | null
+          refund_amount: number | null
+          refund_reason: string | null
+          refund_status: string | null
+          region: string | null
+          shipped_at: string | null
           shipping_info: Json | null
           status: string
           total: number
@@ -2727,12 +2735,20 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string
+          delivered_at?: string | null
+          delivery_fee?: number | null
           id?: string
           items?: Json
           notes?: string | null
           payment_method?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
+          refund_status?: string | null
+          region?: string | null
+          shipped_at?: string | null
           shipping_info?: Json | null
           status?: string
           total?: number
@@ -2742,12 +2758,20 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string
+          delivered_at?: string | null
+          delivery_fee?: number | null
           id?: string
           items?: Json
           notes?: string | null
           payment_method?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
+          refund_status?: string | null
+          region?: string | null
+          shipped_at?: string | null
           shipping_info?: Json | null
           status?: string
           total?: number
@@ -2775,6 +2799,8 @@ export type Database = {
       }
       merch_products: {
         Row: {
+          artist_id: string | null
+          brand_id: string | null
           category: string
           color_images: Json | null
           colors: string[] | null
@@ -2783,21 +2809,27 @@ export type Database = {
           description: string | null
           id: string
           images: string[] | null
+          is_active: boolean | null
           is_featured: boolean | null
           is_limited: boolean | null
           limited_drop_end: string | null
+          low_stock_threshold: number | null
           price_bak_max: number | null
           price_bak_min: number | null
           price_max: number
           price_min: number
           sizes: string[] | null
           sort_order: number | null
+          stock_quantity: number | null
           stock_status: string | null
           title: string
+          total_sold: number | null
           updated_at: string | null
           variants: Json | null
         }
         Insert: {
+          artist_id?: string | null
+          brand_id?: string | null
           category?: string
           color_images?: Json | null
           colors?: string[] | null
@@ -2806,21 +2838,27 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_active?: boolean | null
           is_featured?: boolean | null
           is_limited?: boolean | null
           limited_drop_end?: string | null
+          low_stock_threshold?: number | null
           price_bak_max?: number | null
           price_bak_min?: number | null
           price_max?: number
           price_min?: number
           sizes?: string[] | null
           sort_order?: number | null
+          stock_quantity?: number | null
           stock_status?: string | null
           title: string
+          total_sold?: number | null
           updated_at?: string | null
           variants?: Json | null
         }
         Update: {
+          artist_id?: string | null
+          brand_id?: string | null
           category?: string
           color_images?: Json | null
           colors?: string[] | null
@@ -2829,21 +2867,54 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_active?: boolean | null
           is_featured?: boolean | null
           is_limited?: boolean | null
           limited_drop_end?: string | null
+          low_stock_threshold?: number | null
           price_bak_max?: number | null
           price_bak_min?: number | null
           price_max?: number
           price_min?: number
           sizes?: string[] | null
           sort_order?: number | null
+          stock_quantity?: number | null
           stock_status?: string | null
           title?: string
+          total_sold?: number | null
           updated_at?: string | null
           variants?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "merch_products_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_products_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merch_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
