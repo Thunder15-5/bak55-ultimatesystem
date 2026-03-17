@@ -99,13 +99,14 @@ const navGroups = [
   },
 ];
 
-export function AdminSidebar({ activeTab, onTabChange, pendingWithdrawals = 0, pendingPurchases = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, pendingWithdrawals = 0, pendingPurchases = 0, pendingMerchOrders = 0 }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
   const badgeCounts: Record<string, number> = {
     pendingWithdrawals,
     pendingPurchases,
+    pendingMerchOrders,
   };
 
   return (
