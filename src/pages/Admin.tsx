@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { CompetitionReportPanel } from "@/components/admin/CompetitionReportPanel";
+import { MerchManagementPanel } from "@/components/admin/MerchManagementPanel";
+import { MerchOrdersPanel } from "@/components/admin/MerchOrdersPanel";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
 import { MessagesPanel } from "@/components/MessagesPanel";
