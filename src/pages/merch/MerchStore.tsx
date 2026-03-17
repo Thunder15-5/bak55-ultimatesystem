@@ -25,6 +25,7 @@ export default function MerchStore() {
       const { data, error } = await supabase
         .from("merch_products")
         .select("*")
+        .neq("is_active", false)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data;

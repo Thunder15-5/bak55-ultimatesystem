@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, Users, DollarSign, Coins, Trophy, Target, Award, Star,
   ShieldAlert, MessageSquare, Bell, FileText, UserPlus, Gift, Mail,
-  Music2, ShoppingBag, Vote, ShieldCheck, Wallet,
+  Music2, ShoppingBag, Vote, ShieldCheck, Wallet, Package, Truck,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -23,6 +23,7 @@ interface AdminSidebarProps {
   onTabChange: (tab: string) => void;
   pendingWithdrawals?: number;
   pendingPurchases?: number;
+  pendingMerchOrders?: number;
 }
 
 const navGroups = [
@@ -75,6 +76,13 @@ const navGroups = [
     ],
   },
   {
+    label: "Merch Store",
+    items: [
+      { id: "merch-products", label: "Products", icon: ShoppingBag },
+      { id: "merch-orders", label: "Orders", icon: Package, badge: "pendingMerchOrders" },
+    ],
+  },
+  {
     label: "Configuration",
     items: [
       { id: "withdrawal-config", label: "Withdrawal Config", icon: ShieldAlert },
@@ -91,13 +99,14 @@ const navGroups = [
   },
 ];
 
-export function AdminSidebar({ activeTab, onTabChange, pendingWithdrawals = 0, pendingPurchases = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, pendingWithdrawals = 0, pendingPurchases = 0, pendingMerchOrders = 0 }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
   const badgeCounts: Record<string, number> = {
     pendingWithdrawals,
     pendingPurchases,
+    pendingMerchOrders,
   };
 
   return (

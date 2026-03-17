@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { CompetitionReportPanel } from "@/components/admin/CompetitionReportPanel";
+import { MerchManagementPanel } from "@/components/admin/MerchManagementPanel";
+import { MerchOrdersPanel } from "@/components/admin/MerchOrdersPanel";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
 import { MessagesPanel } from "@/components/MessagesPanel";
@@ -94,6 +96,7 @@ export default function Admin() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
   const [coinPurchases, setCoinPurchases] = useState<CoinPurchase[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [pendingMerchOrders, setPendingMerchOrders] = useState(0);
   const [metrics, setMetrics] = useState<Metrics>({
     totalUsers: 0, totalArtists: 0, totalBrands: 0, totalProducers: 0,
     totalTracks: 0, totalBeats: 0, totalCompetitions: 0, activeCompetitions: 0,
@@ -133,10 +136,18 @@ export default function Admin() {
       })
       .subscribe();
 
+    const merchChannel = supabase
+      .channel('admin_merch_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'merch_orders' }, () => {
+        fetchPendingMerchOrders();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(paymentsChannel);
       supabase.removeChannel(transactionsChannel);
       supabase.removeChannel(usersChannel);
+      supabase.removeChannel(merchChannel);
     };
   }, [userRole]);
 
@@ -147,8 +158,16 @@ export default function Admin() {
       fetchCoinPurchases(),
       fetchCompetitions(),
       fetchMetrics(),
+      fetchPendingMerchOrders(),
     ]);
     setLoading(false);
+  };
+
+  const fetchPendingMerchOrders = async () => {
+    try {
+      const { count } = await supabase.from("merch_orders").select("*", { count: "exact", head: true }).eq("status", "pending");
+      setPendingMerchOrders(count || 0);
+    } catch {}
   };
 
   const fetchWithdrawalRequests = async () => {
@@ -406,6 +425,10 @@ export default function Admin() {
         return <VotingControlsPanel />;
       case "competition-report":
         return <CompetitionReportPanel />;
+      case "merch-products":
+        return <MerchManagementPanel />;
+      case "merch-orders":
+        return <MerchOrdersPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":
@@ -426,6 +449,7 @@ export default function Admin() {
               onTabChange={setActiveTab}
               pendingWithdrawals={withdrawalRequests.length}
               pendingPurchases={coinPurchases.length}
+              pendingMerchOrders={pendingMerchOrders}
             />
             <div className="flex-1 flex flex-col min-w-0">
               <header className="h-12 flex items-center gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
