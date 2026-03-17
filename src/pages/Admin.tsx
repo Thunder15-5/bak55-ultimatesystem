@@ -408,6 +408,10 @@ export default function Admin() {
         return <VotingControlsPanel />;
       case "competition-report":
         return <CompetitionReportPanel />;
+      case "merch-products":
+        return <MerchManagementPanel />;
+      case "merch-orders":
+        return <MerchOrdersPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":
