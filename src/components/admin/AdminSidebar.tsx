@@ -23,6 +23,7 @@ interface AdminSidebarProps {
   onTabChange: (tab: string) => void;
   pendingWithdrawals?: number;
   pendingPurchases?: number;
+  pendingMerchOrders?: number;
 }
 
 const navGroups = [
