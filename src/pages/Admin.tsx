@@ -136,10 +136,18 @@ export default function Admin() {
       })
       .subscribe();
 
+    const merchChannel = supabase
+      .channel('admin_merch_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'merch_orders' }, () => {
+        fetchPendingMerchOrders();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(paymentsChannel);
       supabase.removeChannel(transactionsChannel);
       supabase.removeChannel(usersChannel);
+      supabase.removeChannel(merchChannel);
     };
   }, [userRole]);
 
