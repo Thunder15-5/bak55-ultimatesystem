@@ -106,7 +106,7 @@ export function SystemSettingsPanel() {
       await supabase.from('admin_activity_log').insert([{
         event_type: 'config_update', event_category: 'system',
         description: `Voting rules updated: cost=${config.vote_cost_bak} BAK, artist=${config.artist_share_percent}%, self-limit=${config.self_vote_limit_per_day}/day`,
-        metadata: { voting_rules: config },
+        metadata: JSON.parse(JSON.stringify({ voting_rules: config })),
       }]);
 
       toast.success("Voting rules saved. Note: Edge function constants must be redeployed for changes to take effect.");
