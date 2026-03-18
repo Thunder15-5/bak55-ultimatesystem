@@ -208,11 +208,11 @@ Deno.serve(async (req: Request) => {
     const trackMatch = path.match(/\/track\/([^/?#]+)/);
     const competitionMatch = path.match(/\/competition\/([^/?#]+)/);
     const blogMatch = path.match(/\/blog\/([^/?#]+)/);
+    const merchMatch = path.match(/\/merch\/product\/([^/?#]+)/);
 
     let meta: Meta | null = null;
 
     if (customTitle) {
-      // Custom meta passed via query params (used for static pages like blogs)
       meta = {
         title: `${customTitle} | ${SITE_NAME}`,
         description: customDesc || `Read more on ${SITE_NAME}`,
@@ -226,6 +226,18 @@ Deno.serve(async (req: Request) => {
       meta = await resolveTrack(trackMatch[1]);
     } else if (competitionMatch) {
       meta = await resolveCompetition(competitionMatch[1]);
+    } else if (merchMatch && UUID_RE.test(merchMatch[1])) {
+      const product = await queryDb("merch_products", "name,description,price_usd,images", "id", merchMatch[1]);
+      if (product) {
+        const img = product.images?.[0] ? absImage(product.images[0]) : `${SITE_URL}/og-image.png?v=4`;
+        meta = {
+          title: `${product.name} | Born African Royalty | ${SITE_NAME}`,
+          description: product.description?.substring(0, 150) || `Shop ${product.name} - $${product.price_usd} USD`,
+          image: img,
+          url: `${SITE_URL}/merch/product/${merchMatch[1]}`,
+          type: "product",
+        };
+      }
     }
 
     // Default fallback

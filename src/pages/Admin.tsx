@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { CompetitionReportPanel } from "@/components/admin/CompetitionReportPanel";
 import { MerchManagementPanel } from "@/components/admin/MerchManagementPanel";
 import { MerchOrdersPanel } from "@/components/admin/MerchOrdersPanel";
+import { SystemSettingsPanel } from "@/components/admin/SystemSettingsPanel";
+import { BlogManagementPanel } from "@/components/admin/BlogManagementPanel";
 import { Navigation } from "@/components/Navigation";
 import { ModerationPanel } from "@/components/ModerationPanel";
 import { MessagesPanel } from "@/components/MessagesPanel";
@@ -429,6 +431,10 @@ export default function Admin() {
         return <MerchManagementPanel />;
       case "merch-orders":
         return <MerchOrdersPanel />;
+      case "system-settings":
+        return <SystemSettingsPanel />;
+      case "blog":
+        return <BlogManagementPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":

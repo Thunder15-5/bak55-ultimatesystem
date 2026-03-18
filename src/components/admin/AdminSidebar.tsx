@@ -85,6 +85,7 @@ const navGroups = [
   {
     label: "Configuration",
     items: [
+      { id: "system-settings", label: "System Settings", icon: ShieldCheck },
       { id: "withdrawal-config", label: "Withdrawal Config", icon: ShieldAlert },
       { id: "artist-levels", label: "Artist Levels", icon: Award },
     ],
@@ -93,6 +94,7 @@ const navGroups = [
     label: "System",
     items: [
       { id: "referrals", label: "Referrals", icon: Gift },
+      { id: "blog", label: "Blog", icon: FileText },
       { id: "early-access", label: "Leads", icon: Mail },
       { id: "activity-log", label: "Activity Log", icon: FileText },
     ],
