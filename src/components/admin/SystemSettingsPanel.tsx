@@ -135,11 +135,11 @@ export function SystemSettingsPanel() {
           .eq('config_key', 'bak_to_kes_rate'),
       ]);
 
-      await supabase.from('admin_activity_log').insert({
+      await supabase.from('admin_activity_log').insert([{
         event_type: 'config_update', event_category: 'financial',
         description: `Financial config updated: min withdrawal=${config.min_withdrawal_bak} BAK, fee=${config.withdrawal_fee_percent}%`,
         metadata: { financial_config: config },
-      });
+      }]);
 
       toast.success("Financial settings saved");
     } catch (e: any) {

@@ -160,10 +160,10 @@ export function UsersPanel() {
       if (walletError) throw walletError;
 
       await supabase.from('transactions').insert({
-        wallet_id: wallet.id, amount, type: amount > 0 ? 'earning' : 'deduction',
+        wallet_id: wallet.id, amount, type: amount > 0 ? 'earning' : 'purchase' as any,
         description: `Admin adjustment: ${adjustReason}`,
         metadata: { admin_adjustment: true, reason: adjustReason },
-      });
+      } as any);
 
       await supabase.from('admin_activity_log').insert({
         event_type: 'balance_adjustment', event_category: 'financial',
