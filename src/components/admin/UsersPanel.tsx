@@ -78,21 +78,39 @@ export function UsersPanel() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles(role),
-        artist_profiles(stage_name, total_earnings, verified),
-        brand_profiles(company_name, verified),
-        producer_profiles(producer_name, verified),
-        wallets(balance),
-        tracks(id)
-      `)
-      .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, email, created_at, banned')
+        .order('created_at', { ascending: false });
 
-    if (error) { toast.error('Failed to load users'); }
-    else { setUsers(data || []); }
+      if (error) throw error;
+
+      // Batch fetch related data
+      const userIds = (data || []).map(u => u.id);
+      const [rolesRes, artistRes, brandRes, producerRes, walletRes, tracksRes] = await Promise.all([
+        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
+        supabase.from('artist_profiles').select('user_id, stage_name, total_earnings, verified').in('user_id', userIds),
+        supabase.from('brand_profiles').select('user_id, company_name, verified').in('user_id', userIds),
+        supabase.from('producer_profiles').select('user_id, producer_name, verified').in('user_id', userIds),
+        supabase.from('wallets').select('user_id, balance').in('user_id', userIds),
+        supabase.from('tracks').select('id, artist_id').in('artist_id', userIds),
+      ]);
+
+      const enriched: UserProfile[] = (data || []).map(u => ({
+        ...u,
+        user_roles: (rolesRes.data || []).filter(r => r.user_id === u.id).map(r => ({ role: r.role })),
+        artist_profiles: (artistRes.data || []).find(a => a.user_id === u.id) || null,
+        brand_profiles: (brandRes.data || []).find(b => b.user_id === u.id) || null,
+        producer_profiles: (producerRes.data || []).find(p => p.user_id === u.id) || null,
+        wallets: (walletRes.data || []).find(w => w.user_id === u.id) || null,
+        tracks: (tracksRes.data || []).filter(t => t.artist_id === u.id),
+      }));
+
+      setUsers(enriched);
+    } catch (e: any) {
+      toast.error('Failed to load users');
+    }
     setLoading(false);
   };
 

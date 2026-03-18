@@ -138,7 +138,7 @@ export function SystemSettingsPanel() {
       await supabase.from('admin_activity_log').insert([{
         event_type: 'config_update', event_category: 'financial',
         description: `Financial config updated: min withdrawal=${config.min_withdrawal_bak} BAK, fee=${config.withdrawal_fee_percent}%`,
-        metadata: { financial_config: config },
+        metadata: JSON.parse(JSON.stringify({ financial_config: config })),
       }]);
 
       toast.success("Financial settings saved");
