@@ -431,6 +431,10 @@ export default function Admin() {
         return <MerchManagementPanel />;
       case "merch-orders":
         return <MerchOrdersPanel />;
+      case "system-settings":
+        return <SystemSettingsPanel />;
+      case "blog":
+        return <BlogManagementPanel />;
       case "withdrawal-config":
         return <WithdrawalConfigPanel />;
       case "artist-levels":
