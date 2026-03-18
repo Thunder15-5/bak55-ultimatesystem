@@ -89,7 +89,7 @@ export function UsersPanel() {
         wallets(balance),
         tracks(id)
       `)
-      .order('created_at', { ascending: false }) as any;
+      .order('created_at', { ascending: false }) as { data: any[] | null; error: any };
 
     if (error) { toast.error('Failed to load users'); }
     else { setUsers(data || []); }
