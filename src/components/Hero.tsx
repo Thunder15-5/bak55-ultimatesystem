@@ -10,7 +10,9 @@ export const Hero = () => {
 
   useEffect(() => {
     supabase.rpc('get_public_platform_stats').then(({ data }) => {
-      if (data) setStats(data);
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        setStats(data as any);
+      }
     });
   }, []);
 
