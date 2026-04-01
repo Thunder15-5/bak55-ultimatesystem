@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
@@ -13,41 +12,61 @@ import { StatsBar } from "@/components/StatsBar";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
 import { TrendingArtists } from "@/components/TrendingArtists";
 import { FeaturedArtistsCarousel } from "@/components/FeaturedArtistsCarousel";
-import { Loader2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSEO } from "@/components/SEO";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ArrowRight, Mic2, Heart, Briefcase } from "lucide-react";
+
+const audienceCards = [
+  {
+    icon: Mic2,
+    title: "For Artists",
+    description: "Upload tracks, enter competitions, earn BAKCoins, and grow your fanbase with AI-powered insights.",
+    cta: "Apply as Artist",
+    link: "/apply",
+    gradient: "from-primary/10 to-primary-glow/5",
+    border: "border-primary/20 hover:border-primary/40",
+    iconBg: "from-primary to-primary-glow",
+  },
+  {
+    icon: Heart,
+    title: "For Fans",
+    description: "Discover new music, vote for rising stars, earn rewards, and support the artists you love.",
+    cta: "Join as Fan",
+    link: "/signup",
+    gradient: "from-secondary/10 to-secondary-glow/5",
+    border: "border-secondary/20 hover:border-secondary/40",
+    iconBg: "from-secondary to-secondary-glow",
+  },
+  {
+    icon: Briefcase,
+    title: "For Brands",
+    description: "Sponsor competitions, discover talent, and connect your brand with Africa's music audience.",
+    cta: "Partner with Us",
+    link: "/contact",
+    gradient: "from-accent/10 to-accent-glow/5",
+    border: "border-accent/20 hover:border-accent/40",
+    iconBg: "from-accent to-accent-glow",
+  },
+];
 
 const Index = () => {
-  const { user, userRole, loading } = useAuth();
-  const navigate = useNavigate();
   const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
   useEffect(() => {
-    fetchFeaturedCompetition();
-  }, []);
-
-  const fetchFeaturedCompetition = async () => {
-    // Fetch the latest active competition dynamically
-    const { data } = await supabase
+    supabase
       .from('competitions')
       .select('*, submissions(count)')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
-    
-    if (data) {
-      setFeaturedCompetition(data);
-    }
-  };
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setFeaturedCompetition(data);
+      });
+  }, []);
 
-  // Don't auto-redirect - let users view the landing page if they want
-  // They can manually navigate to their dashboard via the navigation menu
-  // Note: We don't block on loading - show the landing page immediately
-
-  // Only show landing page to non-authenticated users
   return (
     <>
       <PageSEO page="home" />
@@ -57,34 +76,46 @@ const Index = () => {
           <Hero />
           <StatsBar />
 
-          {/* Vote Now CTA Banner */}
-          <section className="py-8 md:py-12 px-4" aria-label="Vote for Rising Stars">
+          {/* Who is BAK55 For? */}
+          <section className="py-12 md:py-20 px-4">
             <div className="container mx-auto max-w-6xl">
-              <Link to="/rising-stars/voting">
-                <Card className="relative overflow-hidden p-6 md:p-10 bg-gradient-to-r from-secondary/20 via-primary/10 to-secondary/20 border-secondary/30 hover:border-secondary/50 transition-all group cursor-pointer">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center text-3xl">
-                        🔥
+              <div className="text-center mb-10 md:mb-14 space-y-3">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">
+                  Built for <span className="text-gradient">Everyone in Music</span>
+                </h2>
+                <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
+                  Whether you create, listen, or invest — BAK55 has a place for you.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {audienceCards.map((card, i) => (
+                  <Link key={i} to={card.link}>
+                    <Card className={`group p-6 h-full bg-gradient-to-br ${card.gradient} ${card.border} border transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer`}>
+                      <div className="space-y-4">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                          <card.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-lg font-heading font-bold">{card.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
+                        <div className="flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
+                          {card.cta}
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl md:text-2xl font-bold">Vote for Rising Stars</h3>
-                        <p className="text-muted-foreground">Support your favorite artists — every vote counts!</p>
-                      </div>
-                    </div>
-                    <Button variant="hero" size="lg" className="group-hover:scale-105 transition-transform whitespace-nowrap">
-                      <Trophy className="w-5 h-5 mr-2" />
-                      Vote Now
-                    </Button>
-                  </div>
-                </Card>
-              </Link>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
-          
-          {/* Featured Competition Banner */}
+
+          <SocialProof />
+          <HowItWorks />
+          <Features />
+
+          {/* Featured Competition */}
           {featuredCompetition && (
-            <section className="py-12 md:py-16 px-4" aria-label="Featured Competition">
+            <section className="py-12 md:py-16 px-4">
               <div className="container mx-auto max-w-6xl">
                 <CompetitionBanner
                   competitionId={featuredCompetition.id}
@@ -100,11 +131,9 @@ const Index = () => {
               </div>
             </section>
           )}
-          <Features />
-          <HowItWorks />
+
           <FeaturedArtistsCarousel />
           <TrendingArtists />
-          <SocialProof />
           <Economy />
           <CTA />
         </main>
