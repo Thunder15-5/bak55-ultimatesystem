@@ -1,210 +1,150 @@
-# BAK55 — Complete Partially Finished Features Plan
-**Created:** March 8, 2026  
-**Objective:** Bring every partially-built feature to production-ready status  
-**Estimated Timeline:** 6 weeks (3 sprints × 2 weeks)
-
----
-
-## Summary of Partially Built Features
-
-| # | Feature | Current State | What's Missing |
-|---|---------|--------------|----------------|
-| 1 | Fan Club Content Gating | Tiers & memberships exist, subscription works | No actual content access control; no exclusive upload flow; no auto-billing |
-| 2 | Live Streaming | UI + DB tables exist (create/list streams) | No WebRTC/video infrastructure; no actual streaming; no live tipping |
-| 3 | Artist Course / Education | UI + `course_lessons` table exist | Table is empty — zero lessons populated; no completion certificates |
-| 4 | KYC Verification | `kyc_verifications` table exists; manual review only | No automated ID verification provider; no selfie matching; no document upload UI |
-| 5 | Withdrawal Pipeline | Wallet + withdrawal request UI exists | M-Pesa integration is simulated; no status tracking UI for users; no automated payouts |
-| 6 | Brand Dashboard | Basic stats + competition creation works | No campaign management; no sponsorship tracking; no artist discovery filters; no ROI metrics |
-| 7 | OG Image Generation | Edge function generates SVG | SVG not supported by social crawlers — needs PNG conversion |
-| 8 | Push Notifications | In-app notification bell works | No native push (FCM/APNs); no background notifications; no preference controls |
-| 9 | Direct Messaging | `conversations` + `messages` tables exist | Chat UI exists but is basic; no read receipts; no typing indicators; no fan club group chat |
-| 10 | Listening History Analytics | History page fetches data | No insights/stats (top genres, time spent, streak); no recommendations based on history |
-| 11 | Payment Webhook Validation | Selar + PesaPal callbacks exist | Signature verification is incomplete/untested |
-| 12 | Artist Analytics | Basic play counts shown | No revenue breakdown by source; no follower growth chart; no export capability |
-
----
-
-## Sprint 1: Revenue-Critical Features (Weeks 1–2)
-
-### 1.1 Fan Club Content Gating ✦ HIGH PRIORITY
-**Goal:** Artists can upload exclusive content; only paying members see it.
-
-- [ ] Add `is_exclusive` and `required_tier_level` columns to `tracks` table
-- [ ] Create RLS policies: block track access if user lacks active membership at required tier
-- [ ] Build "Upload Exclusive Content" flow on artist dashboard (select tier level)
-- [ ] Add "Members Only" lock overlay on gated tracks in UI
-- [ ] Implement auto-renewal: edge function that runs daily, deducts BAKCoins for active memberships, expires lapsed ones
-- [ ] Add membership expiry notifications (3 days before, on expiry)
-
-**Database changes:**
-```sql
-ALTER TABLE tracks ADD COLUMN is_exclusive boolean DEFAULT false;
-ALTER TABLE tracks ADD COLUMN required_tier_level integer DEFAULT 0;
-```
-
-### 1.2 Complete Withdrawal Pipeline ✦ HIGH PRIORITY
-**Goal:** Artists can request withdrawals and track status; admins approve with real M-Pesa payouts.
-
-- [ ] Build user-facing withdrawal status tracker (pending → approved → processing → completed/failed)
-- [ ] Add withdrawal history page showing all past requests with statuses
-- [ ] Integrate real M-Pesa B2C API in `mpesa-withdraw` edge function (replace simulation)
-- [ ] Add PesaPal production credentials and test end-to-end
-- [ ] Add admin withdrawal details view: user KYC status, transaction history, fraud flags
-- [ ] Email notifications on withdrawal status changes
-
-### 1.3 OG Image PNG Conversion ✦ HIGH PRIORITY
-**Goal:** Social sharing images render correctly on WhatsApp, Facebook, Instagram, X.
-
-- [ ] Install `@vercel/og` or use Satori + resvg-js in edge function for SVG→PNG rendering
-- [ ] Update `generate-og-image` to return `image/png` content type
-- [ ] Test with Facebook Sharing Debugger, X Card Validator, WhatsApp link preview
-- [ ] Add fallback default image for tracks/artists without cover art
-
-### 1.4 Payment Webhook Hardening
-**Goal:** Verify all payment callbacks are authentic.
-
-- [ ] Implement HMAC signature validation in `selar-callback` edge function using `SELAR_WEBHOOK_SECRET`
-- [ ] Implement PesaPal IPN signature validation using `PESAPAL_IPN_SECRET`
-- [ ] Add replay attack prevention (check transaction ID uniqueness)
-- [ ] Log all webhook events to `admin_activity_log` for audit
-
----
-
-## Sprint 2: Engagement & Growth Features (Weeks 3–4)
-
-### 2.1 Artist Course Content Population ✦ MEDIUM PRIORITY
-**Goal:** 10 onboarding lessons live and trackable.
-
-- [ ] Write and insert 10 lessons into `course_lessons` table via migration:
-  1. Welcome to BAK55 — Platform overview
-  2. Setting Up Your Artist Profile — Bio, photos, social links
-  3. Uploading Your First Track — Audio specs, cover art, metadata
-  4. Understanding BAKCoins — Earning, spending, withdrawing
-  5. Entering Competitions — How to submit and win
-  6. Growing Your Fanbase — Followers, engagement, sharing
-  7. Fan Clubs & Exclusive Content — Monetize your superfans
-  8. Understanding Analytics — Reads your stats, make decisions
-  9. KYC & Withdrawals — Getting verified and cashing out
-  10. Collaboration & Networking — Working with other artists
-- [ ] Add completion badge: "BAK55 Graduate" to `artist_badges` table
-- [ ] Auto-award badge when all 10 lessons completed
-- [ ] Add course completion certificate UI (shareable card)
-
-### 2.2 KYC Verification Upgrade ✦ MEDIUM PRIORITY
-**Goal:** Document upload + admin review flow (automated provider deferred to Phase 6).
-
-- [ ] Create `kyc_documents` storage bucket (private)
-- [ ] Build KYC document upload UI: ID front/back + selfie
-- [ ] Store documents in storage bucket with user_id folder structure
-- [ ] Update `kyc_verifications` table: add `document_urls`, `selfie_url`, `rejection_reason`
-- [ ] Admin KYC review panel: view documents, approve/reject with notes
-- [ ] Notifications on KYC status changes
-- [ ] Block withdrawal requests if KYC not approved
-
-### 2.3 Direct Messaging Completion ✦ MEDIUM PRIORITY
-**Goal:** Functional artist↔fan messaging with real-time updates.
-
-- [ ] Build full chat UI component with message list, input, send button
-- [ ] Add real-time message subscription using Supabase Realtime
-- [ ] Add read receipts (update `read_at` timestamp on message view)
-- [ ] Add unread message count badge on navigation
-- [ ] Fan club group chat: create conversation per tier, auto-add members
-- [ ] Message notification integration (in-app + future push)
-
-### 2.4 Artist Analytics Enhancement ✦ MEDIUM PRIORITY
-**Goal:** Artists get actionable revenue and growth insights.
-
-- [ ] Revenue breakdown chart: tips vs competition winnings vs track sales vs fan club
-- [ ] Follower growth line chart (daily/weekly/monthly)
-- [ ] Top tracks by plays/revenue table
-- [ ] Geographic listener distribution (if data available)
-- [ ] CSV export for all analytics data
-- [ ] Compare periods: this week vs last week
-
----
-
-## Sprint 3: Platform Polish & Remaining Features (Weeks 5–6) ✅ COMPLETED
-
-### 3.1 Push Notifications ✦ MEDIUM PRIORITY ✅
-**Goal:** Native push notifications on mobile (PWA + Capacitor).
-
-- [x] Create `push_tokens` table to store device tokens per user
-- [x] Create `notification_preferences` table for per-category toggles
-- [x] Edge function `send-push-notification` to send push via FCM (ready for FCM key)
-- [x] Notification preferences UI: toggle per category (follows, tips, competitions, messages, track updates, marketing)
-- [x] Integrated into Profile page as "Alerts" tab
-- [ ] Configure Capacitor Push Notifications plugin (requires native build)
-- [ ] Update PWA service worker for background notification handling (deferred)
-
-### 3.2 Brand Dashboard Completion ✦ LOW PRIORITY ✅
-**Goal:** Brands can manage sponsorships and discover artists.
-
-- [x] Campaign management: create/edit campaigns with budget tracking and ROI metrics
-- [x] Artist discovery with filters: genre, location, follower count, verified status, talent score
-- [x] ROI dashboard: total campaigns, active count, budget utilization percentage
-- [x] Brand↔Artist partnership request system (notification-based)
-- [x] Sort by talent score, followers, tracks, earnings
-
-### 3.3 Live Streaming Foundation ✦ LOW PRIORITY ✅
-**Goal:** Basic streaming capability using third-party infrastructure.
-
-- [x] Artist "Go Live" flow: schedule stream → go live → end stream
-- [x] Viewer page: watch stream with real-time chat sidebar (Supabase Realtime)
-- [x] Live tipping: fans send BAKCoins during stream via send-tip function
-- [x] Stream chat messages table with realtime subscription
-- [ ] Integrate with streaming provider (Mux/Agora) — requires API key (deferred)
-- [ ] Stream recording and replay capability (deferred)
-
-### 3.4 Listening History Insights ✦ LOW PRIORITY ✅
-**Goal:** Fans get personalized listening stats.
-
-- [x] "Your Top Artists" section (most listened in 30 days)
-- [x] "Your Top Genres" breakdown chart with percentage bars
-- [x] Total listening time stat (estimated from plays)
-- [x] Listening streak tracker (consecutive days)
-- [x] Shareable "My BAK55 Wrapped" style card (Web Share API / clipboard)
 
 
----
+# BAK55 Platform Product Overhaul Plan
 
-## Implementation Order (Recommended)
+## Current State Assessment
 
-| Priority | Feature | Sprint | Est. Effort |
-|----------|---------|--------|-------------|
-| 🔴 P0 | Fan Club Content Gating | 1 | 3 days |
-| 🔴 P0 | Withdrawal Pipeline | 1 | 3 days |
-| 🔴 P0 | OG Image PNG | 1 | 1 day |
-| 🔴 P0 | Webhook Validation | 1 | 1 day |
-| 🟡 P1 | Artist Course Content | 2 | 2 days |
-| 🟡 P1 | KYC Document Upload | 2 | 3 days |
-| 🟡 P1 | Direct Messaging | 2 | 3 days |
-| 🟡 P1 | Artist Analytics | 2 | 2 days |
-| 🟢 P2 | Push Notifications | 3 | 3 days |
-| 🟢 P2 | Brand Dashboard | 3 | 3 days |
-| 🟢 P2 | Live Streaming | 3 | 4 days |
-| 🟢 P2 | Listening Insights | 3 | 1 day |
+The platform is functional but suffers from:
+- **Navigation overload**: Desktop nav has 8-12 items per role, creating cognitive burden
+- **Homepage is competition-heavy, not product-clear**: Hero talks about "infrastructure" (abstract), not what users actually DO
+- **Dashboards are dense**: Artist dashboard has 8 stat cards + 3 banners + onboarding + activity + quick actions all competing
+- **No clear "what to do next" logic**: Onboarding checklist exists but is easily dismissed and not contextual
+- **Mobile nav is decent** but desktop nav feels like a spreadsheet toolbar
+- **Empty states exist** but are minimal ("No tracks yet" as plain text in some places)
+- **Trust signals are weak**: No social proof on auth pages, no security messaging on payment flows
 
----
+## Execution Plan (Priority Order)
 
-## Dependencies & Blockers
+### Phase 1: Homepage Rebuild (Clarity + Conversion)
 
-| Feature | Dependency | Notes |
-|---------|-----------|-------|
-| Withdrawal Pipeline | M-Pesa B2C production credentials | Need PesaPal production API access |
-| Push Notifications | FCM server key | Need Firebase project + secret |
-| Live Streaming | Streaming provider account | Mux/Agora/LiveKit API key needed |
-| KYC (automated) | Smile ID or similar | Deferred — manual review first |
-| OG Image PNG | Edge function runtime | Verify Deno supports resvg-js WASM |
+**Goal**: Make any visitor understand BAK55 in 5 seconds.
 
----
+**Changes to `Hero.tsx`**:
+- Rewrite headline from abstract ("Building Infrastructure for African Music's Digital Future") to concrete: "Where African Artists Launch Careers" with subtext "Upload music. Win competitions. Earn real money."
+- Replace vague trust indicators with concrete numbers (pull from `get_public_platform_stats` RPC)
+- Simplify CTAs to two: "Join Free" and "Explore Music"
+- Remove competition-specific language from hero (move to dedicated section below)
 
-## Success Criteria
+**Changes to `Index.tsx`**:
+- Restructure section order: Hero → Social Proof (moved up) → How It Works (simplified to 3 steps) → Features → Competition Banner → Trending → CTA
+- Remove the redundant "Vote for Rising Stars" card that competes with the competition banner
+- Add a "Who is BAK55 for?" section with 3 audience cards (Artists, Fans, Brands) each with a clear value prop and CTA
 
-- [ ] Fan club members can ONLY access tier-gated content
-- [ ] Withdrawals flow end-to-end: request → admin approve → M-Pesa payout → user notified
-- [ ] OG images render as PNG on all social platforms
-- [ ] All 10 course lessons accessible and completable
-- [ ] KYC documents uploadable and reviewable by admin
-- [ ] Real-time chat works between artists and fans
-- [ ] Artist analytics show revenue breakdown and follower growth
-- [ ] Payment webhooks reject invalid signatures
+**Changes to `Features.tsx`**:
+- Rewrite descriptions to be benefit-focused, not feature-focused
+- Tighten to 3 core pillars: "Upload & Earn", "Compete & Win", "Engage & Grow"
+
+### Phase 2: Navigation Simplification
+
+**Goal**: Reduce cognitive load, improve discoverability.
+
+**Changes to `Navigation.tsx`**:
+- Desktop: Collapse to 5 primary items max per role + overflow dropdown
+  - Fan: Home, Discover, Vote, Wallet, [More: Playlists, History, Live, Leaderboard]
+  - Artist: Home, Upload, My Music, Wallet, [More: Analytics, Competitions, Beats, Live]
+- Remove "Upgrade to Artist" from inline nav; move to dashboard CTA
+- Add active state highlighting (currently just ghost buttons)
+
+**Changes to `BottomNavigation.tsx`**:
+- Already well-structured; minor refinement to add active route indicator animation
+
+### Phase 3: Dashboard Focus & Hierarchy
+
+**Goal**: Each dashboard answers "What should I do right now?"
+
+**Fan Dashboard (`FanDashboard.tsx`)**:
+- Move stats grid below the fold; lead with a single "hero action" card: "Vote in Rising Stars" or "Discover New Music" based on context
+- Reduce stats from 5 to 3 visible (BAKCoins, Votes Cast, Following) with "See all" expansion
+- Consolidate upgrade banners into a single subtle prompt
+- Move DailyStreak and WeeklyChallenges into a tabbed "Engagement" card
+
+**Artist Dashboard (`ArtistDashboard.tsx`)**:
+- Lead with a contextual action card: if 0 tracks → "Upload Your First Track", if 0 competitions → "Enter a Competition", else → top track performance
+- Reduce from 8 stat cards to 4 primary (Balance, Tracks, Total Plays, Followers) with secondary row collapsed
+- Revenue split card is good but should be in Settings/Profile, not dashboard
+- Consolidate ArtistLevelCard + WithdrawalEligibilityCard into a single "Artist Status" card
+- Remove SubscriptionStatusCard and ArtistCollaboration from main view; move to profile
+
+**Producer Dashboard**: Similar treatment — lead with contextual action, reduce stat density
+
+**Brand Dashboard**: Lead with "Discover Artists" or "Create Competition" action
+
+### Phase 4: Auth Flow Polish
+
+**Goal**: Reduce signup friction, increase trust.
+
+**Changes to `Signup.tsx`**:
+- Split into 2 steps: Step 1 = Role selection + Email/Password/Username; Step 2 = Role-specific fields
+- Add progress indicator
+- Add trust badge: "Join 500+ artists already on BAK55" (dynamic count)
+- Add social proof: testimonial or stat near CTA
+
+**Changes to `Login.tsx`**:
+- Add "Welcome back, [role]" personalization if returning user
+- Currently clean; add a small trust indicator ("Secured by bank-level encryption")
+
+### Phase 5: Empty States & Success States
+
+**Goal**: Every empty screen converts users into action.
+
+- Replace all `"No tracks yet"` / `"No recent activity"` plain text with `EmptyStateCard` components
+- Create success state components for: track upload complete, competition entry submitted, first vote cast, first coin purchase
+- Each success state shows confetti animation + next action suggestion
+
+### Phase 6: Premium Polish
+
+**Goal**: Make the platform feel funded and intentional.
+
+- Standardize card border-radius, shadows, and spacing across all dashboards
+- Improve skeleton loaders to match actual content layout (not generic blocks)
+- Add subtle page transition animations (fade-in on route change)
+- Standardize button variants: `hero` for primary CTAs, `outline` for secondary, `ghost` for tertiary
+- Ensure consistent 16px/24px spacing rhythm throughout
+
+### Phase 7: Trust & Conversion Layer
+
+**Goal**: Build confidence at every decision point.
+
+- Add security badges near payment/wallet actions
+- Add "How BAKCoins work" tooltip on first wallet visit
+- Add competition rules summary card at top of voting page
+- Add "What happens next?" section after key actions (signup, upload, vote)
+- Add platform stats to footer (total artists, total tracks, total votes)
+
+## Technical Details
+
+### Files to Create
+- `src/components/HeroAction.tsx` — Contextual "do this next" card for dashboards
+- `src/components/SuccessState.tsx` — Reusable post-action celebration component
+- `src/components/TrustBadge.tsx` — Security/credibility indicator
+- `src/components/NavigationDropdown.tsx` — Overflow menu for desktop nav
+
+### Files to Modify (Major)
+- `src/components/Hero.tsx` — Full rewrite of copy and structure
+- `src/pages/Index.tsx` — Section reorder and new audience section
+- `src/components/Navigation.tsx` — Simplify per-role items
+- `src/pages/fan/FanDashboard.tsx` — Hierarchy restructure
+- `src/pages/artist/ArtistDashboard.tsx` — Hierarchy restructure
+- `src/pages/Signup.tsx` — Multi-step conversion
+- `src/components/Features.tsx` — Copy rewrite
+
+### Files to Modify (Minor)
+- `src/pages/producer/ProducerDashboard.tsx`
+- `src/pages/brand/BrandDashboard.tsx`
+- `src/components/EmptyStateCard.tsx` — Enhanced variants
+- `src/components/BottomNavigation.tsx` — Active state animation
+
+### No Database Changes Required
+All improvements are frontend UX/UI. Existing RPC `get_public_platform_stats` already provides the data needed for trust indicators.
+
+## Implementation Order
+
+Each phase is independently shippable. Recommended sequence:
+1. Homepage rebuild (highest conversion impact)
+2. Navigation simplification (reduces confusion immediately)
+3. Dashboard hierarchy (improves retention)
+4. Auth polish (improves signup conversion)
+5. Empty/success states (improves activation)
+6. Premium polish (improves perception)
+7. Trust layer (improves payment conversion)
+
