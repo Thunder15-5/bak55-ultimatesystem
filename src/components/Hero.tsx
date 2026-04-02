@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Music, Play, Users } from "lucide-react";
+import { ArrowRight, Music, Play } from "lucide-react";
 import heroBackground from "@/assets/hero-bg.jpg";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +42,7 @@ export const Hero = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-xl animate-fade-in">
             <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Now live — Competitions open for entries
+              Competitions open — entries live now
             </span>
           </div>
 
@@ -56,9 +56,9 @@ export const Hero = () => {
             </h1>
           </div>
 
-          {/* Subheadline — concrete, benefit-focused */}
+          {/* Subheadline */}
           <p className="text-sm sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up px-2" style={{ animationDelay: '0.2s' }}>
-            Upload music. Win competitions. Earn real money.
+            Upload music. Compete for real prizes. Build a fanbase.
             <br className="hidden sm:block" />
             <span className="text-foreground/80">The all-in-one platform for emerging African talent.</span>
           </p>
@@ -80,7 +80,7 @@ export const Hero = () => {
             </Link>
           </div>
 
-          {/* Live stats — concrete social proof */}
+          {/* Live stats */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-4 animate-fade-in px-4" style={{ animationDelay: '0.4s' }}>
             {[
               { value: stats.total_artists || '50+', label: 'Artists' },
