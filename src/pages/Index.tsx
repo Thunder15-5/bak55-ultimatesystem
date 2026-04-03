@@ -5,18 +5,16 @@ import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { HowItWorks } from "@/components/HowItWorks";
 import { SocialProof } from "@/components/SocialProof";
-import { Economy } from "@/components/Economy";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
-import { StatsBar } from "@/components/StatsBar";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
-import { TrendingArtists } from "@/components/TrendingArtists";
 import { FeaturedArtistsCarousel } from "@/components/FeaturedArtistsCarousel";
+import { FAQ } from "@/components/FAQ";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSEO } from "@/components/SEO";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mic2, Heart, Briefcase } from "lucide-react";
+import { ArrowRight, Mic2, Heart, Briefcase, Shield, Banknote, BarChart3 } from "lucide-react";
 
 const audienceCards = [
   {
@@ -51,6 +49,12 @@ const audienceCards = [
   },
 ];
 
+const trustBadges = [
+  { icon: Shield, label: "Verified Payouts" },
+  { icon: Banknote, label: "M-Pesa Cash Out" },
+  { icon: BarChart3, label: "Transparent Voting" },
+];
+
 const Index = () => {
   const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
@@ -74,7 +78,21 @@ const Index = () => {
         <Navigation />
         <main>
           <Hero />
-          <StatsBar />
+
+          {/* Trust Bar */}
+          <section className="py-6 px-4 border-y border-border/30 bg-card/20 backdrop-blur-sm">
+            <div className="container mx-auto max-w-4xl flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+              {trustBadges.map((badge, i) => (
+                <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                  <badge.icon className="w-4 h-4 text-primary" />
+                  <span className="text-xs sm:text-sm font-medium">{badge.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <SocialProof />
+          <HowItWorks />
 
           {/* Who is BAK55 For? */}
           <section className="py-12 md:py-20 px-4">
@@ -109,8 +127,6 @@ const Index = () => {
             </div>
           </section>
 
-          <SocialProof />
-          <HowItWorks />
           <Features />
 
           {/* Featured Competition */}
@@ -133,8 +149,7 @@ const Index = () => {
           )}
 
           <FeaturedArtistsCarousel />
-          <TrendingArtists />
-          <Economy />
+          <FAQ />
           <CTA />
         </main>
         <Footer />
