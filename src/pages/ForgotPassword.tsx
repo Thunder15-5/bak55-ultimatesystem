@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, CheckCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+
 const logoImage = "/bak55-logo.png";
 
 export default function ForgotPassword() {
@@ -16,26 +16,22 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email) {
       toast.error("Please enter your email address");
       return;
     }
-
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `https://www.bak55talent.co.ke/reset-password`,
       });
-
       if (error) {
         toast.error(error.message || "Failed to send reset email");
       } else {
         setEmailSent(true);
-        toast.success("Password reset email sent!");
+        toast.success("Reset link sent!");
       }
-    } catch (err) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -43,76 +39,57 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8">
-      {/* Animated background */}
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-8">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-12 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 -right-12 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-12 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-12 w-80 h-80 bg-secondary/15 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative z-10 border-primary/20 bg-card/95 backdrop-blur-xl shadow-2xl animate-scale-in">
-        <CardHeader className="space-y-4 p-6 sm:p-8 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <div className="relative">
-              <img src={logoImage} alt="BAK55 Talent" className="h-20 w-auto" />
-              <div className="absolute inset-0 blur-xl bg-primary/20 -z-10" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <CardTitle className="text-3xl md:text-4xl font-heading">
-              <span className="text-gradient">Reset Password</span>
-            </CardTitle>
-            <CardDescription className="text-base">
-              {emailSent 
-                ? "Check your email for a reset link" 
-                : "Enter your email to receive a password reset link"
-              }
-            </CardDescription>
-          </div>
-        </CardHeader>
+      <div className="w-full max-w-md relative z-10 space-y-6">
+        <div className="text-center space-y-3">
+          <img src={logoImage} alt="BAK55 Talent" className="h-12 w-auto mx-auto" />
+          <h1 className="text-2xl font-heading font-bold">
+            <span className="text-gradient">Reset password</span>
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {emailSent
+              ? "Check your inbox for a reset link"
+              : "Enter your email to receive a reset link"}
+          </p>
+        </div>
 
-        {emailSent ? (
-          <CardContent className="space-y-6 p-6 sm:p-8 pt-0">
-            <div className="flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+        <div className="rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-6">
+          {emailSent ? (
+            <div className="space-y-5 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8 text-primary" />
               </div>
               <div className="space-y-2">
-                <p className="text-muted-foreground">
-                  We've sent a password reset link to:
-                </p>
+                <p className="text-sm text-muted-foreground">Reset link sent to:</p>
                 <p className="font-semibold text-primary">{email}</p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Didn't receive the email? Check your spam folder or try again.
+              <p className="text-xs text-muted-foreground">
+                Didn't get it? Check spam or try again.
               </p>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setEmailSent(false)}
-                className="w-full"
-              >
-                Try a different email
-              </Button>
-              <Link to="/login" className="w-full">
-                <Button variant="hero" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Login
+              <div className="flex flex-col gap-3">
+                <Button variant="outline" onClick={() => setEmailSent(false)} className="w-full">
+                  Try different email
                 </Button>
-              </Link>
+                <Link to="/login" className="w-full">
+                  <Button variant="hero" className="w-full">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Login
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </CardContent>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-5 p-6 sm:p-8 pt-0">
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  Email Address
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                  Email
                 </Label>
                 <Input
                   id="email"
@@ -120,13 +97,11 @@ export default function ForgotPassword() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                  className="h-11 bg-background/50 border-border/50 focus:border-primary"
                   required
                 />
               </div>
-            </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4 p-6 sm:p-8 pt-0">
               <Button
                 type="submit"
                 variant="hero"
@@ -139,18 +114,24 @@ export default function ForgotPassword() {
                     Sending...
                   </>
                 ) : (
-                  "Send Reset Link"
+                  <>
+                    Send Reset Link
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
                 )}
               </Button>
 
-              <Link to="/login" className="text-primary hover:underline text-sm font-medium flex items-center justify-center gap-2">
-                <ArrowLeft className="w-4 h-4" />
+              <Link
+                to="/login"
+                className="text-primary hover:underline text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
                 Back to Login
               </Link>
-            </CardFooter>
-          </form>
-        )}
-      </Card>
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

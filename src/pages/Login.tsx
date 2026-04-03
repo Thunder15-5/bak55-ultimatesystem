@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Shield, Users, Coins } from "lucide-react";
 import { toast } from "sonner";
+
 const logoImage = "/bak55-logo.png";
-import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -20,75 +19,56 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const getLoginErrorMessage = (error: any): string => {
-    const msg = (error?.message || '').toLowerCase();
-    
-    if (msg.includes('invalid login credentials')) {
-      return 'Invalid email or password. If you recently signed up, please check your email and verify your account first.';
-    }
-    if (msg.includes('email not confirmed')) {
-      return 'Please verify your email address before logging in. Check your inbox for a confirmation link.';
-    }
-    if (msg.includes('rate limit') || msg.includes('too many')) {
-      return 'Too many login attempts. Please wait a few minutes before trying again.';
-    }
-    if (msg.includes('network') || msg.includes('fetch')) {
-      return 'Connection error. Please check your internet and try again.';
-    }
-    return error?.message || 'Failed to login. Please try again.';
+    const msg = (error?.message || "").toLowerCase();
+    if (msg.includes("invalid login credentials"))
+      return "Invalid email or password. If you recently signed up, check your email to verify your account first.";
+    if (msg.includes("email not confirmed"))
+      return "Please verify your email before logging in. Check your inbox for a confirmation link.";
+    if (msg.includes("rate limit") || msg.includes("too many"))
+      return "Too many attempts. Please wait a few minutes and try again.";
+    if (msg.includes("network") || msg.includes("fetch"))
+      return "Connection error. Check your internet and try again.";
+    return error?.message || "Login failed. Please try again.";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     const { error } = await signIn(email, password, redirectUrl || undefined);
-
-    if (error) {
-      toast.error(getLoginErrorMessage(error));
-    }
-
+    if (error) toast.error(getLoginErrorMessage(error));
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8">
-      {/* Animated background */}
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-8">
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-12 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 -right-12 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-12 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-12 w-80 h-80 bg-secondary/15 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative z-10 border-primary/20 bg-card/95 backdrop-blur-xl shadow-2xl animate-scale-in">
-        <CardHeader className="space-y-4 p-6 sm:p-8 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <div className="relative">
-              <img src={logoImage} alt="BAK55 Talent" className="h-20 w-auto" />
-              <div className="absolute inset-0 blur-xl bg-primary/20 -z-10" />
-            </div>
+      <div className="w-full max-w-md relative z-10 space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <img src={logoImage} alt="BAK55 Talent" className="h-12 w-auto mx-auto" />
+          <div>
+            <h1 className="text-2xl font-heading font-bold">
+              <span className="text-gradient">Welcome back</span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Log in to continue your music journey
+            </p>
           </div>
-          
-          <div className="space-y-2">
-            <CardTitle className="text-3xl md:text-4xl font-heading">
-              <span className="text-gradient">Welcome Back</span>
-            </CardTitle>
-            <CardDescription className="text-base">
-              Login to continue building your music career
-            </CardDescription>
-          </div>
+        </div>
 
-          <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-primary font-medium">Secure Login</span>
-          </div>
-        </CardHeader>
-
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5 p-6 sm:p-8 pt-0">
+        {/* Form Card */}
+        <div className="rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                Email Address
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                Email
               </Label>
               <Input
                 id="email"
@@ -96,35 +76,35 @@ export default function Login() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                className="h-11 bg-background/50 border-border/50 focus:border-primary"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                  Password
+                </Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Forgot?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                className="h-11 bg-background/50 border-border/50 focus:border-primary"
                 required
               />
             </div>
 
-            <div className="flex items-center justify-end text-sm">
-              <Link to="/forgot-password" className="text-primary hover:underline font-medium">
-                Forgot password?
-              </Link>
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4 p-6 sm:p-8 pt-0">
             <Button
               type="submit"
               variant="hero"
@@ -138,31 +118,40 @@ export default function Login() {
                 </>
               ) : (
                 <>
-                  Login to Dashboard
-                  <Sparkles className="ml-2 h-5 w-5" />
+                  Log In
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
+          </form>
 
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-primary/10"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">New to BAK55?</span>
-              </div>
-            </div>
+          {/* Trust indicators */}
+          <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-2 border-t border-border/30">
+            <span className="flex items-center gap-1">
+              <Shield className="w-3 h-3" /> Secure login
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" /> 10K+ users
+            </span>
+            <span className="flex items-center gap-1">
+              <Coins className="w-3 h-3" /> M-Pesa payouts
+            </span>
+          </div>
+        </div>
 
-            <p className="text-sm text-center text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to={`/signup${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className="text-primary hover:underline font-semibold">
-                Create account
-              </Link>
-            </p>
-
-          </CardFooter>
-        </form>
-      </Card>
+        {/* Bottom */}
+        <div className="text-center space-y-3">
+          <p className="text-sm text-muted-foreground">
+            New to BAK55?{" "}
+            <Link
+              to={`/signup${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+              className="text-primary hover:underline font-semibold"
+            >
+              Create free account
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
