@@ -57,7 +57,7 @@ export function ActiveCompetitionCard({ userId }: ActiveCompetitionCardProps) {
                 {daysLeft} days left
               </Badge>
               {hasSubmitted && (
-                <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-400">
+                <Badge variant="outline" className="text-[10px] border-accent/50 text-accent">
                   <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
                   Submitted
                 </Badge>
