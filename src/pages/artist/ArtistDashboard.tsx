@@ -3,23 +3,22 @@ import { getArtistShareUrl } from "@/lib/shareUrl";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/Navigation";
-import { TrackRecommendations } from "@/components/TrackRecommendations";
-import { CompetitionBanner } from "@/components/CompetitionBanner";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { HeroAction } from "@/components/HeroAction";
-import { StatsCard, DashboardHeader, QuickActions, DashboardSkeleton } from "@/components/dashboard";
+import {
+  StatsCard, DashboardHeader, QuickActions, DashboardSkeleton,
+  ShareAndGrow, OpportunitiesFeed, ActiveCompetitionCard,
+} from "@/components/dashboard";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Music, Wallet, TrendingUp, Upload, BarChart3, DollarSign,
-  Users, Trophy, Clock, Play, Headphones, Share2
+  Music, Wallet, TrendingUp, Upload, BarChart3,
+  DollarSign, Users, Trophy, Clock, Play, Headphones,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useFeaturedCompetition } from "@/hooks/useFeaturedCompetition";
 
 export default function ArtistDashboard() {
   const { user } = useAuth();
@@ -37,7 +36,6 @@ export default function ArtistDashboard() {
     recentActivity: [] as any[],
   });
   const [loading, setLoading] = useState(true);
-  const featuredCompetition = useFeaturedCompetition(user?.id);
 
   useEffect(() => {
     if (user) {
@@ -46,14 +44,7 @@ export default function ArtistDashboard() {
         .channel('artist_wallet_rt')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'wallets', filter: `user_id=eq.${user.id}` }, () => fetchStats())
         .subscribe();
-      const artistChannel = supabase
-        .channel('artist_profile_rt')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'artist_profiles', filter: `user_id=eq.${user.id}` }, () => fetchStats())
-        .subscribe();
-      return () => {
-        supabase.removeChannel(walletChannel);
-        supabase.removeChannel(artistChannel);
-      };
+      return () => { supabase.removeChannel(walletChannel); };
     }
   }, [user]);
 
@@ -101,13 +92,12 @@ export default function ArtistDashboard() {
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "Artist";
 
-  // Contextual hero action
   const getHeroAction = () => {
     if (stats.tracksCount === 0) {
-      return { icon: Upload, title: "Upload Your First Track", description: "Get started by sharing your music with the world.", actionLabel: "Upload", actionLink: "/artist/upload" };
+      return { icon: Upload, title: "Upload Your First Track", description: "Get started by sharing your music with the world.", actionLabel: "Upload Now", actionLink: "/artist/upload" };
     }
     if (stats.competitions === 0) {
-      return { icon: Trophy, title: "Enter a Competition", description: "Compete for prizes and get your music in front of new fans.", actionLabel: "Browse", actionLink: "/artist/competitions" };
+      return { icon: Trophy, title: "Enter a Competition", description: "Compete for prizes and grow your fanbase.", actionLabel: "Browse", actionLink: "/artist/competitions" };
     }
     return null;
   };
@@ -122,27 +112,13 @@ export default function ArtistDashboard() {
           {loading ? (
             <DashboardSkeleton statsCount={4} />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
+              {/* Header */}
               <DashboardHeader
                 greeting="Welcome Back"
                 username={username}
-                subtitle="Ready to create amazing music today?"
+                subtitle="Here's what's happening with your music"
                 actions={[
-                  {
-                    label: "Share Profile",
-                    icon: Share2,
-                    variant: "outline",
-                    onClick: () => {
-                      const url = getArtistShareUrl(user?.id || "");
-                      const text = `Check out my music on BAK55 Talent! 🎶🔥`;
-                      if (navigator.share) {
-                        navigator.share({ title: "My BAK55 Profile", text, url });
-                      } else {
-                        navigator.clipboard.writeText(`${text}\n${url}`);
-                        toast.success("Profile link copied!");
-                      }
-                    },
-                  },
                   { label: "Upload Track", icon: Upload, variant: "hero" as any, onClick: () => navigate("/artist/upload") },
                 ]}
               />
@@ -160,8 +136,6 @@ export default function ArtistDashboard() {
                 />
               )}
 
-              <OnboardingChecklist />
-
               {/* 4 Primary Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <StatsCard icon={Wallet} label="BAKCoins" value={stats.balance.toFixed(2)} variant="primary" link="/artist/wallet" />
@@ -170,23 +144,29 @@ export default function ArtistDashboard() {
                 <StatsCard icon={Users} label="Followers" value={stats.followers} variant="success" link="/artist/profile" />
               </div>
 
-              {/* Featured Competition */}
-              {featuredCompetition && (
-                <CompetitionBanner
-                  competitionId={featuredCompetition.id}
-                  title={featuredCompetition.title}
-                  coverImage={featuredCompetition.cover_image}
-                  prizeAmount={featuredCompetition.prize_amount}
-                  endDate={featuredCompetition.end_date}
-                  maxSubmissions={featuredCompetition.max_submissions}
-                  currentSubmissions={featuredCompetition.submissions?.[0]?.count || 0}
-                  ctaText="Submit Your Track"
-                  ctaLink={`/artist/upload?competition=${featuredCompetition.id}`}
-                />
-              )}
+              {/* Active Competition — High Priority */}
+              <ActiveCompetitionCard userId={user?.id || ""} />
 
-              {/* Top Track + Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Quick Actions + Share & Grow */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="lg:col-span-2">
+                  <QuickActions
+                    columns={3}
+                    actions={[
+                      { icon: Upload, label: "Upload", link: "/artist/upload", variant: "hero" },
+                      { icon: BarChart3, label: "Analytics", link: "/artist/analytics" },
+                      { icon: Wallet, label: "Wallet", link: "/artist/wallet" },
+                      { icon: Trophy, label: "Competitions", link: "/artist/competitions" },
+                      { icon: Music, label: "My Tracks", link: "/artist/catalog" },
+                      { icon: Headphones, label: "Beats", link: "/beats" },
+                    ]}
+                  />
+                </div>
+                <ShareAndGrow userId={user?.id || ""} />
+              </div>
+
+              {/* Top Track + Recent Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 <Card className="border-border/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -200,7 +180,7 @@ export default function ArtistDashboard() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
-                            <Play className="w-5 h-5 text-white" />
+                            <Play className="w-5 h-5 text-primary-foreground" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{stats.topTrack.title}</p>
@@ -253,23 +233,8 @@ export default function ArtistDashboard() {
                 </Card>
               </div>
 
-              {/* Quick Actions & Recommendations */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <QuickActions
-                    columns={3}
-                    actions={[
-                      { icon: Upload, label: "Upload", link: "/artist/upload", variant: "hero" },
-                      { icon: BarChart3, label: "Analytics", link: "/artist/analytics" },
-                      { icon: Wallet, label: "Wallet", link: "/artist/wallet" },
-                      { icon: Trophy, label: "Competitions", link: "/artist/competitions" },
-                      { icon: Music, label: "My Tracks", link: "/artist/catalog" },
-                      { icon: Headphones, label: "Beats", link: "/beats" },
-                    ]}
-                  />
-                </div>
-                <TrackRecommendations />
-              </div>
+              {/* Opportunities */}
+              <OpportunitiesFeed />
             </div>
           )}
         </div>
