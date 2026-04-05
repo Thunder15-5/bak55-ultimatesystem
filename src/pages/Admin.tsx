@@ -25,7 +25,6 @@ import { VotingControlsPanel } from "@/components/admin/VotingControlsPanel";
 import { WithdrawalConfigPanel } from "@/components/admin/WithdrawalConfigPanel";
 import { ArtistLevelsPanel } from "@/components/admin/ArtistLevelsPanel";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { StatsCard } from "@/components/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +35,11 @@ import { toast } from "sonner";
 import {
   DollarSign, Check, X, Loader2, Users, Trophy,
   ShieldAlert, ShieldCheck, Edit, Trash2,
-  TrendingUp, Music, Coins, Wallet, Music2
+  TrendingUp, Music, Coins, Wallet, Music2,
+  ArrowRight, Clock, AlertTriangle, Activity, Zap,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { DashboardSkeleton } from "@/components/dashboard";
 
 interface WithdrawalRequest {
   id: string;
@@ -91,6 +90,14 @@ interface Metrics {
   pendingWithdrawals: number;
 }
 
+interface ActivityItem {
+  id: string;
+  event_type: string;
+  description: string;
+  created_at: string;
+  event_category: string;
+}
+
 export default function Admin() {
   const { userRole } = useAuth();
   const navigate = useNavigate();
@@ -99,6 +106,7 @@ export default function Admin() {
   const [coinPurchases, setCoinPurchases] = useState<CoinPurchase[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [pendingMerchOrders, setPendingMerchOrders] = useState(0);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [metrics, setMetrics] = useState<Metrics>({
     totalUsers: 0, totalArtists: 0, totalBrands: 0, totalProducers: 0,
     totalTracks: 0, totalBeats: 0, totalCompetitions: 0, activeCompetitions: 0,
@@ -114,7 +122,6 @@ export default function Admin() {
     }
     fetchAllData();
 
-    // Real-time subscriptions for admin metrics
     const paymentsChannel = supabase
       .channel('admin_payments_rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_transactions' }, () => {
@@ -135,6 +142,7 @@ export default function Admin() {
       .channel('admin_users_rt')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
         fetchMetrics();
+        fetchRecentActivity();
       })
       .subscribe();
 
@@ -161,8 +169,20 @@ export default function Admin() {
       fetchCompetitions(),
       fetchMetrics(),
       fetchPendingMerchOrders(),
+      fetchRecentActivity(),
     ]);
     setLoading(false);
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const { data } = await supabase
+        .from("admin_activity_log")
+        .select("id, event_type, description, created_at, event_category")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      setRecentActivity(data || []);
+    } catch {}
   };
 
   const fetchPendingMerchOrders = async () => {
@@ -386,7 +406,17 @@ export default function Admin() {
   const renderContent = () => {
     switch (activeTab) {
       case "metrics":
-        return <MetricsPanel metrics={metrics} withdrawalRequests={withdrawalRequests} navigate={navigate} />;
+        return (
+          <MetricsPanel
+            metrics={metrics}
+            withdrawalRequests={withdrawalRequests}
+            coinPurchases={coinPurchases}
+            competitions={competitions}
+            recentActivity={recentActivity}
+            navigate={navigate}
+            onTabChange={setActiveTab}
+          />
+        );
       case "withdrawals":
         return <WithdrawalsPanel requests={withdrawalRequests} processing={processing} onApprove={handleApproveWithdrawal} onReject={handleRejectWithdrawal} />;
       case "purchases":
@@ -444,6 +474,8 @@ export default function Admin() {
     }
   };
 
+  const totalPending = withdrawalRequests.length + coinPurchases.length + pendingMerchOrders;
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -458,11 +490,18 @@ export default function Admin() {
               pendingMerchOrders={pendingMerchOrders}
             />
             <div className="flex-1 flex flex-col min-w-0">
-              <header className="h-12 flex items-center gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
-                <SidebarTrigger />
-                <h1 className="text-sm font-heading font-bold capitalize">
-                  {activeTab === "metrics" ? "Dashboard" : activeTab.replace("-", " ")}
-                </h1>
+              <header className="h-12 flex items-center justify-between gap-3 border-b border-border/50 px-4 bg-card/50 backdrop-blur-sm sticky top-16 z-10">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger />
+                  <h1 className="text-sm font-heading font-bold capitalize">
+                    {activeTab === "metrics" ? "Command Center" : activeTab.replace(/-/g, " ")}
+                  </h1>
+                </div>
+                {totalPending > 0 && (
+                  <Badge variant="destructive" className="text-[10px] animate-pulse">
+                    {totalPending} pending
+                  </Badge>
+                )}
               </header>
               <main className="flex-1 p-4 md:p-6 overflow-auto">
                 {renderContent()}
@@ -477,45 +516,255 @@ export default function Admin() {
 
 // ── Sub-panels ──
 
-function MetricsPanel({ metrics, withdrawalRequests, navigate }: { metrics: Metrics; withdrawalRequests: WithdrawalRequest[]; navigate: any }) {
+function MetricsPanel({
+  metrics, withdrawalRequests, coinPurchases, competitions, recentActivity, navigate, onTabChange,
+}: {
+  metrics: Metrics;
+  withdrawalRequests: WithdrawalRequest[];
+  coinPurchases: CoinPurchase[];
+  competitions: Competition[];
+  recentActivity: ActivityItem[];
+  navigate: any;
+  onTabChange: (tab: string) => void;
+}) {
+  const urgentItems = [
+    withdrawalRequests.length > 0 && { label: `${withdrawalRequests.length} withdrawals`, tab: "withdrawals", icon: Wallet },
+    coinPurchases.length > 0 && { label: `${coinPurchases.length} purchases`, tab: "purchases", icon: Coins },
+  ].filter(Boolean) as { label: string; tab: string; icon: any }[];
+
+  const activeComps = competitions.filter(c => c.status === "active");
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <StatsCard icon={Users} label="Total Users" value={metrics.totalUsers} subtitle={`${metrics.totalArtists} artists, ${metrics.totalBrands} brands, ${metrics.totalProducers} producers`} variant="primary" />
-        <StatsCard icon={Music} label="Total Tracks" value={metrics.totalTracks} subtitle="Uploaded by artists" variant="secondary" />
-        <StatsCard icon={Music2} label="Total Beats" value={metrics.totalBeats} subtitle="Uploaded by producers" variant="accent" />
-        <StatsCard icon={Trophy} label="Competitions" value={metrics.totalCompetitions} subtitle={`${metrics.activeCompetitions} active`} variant="warning" />
-        <StatsCard icon={Wallet} label="Total Revenue" value={`${metrics.totalRevenue.toFixed(0)} KES`} subtitle="From coin purchases" variant="success" />
-        <StatsCard icon={TrendingUp} label="Pending Withdrawals" value={`${metrics.pendingWithdrawals.toFixed(0)} BAK`} subtitle={`${withdrawalRequests.length} requests`} variant="destructive" />
+      {/* Urgent Action Banner */}
+      {urgentItems.length > 0 && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <span className="text-sm font-semibold text-destructive">Requires Attention</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {urgentItems.map((item) => (
+                <Button
+                  key={item.tab}
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => onTabChange(item.tab)}
+                  className="h-8 text-xs"
+                >
+                  <item.icon className="h-3 w-3 mr-1.5" />
+                  {item.label}
+                  <ArrowRight className="h-3 w-3 ml-1.5" />
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Key Metrics */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          icon={Users}
+          label="Total Users"
+          value={metrics.totalUsers}
+          detail={`${metrics.totalArtists} artists · ${metrics.totalProducers} producers`}
+          color="text-primary"
+          bgColor="bg-primary/10"
+        />
+        <MetricCard
+          icon={Trophy}
+          label="Competitions"
+          value={metrics.totalCompetitions}
+          detail={`${metrics.activeCompetitions} active`}
+          color="text-amber-500"
+          bgColor="bg-amber-500/10"
+        />
+        <MetricCard
+          icon={TrendingUp}
+          label="Revenue"
+          value={`${(metrics.totalRevenue / 1000).toFixed(1)}K`}
+          detail="KES total"
+          color="text-emerald-500"
+          bgColor="bg-emerald-500/10"
+        />
+        <MetricCard
+          icon={Music}
+          label="Content"
+          value={metrics.totalTracks + metrics.totalBeats}
+          detail={`${metrics.totalTracks} tracks · ${metrics.totalBeats} beats`}
+          color="text-violet-500"
+          bgColor="bg-violet-500/10"
+        />
       </div>
 
+      {/* Two Column: Active Competitions + Activity Feed */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        {/* Active Competitions */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                Active Competitions
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onTabChange("competitions")}>
+                View all <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {activeComps.length === 0 ? (
+              <div className="text-center py-6">
+                <Trophy className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-xs text-muted-foreground">No active competitions</p>
+                <Button variant="outline" size="sm" className="mt-3 h-7 text-xs" onClick={() => navigate('/admin/create-competition')}>
+                  Create Competition
+                </Button>
+              </div>
+            ) : (
+              activeComps.slice(0, 3).map((comp) => {
+                const daysLeft = Math.ceil((new Date(comp.end_date).getTime() - Date.now()) / 86400000);
+                return (
+                  <div key={comp.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{comp.title}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] text-muted-foreground">{comp.submissions?.length || 0} entries</span>
+                        <span className="text-[10px] text-muted-foreground">{comp.prize_amount} BAK</span>
+                      </div>
+                    </div>
+                    <Badge variant={daysLeft <= 3 ? "destructive" : "secondary"} className="text-[10px] shrink-0">
+                      <Clock className="h-2.5 w-2.5 mr-1" />
+                      {daysLeft > 0 ? `${daysLeft}d left` : "Ending"}
+                    </Badge>
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Live Activity Feed */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" />
+                Recent Activity
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onTabChange("activity-log")}>
+                View all <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">No recent activity</p>
+            ) : (
+              <div className="space-y-1">
+                {recentActivity.map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${getCategoryColor(item.event_category)}`}>
+                      {getCategoryIcon(item.event_category)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs leading-relaxed truncate">{item.description}</p>
+                      <p className="text-[10px] text-muted-foreground">{getRelativeTime(item.created_at)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Quick Actions</CardTitle>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Zap className="h-4 w-4 text-amber-500" />
+            Quick Actions
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button onClick={() => navigate('/admin/cash-reserve')} variant="outline" className="h-auto py-3 flex-col gap-1.5">
-              <Wallet className="h-5 w-5" />
+            <Button onClick={() => navigate('/admin/create-competition')} variant="outline" className="h-auto py-3 flex-col gap-1.5 border-border/50">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              <span className="text-xs">New Competition</span>
+            </Button>
+            <Button onClick={() => navigate('/admin/cash-reserve')} variant="outline" className="h-auto py-3 flex-col gap-1.5 border-border/50">
+              <Wallet className="h-5 w-5 text-emerald-500" />
               <span className="text-xs">Cash Reserve</span>
             </Button>
-            <Button onClick={() => navigate('/admin/vouchers')} variant="outline" className="h-auto py-3 flex-col gap-1.5">
-              <Coins className="h-5 w-5" />
+            <Button onClick={() => navigate('/admin/vouchers')} variant="outline" className="h-auto py-3 flex-col gap-1.5 border-border/50">
+              <Coins className="h-5 w-5 text-violet-500" />
               <span className="text-xs">Vouchers</span>
             </Button>
-            <Button onClick={() => navigate('/admin/deposits')} variant="outline" className="h-auto py-3 flex-col gap-1.5">
-              <DollarSign className="h-5 w-5" />
+            <Button onClick={() => navigate('/admin/deposits')} variant="outline" className="h-auto py-3 flex-col gap-1.5 border-border/50">
+              <DollarSign className="h-5 w-5 text-primary" />
               <span className="text-xs">Deposits</span>
-            </Button>
-            <Button onClick={() => navigate('/admin/create-competition')} variant="outline" className="h-auto py-3 flex-col gap-1.5">
-              <Trophy className="h-5 w-5" />
-              <span className="text-xs">New Competition</span>
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function MetricCard({ icon: Icon, label, value, detail, color, bgColor }: {
+  icon: any; label: string; value: string | number; detail: string; color: string; bgColor: string;
+}) {
+  return (
+    <Card className="border-border/50 hover:border-border transition-colors">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+            <p className="text-2xl font-bold mt-1">{value}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{detail}</p>
+          </div>
+          <div className={`h-9 w-9 rounded-lg ${bgColor} flex items-center justify-center`}>
+            <Icon className={`h-4.5 w-4.5 ${color}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function getCategoryColor(category: string): string {
+  switch (category) {
+    case "competition": return "bg-amber-500/10";
+    case "payment": return "bg-emerald-500/10";
+    case "artist": case "fan": return "bg-primary/10";
+    case "moderation": case "content": return "bg-violet-500/10";
+    default: return "bg-muted";
+  }
+}
+
+function getCategoryIcon(category: string) {
+  const cls = "h-3 w-3";
+  switch (category) {
+    case "competition": return <Trophy className={`${cls} text-amber-500`} />;
+    case "payment": return <Coins className={`${cls} text-emerald-500`} />;
+    case "artist": case "fan": return <Users className={`${cls} text-primary`} />;
+    case "moderation": case "content": return <ShieldCheck className={`${cls} text-violet-500`} />;
+    default: return <Activity className={`${cls} text-muted-foreground`} />;
+  }
+}
+
+function getRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 }
 
 function WithdrawalsPanel({ requests, processing, onApprove, onReject }: { requests: WithdrawalRequest[]; processing: string | null; onApprove: (r: WithdrawalRequest) => void; onReject: (r: WithdrawalRequest) => void }) {
@@ -527,7 +776,10 @@ function WithdrawalsPanel({ requests, processing, onApprove, onReject }: { reque
       </CardHeader>
       <CardContent>
         {requests.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8 text-sm">No pending withdrawal requests</p>
+          <div className="text-center py-12">
+            <Check className="h-10 w-10 mx-auto text-emerald-500/30 mb-3" />
+            <p className="text-sm text-muted-foreground">All clear — no pending withdrawals</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {requests.map((request) => (
@@ -571,9 +823,9 @@ function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetch
         <CardDescription className="text-xs">Pesapal payments are processed automatically. Use manual verification only if needed.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Card className="border-warning/30 bg-warning/5">
+        <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-warning mb-2 flex items-center gap-1.5">
+            <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1.5">
               <ShieldAlert className="h-3.5 w-3.5" /> Manual Verification
             </p>
             <div className="flex gap-2">
@@ -600,7 +852,10 @@ function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetch
         </Card>
 
         {purchases.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8 text-sm">No pending purchases</p>
+          <div className="text-center py-12">
+            <Check className="h-10 w-10 mx-auto text-emerald-500/30 mb-3" />
+            <p className="text-sm text-muted-foreground">All clear — no pending purchases</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {purchases.map((purchase) => (
@@ -641,48 +896,87 @@ function PurchasesPanel({ purchases, processing, onApprove, setProcessing, fetch
 }
 
 function CompetitionsPanel({ competitions, processing, navigate, onEnd, onDelete }: { competitions: Competition[]; processing: string | null; navigate: any; onEnd: (id: string) => void; onDelete: (id: string) => void }) {
+  const statusOrder: Record<string, number> = { active: 0, voting: 1, upcoming: 2, completed: 3 };
+  const sorted = [...competitions].sort((a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99));
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Competition Management</CardTitle>
-        <CardDescription className="text-xs">Manage all platform competitions</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base">Competition Management</CardTitle>
+            <CardDescription className="text-xs">Manage all platform competitions</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => navigate('/admin/create-competition')}>
+            <Trophy className="h-3 w-3 mr-1.5" /> New
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {competitions.map((comp) => (
-            <div key={comp.id} className="space-y-3">
-              <Card className="border-border">
-                <CardContent className="p-4">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Trophy className="h-4 w-4 text-primary flex-shrink-0" />
-                        <h3 className="text-sm font-bold break-words">{comp.title}</h3>
-                        <Badge variant={comp.status === "active" ? "default" : "secondary"} className="text-[10px]">{comp.status}</Badge>
+          {sorted.map((comp) => {
+            const daysLeft = Math.ceil((new Date(comp.end_date).getTime() - Date.now()) / 86400000);
+            const isUrgent = comp.status === "active" && daysLeft <= 3;
+
+            return (
+              <div key={comp.id} className="space-y-3">
+                <Card className={`border-border ${isUrgent ? "border-destructive/30 bg-destructive/5" : ""}`}>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm font-bold break-words">{comp.title}</h3>
+                          <Badge
+                            variant={comp.status === "active" ? "default" : comp.status === "completed" ? "secondary" : "outline"}
+                            className="text-[10px]"
+                          >
+                            {comp.status}
+                          </Badge>
+                          {isUrgent && (
+                            <Badge variant="destructive" className="text-[10px]">
+                              <Clock className="h-2.5 w-2.5 mr-1" />
+                              {daysLeft > 0 ? `${daysLeft}d left` : "Ending today"}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Coins className="h-3 w-3" /> {comp.prize_amount} BAK
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Music className="h-3 w-3" /> {comp.submissions?.length || 0} entries
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(comp.start_date).toLocaleDateString()} — {new Date(comp.end_date).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">Prize: {comp.prize_amount} BAK • {comp.submissions?.length || 0} submissions</p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(comp.start_date).toLocaleDateString()} - {new Date(comp.end_date).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}><Edit className="mr-1 h-3 w-3" /> Edit</Button>
-                      <Button variant="secondary" size="sm" onClick={() => navigate(`/competition/${comp.id}`)}>View</Button>
-                      {comp.status === "active" && (
-                        <Button variant="default" size="sm" onClick={() => onEnd(comp.id)} disabled={processing === comp.id}>
-                          {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "End"}
+                      <div className="flex flex-wrap gap-1.5 shrink-0">
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => navigate(`/admin/edit-competition/${comp.id}`)}>
+                          <Edit className="mr-1 h-3 w-3" /> Edit
                         </Button>
-                      )}
-                      <Button variant="destructive" size="sm" onClick={() => onDelete(comp.id)} disabled={processing === comp.id}>
-                        {processing === comp.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                      </Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => navigate(`/competition/${comp.id}`)}>
+                          View
+                        </Button>
+                        {comp.status === "active" && (
+                          <Button variant="default" size="sm" className="h-7 text-xs" onClick={() => onEnd(comp.id)} disabled={processing === comp.id}>
+                            {processing === comp.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "End"}
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => onDelete(comp.id)} disabled={processing === comp.id}>
+                          {processing === comp.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              {(comp.status === "active" || comp.status === "voting") && (
-                <FraudDetection competitionId={comp.id} competitionTitle={comp.title} />
-              )}
-            </div>
-          ))}
+                  </CardContent>
+                </Card>
+                {(comp.status === "active" || comp.status === "voting") && (
+                  <FraudDetection competitionId={comp.id} competitionTitle={comp.title} />
+                )}
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
