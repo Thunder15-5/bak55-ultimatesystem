@@ -1,49 +1,39 @@
 
-# Phase 3: User Flow Optimization + Artist Dashboard Redesign
+# Phase: Admin Dashboard Redesign
 
-## Part A: Artist Dashboard Rebuild
+## Goals
+Transform the admin dashboard from a cluttered control panel into a premium, focused operations center optimized for competition management.
 
-### Current Problems
-- Dashboard is functional but not inspiring — lacks energy and visual hierarchy
-- Stats feel flat; no sense of progress or momentum
-- Competition section only shows when featured competition exists
-- No promotion/sharing tools integrated
-- No notifications or opportunities section
-- Empty states are basic
+## Changes
 
-### New Dashboard Structure (Top → Bottom)
+### 1. Redesign Overview Panel (`MetricsPanel`)
+- **Command Center Header**: Real-time status bar showing urgent items (pending withdrawals, pending submissions, fraud alerts)
+- **Streamlined Stats Grid**: 4 key metrics (Users, Revenue, Active Competitions, Pending Actions) instead of 6
+- **Live Activity Feed**: Recent platform events (signups, submissions, votes, payments) in a compact timeline
+- **Smart Quick Actions**: Context-aware actions that highlight urgent tasks first
 
-1. **Hero Header** — Greeting + artist level badge + primary CTA (Upload Track)
-2. **Progress Ring** — Visual artist level progress (streams/followers to next level)
-3. **4 Stats Cards** — BAKCoins, Tracks, Plays, Followers (keep existing, polish)
-4. **Active Competition Card** — Full-width, urgent, with countdown timer + submission status
-5. **Quick Actions Grid** — 6 actions: Upload, Analytics, Wallet, Competitions, My Tracks, Beats
-6. **Share & Grow Section** — NEW: Profile share card with copy link, social share buttons, referral stats
-7. **Recent Activity** — Transaction feed (keep, polish)
-8. **Opportunities Feed** — NEW: Open competitions, trending challenges, brand campaigns
-9. **Top Track Performance** — Keep existing card
+### 2. Reorganize Sidebar (`AdminSidebar`)
+- Reduce from 9 groups to 5 focused groups: **Operations**, **Competitions**, **Users**, **Content**, **Settings**
+- Add urgent indicator dots (not just badge counts)
+- Move rarely-used items (Blog, Leads, Referrals) into Settings
 
-### What Gets Removed
-- Redundant OnboardingChecklist (merge into HeroAction contextual logic)
-- TrackRecommendations from dashboard (move to Discover page)
+### 3. Improve Competition Management
+- Add inline submission count + vote stats to competition cards
+- Add status timeline (Created → Active → Voting → Completed)
+- Integrate fraud alerts directly into competition view
 
-### What Gets Added
-- `ShareAndGrow` component — profile sharing + referral mini-dashboard
-- `OpportunitiesFeed` component — open competitions + challenges
-- Artist level progress visualization in header
-- Countdown timer on active competition
+### 4. Enhanced Moderation Workflow
+- Add pending count badges to sidebar for submissions needing review
+- Quick-approve/reject inline without opening full panel
 
-### Files to Modify
-- `src/pages/artist/ArtistDashboard.tsx` — Full restructure
-- `src/components/dashboard/DashboardHeader.tsx` — Add level badge
-- NEW: `src/components/dashboard/ShareAndGrow.tsx`
-- NEW: `src/components/dashboard/OpportunitiesFeed.tsx`
-- NEW: `src/components/dashboard/ActiveCompetitionCard.tsx`
+### 5. Admin Header Bar
+- Show admin name + role badge
+- Add global search across users/competitions/submissions
+- Real-time notification count
 
-### Design Principles
-- Mobile-first: single column, thumb-friendly
-- Visual hierarchy: Competition urgency > Stats > Actions > Growth
-- Every section should answer: "What should I do next?"
-- Premium dark aesthetic with gradient accents
+## Files to modify
+- `src/pages/Admin.tsx` — Redesign MetricsPanel, CompetitionsPanel, header
+- `src/components/admin/AdminSidebar.tsx` — Reorganize nav groups, add urgency indicators
 
-No database changes needed.
+## Files unchanged
+- All existing sub-panels (UsersPanel, VotingControlsPanel, etc.) — working well already
