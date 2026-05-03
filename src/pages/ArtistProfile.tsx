@@ -19,7 +19,7 @@ import {
   UserPlus, UserMinus, Music, Users, TrendingUp,
   MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Trophy, Share2,
   CheckCircle2, Vote, Heart, Sparkles, Flame, ShieldCheck, Copy, MessageCircle,
-  Twitter, Instagram, Youtube, Globe, ChevronRight,
+  Twitter, Instagram, Youtube, Globe, ChevronRight, Download, Gift, Image as ImageIcon,
 } from "lucide-react";
 import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
 import { ArtistBadges } from "@/components/ArtistBadges";
