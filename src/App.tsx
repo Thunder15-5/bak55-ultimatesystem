@@ -158,6 +158,7 @@ const App = () => (
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/faq" element={<FAQ />} />
+                  <Route path="/transparency" element={<Transparency />} />
                 
                 {/* PUBLIC SHAREABLE ROUTES - No auth required */}
                 <Route path="/track/:id" element={<TrackDetails />} />
