@@ -145,7 +145,13 @@ export default function RisingStarsVoting() {
 
       setJustVoted(submissionId);
       setTimeout(() => setJustVoted(null), 2000);
-      toast({ title: "Vote recorded! 🗳️", description: "1 BAK deducted • 0.65 BAK sent to artist" });
+      const sub = submissions.find((s) => s.id === submissionId);
+      setReceiptInfo({
+        title: sub?.title || "Submission",
+        artist: sub?.artist_username || "Artist",
+        voteId: data?.vote_id,
+      });
+      setReceiptOpen(true);
       fetchApprovedSubmissions();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record vote.", variant: "destructive" });
