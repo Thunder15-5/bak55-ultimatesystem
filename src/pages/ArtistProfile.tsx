@@ -84,6 +84,31 @@ export default function ArtistProfile() {
   const [following, setFollowingLoading] = useState(false);
   const [activeSubmission, setActiveSubmission] = useState<ActiveSubmission | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<RelatedArtist[]>([]);
+  const [tipOpen, setTipOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
+  const [generatingCard, setGeneratingCard] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadShareCard = async () => {
+    if (!shareCardRef.current) return;
+    setGeneratingCard(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 1,
+        skipFonts: true,
+      });
+      const link = document.createElement("a");
+      link.download = `${(artist?.username || "artist")}-bak55.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Share card downloaded!");
+    } catch (e: any) {
+      toast.error("Failed to generate card");
+    } finally {
+      setGeneratingCard(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
