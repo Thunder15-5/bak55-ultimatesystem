@@ -395,6 +395,15 @@ export default function ArtistProfile() {
                     ))}
                   </div>
                 )}
+
+                <div className="mt-3">
+                  <VerifiedTrustStack
+                    identityVerified={artist.artist_profiles?.verified}
+                    kycComplete={artist.artist_profiles?.verified}
+                    rightsAttested={tracks.length > 0}
+                    activeSince={artist.created_at}
+                  />
+                </div>
               </div>
             </div>
 
