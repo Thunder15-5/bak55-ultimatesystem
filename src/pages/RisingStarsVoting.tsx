@@ -44,6 +44,8 @@ export default function RisingStarsVoting() {
   const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [justVoted, setJustVoted] = useState<string | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [receiptInfo, setReceiptInfo] = useState<{ title: string; artist: string; voteId?: string } | null>(null);
 
   useEffect(() => {
     fetchApprovedSubmissions();
