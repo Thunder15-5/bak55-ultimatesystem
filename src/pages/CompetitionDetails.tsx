@@ -20,6 +20,7 @@ import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { CompetitionPhaseTimeline } from "@/components/competition/CompetitionPhaseTimeline";
 import { PrizeBreakdown } from "@/components/competition/PrizeBreakdown";
 import { TrustSignals } from "@/components/competition/TrustSignals";
+import { RuleCard } from "@/components/trust/RuleCard";
 import { differenceInDays, format } from "date-fns";
 
 interface Competition {
@@ -488,6 +489,19 @@ export default function CompetitionDetails() {
 
               {/* Trust Signals */}
               <TrustSignals />
+
+              {/* Universal rules disclosure */}
+              <RuleCard
+                title="How this competition works"
+                subtitle="Phases, scoring, and payouts."
+                rules={[
+                  { label: "Scoring", value: "70% fan · 30% AI" },
+                  { label: "Vote cost", value: "1 BAK", hint: "0.65 BAK to artist" },
+                  { label: "Self-vote daily cap", value: "10 / day" },
+                  { label: "Artist revenue share", value: "65%" },
+                  { label: "Settlement", value: "Day 7 post-finals", hint: "After fraud review" },
+                ]}
+              />
 
               {/* Rules */}
               <Card className="bg-card/50 border-border/50">

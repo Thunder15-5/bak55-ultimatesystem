@@ -58,6 +58,7 @@ const CompetitionsActive = lazyRetry(() => import("./pages/CompetitionsActive"))
 const CompetitionDetails = lazyRetry(() => import("./pages/CompetitionDetails"));
 const CreateCompetition = lazyRetry(() => import("./pages/admin/CreateCompetition"));
 const BAKCoins = lazyRetry(() => import("./pages/BAKCoins"));
+const Transparency = lazyRetry(() => import("./pages/Transparency"));
 const AITools = lazyRetry(() => import("./pages/AITools"));
 const AIIntelligence = lazyRetry(() => import("./pages/AIIntelligence"));
 const Join = lazyRetry(() => import("./pages/Join"));
@@ -158,6 +159,7 @@ const App = () => (
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/faq" element={<FAQ />} />
+                  <Route path="/transparency" element={<Transparency />} />
                 
                 {/* PUBLIC SHAREABLE ROUTES - No auth required */}
                 <Route path="/track/:id" element={<TrackDetails />} />
