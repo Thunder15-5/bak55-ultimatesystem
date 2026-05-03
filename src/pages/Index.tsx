@@ -88,6 +88,13 @@ const Index = () => {
                   <span className="text-xs sm:text-sm font-medium">{badge.label}</span>
                 </div>
               ))}
+              <Link
+                to="/transparency"
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-primary hover:underline"
+              >
+                See live platform stats
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </section>
 
