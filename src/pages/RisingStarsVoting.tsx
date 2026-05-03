@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { TrustSignals } from "@/components/competition/TrustSignals";
+import { VoteReceipt } from "@/components/trust/VoteReceipt";
+import { RuleCard } from "@/components/trust/RuleCard";
 import {
   Dialog,
   DialogContent,
