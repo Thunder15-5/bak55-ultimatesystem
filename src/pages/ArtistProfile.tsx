@@ -729,6 +729,67 @@ export default function ArtistProfile() {
           )}
         </div>
       </div>
+
+      {id && (
+        <TipDialog
+          open={tipOpen}
+          onOpenChange={setTipOpen}
+          artistId={id}
+          artistName={displayName}
+        />
+      )}
+
+      <Dialog open={shareCardOpen} onOpenChange={setShareCardOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-primary" />Downloadable Share Card
+            </DialogTitle>
+            <DialogDescription>
+              A premium 1080×1350 vote-promotion card optimized for Instagram, WhatsApp, and X.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-xl overflow-hidden border bg-muted">
+            <div
+              style={{
+                transform: "scale(0.35)",
+                transformOrigin: "top left",
+                width: 1080,
+                height: 1350,
+              }}
+            >
+              <ShareCard
+                ref={shareCardRef}
+                artistName={displayName}
+                username={artist.username}
+                avatarUrl={artist.avatar_url}
+                bannerUrl={artist.artist_profiles?.banner_url || undefined}
+                competitionTitle={activeSubmission?.competition?.title}
+                votes={activeSubmission?.votes_count}
+                daysLeft={votingDaysLeft}
+                verified={artist.artist_profiles?.verified}
+                shareUrl={shareUrl}
+              />
+            </div>
+            <div style={{ height: 1350 * 0.35, marginTop: -1350 }} />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={handleDownloadShareCard}
+              disabled={generatingCard}
+              className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            >
+              {generatingCard ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Download PNG
+            </Button>
+            <Button variant="outline" onClick={() => handleShare("whatsapp")} className="flex-1">
+              <MessageCircle className="mr-2 h-4 w-4" />Share Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
