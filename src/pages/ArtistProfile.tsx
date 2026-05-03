@@ -484,14 +484,32 @@ export default function ArtistProfile() {
                         </span>
                       )}
                     </div>
-                    <Button
-                      onClick={() => navigate("/rising-stars/voting")}
-                      size="lg"
-                      className="mt-4 w-full sm:w-auto bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold"
-                    >
-                      <Vote className="mr-2 h-5 w-5" />Vote for {displayName}
-                      <ChevronRight className="ml-1 h-5 w-5" />
-                    </Button>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Button
+                        onClick={() => navigate("/rising-stars/voting")}
+                        size="lg"
+                        className="bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold"
+                      >
+                        <Vote className="mr-2 h-5 w-5" />Vote for {displayName}
+                        <ChevronRight className="ml-1 h-5 w-5" />
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => setShareCardOpen(true)}
+                        className="border-primary/40"
+                      >
+                        <ImageIcon className="mr-2 h-5 w-5" />Get Share Card
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => setTipOpen(true)}
+                        disabled={!user || user.id === id}
+                      >
+                        <Gift className="mr-2 h-5 w-5" />Tip Artist
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
