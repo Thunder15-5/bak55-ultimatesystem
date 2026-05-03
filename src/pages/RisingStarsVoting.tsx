@@ -363,13 +363,32 @@ export default function RisingStarsVoting() {
               )}
 
               {/* Trust section */}
-              <div className="mt-8">
+              <div className="mt-8 space-y-4">
+                <RuleCard
+                  title="Voting Rules"
+                  subtitle="Read this once. Vote with confidence."
+                  rules={[
+                    { label: "Cost per vote", value: "1 BAK", hint: "0.65 BAK goes to the artist" },
+                    { label: "Self-vote daily cap", value: "10 / day" },
+                    { label: "Per-submission rate limit", value: "50 / hour" },
+                    { label: "Final score weighting", value: "70% fan · 30% AI" },
+                    { label: "Fraud review window", value: "7 days post-finals" },
+                  ]}
+                />
                 <TrustSignals />
               </div>
             </>
           )}
         </div>
       </div>
+
+      <VoteReceipt
+        open={receiptOpen}
+        onOpenChange={setReceiptOpen}
+        submissionTitle={receiptInfo?.title}
+        artistName={receiptInfo?.artist}
+        voteId={receiptInfo?.voteId}
+      />
     </div>
   );
 }
