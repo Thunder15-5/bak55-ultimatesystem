@@ -26,6 +26,7 @@ import { ArtistBadges } from "@/components/ArtistBadges";
 import { ArtistLevelCard } from "@/components/ArtistLevelCard";
 import { FanClubSection } from "@/components/FanClubSection";
 import { TrustSignals } from "@/components/competition/TrustSignals";
+import { VerifiedTrustStack } from "@/components/trust/VerifiedTrustStack";
 
 interface ArtistData {
   id: string;
