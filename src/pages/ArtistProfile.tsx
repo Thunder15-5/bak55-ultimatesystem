@@ -442,6 +442,14 @@ export default function ArtistProfile() {
             <Button variant="outline" onClick={() => handleShare("native")} className="flex-shrink-0">
               <Share2 className="mr-2 h-4 w-4" />Share
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setTipOpen(true)}
+              disabled={!user || user.id === id}
+              className="flex-shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+            >
+              <Gift className="mr-2 h-4 w-4" />Tip
+            </Button>
             {featuredTrack && (
               <Button
                 variant="ghost"
