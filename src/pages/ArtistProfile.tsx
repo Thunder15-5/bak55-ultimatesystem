@@ -1,4 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { toPng } from "html-to-image";
+import { TipDialog } from "@/components/TipDialog";
+import { ShareCard } from "@/components/competition/ShareCard";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getArtistShareUrl } from "@/lib/shareUrl";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArtistSEO } from "@/components/SEO";
@@ -15,7 +19,7 @@ import {
   UserPlus, UserMinus, Music, Users, TrendingUp,
   MapPin, Calendar, ExternalLink, Loader2, Play, Plus, Trophy, Share2,
   CheckCircle2, Vote, Heart, Sparkles, Flame, ShieldCheck, Copy, MessageCircle,
-  Twitter, Instagram, Youtube, Globe, ChevronRight,
+  Twitter, Instagram, Youtube, Globe, ChevronRight, Download, Gift, Image as ImageIcon,
 } from "lucide-react";
 import { ArtistJourneyTimeline } from "@/components/competition/ArtistJourneyTimeline";
 import { ArtistBadges } from "@/components/ArtistBadges";
@@ -80,6 +84,31 @@ export default function ArtistProfile() {
   const [following, setFollowingLoading] = useState(false);
   const [activeSubmission, setActiveSubmission] = useState<ActiveSubmission | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<RelatedArtist[]>([]);
+  const [tipOpen, setTipOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
+  const [generatingCard, setGeneratingCard] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadShareCard = async () => {
+    if (!shareCardRef.current) return;
+    setGeneratingCard(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 1,
+        skipFonts: true,
+      });
+      const link = document.createElement("a");
+      link.download = `${(artist?.username || "artist")}-bak55.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Share card downloaded!");
+    } catch (e: any) {
+      toast.error("Failed to generate card");
+    } finally {
+      setGeneratingCard(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -413,6 +442,14 @@ export default function ArtistProfile() {
             <Button variant="outline" onClick={() => handleShare("native")} className="flex-shrink-0">
               <Share2 className="mr-2 h-4 w-4" />Share
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setTipOpen(true)}
+              disabled={!user || user.id === id}
+              className="flex-shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+            >
+              <Gift className="mr-2 h-4 w-4" />Tip
+            </Button>
             {featuredTrack && (
               <Button
                 variant="ghost"
@@ -447,14 +484,32 @@ export default function ArtistProfile() {
                         </span>
                       )}
                     </div>
-                    <Button
-                      onClick={() => navigate("/rising-stars/voting")}
-                      size="lg"
-                      className="mt-4 w-full sm:w-auto bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold"
-                    >
-                      <Vote className="mr-2 h-5 w-5" />Vote for {displayName}
-                      <ChevronRight className="ml-1 h-5 w-5" />
-                    </Button>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Button
+                        onClick={() => navigate("/rising-stars/voting")}
+                        size="lg"
+                        className="bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold"
+                      >
+                        <Vote className="mr-2 h-5 w-5" />Vote for {displayName}
+                        <ChevronRight className="ml-1 h-5 w-5" />
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => setShareCardOpen(true)}
+                        className="border-primary/40"
+                      >
+                        <ImageIcon className="mr-2 h-5 w-5" />Get Share Card
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => setTipOpen(true)}
+                        disabled={!user || user.id === id}
+                      >
+                        <Gift className="mr-2 h-5 w-5" />Tip Artist
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -674,6 +729,67 @@ export default function ArtistProfile() {
           )}
         </div>
       </div>
+
+      {id && (
+        <TipDialog
+          open={tipOpen}
+          onOpenChange={setTipOpen}
+          artistId={id}
+          artistName={displayName}
+        />
+      )}
+
+      <Dialog open={shareCardOpen} onOpenChange={setShareCardOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-primary" />Downloadable Share Card
+            </DialogTitle>
+            <DialogDescription>
+              A premium 1080×1350 vote-promotion card optimized for Instagram, WhatsApp, and X.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-xl overflow-hidden border bg-muted">
+            <div
+              style={{
+                transform: "scale(0.35)",
+                transformOrigin: "top left",
+                width: 1080,
+                height: 1350,
+              }}
+            >
+              <ShareCard
+                ref={shareCardRef}
+                artistName={displayName}
+                username={artist.username}
+                avatarUrl={artist.avatar_url}
+                bannerUrl={artist.artist_profiles?.banner_url || undefined}
+                competitionTitle={activeSubmission?.competition?.title}
+                votes={activeSubmission?.votes_count}
+                daysLeft={votingDaysLeft}
+                verified={artist.artist_profiles?.verified}
+                shareUrl={shareUrl}
+              />
+            </div>
+            <div style={{ height: 1350 * 0.35, marginTop: -1350 }} />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={handleDownloadShareCard}
+              disabled={generatingCard}
+              className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            >
+              {generatingCard ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Download PNG
+            </Button>
+            <Button variant="outline" onClick={() => handleShare("whatsapp")} className="flex-1">
+              <MessageCircle className="mr-2 h-4 w-4" />Share Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
