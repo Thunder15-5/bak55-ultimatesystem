@@ -20,6 +20,7 @@ import { BadgeCollection } from "@/components/competition/BadgeCollection";
 import { CompetitionPhaseTimeline } from "@/components/competition/CompetitionPhaseTimeline";
 import { PrizeBreakdown } from "@/components/competition/PrizeBreakdown";
 import { TrustSignals } from "@/components/competition/TrustSignals";
+import { RuleCard } from "@/components/trust/RuleCard";
 import { differenceInDays, format } from "date-fns";
 
 interface Competition {
