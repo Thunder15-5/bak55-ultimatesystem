@@ -1,4 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { toPng } from "html-to-image";
+import { TipDialog } from "@/components/TipDialog";
+import { ShareCard } from "@/components/competition/ShareCard";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getArtistShareUrl } from "@/lib/shareUrl";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArtistSEO } from "@/components/SEO";
