@@ -85,11 +85,7 @@ export default function Transparency() {
 
   return (
     <>
-      <PageSEO
-        page="home"
-        customTitle="Transparency Report — BAK55 Talent"
-        customDescription="Live platform metrics, rules, and integrity actions. BAK55 operates in the open."
-      />
+      <PageSEO page="home" />
       <div className="min-h-screen bg-background pb-32">
         <Navigation />
 
