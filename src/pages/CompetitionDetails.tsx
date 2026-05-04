@@ -21,6 +21,7 @@ import { CompetitionPhaseTimeline } from "@/components/competition/CompetitionPh
 import { PrizeBreakdown } from "@/components/competition/PrizeBreakdown";
 import { TrustSignals } from "@/components/competition/TrustSignals";
 import { RuleCard } from "@/components/trust/RuleCard";
+import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
 import { differenceInDays, format } from "date-fns";
 
 interface Competition {
@@ -489,6 +490,9 @@ export default function CompetitionDetails() {
 
               {/* Trust Signals */}
               <TrustSignals />
+
+              {/* Fairness scoring breakdown */}
+              <FairnessBreakdown />
 
               {/* Universal rules disclosure */}
               <RuleCard

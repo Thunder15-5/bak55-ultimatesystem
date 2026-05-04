@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TrustSignals } from "@/components/competition/TrustSignals";
 import { VoteReceipt } from "@/components/trust/VoteReceipt";
 import { RuleCard } from "@/components/trust/RuleCard";
+import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
 import {
   Dialog,
   DialogContent,
@@ -364,6 +365,7 @@ export default function RisingStarsVoting() {
 
               {/* Trust section */}
               <div className="mt-8 space-y-4">
+                <FairnessBreakdown />
                 <RuleCard
                   title="Voting Rules"
                   subtitle="Read this once. Vote with confidence."
