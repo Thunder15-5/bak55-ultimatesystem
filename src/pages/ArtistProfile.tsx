@@ -27,6 +27,7 @@ import { ArtistLevelCard } from "@/components/ArtistLevelCard";
 import { FanClubSection } from "@/components/FanClubSection";
 import { TrustSignals } from "@/components/competition/TrustSignals";
 import { VerifiedTrustStack } from "@/components/trust/VerifiedTrustStack";
+import { RuleCard } from "@/components/trust/RuleCard";
 
 interface ArtistData {
   id: string;
@@ -630,8 +631,19 @@ export default function ArtistProfile() {
               </CardTitle>
               <CardDescription>Every artist, vote, and payout is verified.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <TrustSignals />
+              <RuleCard
+                title="How tips & support work"
+                subtitle="Where your money goes when you support this artist."
+                rules={[
+                  { label: "Tip minimum", value: "0.1 BAK" },
+                  { label: "Artist receives", value: "100% of tips", hint: "No platform commission on tips" },
+                  { label: "Vote cost", value: "1 BAK", hint: "0.65 BAK goes to the artist" },
+                  { label: "Fan club minimum", value: "10 BAK / month" },
+                  { label: "Refund policy", value: "Auto-refund on fraud reversal" },
+                ]}
+              />
             </CardContent>
           </Card>
 

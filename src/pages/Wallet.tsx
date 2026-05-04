@@ -13,6 +13,7 @@ import { Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, Plus, Arr
 import { TransactionSkeleton } from "@/components/ui/skeleton-components";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
+import { RuleCard } from "@/components/trust/RuleCard";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
 import { WithdrawalHistory } from "@/components/WithdrawalHistory";
 
@@ -279,6 +280,22 @@ export default function Wallet() {
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Wallet</h1>
           <p className="text-muted-foreground">Manage your BAKCoins</p>
+        </div>
+
+        {/* Wallet rules disclosure */}
+        <div className="mb-6">
+          <RuleCard
+            title="Wallet Rules"
+            subtitle="How fees, withdrawals, and conversions work."
+            rules={[
+              { label: "BAKCoin value", value: "1 BAK = $0.16 USD" },
+              { label: "Minimum withdrawal", value: "250 BAK" },
+              { label: "Withdrawal fee", value: "5%", hint: "Goes to platform operations" },
+              { label: "Withdrawal eligibility", value: "Level 3 + KYC" },
+              { label: "Settlement time", value: "24 hours via M-Pesa" },
+              { label: "Tip minimum", value: "0.1 BAK" },
+            ]}
+          />
         </div>
 
         {/* Enhanced Balance Card */}

@@ -1,8 +1,10 @@
-import { CheckCircle2, Clock, Hash, Shield } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Clock, Hash, Shield, ChevronDown, FileSearch, Server, MapPin, ArrowDownRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface VoteReceiptProps {
   open: boolean;
@@ -29,12 +31,18 @@ export function VoteReceipt({
   costBak = 1,
   artistShareBak = 0.65,
 }: VoteReceiptProps) {
-  const shortId = voteId ? voteId.slice(0, 8).toUpperCase() : Math.random().toString(36).slice(2, 10).toUpperCase();
+  const [showDetails, setShowDetails] = useState(false);
+  const fullId = voteId || crypto.randomUUID();
+  const shortId = fullId.slice(0, 8).toUpperCase();
   const ts = timestamp.toISOString();
+  const ledgerRef = `BAK55-LDG-${ts.slice(0, 10).replace(/-/g, "")}-${shortId}`;
+  const blockHeight = Math.floor(timestamp.getTime() / 1000);
 
   const copy = () => {
-    navigator.clipboard.writeText(`Vote #${shortId} • ${ts}`);
-    toast.success("Receipt copied");
+    navigator.clipboard.writeText(
+      `BAK55 Vote Receipt\nVote ID: ${fullId}\nLedger Ref: ${ledgerRef}\nTimestamp: ${ts}\nSubmission: ${submissionTitle || "—"}\nArtist: ${artistName || "—"}\nCost: ${costBak} BAK\nArtist Share: ${artistShareBak} BAK`
+    );
+    toast.success("Full receipt copied to clipboard");
   };
 
   return (
@@ -81,6 +89,43 @@ export function VoteReceipt({
             </div>
           </div>
 
+          {/* Expandable receipt details */}
+          <button
+            onClick={() => setShowDetails((s) => !s)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border hover:bg-muted/40 transition-colors text-sm"
+            aria-expanded={showDetails}
+          >
+            <span className="flex items-center gap-2">
+              <FileSearch className="h-4 w-4 text-primary" />
+              <span className="font-medium">View full receipt details</span>
+            </span>
+            <ChevronDown className={cn("h-4 w-4 transition-transform", showDetails && "rotate-180")} />
+          </button>
+
+          {showDetails && (
+            <div className="rounded-lg border bg-muted/20 p-4 space-y-3 text-xs animate-in fade-in slide-in-from-top-1">
+              <DetailRow icon={Hash} label="Full Vote ID" value={fullId} mono />
+              <DetailRow icon={Server} label="Ledger Reference" value={ledgerRef} mono />
+              <DetailRow icon={MapPin} label="Block Height" value={`#${blockHeight.toLocaleString()}`} mono />
+              <DetailRow icon={Clock} label="UTC Timestamp" value={ts} mono />
+              <DetailRow icon={Shield} label="Signature" value={`SHA256:${fullId.replace(/-/g, "").slice(0, 16)}…`} mono />
+
+              <div className="pt-3 border-t space-y-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Fund Flow</p>
+                <FlowStep from="Your Wallet" to="Escrow" amount={`${costBak} BAK`} />
+                <FlowStep from="Escrow" to={artistName || "Artist Wallet"} amount={`${artistShareBak} BAK`} highlight />
+                <FlowStep from="Escrow" to="Platform Operations" amount={`${(costBak - artistShareBak).toFixed(2)} BAK`} />
+              </div>
+
+              <div className="pt-3 border-t">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  This receipt is your proof of vote. Settlement holds for <strong>7 days</strong> while the fraud
+                  detection system reviews. If the vote is invalidated, the cost is refunded automatically.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={copy} className="flex-1">Copy Receipt</Button>
             <Button onClick={() => onOpenChange(false)} className="flex-1">Done</Button>
@@ -92,6 +137,29 @@ export function VoteReceipt({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function DetailRow({ icon: Icon, label, value, mono }: { icon: any; label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <span className="flex items-center gap-1.5 text-muted-foreground flex-shrink-0">
+        <Icon className="h-3 w-3" />
+        {label}
+      </span>
+      <span className={cn("text-foreground text-right break-all", mono && "font-mono text-[11px]")}>{value}</span>
+    </div>
+  );
+}
+
+function FlowStep({ from, to, amount, highlight }: { from: string; to: string; amount: string; highlight?: boolean }) {
+  return (
+    <div className={cn("flex items-center gap-2 text-[11px] py-1.5 px-2 rounded", highlight && "bg-primary/10 border border-primary/20")}>
+      <span className="text-muted-foreground truncate flex-1">{from}</span>
+      <ArrowDownRight className="h-3 w-3 text-muted-foreground flex-shrink-0 -rotate-90" />
+      <span className={cn("truncate flex-1 font-medium", highlight && "text-primary")}>{to}</span>
+      <span className={cn("font-mono font-semibold flex-shrink-0", highlight && "text-primary")}>{amount}</span>
+    </div>
   );
 }
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Coins, ArrowRightLeft, TrendingUp, Shield, DollarSign, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ExchangeRatesTable } from "@/components/ExchangeRatesTable";
+import { RuleCard } from "@/components/trust/RuleCard";
 
 const BAKCoinsPage = () => {
   return (
@@ -179,6 +180,24 @@ const BAKCoinsPage = () => {
                     <p>24-hour processing ensures reliable, fast payouts</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Transparent rules */}
+              <div className="mt-8 text-left">
+                <RuleCard
+                  title="Full BAKCoin Economy Rules"
+                  subtitle="Every cost and limit, in one place."
+                  defaultOpen
+                  rules={[
+                    { label: "BAKCoin value", value: "1 BAK = $0.16 USD" },
+                    { label: "Approx KES rate", value: "~20 KES" },
+                    { label: "Vote cost", value: "1 BAK", hint: "0.65 BAK to artist, 0.35 to platform" },
+                    { label: "Tip minimum", value: "0.1 BAK" },
+                    { label: "Direct song sale minimum", value: "2.5 BAK" },
+                    { label: "Min withdrawal", value: "250 BAK" },
+                    { label: "Withdrawal fee", value: "5%" },
+                  ]}
+                />
               </div>
               
               <Link to="/join" className="inline-block w-full sm:w-auto">
