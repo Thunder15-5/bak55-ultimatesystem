@@ -1,8 +1,10 @@
-import { CheckCircle2, Clock, Hash, Shield } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Clock, Hash, Shield, ChevronDown, FileSearch, Server, MapPin, ArrowDownRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface VoteReceiptProps {
   open: boolean;
