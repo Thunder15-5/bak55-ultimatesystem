@@ -162,3 +162,19 @@ function FlowStep({ from, to, amount, highlight }: { from: string; to: string; a
     </div>
   );
 }
+
+function Row({ icon: Icon, label, value, badge }: { icon: any; label: string; value: string; badge?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </span>
+      {badge ? (
+        <Badge className="bg-primary/15 text-primary border-primary/30 font-mono">{value}</Badge>
+      ) : (
+        <span className="font-semibold text-foreground">{value}</span>
+      )}
+    </div>
+  );
+}
