@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrustSignals } from "@/components/competition/TrustSignals";
 import { LiveAuditFeed } from "@/components/trust/LiveAuditFeed";
 import { RuleCard } from "@/components/trust/RuleCard";
+import { TransparencyChangelog } from "@/components/trust/TransparencyChangelog";
 import { PageSEO } from "@/components/SEO";
 
 interface PlatformStats {
@@ -219,6 +220,11 @@ export default function Transparency() {
                 { label: "Direct song sale minimum", value: "2.5 BAK" },
               ]}
             />
+          </div>
+
+          {/* Public change log */}
+          <div className="mb-8">
+            <TransparencyChangelog />
           </div>
 
           {/* Commitments */}
