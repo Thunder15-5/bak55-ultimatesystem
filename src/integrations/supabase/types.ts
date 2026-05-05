@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_signals: {
+        Row: {
+          first_seen: string
+          id: string
+          last_seen: string
+          occurrence_count: number
+          signal_type: string
+          signal_value: string
+          user_id: string
+        }
+        Insert: {
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          occurrence_count?: number
+          signal_type: string
+          signal_value: string
+          user_id: string
+        }
+        Update: {
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          occurrence_count?: number
+          signal_type?: string
+          signal_value?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_activity_log: {
         Row: {
           created_at: string | null
@@ -227,6 +257,63 @@ export type Database = {
             columns: ["announcement_id"]
             isOneToOne: false
             referencedRelation: "platform_announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appeals: {
+        Row: {
+          appellant_id: string
+          case_id: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          enforcement_action_id: string | null
+          evidence_urls: Json
+          id: string
+          statement: string
+          status: string
+        }
+        Insert: {
+          appellant_id: string
+          case_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          enforcement_action_id?: string | null
+          evidence_urls?: Json
+          id?: string
+          statement: string
+          status?: string
+        }
+        Update: {
+          appellant_id?: string
+          case_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          enforcement_action_id?: string | null
+          evidence_urls?: Json
+          id?: string
+          statement?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appeals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "fraud_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appeals_enforcement_action_id_fkey"
+            columns: ["enforcement_action_id"]
+            isOneToOne: false
+            referencedRelation: "enforcement_actions"
             referencedColumns: ["id"]
           },
         ]
@@ -2099,6 +2186,74 @@ export type Database = {
           },
         ]
       }
+      enforcement_actions: {
+        Row: {
+          action_type: string
+          after_state: Json | null
+          approved_by: string | null
+          before_state: Json | null
+          case_id: string | null
+          created_at: string
+          executed_at: string | null
+          id: string
+          metadata: Json
+          notes: string | null
+          proposed_by: string
+          reason_code: string
+          requires_second_admin: boolean
+          reversible_until: string | null
+          status: string
+          subject_id: string
+          subject_type: string
+        }
+        Insert: {
+          action_type: string
+          after_state?: Json | null
+          approved_by?: string | null
+          before_state?: Json | null
+          case_id?: string | null
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          proposed_by: string
+          reason_code: string
+          requires_second_admin?: boolean
+          reversible_until?: string | null
+          status?: string
+          subject_id: string
+          subject_type: string
+        }
+        Update: {
+          action_type?: string
+          after_state?: Json | null
+          approved_by?: string | null
+          before_state?: Json | null
+          case_id?: string | null
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          proposed_by?: string
+          reason_code?: string
+          requires_second_admin?: boolean
+          reversible_until?: string | null
+          status?: string
+          subject_id?: string
+          subject_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enforcement_actions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "fraud_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates: {
         Row: {
           base_currency: string
@@ -2413,6 +2568,105 @@ export type Database = {
           created_at?: string
           follower_id?: string
           id?: string
+        }
+        Relationships: []
+      }
+      fraud_alerts: {
+        Row: {
+          assigned_to: string | null
+          case_id: string | null
+          created_at: string
+          evidence: Json
+          id: string
+          rule_id: string
+          rule_name: string
+          severity: string
+          snoozed_until: string | null
+          status: string
+          subject_id: string
+          subject_type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_id?: string | null
+          created_at?: string
+          evidence?: Json
+          id?: string
+          rule_id: string
+          rule_name: string
+          severity: string
+          snoozed_until?: string | null
+          status?: string
+          subject_id: string
+          subject_type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_id?: string | null
+          created_at?: string
+          evidence?: Json
+          id?: string
+          rule_id?: string
+          rule_name?: string
+          severity?: string
+          snoozed_until?: string | null
+          status?: string
+          subject_id?: string
+          subject_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fraud_cases: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          resolution: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          sla_due_at: string | null
+          status: string
+          subject_id: string
+          subject_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          resolution?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          sla_due_at?: string | null
+          status?: string
+          subject_id: string
+          subject_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          resolution?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          sla_due_at?: string | null
+          status?: string
+          subject_id?: string
+          subject_type?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5097,6 +5351,10 @@ export type Database = {
       }
       check_withdrawal_eligibility: {
         Args: { p_user_id: string }
+        Returns: Json
+      }
+      compute_artist_risk_score: {
+        Args: { p_artist_id: string }
         Returns: Json
       }
       deduct_wallet: {
