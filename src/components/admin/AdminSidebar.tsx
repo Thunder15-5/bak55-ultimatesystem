@@ -35,6 +35,7 @@ const navGroups = [
       { id: "purchases", label: "Purchases", icon: Coins, badge: "pendingPurchases" },
       { id: "sales", label: "Sales", icon: ShoppingBag },
       { id: "moderation", label: "Moderation", icon: Eye },
+      { id: "trust-safety", label: "Trust & Safety", icon: ShieldAlert, external: "/admin/trust-safety" },
     ],
   },
   {
