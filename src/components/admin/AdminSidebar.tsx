@@ -35,6 +35,7 @@ const navGroups = [
       { id: "purchases", label: "Purchases", icon: Coins, badge: "pendingPurchases" },
       { id: "sales", label: "Sales", icon: ShoppingBag },
       { id: "moderation", label: "Moderation", icon: Eye },
+      { id: "trust-safety", label: "Trust & Safety", icon: ShieldAlert, external: "/admin/trust-safety" },
     ],
   },
   {
@@ -133,11 +134,12 @@ export function AdminSidebar({ activeTab, onTabChange, pendingWithdrawals = 0, p
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
                   const badgeCount = item.badge ? badgeCounts[item.badge] : 0;
+                  const external = (item as any).external as string | undefined;
 
                   return (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
-                        onClick={() => onTabChange(item.id)}
+                        onClick={() => external ? (window.location.href = external) : onTabChange(item.id)}
                         isActive={isActive}
                         tooltip={item.label}
                         className={`transition-all duration-150 ${isActive ? "bg-primary/10 text-primary font-medium border-l-2 border-primary" : "hover:bg-muted/50"}`}
