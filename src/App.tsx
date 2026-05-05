@@ -296,6 +296,7 @@ const App = () => (
                 <Route path="/admin/cash-reserve" element={<ProtectedRoute requiredRole="admin"><CashReserve /></ProtectedRoute>} />
                 <Route path="/admin/vouchers" element={<ProtectedRoute requiredRole="admin"><Vouchers /></ProtectedRoute>} />
                 <Route path="/admin/deposits" element={<ProtectedRoute requiredRole="admin"><Deposits /></ProtectedRoute>} />
+                <Route path="/admin/trust-safety" element={<ProtectedRoute requiredRole="admin"><TrustSafety /></ProtectedRoute>} />
 
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
