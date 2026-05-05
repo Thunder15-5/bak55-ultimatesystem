@@ -87,6 +87,7 @@ const EditCompetition = lazyRetry(() => import("./pages/admin/EditCompetition"))
 const CashReserve = lazyRetry(() => import("./pages/admin/CashReserve"));
 const Vouchers = lazyRetry(() => import("./pages/admin/Vouchers"));
 const Deposits = lazyRetry(() => import("./pages/admin/Deposits"));
+const TrustSafety = lazyRetry(() => import("./pages/admin/TrustSafety"));
 const Analytics = lazyRetry(() => import("./pages/Analytics"));
 const ArtistProfile = lazyRetry(() => import("./pages/ArtistProfile"));
 const Playlists = lazyRetry(() => import("./pages/Playlists"));
