@@ -17,7 +17,10 @@ const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 interface VoteRequest {
   submission_id: string;
   stage_id?: string;
+  quantity?: number; // number of votes to cast in this transaction (1-25)
 }
+
+const MAX_BUNDLE_QUANTITY = 25;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
