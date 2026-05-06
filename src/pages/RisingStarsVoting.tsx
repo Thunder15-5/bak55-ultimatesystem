@@ -312,17 +312,12 @@ export default function RisingStarsVoting() {
                               </div>
                               <Button
                                 size="sm"
-                                disabled={votingSubmission === submission.id}
-                                onClick={() => handleVote(submission.id)}
+                                onClick={() => openVoteSheet(submission.id)}
                                 className="h-8 px-3 text-xs"
                               >
-                                {votingSubmission === submission.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Heart className="h-3 w-3 mr-1" />
-                                    Vote
-                                  </>
+                                <Heart className="h-3 w-3 mr-1" />
+                                Vote
+                              </>
                                 )}
                               </Button>
                             </div>
