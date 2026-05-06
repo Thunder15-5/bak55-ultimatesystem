@@ -249,8 +249,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const artistAmount = VOTE_COST * ARTIST_SHARE;
-    const platformAmount = VOTE_COST * PLATFORM_SHARE;
+    const artistAmount = totalCost * ARTIST_SHARE;
+    const platformAmount = totalCost * PLATFORM_SHARE;
 
     // === START TRANSACTION ===
 
@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
     const { data: deductResult, error: voterDeductError } = await supabaseAdmin
       .from('wallets')
       .update({ 
-        balance: voterWallet.balance - VOTE_COST,
+        balance: voterWallet.balance - totalCost,
         updated_at: new Date().toISOString()
       })
       .eq('id', voterWallet.id)
