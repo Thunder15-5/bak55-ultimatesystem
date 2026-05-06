@@ -12,6 +12,9 @@ import { TrustSignals } from "@/components/competition/TrustSignals";
 import { VoteReceipt } from "@/components/trust/VoteReceipt";
 import { RuleCard } from "@/components/trust/RuleCard";
 import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
+import { VoteSheet } from "@/components/voting/VoteSheet";
+import { CheerAgainBar } from "@/components/voting/CheerAgainBar";
+import type { VoteSuccessData } from "@/components/voting/VoteSuccessState";
 import {
   Dialog,
   DialogContent,
@@ -41,12 +44,12 @@ export default function RisingStarsVoting() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VotingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [votingSubmission, setVotingSubmission] = useState<string | null>(null);
-  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
-  const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [justVoted, setJustVoted] = useState<string | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptInfo, setReceiptInfo] = useState<{ title: string; artist: string; voteId?: string } | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeSubmission, setActiveSubmission] = useState<VotingSubmission | null>(null);
+  const [lastSupport, setLastSupport] = useState<{ submission: VotingSubmission; quantity: number } | null>(null);
 
   useEffect(() => {
     fetchApprovedSubmissions();
@@ -109,56 +112,29 @@ export default function RisingStarsVoting() {
     }
   };
 
-  const handleVote = async (submissionId: string) => {
+  const openVoteSheet = (submissionId: string) => {
     if (!user) {
       navigate(`/login?redirect=/rising-stars/voting`);
       return;
     }
-    if (votingSubmission) return;
+    const sub = submissions.find((s) => s.id === submissionId);
+    if (!sub) return;
+    setActiveSubmission(sub);
+    setSheetOpen(true);
+  };
 
-    setVotingSubmission(submissionId);
-    try {
-      const { data, error } = await supabase.functions.invoke('vote-submission', {
-        body: { submission_id: submissionId }
-      });
+  const handleVoted = (data: VoteSuccessData) => {
+    if (!activeSubmission) return;
+    setJustVoted(activeSubmission.id);
+    setTimeout(() => setJustVoted(null), 2000);
+    setLastSupport({ submission: activeSubmission, quantity: data.quantity });
+    fetchApprovedSubmissions();
+  };
 
-      if (error) {
-        let errorBody: any = null;
-        try { errorBody = error.context ? await error.context.json() : null; } catch {}
-        if (errorBody?.code === 'INSUFFICIENT_BALANCE') {
-          setCurrentBalance(errorBody.current_balance ?? 0);
-          setShowInsufficientDialog(true);
-          return;
-        }
-        toast({ title: "Vote failed", description: errorBody?.error || "Failed to record vote.", variant: "destructive" });
-        return;
-      }
-
-      if (data?.error) {
-        if (data.code === 'INSUFFICIENT_BALANCE') {
-          setCurrentBalance(data.current_balance ?? 0);
-          setShowInsufficientDialog(true);
-          return;
-        }
-        toast({ title: "Vote failed", description: data.error, variant: "destructive" });
-        return;
-      }
-
-      setJustVoted(submissionId);
-      setTimeout(() => setJustVoted(null), 2000);
-      const sub = submissions.find((s) => s.id === submissionId);
-      setReceiptInfo({
-        title: sub?.title || "Submission",
-        artist: sub?.artist_username || "Artist",
-        voteId: data?.vote_id,
-      });
-      setReceiptOpen(true);
-      fetchApprovedSubmissions();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to record vote.", variant: "destructive" });
-    } finally {
-      setVotingSubmission(null);
-    }
+  const handleCheerAgain = () => {
+    if (!lastSupport) return;
+    setActiveSubmission(lastSupport.submission);
+    setSheetOpen(true);
   };
 
   const handleShare = (submission: VotingSubmission) => {
@@ -189,27 +165,31 @@ export default function RisingStarsVoting() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Insufficient BAKCoins Dialog */}
-      <Dialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-primary" />
-              Need More BAKCoins
-            </DialogTitle>
-            <DialogDescription>
-              Each vote costs 1 BAK. Your balance: <strong>{currentBalance.toFixed(2)} BAK</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowInsufficientDialog(false)}>Cancel</Button>
-            <Button onClick={() => { setShowInsufficientDialog(false); navigate('/buy-coins'); }}>
-              <Coins className="h-4 w-4 mr-2" />
-              Buy BAKCoins
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Vote Sheet */}
+      {activeSubmission && (
+        <VoteSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          submissionId={activeSubmission.id}
+          artistId={activeSubmission.artist_id}
+          artistName={activeSubmission.artist_username}
+          artistAvatar={activeSubmission.artist_avatar}
+          trackTitle={activeSubmission.title}
+          competitionTitle={activeSubmission.competition_title}
+          currentVotes={activeSubmission.vote_count}
+          onVoted={handleVoted}
+        />
+      )}
+
+      {/* Floating Cheer Again bar */}
+      {lastSupport && !sheetOpen && (
+        <CheerAgainBar
+          artistName={lastSupport.submission.artist_username}
+          artistAvatar={lastSupport.submission.artist_avatar}
+          lastQuantity={lastSupport.quantity}
+          onCheer={handleCheerAgain}
+        />
+      )}
 
       {/* Hero */}
       <div className="border-b border-border/50 bg-gradient-to-b from-primary/5 to-transparent">
@@ -251,15 +231,15 @@ export default function RisingStarsVoting() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {/* 2nd Place */}
               <div className="order-1 pt-4">
-                <PodiumCard submission={submissions[1]} rank={2} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[1]} rank={2} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
               {/* 1st Place */}
               <div className="order-2">
-                <PodiumCard submission={submissions[0]} rank={1} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[0]} rank={1} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
               {/* 3rd Place */}
               <div className="order-3 pt-6">
-                <PodiumCard submission={submissions[2]} rank={3} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[2]} rank={3} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
             </div>
           </div>
@@ -332,18 +312,11 @@ export default function RisingStarsVoting() {
                               </div>
                               <Button
                                 size="sm"
-                                disabled={votingSubmission === submission.id}
-                                onClick={() => handleVote(submission.id)}
+                                onClick={() => openVoteSheet(submission.id)}
                                 className="h-8 px-3 text-xs"
                               >
-                                {votingSubmission === submission.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Heart className="h-3 w-3 mr-1" />
-                                    Vote
-                                  </>
-                                )}
+                                <Heart className="h-3 w-3 mr-1" />
+                                Vote
                               </Button>
                             </div>
                           </div>

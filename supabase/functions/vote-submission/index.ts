@@ -17,7 +17,10 @@ const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
 interface VoteRequest {
   submission_id: string;
   stage_id?: string;
+  quantity?: number; // number of votes to cast in this transaction (1-25)
 }
+
+const MAX_BUNDLE_QUANTITY = 25;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -64,7 +67,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { submission_id, stage_id }: VoteRequest = await req.json();
+    const { submission_id, stage_id, quantity: rawQty }: VoteRequest = await req.json();
 
     if (!submission_id) {
       return new Response(
@@ -72,6 +75,9 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const quantity = Math.max(1, Math.min(MAX_BUNDLE_QUANTITY, Math.floor(Number(rawQty) || 1)));
+    const totalCost = VOTE_COST * quantity;
 
     // Get submission details
     const { data: submission, error: subError } = await supabaseAdmin
@@ -157,7 +163,7 @@ Deno.serve(async (req) => {
       .eq('submission_id', submission_id)
       .gte('created_at', oneHourAgo);
 
-    if ((recentVotes || 0) >= MAX_VOTES_PER_SUBMISSION_PER_HOUR) {
+    if ((recentVotes || 0) + quantity > MAX_VOTES_PER_SUBMISSION_PER_HOUR) {
       return new Response(
         JSON.stringify({ 
           error: `You've reached the maximum of ${MAX_VOTES_PER_SUBMISSION_PER_HOUR} votes per hour for this submission. Please try again later.`,
@@ -177,7 +183,7 @@ Deno.serve(async (req) => {
         .eq('submission_id', submission_id)
         .gte('created_at', oneDayAgo);
 
-      if ((selfVotesToday || 0) >= SELF_VOTE_LIMIT_PER_DAY) {
+      if ((selfVotesToday || 0) + quantity > SELF_VOTE_LIMIT_PER_DAY) {
         return new Response(
           JSON.stringify({ 
             error: `Self-voting is limited to ${SELF_VOTE_LIMIT_PER_DAY} votes per day. Ask your fans to vote for you!`,
@@ -202,12 +208,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (voterWallet.balance < VOTE_COST) {
+    if (voterWallet.balance < totalCost) {
       return new Response(
         JSON.stringify({ 
-          error: `Insufficient BAKCoins. You need ${VOTE_COST} BAK to vote. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
+          error: `Insufficient BAKCoins. You need ${totalCost} BAK to send ${quantity} vote${quantity>1?'s':''}. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
           code: 'INSUFFICIENT_BALANCE',
-          required: VOTE_COST,
+          required: totalCost,
+          quantity,
           current_balance: voterWallet.balance
         }),
         { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -242,8 +249,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const artistAmount = VOTE_COST * ARTIST_SHARE;
-    const platformAmount = VOTE_COST * PLATFORM_SHARE;
+    const artistAmount = totalCost * ARTIST_SHARE;
+    const platformAmount = totalCost * PLATFORM_SHARE;
 
     // === START TRANSACTION ===
 
@@ -251,7 +258,7 @@ Deno.serve(async (req) => {
     const { data: deductResult, error: voterDeductError } = await supabaseAdmin
       .from('wallets')
       .update({ 
-        balance: voterWallet.balance - VOTE_COST,
+        balance: voterWallet.balance - totalCost,
         updated_at: new Date().toISOString()
       })
       .eq('id', voterWallet.id)
@@ -295,18 +302,20 @@ Deno.serve(async (req) => {
       })
       .eq('id', platformWallet.id);
 
-    // 4. Record the vote
-    const voteData: any = {
+    // 4. Record the votes (one row per vote)
+    const nowIso = new Date().toISOString();
+    const voteRows = Array.from({ length: quantity }).map(() => ({
       submission_id,
       voter_id: user.id,
       stage_id: stage_id || null,
       vote_weight: 1,
-      voted_at: new Date().toISOString()
-    };
+      voted_at: nowIso,
+    }));
 
-    const { error: voteError } = await supabaseAdmin
+    const { data: insertedVotes, error: voteError } = await supabaseAdmin
       .from('votes')
-      .insert(voteData);
+      .insert(voteRows)
+      .select('id');
 
     if (voteError) {
       console.error('Vote record error:', voteError);
@@ -333,27 +342,27 @@ Deno.serve(async (req) => {
     await Promise.all([
       supabaseAdmin.from('transactions').insert({
         wallet_id: voterWallet.id,
-        amount: -VOTE_COST,
+        amount: -totalCost,
         type: 'purchase',
-        description: `Vote for competition submission`,
+        description: `${quantity} vote${quantity>1?'s':''} for competition submission`,
         reference_id: submission_id,
-        metadata: { type: 'vote_payment', competition_id: submission.competition_id, artist_id: submission.artist_id, is_self_vote: isSelfVote }
+        metadata: { type: 'vote_payment', quantity, competition_id: submission.competition_id, artist_id: submission.artist_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: artistWallet.id,
         amount: artistAmount,
         type: 'earning',
-        description: `Vote revenue (65% of ${VOTE_COST} BAK)`,
+        description: `Vote revenue (65% of ${totalCost} BAK)`,
         reference_id: submission_id,
-        metadata: { type: 'vote_earning', voter_id: user.id, competition_id: submission.competition_id, is_self_vote: isSelfVote }
+        metadata: { type: 'vote_earning', quantity, voter_id: user.id, competition_id: submission.competition_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: platformWallet.id,
         amount: platformAmount,
         type: 'earning',
-        description: `Platform vote fee (35% of ${VOTE_COST} BAK)`,
+        description: `Platform vote fee (35% of ${totalCost} BAK)`,
         reference_id: submission_id,
-        metadata: { type: 'platform_vote_fee', voter_id: user.id, artist_id: submission.artist_id, competition_id: submission.competition_id }
+        metadata: { type: 'platform_vote_fee', quantity, voter_id: user.id, artist_id: submission.artist_id, competition_id: submission.competition_id }
       })
     ]);
 
@@ -375,15 +384,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get supporter rank for this voter on this artist
+    const { count: supporterRank } = await supabaseAdmin
+      .from('votes')
+      .select('voter_id', { count: 'exact', head: true })
+      .eq('submission_id', submission_id)
+      .eq('voter_id', user.id);
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Vote recorded successfully!',
-        vote_cost: VOTE_COST,
+        message: `${quantity} vote${quantity>1?'s':''} recorded successfully!`,
+        quantity,
+        vote_cost: totalCost,
         artist_earned: artistAmount,
         platform_fee: platformAmount,
         new_balance: deductResult.balance,
-        is_self_vote: isSelfVote
+        is_self_vote: isSelfVote,
+        total_votes_for_submission: totalVotesForSubmission || 0,
+        voter_total_votes_on_submission: supporterRank || quantity,
+        vote_id: insertedVotes?.[0]?.id,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
