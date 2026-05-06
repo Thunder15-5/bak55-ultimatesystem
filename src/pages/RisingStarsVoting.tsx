@@ -12,6 +12,9 @@ import { TrustSignals } from "@/components/competition/TrustSignals";
 import { VoteReceipt } from "@/components/trust/VoteReceipt";
 import { RuleCard } from "@/components/trust/RuleCard";
 import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
+import { VoteSheet } from "@/components/voting/VoteSheet";
+import { CheerAgainBar } from "@/components/voting/CheerAgainBar";
+import type { VoteSuccessData } from "@/components/voting/VoteSuccessState";
 import {
   Dialog,
   DialogContent,
