@@ -342,27 +342,27 @@ Deno.serve(async (req) => {
     await Promise.all([
       supabaseAdmin.from('transactions').insert({
         wallet_id: voterWallet.id,
-        amount: -VOTE_COST,
+        amount: -totalCost,
         type: 'purchase',
-        description: `Vote for competition submission`,
+        description: `${quantity} vote${quantity>1?'s':''} for competition submission`,
         reference_id: submission_id,
-        metadata: { type: 'vote_payment', competition_id: submission.competition_id, artist_id: submission.artist_id, is_self_vote: isSelfVote }
+        metadata: { type: 'vote_payment', quantity, competition_id: submission.competition_id, artist_id: submission.artist_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: artistWallet.id,
         amount: artistAmount,
         type: 'earning',
-        description: `Vote revenue (65% of ${VOTE_COST} BAK)`,
+        description: `Vote revenue (65% of ${totalCost} BAK)`,
         reference_id: submission_id,
-        metadata: { type: 'vote_earning', voter_id: user.id, competition_id: submission.competition_id, is_self_vote: isSelfVote }
+        metadata: { type: 'vote_earning', quantity, voter_id: user.id, competition_id: submission.competition_id, is_self_vote: isSelfVote }
       }),
       supabaseAdmin.from('transactions').insert({
         wallet_id: platformWallet.id,
         amount: platformAmount,
         type: 'earning',
-        description: `Platform vote fee (35% of ${VOTE_COST} BAK)`,
+        description: `Platform vote fee (35% of ${totalCost} BAK)`,
         reference_id: submission_id,
-        metadata: { type: 'platform_vote_fee', voter_id: user.id, artist_id: submission.artist_id, competition_id: submission.competition_id }
+        metadata: { type: 'platform_vote_fee', quantity, voter_id: user.id, artist_id: submission.artist_id, competition_id: submission.competition_id }
       })
     ]);
 
@@ -384,15 +384,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get supporter rank for this voter on this artist
+    const { count: supporterRank } = await supabaseAdmin
+      .from('votes')
+      .select('voter_id', { count: 'exact', head: true })
+      .eq('submission_id', submission_id)
+      .eq('voter_id', user.id);
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Vote recorded successfully!',
-        vote_cost: VOTE_COST,
+        message: `${quantity} vote${quantity>1?'s':''} recorded successfully!`,
+        quantity,
+        vote_cost: totalCost,
         artist_earned: artistAmount,
         platform_fee: platformAmount,
         new_balance: deductResult.balance,
-        is_self_vote: isSelfVote
+        is_self_vote: isSelfVote,
+        total_votes_for_submission: totalVotesForSubmission || 0,
+        voter_total_votes_on_submission: supporterRank || quantity,
+        vote_id: insertedVotes?.[0]?.id,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
