@@ -231,15 +231,15 @@ export default function RisingStarsVoting() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {/* 2nd Place */}
               <div className="order-1 pt-4">
-                <PodiumCard submission={submissions[1]} rank={2} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[1]} rank={2} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
               {/* 1st Place */}
               <div className="order-2">
-                <PodiumCard submission={submissions[0]} rank={1} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[0]} rank={1} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
               {/* 3rd Place */}
               <div className="order-3 pt-6">
-                <PodiumCard submission={submissions[2]} rank={3} onVote={handleVote} onShare={handleShare} votingId={votingSubmission} justVoted={justVoted} />
+                <PodiumCard submission={submissions[2]} rank={3} onVote={openVoteSheet} onShare={handleShare} votingId={null} justVoted={justVoted} />
               </div>
             </div>
           </div>
