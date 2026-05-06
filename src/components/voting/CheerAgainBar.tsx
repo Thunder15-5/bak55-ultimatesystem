@@ -12,7 +12,7 @@ interface Props {
 export function CheerAgainBar({ artistName, artistAvatar, lastQuantity, onCheer }: Props) {
   return (
     <div className="fixed left-0 right-0 bottom-16 z-40 px-3 pb-2 pointer-events-none">
-      <div className="mx-auto max-w-md pointer-events-auto animate-slide-in-up">
+      <div className="mx-auto max-w-md pointer-events-auto animate-fade-in-up">
         <div className="rounded-full bg-card/95 backdrop-blur shadow-lg border border-primary/40 pl-2 pr-2 py-1.5 flex items-center gap-2">
           <Avatar className="h-8 w-8 ring-1 ring-primary/40">
             <AvatarImage src={artistAvatar || undefined} />
