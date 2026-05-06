@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
       .eq('submission_id', submission_id)
       .gte('created_at', oneHourAgo);
 
-    if ((recentVotes || 0) >= MAX_VOTES_PER_SUBMISSION_PER_HOUR) {
+    if ((recentVotes || 0) + quantity > MAX_VOTES_PER_SUBMISSION_PER_HOUR) {
       return new Response(
         JSON.stringify({ 
           error: `You've reached the maximum of ${MAX_VOTES_PER_SUBMISSION_PER_HOUR} votes per hour for this submission. Please try again later.`,
