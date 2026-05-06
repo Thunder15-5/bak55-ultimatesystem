@@ -112,56 +112,29 @@ export default function RisingStarsVoting() {
     }
   };
 
-  const handleVote = async (submissionId: string) => {
+  const openVoteSheet = (submissionId: string) => {
     if (!user) {
       navigate(`/login?redirect=/rising-stars/voting`);
       return;
     }
-    if (votingSubmission) return;
+    const sub = submissions.find((s) => s.id === submissionId);
+    if (!sub) return;
+    setActiveSubmission(sub);
+    setSheetOpen(true);
+  };
 
-    setVotingSubmission(submissionId);
-    try {
-      const { data, error } = await supabase.functions.invoke('vote-submission', {
-        body: { submission_id: submissionId }
-      });
+  const handleVoted = (data: VoteSuccessData) => {
+    if (!activeSubmission) return;
+    setJustVoted(activeSubmission.id);
+    setTimeout(() => setJustVoted(null), 2000);
+    setLastSupport({ submission: activeSubmission, quantity: data.quantity });
+    fetchApprovedSubmissions();
+  };
 
-      if (error) {
-        let errorBody: any = null;
-        try { errorBody = error.context ? await error.context.json() : null; } catch {}
-        if (errorBody?.code === 'INSUFFICIENT_BALANCE') {
-          setCurrentBalance(errorBody.current_balance ?? 0);
-          setShowInsufficientDialog(true);
-          return;
-        }
-        toast({ title: "Vote failed", description: errorBody?.error || "Failed to record vote.", variant: "destructive" });
-        return;
-      }
-
-      if (data?.error) {
-        if (data.code === 'INSUFFICIENT_BALANCE') {
-          setCurrentBalance(data.current_balance ?? 0);
-          setShowInsufficientDialog(true);
-          return;
-        }
-        toast({ title: "Vote failed", description: data.error, variant: "destructive" });
-        return;
-      }
-
-      setJustVoted(submissionId);
-      setTimeout(() => setJustVoted(null), 2000);
-      const sub = submissions.find((s) => s.id === submissionId);
-      setReceiptInfo({
-        title: sub?.title || "Submission",
-        artist: sub?.artist_username || "Artist",
-        voteId: data?.vote_id,
-      });
-      setReceiptOpen(true);
-      fetchApprovedSubmissions();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to record vote.", variant: "destructive" });
-    } finally {
-      setVotingSubmission(null);
-    }
+  const handleCheerAgain = () => {
+    if (!lastSupport) return;
+    setActiveSubmission(lastSupport.submission);
+    setSheetOpen(true);
   };
 
   const handleShare = (submission: VotingSubmission) => {
