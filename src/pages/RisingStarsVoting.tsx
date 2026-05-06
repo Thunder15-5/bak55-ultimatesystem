@@ -317,7 +317,7 @@ export default function RisingStarsVoting() {
                               >
                                 <Heart className="h-3 w-3 mr-1" />
                                 Vote
-                              </>
+                              </Button>
                                 )}
                               </Button>
                             </div>
