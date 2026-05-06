@@ -208,12 +208,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (voterWallet.balance < VOTE_COST) {
+    if (voterWallet.balance < totalCost) {
       return new Response(
         JSON.stringify({ 
-          error: `Insufficient BAKCoins. You need ${VOTE_COST} BAK to vote. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
+          error: `Insufficient BAKCoins. You need ${totalCost} BAK to send ${quantity} vote${quantity>1?'s':''}. Current balance: ${voterWallet.balance.toFixed(2)} BAK`,
           code: 'INSUFFICIENT_BALANCE',
-          required: VOTE_COST,
+          required: totalCost,
+          quantity,
           current_balance: voterWallet.balance
         }),
         { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
