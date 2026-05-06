@@ -302,18 +302,20 @@ Deno.serve(async (req) => {
       })
       .eq('id', platformWallet.id);
 
-    // 4. Record the vote
-    const voteData: any = {
+    // 4. Record the votes (one row per vote)
+    const nowIso = new Date().toISOString();
+    const voteRows = Array.from({ length: quantity }).map(() => ({
       submission_id,
       voter_id: user.id,
       stage_id: stage_id || null,
       vote_weight: 1,
-      voted_at: new Date().toISOString()
-    };
+      voted_at: nowIso,
+    }));
 
-    const { error: voteError } = await supabaseAdmin
+    const { data: insertedVotes, error: voteError } = await supabaseAdmin
       .from('votes')
-      .insert(voteData);
+      .insert(voteRows)
+      .select('id');
 
     if (voteError) {
       console.error('Vote record error:', voteError);
