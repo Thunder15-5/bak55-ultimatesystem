@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
         .eq('submission_id', submission_id)
         .gte('created_at', oneDayAgo);
 
-      if ((selfVotesToday || 0) >= SELF_VOTE_LIMIT_PER_DAY) {
+      if ((selfVotesToday || 0) + quantity > SELF_VOTE_LIMIT_PER_DAY) {
         return new Response(
           JSON.stringify({ 
             error: `Self-voting is limited to ${SELF_VOTE_LIMIT_PER_DAY} votes per day. Ask your fans to vote for you!`,
