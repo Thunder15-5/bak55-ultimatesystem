@@ -165,27 +165,31 @@ export default function RisingStarsVoting() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Insufficient BAKCoins Dialog */}
-      <Dialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-primary" />
-              Need More BAKCoins
-            </DialogTitle>
-            <DialogDescription>
-              Each vote costs 1 BAK. Your balance: <strong>{currentBalance.toFixed(2)} BAK</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowInsufficientDialog(false)}>Cancel</Button>
-            <Button onClick={() => { setShowInsufficientDialog(false); navigate('/buy-coins'); }}>
-              <Coins className="h-4 w-4 mr-2" />
-              Buy BAKCoins
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Vote Sheet */}
+      {activeSubmission && (
+        <VoteSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          submissionId={activeSubmission.id}
+          artistId={activeSubmission.artist_id}
+          artistName={activeSubmission.artist_username}
+          artistAvatar={activeSubmission.artist_avatar}
+          trackTitle={activeSubmission.title}
+          competitionTitle={activeSubmission.competition_title}
+          currentVotes={activeSubmission.vote_count}
+          onVoted={handleVoted}
+        />
+      )}
+
+      {/* Floating Cheer Again bar */}
+      {lastSupport && !sheetOpen && (
+        <CheerAgainBar
+          artistName={lastSupport.submission.artist_username}
+          artistAvatar={lastSupport.submission.artist_avatar}
+          lastQuantity={lastSupport.quantity}
+          onCheer={handleCheerAgain}
+        />
+      )}
 
       {/* Hero */}
       <div className="border-b border-border/50 bg-gradient-to-b from-primary/5 to-transparent">
