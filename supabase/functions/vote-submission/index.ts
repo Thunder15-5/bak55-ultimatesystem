@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { submission_id, stage_id }: VoteRequest = await req.json();
+    const { submission_id, stage_id, quantity: rawQty }: VoteRequest = await req.json();
 
     if (!submission_id) {
       return new Response(
@@ -75,6 +75,9 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const quantity = Math.max(1, Math.min(MAX_BUNDLE_QUANTITY, Math.floor(Number(rawQty) || 1)));
+    const totalCost = VOTE_COST * quantity;
 
     // Get submission details
     const { data: submission, error: subError } = await supabaseAdmin
