@@ -44,12 +44,12 @@ export default function RisingStarsVoting() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VotingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [votingSubmission, setVotingSubmission] = useState<string | null>(null);
-  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
-  const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [justVoted, setJustVoted] = useState<string | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptInfo, setReceiptInfo] = useState<{ title: string; artist: string; voteId?: string } | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeSubmission, setActiveSubmission] = useState<VotingSubmission | null>(null);
+  const [lastSupport, setLastSupport] = useState<{ submission: VotingSubmission; quantity: number } | null>(null);
 
   useEffect(() => {
     fetchApprovedSubmissions();
