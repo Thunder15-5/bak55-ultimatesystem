@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Users, Music, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlacementBadge } from "@/components/monetization/PlacementBadge";
 
 interface PublicArtist {
   user_id: string;
@@ -183,6 +184,9 @@ export function FeaturedArtistsCarousel() {
           <p className="text-muted-foreground text-base sm:text-lg">
             Discover talented artists on BAK55 Talent
           </p>
+          <div className="mt-3 flex justify-center">
+            <PlacementBadge variant="curated" />
+          </div>
         </div>
 
         <div className="relative">
