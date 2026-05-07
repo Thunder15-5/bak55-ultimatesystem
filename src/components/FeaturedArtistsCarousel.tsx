@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Users, Music, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlacementBadge } from "@/components/monetization/PlacementBadge";
 
 interface PublicArtist {
   user_id: string;
