@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { toPng } from "html-to-image";
 import { TipDialog } from "@/components/TipDialog";
+import { SupporterCount } from "@/components/monetization/SupporterCount";
 import { ShareCard } from "@/components/competition/ShareCard";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getArtistShareUrl } from "@/lib/shareUrl";
@@ -425,6 +426,11 @@ export default function ArtistProfile() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Public supporter count — never reveals amounts */}
+            <div className="mt-4 flex justify-center">
+              <SupporterCount artistId={id!} />
             </div>
           </div>
         </div>
