@@ -5,7 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Download, Wallet } from "lucide-react";
+import { ArrowLeft, Download, Wallet, ArrowDownToLine } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -14,6 +14,7 @@ import { RevenueHeroCard } from "@/components/revenue/RevenueHeroCard";
 import { EarningsByStream, type StreamRow } from "@/components/revenue/EarningsByStream";
 import { PayoutLedger, type LedgerEntry } from "@/components/revenue/PayoutLedger";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
+import { WithdrawDialog } from "@/components/revenue/WithdrawDialog";
 
 type Bucket = StreamRow["key"];
 
