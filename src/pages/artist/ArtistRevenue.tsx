@@ -5,7 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Download, Wallet } from "lucide-react";
+import { ArrowLeft, Download, ArrowDownToLine } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -14,6 +14,7 @@ import { RevenueHeroCard } from "@/components/revenue/RevenueHeroCard";
 import { EarningsByStream, type StreamRow } from "@/components/revenue/EarningsByStream";
 import { PayoutLedger, type LedgerEntry } from "@/components/revenue/PayoutLedger";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
+import { WithdrawDialog } from "@/components/revenue/WithdrawDialog";
 
 type Bucket = StreamRow["key"];
 
@@ -62,6 +63,7 @@ export default function ArtistRevenue() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [txns, setTxns] = useState<any[]>([]);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   useEffect(() => {
     if (user) fetchData();
@@ -199,12 +201,10 @@ export default function ArtistRevenue() {
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 <span className="hidden sm:inline">Export</span> CSV
               </Button>
-              <Link to="/artist/wallet">
-                <Button size="sm" className="gap-1.5">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Wallet
-                </Button>
-              </Link>
+              <Button size="sm" className="gap-1.5" onClick={() => setWithdrawOpen(true)}>
+                <ArrowDownToLine className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Request</span> payout
+              </Button>
             </div>
           </div>
 
@@ -247,6 +247,12 @@ export default function ArtistRevenue() {
           )}
         </div>
       </main>
+
+      <WithdrawDialog
+        open={withdrawOpen}
+        onOpenChange={setWithdrawOpen}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }

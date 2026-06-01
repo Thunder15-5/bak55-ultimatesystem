@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { VoteSuccessState, VoteSuccessData } from "./VoteSuccessState";
+import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
 
 const ARTIST_SHARE = 0.65;
 const PLATFORM_SHARE = 0.35;
@@ -235,9 +236,17 @@ export function VoteSheet({
             </div>
 
             {/* Trust bar */}
-            <div className="mx-5 mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <ShieldCheck className="h-3 w-3 text-success" />
-              <span>65% to artist · 35% to prize pool · Audited daily</span>
+            <div className="mx-5 mt-3 flex items-center justify-between gap-2">
+              <FeeSplitBadge
+                artistShare={65}
+                prizePoolShare={35}
+                label="65% artist · 35% prize pool"
+                title="Where your BAK goes"
+                footnote="Audited daily. Every vote logged on the public ledger."
+              />
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-success" /> Verified
+              </span>
             </div>
 
             {/* Sticky CTA */}
