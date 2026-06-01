@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Crown, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
 
 interface SubscriptionPlanCardProps {
   plan: {
@@ -63,6 +64,20 @@ export function SubscriptionPlanCard({ plan, isCurrentPlan, onSubscribe, loading
           <p className="text-sm text-muted-foreground mt-1">
             or {plan.price_bak} BAK/month
           </p>
+          {!isFree && (
+            <div className="mt-2">
+              <FeeSplitBadge
+                label="No hidden fees · Cancel anytime"
+                title="What you're paying for"
+                lines={[
+                  "Plan fee billed monthly",
+                  "Cancel anytime — kept until period ends",
+                  "No auto-charge surprises · 7-day renewal reminder",
+                ]}
+                footnote="Subscriptions fund hosting, moderation, and creator tools."
+              />
+            </div>
+          )}
         </div>
 
         <ul className="space-y-2">
