@@ -138,7 +138,7 @@ export default function ArtistDashboard() {
 
               {/* 4 Primary Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <StatsCard icon={Wallet} label="BAKCoins" value={stats.balance.toFixed(2)} variant="primary" link="/artist/wallet" />
+                <StatsCard icon={Wallet} label="BAKCoins" value={stats.balance.toFixed(2)} variant="primary" link="/artist/revenue" />
                 <StatsCard icon={Music} label="Tracks" value={stats.tracksCount} variant="secondary" link="/artist/catalog" />
                 <StatsCard icon={TrendingUp} label="Plays" value={stats.totalPlays.toLocaleString()} variant="accent" link="/artist/analytics" />
                 <StatsCard icon={Users} label="Followers" value={stats.followers} variant="success" link="/artist/profile" />
@@ -155,7 +155,7 @@ export default function ArtistDashboard() {
                     actions={[
                       { icon: Upload, label: "Upload", link: "/artist/upload", variant: "hero" },
                       { icon: BarChart3, label: "Analytics", link: "/artist/analytics" },
-                      { icon: Wallet, label: "Wallet", link: "/artist/wallet" },
+                      { icon: Wallet, label: "Revenue", link: "/artist/revenue" },
                       { icon: Trophy, label: "Competitions", link: "/artist/competitions" },
                       { icon: Music, label: "My Tracks", link: "/artist/catalog" },
                       { icon: Headphones, label: "Beats", link: "/beats" },
