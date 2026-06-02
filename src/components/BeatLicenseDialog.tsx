@@ -212,6 +212,9 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
                       {price.kes > 0 && (
                         <div className="text-xs text-muted-foreground">≈ {formatFromKES(price.kes)}</div>
                       )}
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        Producer earns {(price.bak * 0.85).toFixed(0)} BAK
+                      </div>
                     </div>
                   )}
 
