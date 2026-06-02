@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShoppingCart, Check, Loader2, Music2, Crown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
 
 interface BeatLicenseDialogProps {
   beat: {
@@ -165,8 +166,22 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg">License "{beat.title}"</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Choose a license tier from {producerName}. Revenue split: 85% producer / 15% platform.
+            Choose a license tier from {producerName}.
           </DialogDescription>
+          <div className="pt-2">
+            <FeeSplitBadge
+              artistShare={85}
+              platformShare={15}
+              label="85% to producer"
+              title="Beat license revenue split"
+              lines={[
+                "85% to the producer",
+                "15% platform fee (hosting, payouts, support)",
+                "100% royalties on your release stay with you",
+              ]}
+              footnote="Same split on every tier. Disclosed before checkout."
+            />
+          </div>
         </DialogHeader>
 
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
@@ -197,6 +212,9 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
                       {price.kes > 0 && (
                         <div className="text-xs text-muted-foreground">≈ {formatFromKES(price.kes)}</div>
                       )}
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        Producer earns {(price.bak * 0.85).toFixed(0)} BAK
+                      </div>
                     </div>
                   )}
 

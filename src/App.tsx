@@ -99,6 +99,7 @@ const FanSubscribe = lazyRetry(() => import("./pages/fan/FanSubscribe"));
 const FanDiscover = lazyRetry(() => import("./pages/fan/FanDiscover"));
 const ArtistDashboard = lazyRetry(() => import("./pages/artist/ArtistDashboard"));
 const ArtistRevenue = lazyRetry(() => import("./pages/artist/ArtistRevenue"));
+const ArtistAmplify = lazyRetry(() => import("./pages/artist/ArtistAmplify"));
 const ArtistCatalog = lazyRetry(() => import("./pages/artist/ArtistCatalog"));
 const ArtistDiscover = lazyRetry(() => import("./pages/artist/ArtistDiscover"));
 const ArtistCourse = lazyRetry(() => import("./pages/artist/ArtistCourse"));
@@ -215,6 +216,7 @@ const App = () => (
                 {/* Artist Routes */}
                 <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/artist/revenue" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistRevenue /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/artist/amplify" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistAmplify /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/artist/upload" element={<ProtectedRoute requiredRole="artist"><UploadTrack /></ProtectedRoute>} />
                 <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><ArtistCatalog /></ProtectedRoute>} />
                 <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><ArtistDiscover /></ProtectedRoute>} />
