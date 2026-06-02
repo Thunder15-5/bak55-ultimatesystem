@@ -143,28 +143,6 @@ export function TipDialog({ open, onOpenChange, artistId, artistName, trackId, o
             />
           </div>
 
-          {/* Transparent fee preview */}
-          {numericAmount > 0 && (
-            <div className="rounded-xl border bg-muted/40 p-3 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Artist receives</span>
-                <span className="font-semibold">{artistReceives.toFixed(2)} BAK</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Platform fee</span>
-                <span className={cn("font-medium", isFreeOfFee && "text-emerald-600")}>
-                  {isFreeOfFee ? "0% — free under 50 BAK" : `${PLATFORM_FEE_PCT}% (${platformFee.toFixed(2)} BAK)`}
-                </span>
-              </div>
-              {isFreeOfFee && (
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 pt-1 border-t border-emerald-500/20">
-                  <Sparkles className="h-3 w-3" />
-                  Artist-friendly: tips under 50 BAK have no fees
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Message */}
           <div className="space-y-2">
             <Label htmlFor="message" className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -181,12 +159,56 @@ export function TipDialog({ open, onOpenChange, artistId, artistName, trackId, o
             <p className="text-[11px] text-muted-foreground text-right">{message.length}/140</p>
           </div>
 
-          <div className="flex items-center justify-between">
-            <FeeSplitBadge
-              artistShare={isFreeOfFee ? 100 : 100 - PLATFORM_FEE_PCT}
-              platformShare={isFreeOfFee ? 0 : PLATFORM_FEE_PCT}
-              label={isFreeOfFee ? "100% to artist" : `${100 - PLATFORM_FEE_PCT}% to artist`}
-            />
+          {/* Final review — fee transparency before paying */}
+          {numericAmount > 0 && (
+            <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-rose-500/5 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] uppercase tracking-wider font-semibold text-primary">
+                  Final review
+                </span>
+                <FeeSplitBadge
+                  artistShare={isFreeOfFee ? 100 : 100 - PLATFORM_FEE_PCT}
+                  platformShare={isFreeOfFee ? 0 : PLATFORM_FEE_PCT}
+                  title="Your tip breakdown"
+                  lines={[
+                    `You pay: ${numericAmount.toFixed(2)} BAK`,
+                    `Artist receives: ${artistReceives.toFixed(2)} BAK`,
+                    isFreeOfFee
+                      ? "Platform fee: 0% (free under 50 BAK)"
+                      : `Platform fee: ${PLATFORM_FEE_PCT}% (${platformFee.toFixed(2)} BAK)`,
+                  ]}
+                  footnote="Disclosed before payment. No hidden fees."
+                  label={isFreeOfFee ? "100% to artist" : `${100 - PLATFORM_FEE_PCT}% to artist`}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">You pay</span>
+                  <span className="font-medium">{numericAmount.toFixed(2)} BAK</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Platform fee</span>
+                  <span className={cn("font-medium", isFreeOfFee && "text-emerald-600")}>
+                    {isFreeOfFee ? "0% — free under 50 BAK" : `${PLATFORM_FEE_PCT}% (${platformFee.toFixed(2)} BAK)`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-base pt-2 border-t border-primary/15">
+                  <span className="font-semibold">Artist receives</span>
+                  <span className="font-bold text-primary">{artistReceives.toFixed(2)} BAK</span>
+                </div>
+              </div>
+
+              {isFreeOfFee && (
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 pt-1">
+                  <Sparkles className="h-3 w-3" />
+                  Artist-friendly: tips under 50 BAK have zero platform fees
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end">
             <span className="text-[11px] text-muted-foreground">Min 0.1 · Max 10,000 BAK</span>
           </div>
         </div>
