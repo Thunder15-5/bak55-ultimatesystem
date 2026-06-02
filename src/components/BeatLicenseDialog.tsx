@@ -166,8 +166,22 @@ export function BeatLicenseDialog({ beat, producerName, children }: BeatLicenseD
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg">License "{beat.title}"</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Choose a license tier from {producerName}. Revenue split: 85% producer / 15% platform.
+            Choose a license tier from {producerName}.
           </DialogDescription>
+          <div className="pt-2">
+            <FeeSplitBadge
+              artistShare={85}
+              platformShare={15}
+              label="85% to producer"
+              title="Beat license revenue split"
+              lines={[
+                "85% to the producer",
+                "15% platform fee (hosting, payouts, support)",
+                "100% royalties on your release stay with you",
+              ]}
+              footnote="Same split on every tier. Disclosed before checkout."
+            />
+          </div>
         </DialogHeader>
 
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
