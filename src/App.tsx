@@ -216,6 +216,7 @@ const App = () => (
                 {/* Artist Routes */}
                 <Route path="/artist/dashboard" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/artist/revenue" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistRevenue /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/artist/amplify" element={<ProtectedRoute requiredRole="artist"><RouteErrorBoundary><ArtistAmplify /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/artist/upload" element={<ProtectedRoute requiredRole="artist"><UploadTrack /></ProtectedRoute>} />
                 <Route path="/artist/catalog" element={<ProtectedRoute requiredRole="artist"><ArtistCatalog /></ProtectedRoute>} />
                 <Route path="/artist/discover" element={<ProtectedRoute requiredRole="artist"><ArtistDiscover /></ProtectedRoute>} />
