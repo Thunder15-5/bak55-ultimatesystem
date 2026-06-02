@@ -99,6 +99,7 @@ const FanSubscribe = lazyRetry(() => import("./pages/fan/FanSubscribe"));
 const FanDiscover = lazyRetry(() => import("./pages/fan/FanDiscover"));
 const ArtistDashboard = lazyRetry(() => import("./pages/artist/ArtistDashboard"));
 const ArtistRevenue = lazyRetry(() => import("./pages/artist/ArtistRevenue"));
+const ArtistAmplify = lazyRetry(() => import("./pages/artist/ArtistAmplify"));
 const ArtistCatalog = lazyRetry(() => import("./pages/artist/ArtistCatalog"));
 const ArtistDiscover = lazyRetry(() => import("./pages/artist/ArtistDiscover"));
 const ArtistCourse = lazyRetry(() => import("./pages/artist/ArtistCourse"));
