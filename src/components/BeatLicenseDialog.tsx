@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShoppingCart, Check, Loader2, Music2, Crown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
 
 interface BeatLicenseDialogProps {
   beat: {
