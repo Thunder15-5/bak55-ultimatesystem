@@ -232,6 +232,148 @@ export type Database = {
           },
         ]
       }
+      amplify_campaigns: {
+        Row: {
+          actual_impressions: number
+          actual_new_fans: number
+          artist_id: string
+          audience_level: number
+          bak_price: number
+          created_at: string
+          duration_days: number
+          ends_at: string
+          id: string
+          placements: string[]
+          predicted_cost_per_fan: number
+          predicted_impressions_high: number
+          predicted_impressions_low: number
+          predicted_new_fans_high: number
+          predicted_new_fans_low: number
+          refund_amount: number
+          refunded_at: string | null
+          starts_at: string
+          status: string
+          tier_id: string
+          tier_name: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_impressions?: number
+          actual_new_fans?: number
+          artist_id: string
+          audience_level: number
+          bak_price: number
+          created_at?: string
+          duration_days: number
+          ends_at: string
+          id?: string
+          placements?: string[]
+          predicted_cost_per_fan: number
+          predicted_impressions_high: number
+          predicted_impressions_low: number
+          predicted_new_fans_high: number
+          predicted_new_fans_low: number
+          refund_amount?: number
+          refunded_at?: string | null
+          starts_at?: string
+          status?: string
+          tier_id: string
+          tier_name: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_impressions?: number
+          actual_new_fans?: number
+          artist_id?: string
+          audience_level?: number
+          bak_price?: number
+          created_at?: string
+          duration_days?: number
+          ends_at?: string
+          id?: string
+          placements?: string[]
+          predicted_cost_per_fan?: number
+          predicted_impressions_high?: number
+          predicted_impressions_low?: number
+          predicted_new_fans_high?: number
+          predicted_new_fans_low?: number
+          refund_amount?: number
+          refunded_at?: string | null
+          starts_at?: string
+          status?: string
+          tier_id?: string
+          tier_name?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amplify_campaigns_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amplify_campaigns_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      amplify_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          placement: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          placement?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          placement?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amplify_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "amplify_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amplify_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amplify_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_dismissals: {
         Row: {
           announcement_id: string
@@ -5414,6 +5556,10 @@ export type Database = {
         | { Args: { _amount: number; _user_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_not_fan: { Args: { user_id_param: string }; Returns: boolean }
+      settle_amplify_campaign: {
+        Args: { p_campaign_id: string }
+        Returns: Json
+      }
       transfer_funds: {
         Args: {
           recipient_id: string
