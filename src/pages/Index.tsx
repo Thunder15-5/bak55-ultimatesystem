@@ -163,6 +163,13 @@ const Index = () => {
           <CTA />
         </main>
         <Footer />
+        <StickyMobileCTA
+          label="Join Free · 10 BAK Bonus"
+          to="/signup"
+          secondary={{ label: "Already have an account? Log in", to: "/login" }}
+          hidden={!!user}
+          hint="Vote, earn & get discovered"
+        />
       </div>
     </>
   );
