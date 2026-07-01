@@ -12,6 +12,7 @@ import {
   StatsCard, DashboardHeader, QuickActions, DashboardSkeleton,
   ShareAndGrow, OpportunitiesFeed, ActiveCompetitionCard,
 } from "@/components/dashboard";
+import { MobileFAB } from "@/components/mobile/MobileFAB";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Music, Wallet, TrendingUp, Upload, BarChart3,
@@ -239,6 +240,7 @@ export default function ArtistDashboard() {
           )}
         </div>
       </main>
+      <MobileFAB icon={Upload} label="Upload" to="/artist/upload" />
     </div>
   );
 }

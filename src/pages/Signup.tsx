@@ -293,7 +293,12 @@ export default function Signup() {
                     placeholder="your_username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-primary"
+                    className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    inputMode="text"
                     required
                   />
                 </div>
@@ -309,7 +314,12 @@ export default function Signup() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-primary"
+                    className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    inputMode="email"
                     required
                   />
                 </div>
@@ -325,7 +335,8 @@ export default function Signup() {
                     placeholder="Min. 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-primary"
+                    className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
+                    autoComplete="new-password"
                     required
                   />
                   {password && password.length < 6 && (
