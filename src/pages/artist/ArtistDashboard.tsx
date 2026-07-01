@@ -240,6 +240,7 @@ export default function ArtistDashboard() {
           )}
         </div>
       </main>
+      <MobileFAB icon={Upload} label="Upload" to="/artist/upload" />
     </div>
   );
 }
