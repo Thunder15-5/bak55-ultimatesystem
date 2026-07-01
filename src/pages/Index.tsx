@@ -8,6 +8,8 @@ import { SocialProof } from "@/components/SocialProof";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { CompetitionBanner } from "@/components/CompetitionBanner";
+import { StickyMobileCTA } from "@/components/mobile/StickyMobileCTA";
+import { useAuth } from "@/contexts/AuthContext";
 import { FeaturedArtistsCarousel } from "@/components/FeaturedArtistsCarousel";
 import { FAQ } from "@/components/FAQ";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +58,7 @@ const trustBadges = [
 ];
 
 const Index = () => {
+  const { user } = useAuth();
   const [featuredCompetition, setFeaturedCompetition] = useState<any>(null);
 
   useEffect(() => {
