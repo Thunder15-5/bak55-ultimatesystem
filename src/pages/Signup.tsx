@@ -757,6 +757,7 @@ export default function Signup() {
             </div>
           )}
         </div>
+        )}
 
         {/* Bottom trust */}
         {step > 1 && (
