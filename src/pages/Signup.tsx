@@ -106,10 +106,56 @@ export default function Signup() {
     const roleParam = searchParams.get("role");
     if (roleParam && ["fan", "artist", "brand", "producer"].includes(roleParam)) {
       setRole(roleParam as any);
-      // Skip step 1 if role pre-selected
+      // Role pre-selected → skip to credentials in the full form
+      setUseFullForm(true);
       setStep(2);
     }
+    // Explicit escape hatch for users who want the classic wizard
+    if (searchParams.get("mode") === "full") setUseFullForm(true);
   }, [searchParams]);
+
+  const handleGoogle = async () => {
+    setOauthLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/auth/callback`,
+      });
+      if (result.error) {
+        toast.error((result.error as any)?.message || "Google sign-in failed");
+        setOauthLoading(false);
+        return;
+      }
+      // If redirected, browser is navigating away; otherwise session is set — AuthCallback will route.
+    } catch (err: any) {
+      toast.error(err?.message || "Google sign-in failed");
+      setOauthLoading(false);
+    }
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!magicEmail.trim()) return;
+    setMagicLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicEmail.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: referralCode ? { referral_code: referralCode } : undefined,
+        },
+      });
+      if (error) {
+        toast.error(error.message || "Could not send magic link");
+      } else {
+        setMagicSent(true);
+        toast.success("Check your email for the sign-in link");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Could not send magic link");
+    } finally {
+      setMagicLoading(false);
+    }
+  };
 
   const getErrorMessage = (error: any): string => {
     const msg = error?.message?.toLowerCase() || "";
