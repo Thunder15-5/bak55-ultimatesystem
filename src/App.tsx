@@ -128,6 +128,7 @@ const MerchOrders = lazyRetry(() => import("./pages/merch/MerchOrders"));
 import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 const AuthCallback = lazyRetry(() => import("./pages/AuthCallback"));
+const DesignSystem = lazyRetry(() => import("./pages/DesignSystem"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -163,6 +164,8 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/transparency" element={<Transparency />} />
+                  <Route path="/design-system" element={<DesignSystem />} />
+
                 
                 {/* PUBLIC SHAREABLE ROUTES - No auth required */}
                 <Route path="/track/:id" element={<TrackDetails />} />
