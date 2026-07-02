@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,13 @@ import { toast } from "sonner";
 import { FEATURES } from "@/lib/featureFlags";
 
 const logoImage = "/bak55-logo.png";
+
+// Inline Google G mark (brand-accurate, no color-utility hack)
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.42-1.7 4.16-5.5 4.16-3.32 0-6.02-2.74-6.02-6.13S8.68 5.99 12 5.99c1.88 0 3.14.8 3.86 1.48l2.64-2.55C16.9 3.43 14.68 2.5 12 2.5 6.99 2.5 2.94 6.55 2.94 11.56S6.99 20.62 12 20.62c6.93 0 8.5-6.09 7.83-9.42H12z"/>
+  </svg>
+);
 
 const TOTAL_STEPS = 3;
 
