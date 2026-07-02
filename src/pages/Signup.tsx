@@ -244,33 +244,178 @@ export default function Signup() {
         {/* Logo + Progress */}
         <div className="text-center space-y-4">
           <img src={logoImage} alt="BAK55 Talent" className="h-12 w-auto mx-auto" />
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    s < step
-                      ? "bg-primary text-primary-foreground"
-                      : s === step
-                        ? "bg-primary/20 text-primary border-2 border-primary"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {s < step ? <CheckCircle2 className="w-4 h-4" /> : s}
-                </div>
-                {s < TOTAL_STEPS && (
-                  <div className={`w-8 h-0.5 ${s < step ? "bg-primary" : "bg-muted"}`} />
-                )}
+          {useFullForm && (
+            <>
+              {/* Step indicator */}
+              <div className="flex items-center justify-center gap-2">
+                {[1, 2, 3].map((s) => (
+                  <div key={s} className="flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                        s < step
+                          ? "bg-primary text-primary-foreground"
+                          : s === step
+                            ? "bg-primary/20 text-primary border-2 border-primary"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {s < step ? <CheckCircle2 className="w-4 h-4" /> : s}
+                    </div>
+                    {s < TOTAL_STEPS && (
+                      <div className={`w-8 h-0.5 ${s < step ? "bg-primary" : "bg-muted"}`} />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Step {step} of {TOTAL_STEPS}
-          </p>
+              <p className="text-xs text-muted-foreground">
+                Step {step} of {TOTAL_STEPS}
+              </p>
+            </>
+          )}
         </div>
 
-        {/* Card */}
+        {/* ========== QUICK MODE (default): Social + Magic Link ========== */}
+        {!useFullForm && (
+          <div className="rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <div className="p-6 space-y-5">
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-heading font-bold">
+                  <span className="text-gradient">Join BAK55</span>
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  One tap to start. Pick your role after — no password needed.
+                </p>
+              </div>
+
+              {/* Google */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 text-base font-semibold bg-background/60 border-border/60 hover:bg-background/90"
+                onClick={handleGoogle}
+                disabled={oauthLoading || magicLoading}
+              >
+                {oauthLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    <span className="ml-2">Continue with Google</span>
+                  </>
+                )}
+              </Button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/50" />
+                </div>
+                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                  <span className="bg-card px-3 text-muted-foreground">or magic link</span>
+                </div>
+              </div>
+
+              {/* Magic link */}
+              {magicSent ? (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+                    <Mail className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Check your inbox</p>
+                  <p className="text-xs text-muted-foreground break-words">
+                    We sent a sign-in link to <span className="text-foreground">{magicEmail}</span>. It expires in 60 minutes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setMagicSent(false)}
+                    className="text-xs text-primary hover:underline font-medium mt-1"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleMagicLink} className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="magicEmail" className="text-sm font-medium flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                      Email address
+                    </Label>
+                    <Input
+                      id="magicEmail"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={magicEmail}
+                      onChange={(e) => setMagicEmail(e.target.value)}
+                      className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="email"
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    className="w-full h-12 text-base font-semibold"
+                    disabled={magicLoading || oauthLoading || !magicEmail.trim()}
+                  >
+                    {magicLoading ? (
+                      <>
+                        <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                        Sending link…
+                      </>
+                    ) : (
+                      <>
+                        Email me a sign-in link
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {/* Trust bar */}
+              <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-1">
+                <span className="flex items-center gap-1">
+                  <Shield className="w-3 h-3" /> No password
+                </span>
+                <span className="flex items-center gap-1">
+                  <Coins className="w-3 h-3" /> 10 BAK bonus
+                </span>
+                <span className="flex items-center gap-1">
+                  <Trophy className="w-3 h-3" /> Free forever
+                </span>
+              </div>
+
+              <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
+                By continuing you agree to our{" "}
+                <Link to="/terms" className="text-primary hover:underline">Terms</Link> &{" "}
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>. You must be 16+.
+              </p>
+
+              <div className="flex flex-col items-center gap-2 pt-2 border-t border-border/40">
+                <button
+                  type="button"
+                  onClick={() => setUseFullForm(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Prefer email + password? <span className="text-primary font-semibold">Use classic signup</span>
+                </button>
+                <Link
+                  to={`/login${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Already have an account? <span className="text-primary font-semibold">Log in</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== FULL WIZARD (opt-in) ========== */}
+        {useFullForm && (
         <div className="rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
           {/* ========== STEP 1: Role Selection ========== */}
           {step === 1 && (
