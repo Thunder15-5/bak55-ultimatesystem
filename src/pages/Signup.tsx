@@ -370,6 +370,19 @@ export default function Signup() {
                 )}
               </Button>
 
+              {oauthError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 flex items-start gap-2">
+                  <p className="text-xs text-destructive flex-1 leading-relaxed">{oauthError}</p>
+                  <button
+                    type="button"
+                    onClick={handleGoogle}
+                    className="text-[11px] font-semibold text-destructive hover:underline shrink-0"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
