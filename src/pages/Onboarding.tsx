@@ -58,17 +58,11 @@ export default function Onboarding() {
         throw roleErr;
       }
 
-      // Update profile with role hint (best-effort)
-      await supabase
-        .from("profiles")
-        .update({ role })
-        .eq("id", user.id);
-
       sessionStorage.removeItem("signupIntentRole");
       sessionStorage.removeItem("signupIntentRedirect");
 
       toast.success("You're all set!");
-      const dest = redirectTarget || (role === "admin" ? "/admin" : `/${role}/dashboard`);
+      const dest = redirectTarget || `/${role}/dashboard`;
       navigate(dest, { replace: true });
     } catch (err: any) {
       toast.error(err?.message || "Could not save your role. Please try again.");
