@@ -77,9 +77,12 @@ export default function Signup() {
   // Quick vs full flow. Default = quick (social-first + magic link).
   const [useFullForm, setUseFullForm] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
   const [magicSent, setMagicSent] = useState(false);
+  const [magicError, setMagicError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Step 1: Role
   const [role, setRole] = useState<"artist" | "fan" | "brand" | "producer">("fan");
