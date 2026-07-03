@@ -129,6 +129,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 const AuthCallback = lazyRetry(() => import("./pages/AuthCallback"));
 const DesignSystem = lazyRetry(() => import("./pages/DesignSystem"));
+const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
