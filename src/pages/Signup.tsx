@@ -117,20 +117,58 @@ export default function Signup() {
     if (searchParams.get("mode") === "full") setUseFullForm(true);
   }, [searchParams]);
 
+  // Cooldown ticker for magic-link resend
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  // Persist intent (role + redirect) so post-OAuth onboarding can consume it.
+  const stashIntent = () => {
+    try {
+      const roleParam = searchParams.get("role");
+      if (roleParam) sessionStorage.setItem("signupIntentRole", roleParam);
+      else sessionStorage.setItem("signupIntentRole", role);
+      if (redirectUrl) sessionStorage.setItem("signupIntentRedirect", redirectUrl);
+      if (referralCode) sessionStorage.setItem("signupIntentReferral", referralCode);
+    } catch {
+      // storage unavailable — safe to ignore
+    }
+  };
+
+  const mapAuthError = (err: any): string => {
+    const msg = (err?.message || "").toLowerCase();
+    if (msg.includes("rate") || msg.includes("too many"))
+      return "Too many attempts. Please wait ~60 seconds and try again.";
+    if (msg.includes("popup") || msg.includes("closed"))
+      return "The sign-in window was closed before finishing. Try again.";
+    if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed to fetch"))
+      return "Network hiccup — check your connection and try again.";
+    if (msg.includes("invalid email")) return "That email doesn't look right.";
+    if (msg.includes("provider is not enabled"))
+      return "Google sign-in isn't enabled yet. Use email instead.";
+    if (msg.includes("expired"))
+      return "This link has expired. Request a fresh one below.";
+    return err?.message || "Something went wrong. Please try again.";
+  };
+
   const handleGoogle = async () => {
+    setOauthError(null);
     setOauthLoading(true);
+    stashIntent();
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/auth/callback`,
       });
       if (result.error) {
-        toast.error((result.error as any)?.message || "Google sign-in failed");
+        setOauthError(mapAuthError(result.error));
         setOauthLoading(false);
         return;
       }
       // If redirected, browser is navigating away; otherwise session is set — AuthCallback will route.
     } catch (err: any) {
-      toast.error(err?.message || "Google sign-in failed");
+      setOauthError(mapAuthError(err));
       setOauthLoading(false);
     }
   };
@@ -138,7 +176,9 @@ export default function Signup() {
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!magicEmail.trim()) return;
+    setMagicError(null);
     setMagicLoading(true);
+    stashIntent();
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicEmail.trim(),
@@ -148,13 +188,35 @@ export default function Signup() {
         },
       });
       if (error) {
-        toast.error(error.message || "Could not send magic link");
+        setMagicError(mapAuthError(error));
       } else {
         setMagicSent(true);
+        setResendCooldown(30);
         toast.success("Check your email for the sign-in link");
       }
     } catch (err: any) {
-      toast.error(err?.message || "Could not send magic link");
+      setMagicError(mapAuthError(err));
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  const handleResendMagic = async () => {
+    if (resendCooldown > 0 || !magicEmail.trim()) return;
+    setMagicError(null);
+    setMagicLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicEmail.trim(),
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) setMagicError(mapAuthError(error));
+      else {
+        setResendCooldown(30);
+        toast.success("Sent another link");
+      }
+    } catch (err: any) {
+      setMagicError(mapAuthError(err));
     } finally {
       setMagicLoading(false);
     }
