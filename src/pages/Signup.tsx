@@ -395,7 +395,7 @@ export default function Signup() {
 
               {/* Magic link */}
               {magicSent ? (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-3">
                   <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
                     <Mail className="w-6 h-6 text-primary" />
                   </div>
@@ -403,16 +403,42 @@ export default function Signup() {
                   <p className="text-xs text-muted-foreground break-words">
                     We sent a sign-in link to <span className="text-foreground">{magicEmail}</span>. It expires in 60 minutes.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setMagicSent(false)}
-                    className="text-xs text-primary hover:underline font-medium mt-1"
-                  >
-                    Use a different email
-                  </button>
+                  {magicError && (
+                    <p className="text-[11px] text-destructive">{magicError}</p>
+                  )}
+                  <div className="flex items-center justify-center gap-3 text-xs">
+                    <button
+                      type="button"
+                      onClick={handleResendMagic}
+                      disabled={resendCooldown > 0 || magicLoading}
+                      className="text-primary hover:underline font-medium disabled:text-muted-foreground disabled:no-underline"
+                    >
+                      {magicLoading
+                        ? "Sending…"
+                        : resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : "Resend link"}
+                    </button>
+                    <span className="text-muted-foreground">·</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMagicSent(false);
+                        setMagicError(null);
+                      }}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Use a different email
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleMagicLink} className="space-y-3">
+                  {magicError && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
+                      <p className="text-xs text-destructive leading-relaxed">{magicError}</p>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="magicEmail" className="text-sm font-medium flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-muted-foreground" />
