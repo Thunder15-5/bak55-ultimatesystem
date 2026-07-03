@@ -49,11 +49,28 @@ export default function AuthCallback() {
               .eq("user_id", user.id);
 
             const allRoles = roles?.map((r: any) => r.role) ?? [];
-            let redirectTo = "/fan/dashboard";
-            if (allRoles.includes("admin")) redirectTo = "/admin";
-            else if (allRoles.includes("brand")) redirectTo = "/brand/dashboard";
-            else if (allRoles.includes("producer")) redirectTo = "/producer/dashboard";
-            else if (allRoles.includes("artist")) redirectTo = "/artist/dashboard";
+
+            // Preserve any intended redirect (referral, ?redirect=, etc.)
+            const intendedRedirect =
+              sessionStorage.getItem("signupIntentRedirect") || "";
+            const redirectSuffix = intendedRedirect
+              ? `?redirect=${encodeURIComponent(intendedRedirect)}`
+              : "";
+
+            // New user with no role → onboarding
+            if (allRoles.length === 0) {
+              navigate(`/onboarding${redirectSuffix}`, { replace: true });
+              return;
+            }
+
+            let redirectTo = intendedRedirect || "/fan/dashboard";
+            if (!intendedRedirect) {
+              if (allRoles.includes("admin")) redirectTo = "/admin";
+              else if (allRoles.includes("brand")) redirectTo = "/brand/dashboard";
+              else if (allRoles.includes("producer")) redirectTo = "/producer/dashboard";
+              else if (allRoles.includes("artist")) redirectTo = "/artist/dashboard";
+            }
+            sessionStorage.removeItem("signupIntentRedirect");
 
             navigate(redirectTo, { replace: true });
           } else {
