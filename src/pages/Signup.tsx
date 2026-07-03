@@ -77,9 +77,12 @@ export default function Signup() {
   // Quick vs full flow. Default = quick (social-first + magic link).
   const [useFullForm, setUseFullForm] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
   const [magicSent, setMagicSent] = useState(false);
+  const [magicError, setMagicError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Step 1: Role
   const [role, setRole] = useState<"artist" | "fan" | "brand" | "producer">("fan");
@@ -114,20 +117,58 @@ export default function Signup() {
     if (searchParams.get("mode") === "full") setUseFullForm(true);
   }, [searchParams]);
 
+  // Cooldown ticker for magic-link resend
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  // Persist intent (role + redirect) so post-OAuth onboarding can consume it.
+  const stashIntent = () => {
+    try {
+      const roleParam = searchParams.get("role");
+      if (roleParam) sessionStorage.setItem("signupIntentRole", roleParam);
+      else sessionStorage.setItem("signupIntentRole", role);
+      if (redirectUrl) sessionStorage.setItem("signupIntentRedirect", redirectUrl);
+      if (referralCode) sessionStorage.setItem("signupIntentReferral", referralCode);
+    } catch {
+      // storage unavailable — safe to ignore
+    }
+  };
+
+  const mapAuthError = (err: any): string => {
+    const msg = (err?.message || "").toLowerCase();
+    if (msg.includes("rate") || msg.includes("too many"))
+      return "Too many attempts. Please wait ~60 seconds and try again.";
+    if (msg.includes("popup") || msg.includes("closed"))
+      return "The sign-in window was closed before finishing. Try again.";
+    if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed to fetch"))
+      return "Network hiccup — check your connection and try again.";
+    if (msg.includes("invalid email")) return "That email doesn't look right.";
+    if (msg.includes("provider is not enabled"))
+      return "Google sign-in isn't enabled yet. Use email instead.";
+    if (msg.includes("expired"))
+      return "This link has expired. Request a fresh one below.";
+    return err?.message || "Something went wrong. Please try again.";
+  };
+
   const handleGoogle = async () => {
+    setOauthError(null);
     setOauthLoading(true);
+    stashIntent();
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/auth/callback`,
       });
       if (result.error) {
-        toast.error((result.error as any)?.message || "Google sign-in failed");
+        setOauthError(mapAuthError(result.error));
         setOauthLoading(false);
         return;
       }
       // If redirected, browser is navigating away; otherwise session is set — AuthCallback will route.
     } catch (err: any) {
-      toast.error(err?.message || "Google sign-in failed");
+      setOauthError(mapAuthError(err));
       setOauthLoading(false);
     }
   };
@@ -135,7 +176,9 @@ export default function Signup() {
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!magicEmail.trim()) return;
+    setMagicError(null);
     setMagicLoading(true);
+    stashIntent();
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicEmail.trim(),
@@ -145,13 +188,35 @@ export default function Signup() {
         },
       });
       if (error) {
-        toast.error(error.message || "Could not send magic link");
+        setMagicError(mapAuthError(error));
       } else {
         setMagicSent(true);
+        setResendCooldown(30);
         toast.success("Check your email for the sign-in link");
       }
     } catch (err: any) {
-      toast.error(err?.message || "Could not send magic link");
+      setMagicError(mapAuthError(err));
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  const handleResendMagic = async () => {
+    if (resendCooldown > 0 || !magicEmail.trim()) return;
+    setMagicError(null);
+    setMagicLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicEmail.trim(),
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) setMagicError(mapAuthError(error));
+      else {
+        setResendCooldown(30);
+        toast.success("Sent another link");
+      }
+    } catch (err: any) {
+      setMagicError(mapAuthError(err));
     } finally {
       setMagicLoading(false);
     }
@@ -305,6 +370,19 @@ export default function Signup() {
                 )}
               </Button>
 
+              {oauthError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 flex items-start gap-2">
+                  <p className="text-xs text-destructive flex-1 leading-relaxed">{oauthError}</p>
+                  <button
+                    type="button"
+                    onClick={handleGoogle}
+                    className="text-[11px] font-semibold text-destructive hover:underline shrink-0"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -317,7 +395,7 @@ export default function Signup() {
 
               {/* Magic link */}
               {magicSent ? (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-2">
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center space-y-3">
                   <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
                     <Mail className="w-6 h-6 text-primary" />
                   </div>
@@ -325,16 +403,42 @@ export default function Signup() {
                   <p className="text-xs text-muted-foreground break-words">
                     We sent a sign-in link to <span className="text-foreground">{magicEmail}</span>. It expires in 60 minutes.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setMagicSent(false)}
-                    className="text-xs text-primary hover:underline font-medium mt-1"
-                  >
-                    Use a different email
-                  </button>
+                  {magicError && (
+                    <p className="text-[11px] text-destructive">{magicError}</p>
+                  )}
+                  <div className="flex items-center justify-center gap-3 text-xs">
+                    <button
+                      type="button"
+                      onClick={handleResendMagic}
+                      disabled={resendCooldown > 0 || magicLoading}
+                      className="text-primary hover:underline font-medium disabled:text-muted-foreground disabled:no-underline"
+                    >
+                      {magicLoading
+                        ? "Sending…"
+                        : resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : "Resend link"}
+                    </button>
+                    <span className="text-muted-foreground">·</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMagicSent(false);
+                        setMagicError(null);
+                      }}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Use a different email
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleMagicLink} className="space-y-3">
+                  {magicError && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
+                      <p className="text-xs text-destructive leading-relaxed">{magicError}</p>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="magicEmail" className="text-sm font-medium flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-muted-foreground" />
