@@ -49,13 +49,13 @@ export function VoteSheet({
   onVoted,
 }: VoteSheetProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [tier, setTier] = useState<typeof TIERS[number]["id"] | "custom">("boost");
   const [customQty, setCustomQty] = useState(10);
   const [balance, setBalance] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<VoteSuccessData | null>(null);
+  const [stage, setStage] = useState<"select" | "review">("select");
 
   const quantity = tier === "custom" ? customQty : (TIERS.find((t) => t.id === tier)?.qty ?? 1);
   const totalCost = quantity; // 1 BAK per vote
