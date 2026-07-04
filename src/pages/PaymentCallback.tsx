@@ -1,36 +1,67 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { PaymentStatusScreen, PaymentStatus } from "@/components/mobile/PaymentStatusScreen";
+import { Card, CardContent } from "@/components/ui/card";
 
+/**
+ * Post-checkout landing screen.
+ * Polls the wallet balance to detect webhook credit, then routes to /wallet.
+ */
 const PaymentCallback = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [status, setStatus] = useState<PaymentStatus>("pending");
+  const [amount, setAmount] = useState<number>(0);
+  const startBalance = useRef<number | null>(null);
+  const attempts = useRef(0);
 
   useEffect(() => {
-    // Selar payments are processed via webhook automatically
-    // This page just redirects back to wallet after showing confirmation
-    const timer = setTimeout(() => {
-      navigate('/wallet');
-    }, 3000);
+    if (!user) return;
+    let cancelled = false;
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    const poll = async () => {
+      const { data } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const current = Number(data?.balance ?? 0);
+      if (startBalance.current === null) startBalance.current = current;
+      const delta = current - (startBalance.current ?? current);
+      if (delta > 0) {
+        if (cancelled) return;
+        setAmount(delta);
+        setStatus("success");
+        return;
+      }
+      attempts.current += 1;
+      if (attempts.current >= 20) {
+        if (cancelled) return;
+        setStatus("failed");
+        return;
+      }
+      setTimeout(() => { if (!cancelled) poll(); }, 3000);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [user]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background-dark p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="flex justify-center">
-          <CheckCircle className="h-16 w-16 text-primary animate-pulse" />
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Processing Payment</h1>
-          <p className="text-lg text-muted-foreground">
-            Your payment is being verified. BAKCoins will be credited automatically.
-          </p>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Redirecting to wallet...
-        </div>
-      </div>
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background p-4 pb-safe">
+      <Card className="card-base w-full max-w-md">
+        <CardContent className="p-0">
+          <PaymentStatusScreen
+            status={status}
+            amount={amount}
+            currency="BAK"
+            errorMessage="We haven't seen the payment confirmation yet. It may still complete — check your wallet in a moment."
+            onDone={() => navigate("/wallet")}
+            onRetry={() => navigate("/buy-coins")}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

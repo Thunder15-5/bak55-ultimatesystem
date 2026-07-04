@@ -14,6 +14,8 @@ import { RuleCard } from "@/components/trust/RuleCard";
 import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
 import { VoteSheet } from "@/components/voting/VoteSheet";
 import { CheerAgainBar } from "@/components/voting/CheerAgainBar";
+import { RetryableError } from "@/components/RetryableError";
+import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
 import type { VoteSuccessData } from "@/components/voting/VoteSuccessState";
 import {
   Dialog,
@@ -44,6 +46,7 @@ export default function RisingStarsVoting() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VotingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [justVoted, setJustVoted] = useState<string | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptInfo, setReceiptInfo] = useState<{ title: string; artist: string; voteId?: string } | null>(null);
@@ -64,6 +67,7 @@ export default function RisingStarsVoting() {
   }, []);
 
   const fetchApprovedSubmissions = async () => {
+    setLoadError(null);
     try {
       const { data: subs, error } = await supabase
         .from('submissions')
@@ -105,8 +109,9 @@ export default function RisingStarsVoting() {
       });
 
       setSubmissions(formatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching submissions:', error);
+      setLoadError(error?.message || "Couldn't load the leaderboard.");
     } finally {
       setLoading(false);
     }
@@ -154,8 +159,25 @@ export default function RisingStarsVoting() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="container mx-auto px-4 pt-24 pb-16">
+          <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <TrackCardSkeleton key={i} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 pb-16 max-w-md">
+          <RetryableError
+            title="Voting is offline"
+            description={loadError}
+            onRetry={() => { setLoading(true); fetchApprovedSubmissions(); }}
+          />
         </div>
       </div>
     );
