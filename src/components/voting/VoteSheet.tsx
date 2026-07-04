@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { PressableButton } from "@/components/PressableButton";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Flame, Zap, Gem, Sparkles, ShieldCheck, Coins, ArrowRight } from "lucide-react";
+import { Loader2, Flame, Zap, Gem, Sparkles, ShieldCheck, Coins, ArrowRight, Hash, Clock, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/actionToast";
+import { haptic } from "@/lib/haptics";
 import { useNavigate } from "react-router-dom";
 import { VoteSuccessState, VoteSuccessData } from "./VoteSuccessState";
 import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
