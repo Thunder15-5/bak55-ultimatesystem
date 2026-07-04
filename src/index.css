@@ -576,4 +576,54 @@
       font-size: 16px !important;
     }
   }
+
+  /* ─────────────────────────────────────────────
+     BAK55 Design System — Type ramp & tokens
+     Use these across every page for consistency.
+     ───────────────────────────────────────────── */
+
+  /* 3-size type ramp (mobile-first). Never mix more than 3 on one screen. */
+  .text-display {
+    @apply font-heading font-extrabold tracking-tight leading-[1.05];
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    letter-spacing: -0.02em;
+  }
+  .text-title {
+    @apply font-heading font-bold tracking-tight leading-[1.15];
+    font-size: clamp(1.125rem, 3.2vw, 1.5rem);
+  }
+  .text-body {
+    @apply font-normal leading-relaxed text-muted-foreground;
+    font-size: 0.9375rem;
+  }
+
+  /* Canonical card token. Use instead of ad-hoc bg/border/rounded classes. */
+  .card-base {
+    @apply rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl;
+    box-shadow: var(--shadow-md), var(--shadow-inner-glow);
+  }
+  .card-elevated {
+    @apply rounded-2xl border border-border/60;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-lg), var(--shadow-inner-glow);
+  }
+
+  /* Press-scale for tap feedback on primary actions */
+  .press-scale {
+    transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .press-scale:active {
+    transform: scale(0.97);
+  }
+
+  /* Safe-area helpers for iOS/Android home indicator */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  .h-safe-bottom {
+    height: env(safe-area-inset-bottom);
+  }
 }
