@@ -14,6 +14,8 @@ import { RuleCard } from "@/components/trust/RuleCard";
 import { FairnessBreakdown } from "@/components/trust/FairnessBreakdown";
 import { VoteSheet } from "@/components/voting/VoteSheet";
 import { CheerAgainBar } from "@/components/voting/CheerAgainBar";
+import { RetryableError } from "@/components/RetryableError";
+import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
 import type { VoteSuccessData } from "@/components/voting/VoteSuccessState";
 import {
   Dialog,
