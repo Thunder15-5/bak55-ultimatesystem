@@ -67,6 +67,7 @@ export default function RisingStarsVoting() {
   }, []);
 
   const fetchApprovedSubmissions = async () => {
+    setLoadError(null);
     try {
       const { data: subs, error } = await supabase
         .from('submissions')
@@ -108,8 +109,9 @@ export default function RisingStarsVoting() {
       });
 
       setSubmissions(formatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching submissions:', error);
+      setLoadError(error?.message || "Couldn't load the leaderboard.");
     } finally {
       setLoading(false);
     }
