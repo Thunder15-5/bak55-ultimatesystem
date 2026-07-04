@@ -66,11 +66,12 @@ export function VoteSheet({
   useEffect(() => {
     if (!open || !user) return;
     setSuccess(null);
+    setStage("select");
     supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => setBalance(Number(data?.balance ?? 0)));
   }, [open, user]);
 
-  const handleVote = async () => {
+  const handlePrimaryCta = () => {
     if (!user) {
       navigate(`/login?redirect=/rising-stars/voting`);
       return;
@@ -79,6 +80,15 @@ export function VoteSheet({
       navigate(`/buy-coins?need=${totalCost}&return=/rising-stars/voting`);
       return;
     }
+    if (stage === "select") {
+      haptic("light");
+      setStage("review");
+      return;
+    }
+    void handleVote();
+  };
+
+  const handleVote = async () => {
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("vote-submission", {
@@ -89,14 +99,14 @@ export function VoteSheet({
         try { if (error?.context) body = await error.context.json(); } catch {}
         if (body?.code === "INSUFFICIENT_BALANCE") {
           setBalance(Number(body.current_balance ?? 0));
-          toast({ title: "Need more BAKCoins", description: `You need ${body.required} BAK.`, variant: "destructive" });
+          actionToast.error("Need more BAKCoins", `You need ${body.required} BAK.`);
+          setStage("select");
           return;
         }
-        toast({ title: "Vote failed", description: body?.error || "Try again.", variant: "destructive" });
+        actionToast.error("Vote failed", body?.error || "Try again.");
         return;
       }
-      // Haptic
-      if (navigator.vibrate) navigator.vibrate([20, 30, 40]);
+      haptic("success");
       const successData: VoteSuccessData = {
         artistId,
         artistName,
@@ -114,7 +124,7 @@ export function VoteSheet({
       setSuccess(successData);
       onVoted?.(successData);
     } catch (e: any) {
-      toast({ title: "Error", description: e?.message || "Failed to vote", variant: "destructive" });
+      actionToast.error("Error", e?.message || "Failed to vote");
     } finally {
       setSubmitting(false);
     }
