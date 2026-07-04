@@ -46,6 +46,7 @@ export default function RisingStarsVoting() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VotingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [justVoted, setJustVoted] = useState<string | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptInfo, setReceiptInfo] = useState<{ title: string; artist: string; voteId?: string } | null>(null);
