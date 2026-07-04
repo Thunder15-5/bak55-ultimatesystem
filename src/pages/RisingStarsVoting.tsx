@@ -159,8 +159,25 @@ export default function RisingStarsVoting() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="container mx-auto px-4 pt-24 pb-16">
+          <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <TrackCardSkeleton key={i} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 pb-16 max-w-md">
+          <RetryableError
+            title="Voting is offline"
+            description={loadError}
+            onRetry={() => { setLoading(true); fetchApprovedSubmissions(); }}
+          />
         </div>
       </div>
     );
