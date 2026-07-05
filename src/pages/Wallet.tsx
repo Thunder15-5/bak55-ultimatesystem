@@ -466,11 +466,15 @@ export default function Wallet() {
             {transactions.length === 0 ? (
               <div className="text-center py-12">
                 <WalletIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">No transactions yet</p>
-                <Button onClick={() => navigate('/wallet/buy-coins')} variant="outline" size="sm">
-                  Buy Your First BAKCoins
+                <h3 className="text-title mb-2">No transactions yet</h3>
+                <p className="text-body mb-6 max-w-sm mx-auto">
+                  Top up your wallet to vote for artists, tip creators, and unlock exclusive drops.
+                </p>
+                <Button onClick={() => navigate('/wallet/buy-coins')} variant="default" size="lg" className="press-scale">
+                  Buy your first BAKCoins
                 </Button>
               </div>
+
             ) : (
               <div className="space-y-4">
                 {transactions.map((tx) => (
