@@ -8,7 +8,9 @@ import { Trophy, Calendar, Coins, Users } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/EmptyState";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { RetryableError } from "@/components/RetryableError";
+import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
+import { useNavigate } from "react-router-dom";
 
 interface Competition {
   id: string;
