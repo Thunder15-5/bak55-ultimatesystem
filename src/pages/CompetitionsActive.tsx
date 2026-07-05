@@ -114,14 +114,27 @@ export default function CompetitionsActive() {
       
       <div className="container mx-auto px-4 py-8">
 
-        {competitions.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Trophy className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg text-muted-foreground">No active competitions at the moment</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for new opportunities!</p>
-            </CardContent>
-          </Card>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <TrackCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : error ? (
+          <RetryableError
+            title="Couldn't load competitions"
+            description="Check your connection and try again."
+            onRetry={handleRetry}
+            retrying={retrying}
+          />
+        ) : competitions.length === 0 ? (
+          <EmptyState
+            icon={Trophy}
+            title="No active competitions"
+            description="New opportunities drop weekly — check back soon or explore past winners."
+            actionLabel="Browse artists"
+            onAction={() => navigate('/discover')}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {competitions.map((competition, index) => {
