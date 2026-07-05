@@ -30,8 +30,11 @@ interface Competition {
 
 export default function CompetitionsActive() {
   const { userRole } = useAuth();
+  const navigate = useNavigate();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     fetchCompetitions();
