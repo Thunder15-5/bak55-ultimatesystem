@@ -8,7 +8,9 @@ import { Trophy, Calendar, Coins, Users } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/EmptyState";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { RetryableError } from "@/components/RetryableError";
+import { TrackCardSkeleton } from "@/components/ui/skeleton-components";
+import { useNavigate } from "react-router-dom";
 
 interface Competition {
   id: string;
@@ -28,8 +30,11 @@ interface Competition {
 
 export default function CompetitionsActive() {
   const { userRole } = useAuth();
+  const navigate = useNavigate();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     fetchCompetitions();
@@ -37,6 +42,7 @@ export default function CompetitionsActive() {
 
   const fetchCompetitions = async () => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('competitions')
         .select('*')
@@ -45,11 +51,18 @@ export default function CompetitionsActive() {
 
       if (error) throw error;
       setCompetitions(data || []);
-    } catch (error) {
-      console.error('Error fetching competitions:', error);
+    } catch (err: any) {
+      console.error('Error fetching competitions:', err);
+      setError(err?.message || 'Failed to load competitions');
     } finally {
       setLoading(false);
+      setRetrying(false);
     }
+  };
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    await fetchCompetitions();
   };
 
   const getTimeRemaining = (endDate: string) => {
@@ -65,17 +78,6 @@ export default function CompetitionsActive() {
     if (days > 0) return `${days}d ${hours}h remaining`;
     return `${hours}h remaining`;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,14 +114,27 @@ export default function CompetitionsActive() {
       
       <div className="container mx-auto px-4 py-8">
 
-        {competitions.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Trophy className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg text-muted-foreground">No active competitions at the moment</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for new opportunities!</p>
-            </CardContent>
-          </Card>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <TrackCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : error ? (
+          <RetryableError
+            title="Couldn't load competitions"
+            description="Check your connection and try again."
+            onRetry={handleRetry}
+            retrying={retrying}
+          />
+        ) : competitions.length === 0 ? (
+          <EmptyState
+            icon={Trophy}
+            title="No active competitions"
+            description="New opportunities drop weekly — check back soon or explore past winners."
+            actionLabel="Browse artists"
+            onAction={() => navigate('/discover')}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {competitions.map((competition, index) => {
