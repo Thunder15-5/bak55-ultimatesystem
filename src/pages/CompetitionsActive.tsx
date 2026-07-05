@@ -42,6 +42,7 @@ export default function CompetitionsActive() {
 
   const fetchCompetitions = async () => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('competitions')
         .select('*')
@@ -50,11 +51,18 @@ export default function CompetitionsActive() {
 
       if (error) throw error;
       setCompetitions(data || []);
-    } catch (error) {
-      console.error('Error fetching competitions:', error);
+    } catch (err: any) {
+      console.error('Error fetching competitions:', err);
+      setError(err?.message || 'Failed to load competitions');
     } finally {
       setLoading(false);
+      setRetrying(false);
     }
+  };
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    await fetchCompetitions();
   };
 
   const getTimeRemaining = (endDate: string) => {
@@ -70,17 +78,6 @@ export default function CompetitionsActive() {
     if (days > 0) return `${days}d ${hours}h remaining`;
     return `${hours}h remaining`;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
