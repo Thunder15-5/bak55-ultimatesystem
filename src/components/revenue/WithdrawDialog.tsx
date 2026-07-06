@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/mobile/ResponsiveModal";
+import { PressableButton } from "@/components/PressableButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowDownToLine, Loader2, ShieldCheck, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/actionToast";
 import { useWithdrawalEligibility } from "@/hooks/useWithdrawalEligibility";
 import { Link } from "react-router-dom";
 
