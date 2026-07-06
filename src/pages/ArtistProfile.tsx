@@ -29,6 +29,7 @@ import { FanClubSection } from "@/components/FanClubSection";
 import { TrustSignals } from "@/components/competition/TrustSignals";
 import { VerifiedTrustStack } from "@/components/trust/VerifiedTrustStack";
 import { RuleCard } from "@/components/trust/RuleCard";
+import { FollowButton } from "@/components/FollowButton";
 
 interface ArtistData {
   id: string;
