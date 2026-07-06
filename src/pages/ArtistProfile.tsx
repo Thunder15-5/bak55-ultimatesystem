@@ -446,16 +446,17 @@ export default function ArtistProfile() {
                 <Vote className="mr-2 h-4 w-4" />Vote Now
               </Button>
             )}
-            <Button
-              onClick={handleFollow}
-              disabled={following || user?.id === id}
-              variant={isFollowing ? "outline" : "default"}
-              className="flex-shrink-0"
-            >
-              {following ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> :
-                isFollowing ? <UserMinus className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
+            {id && (
+              <FollowButton
+                artistId={id}
+                artistName={displayName}
+                className="flex-shrink-0"
+                onChange={(next) => {
+                  setIsFollowing(next);
+                  setFollowerCount((p) => Math.max(0, p + (next ? 1 : -1)));
+                }}
+              />
+            )}
             <Button variant="outline" onClick={() => handleShare("native")} className="flex-shrink-0">
               <Share2 className="mr-2 h-4 w-4" />Share
             </Button>
