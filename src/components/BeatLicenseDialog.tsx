@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/mobile/ResponsiveModal";
+import { PressableButton } from "@/components/PressableButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { actionToast } from "@/lib/actionToast";
 import { ShoppingCart, Check, Loader2, Music2, Crown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FeeSplitBadge } from "@/components/monetization/FeeSplitBadge";
