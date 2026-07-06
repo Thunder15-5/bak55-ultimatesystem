@@ -19,6 +19,7 @@ import { useExclusiveAccess } from "@/hooks/useExclusiveAccess";
 import { ExclusiveContentOverlay } from "@/components/ExclusiveContentOverlay";
 import { CommentSection } from "@/components/CommentSection";
 import { isFeatureEnabled } from "@/lib/featureFlags";
+import { FollowButton } from "@/components/FollowButton";
 
   interface Track {
   id: string;
@@ -671,19 +672,13 @@ export default function TrackDetails() {
               <>
 
                 {user.id !== track.artist_id && (
-                  <Button 
-                    onClick={handleFollow}
-                    disabled={followLoading}
+                  <FollowButton
+                    artistId={track.artist_id}
+                    artistName={track.profiles?.username}
                     size="lg"
-                    variant={isFollowing ? "default" : "outline"}
-                  >
-                    {followLoading ? (
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                      <UserPlus className="mr-2 h-5 w-5" />
-                    )}
-                    {isFollowing ? 'Following' : 'Follow Artist'}
-                  </Button>
+                    onFollowed={() => trackActivity('artist_follow', { artist_id: track.artist_id })}
+                    onChange={setIsFollowing}
+                  />
                 )}
 
                 {user.id === track.artist_id && (
