@@ -64,6 +64,7 @@ export const Footer = () => {
             <h4 className="font-semibold text-sm">Company</h4>
             <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
               <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
+              <li><Link to="/changelog" className="hover:text-primary transition-colors">Changelog</Link></li>
               <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
               <li><a href="https://instagram.com/bak55.talent" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a></li>
               <li><a href="https://twitter.com/Bak55Official" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Twitter</a></li>
