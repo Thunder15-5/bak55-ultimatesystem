@@ -71,36 +71,38 @@ export default function Blog() {
         <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="mb-12 text-center">
-            <h1 className="text-5xl font-bold mb-4 text-gradient">BAK55 Insights</h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Real data, honest analysis, and actionable insights for independent artists and music brands
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">Building BAK55 in Public</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Updates written by the team about what we shipped, what broke, and what we are still
+              working on. No filler, no invented stories.
             </p>
           </div>
 
-          {/* Featured Stats */}
-          <Card className="mb-12 bg-gradient-card border-primary/20">
-            <CardContent className="p-8">
-              <div className="grid gap-6 md:grid-cols-4">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary mb-1">$38B</p>
-                  <p className="text-sm text-muted-foreground">Global streaming revenue 2025</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-secondary mb-1">47%</p>
-                  <p className="text-sm text-muted-foreground">Independent artist market share</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-accent mb-1">150K</p>
-                  <p className="text-sm text-muted-foreground">New tracks uploaded daily</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-gradient-primary mb-1">$5.8B</p>
-                  <p className="text-sm text-muted-foreground">Brand partnerships 2025</p>
-                </div>
-              </div>
+          {/* Live platform stats */}
+          <Card className="mb-8 bg-gradient-card border-primary/20">
+            <CardContent className="p-6 md:p-8">
+              <LiveStatsRow />
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                Read live from our database. Whatever the numbers are, that is what we show.
+              </p>
             </CardContent>
           </Card>
+
+          {/* Editorial policy */}
+          <Card className="mb-12 border-border/60">
+            <CardContent className="p-5 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Editorial policy:</span> we publish
+              only real BAK55 updates. No AI-generated filler, no invented artist stories, no
+              fabricated quotes or statistics. Every figure comes from our own data and is stated as
+              of a date. Looking for the release history?{' '}
+              <Link to="/changelog" className="text-primary underline underline-offset-2">
+                See the changelog
+              </Link>
+              .
+            </CardContent>
+          </Card>
+
 
           {/* Blog Posts */}
           <div className="space-y-8">
@@ -187,9 +189,10 @@ export default function Blog() {
           {/* CTA Section */}
           <Card className="mt-12 bg-gradient-hero border-primary/30">
             <CardContent className="p-8 text-center">
-              <h2 className="text-3xl font-bold mb-4">Ready to Change Your Music Career?</h2>
+              <h2 className="text-3xl font-bold mb-4">Join us early</h2>
               <p className="text-lg text-foreground/90 mb-6 max-w-2xl mx-auto">
-                Join thousands of independent artists who are earning real money through competitions and direct fan engagement
+                BAK55 is in open beta. Upload your music, enter competitions and get paid directly by
+                fans — while the platform is still small enough for your feedback to shape it.
               </p>
               <div className="flex items-center justify-center gap-4">
                 <Button size="lg" variant="secondary" onClick={() => window.location.href = '/signup'}>
