@@ -228,8 +228,8 @@ const Investors = () => {
                 <h3 className="text-xl font-bold mb-2">Bith Agustine A. - CEO & Vision</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
                   <li>• 5 years artist management (3 artists to Top 100 on Boomplay)</li>
-                  <li>• Organized 12 live events with 500+ average attendance</li>
-                  <li>• 50+ industry connections including A&Rs at major Record Labels</li>
+                  <li>• Organized live music events in Kenya prior to founding BAK55</li>
+                  <li>• Direct working relationships with artists, producers and event promoters in East Africa</li>
                   <li>• Previously led digital marketing agency serving 20+ African artists</li>
                 </ul>
               </div>
