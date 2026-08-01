@@ -23,9 +23,17 @@ const Changelog = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageSEO
-        page="changelog"
-        customTitle="BAK55 Changelog — What We Shipped and What Broke"
-        customDescription="An append-only record of every BAK55 release, the bugs we fixed, and the work still in progress."
+        page="blog"
+        overrides={{
+          title: "Changelog — What We Shipped and What Broke",
+          description:
+            "An append-only record of every BAK55 release, the bugs we fixed in beta, and the work still in progress.",
+          keywords: ["BAK55 changelog", "platform updates", "release notes", "product transparency"],
+          breadcrumbs: [
+            { name: "Home", url: "/" },
+            { name: "Changelog", url: "/changelog" },
+          ],
+        }}
       />
       <Navbar />
 
