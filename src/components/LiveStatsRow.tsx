@@ -33,8 +33,8 @@ export function LiveStatsRow({ className = "" }: { className?: string }) {
 
   const items = [
     { label: "Artists registered", value: stats?.artists },
-    { label: "Tracks uploaded", value: stats?.tracks },
-    { label: "Competitions run", value: stats?.competitions },
+    { label: "Tracks published", value: stats?.tracks },
+    { label: "Active competitions", value: stats?.competitions },
   ];
 
   return (
