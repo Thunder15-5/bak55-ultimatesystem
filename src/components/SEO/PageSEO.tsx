@@ -25,7 +25,7 @@ const PAGE_SEO_CONFIGS: Record<PageType, PageSEOConfig> = {
   },
   catalog: {
     title: "Music Catalog - Discover African Artists",
-    description: "Browse thousands of tracks from emerging African artists. Find new music from Kenya, Tanzania, Uganda, Nigeria and across Africa. Stream Afrobeats, Hip Hop, Gengetone & more.",
+    description: "Browse tracks from emerging African artists. Find new music from Kenya, Tanzania, Uganda, Nigeria and across Africa. Stream Afrobeats, Hip Hop, Gengetone & more.",
     keywords: ["African music catalog", "discover African artists", "new African music", "Afrobeats playlist", "Kenya hip hop", "African music discovery"],
     breadcrumbs: [{ name: "Home", url: "/" }, { name: "Music Catalog", url: "/catalog" }],
   },

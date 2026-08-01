@@ -68,6 +68,7 @@ const Support = lazyRetry(() => import("./pages/Support"));
 const About = lazyRetry(() => import("./pages/About"));
 const Blog = lazyRetry(() => import("./pages/Blog"));
 const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
+const Changelog = lazyRetry(() => import("./pages/Changelog"));
 const Investors = lazyRetry(() => import("./pages/Investors"));
 const PressKit = lazyRetry(() => import("./pages/PressKit"));
 const Contact = lazyRetry(() => import("./pages/Contact"));
@@ -330,6 +331,7 @@ const App = () => (
                 <Route path="/about" element={<About />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
+          <Route path="/changelog" element={<Changelog />} />
                 <Route path="/how-to-earn" element={<HowToEarn />} />
                 <Route path="/join" element={<Join />} />
                 <Route path="/contact" element={<Contact />} />

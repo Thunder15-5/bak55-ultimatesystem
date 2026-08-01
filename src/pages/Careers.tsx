@@ -27,7 +27,7 @@ const openPositions = [
     department: "Engineering",
     location: "Remote",
     type: "Full-time",
-    description: "Ship features that thousands of artists and fans use daily. React, TypeScript, Tailwind — you know the stack.",
+    description: "Ship features used every day by the artists and fans on BAK55. React, TypeScript, Tailwind — you know the stack.",
   },
   {
     title: "Content Creator & Storyteller",
@@ -69,7 +69,7 @@ export default function Careers() {
           </h1>
           <p className="text-lg text-muted-foreground">
             BAK55 Talent is on a mission to give every African artist a fair shot. 
-            Join a small, fast-moving team where your work reaches thousands of creators across the continent.
+            Join a small, early-stage team where your work reaches artists across the continent.
           </p>
         </section>
 

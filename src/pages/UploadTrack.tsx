@@ -364,7 +364,7 @@ export default function UploadTrack() {
             Share Your <span className="text-gradient">Music</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Upload your track and reach thousands of listeners across the platform
+            Upload your track and make it available to everyone on BAK55
           </p>
           
           {subscription && (

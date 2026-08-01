@@ -337,7 +337,7 @@ const Competitions = () => {
         <div className="container mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold mb-3">Ready to Compete?</h2>
           <p className="text-sm text-muted-foreground mb-5">
-            Join thousands of artists building their careers through BAK55 competitions.
+            Enter an open competition and let fans back your track.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/rising-stars/voting">

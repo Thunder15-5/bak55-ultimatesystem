@@ -1,159 +1,110 @@
-import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Quote, Music, Users, Trophy, TrendingUp } from "lucide-react";
+import { Quote } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { LiveStatsRow } from "@/components/LiveStatsRow";
+import { JourneyTimeline } from "@/components/JourneyTimeline";
 
+/**
+ * Success Stories.
+ * We have not yet completed a full competition season, so there are no finished
+ * artist success stories to tell. This page says that plainly and shows the real
+ * state of the platform instead of inventing outcomes.
+ */
 const SuccessStories = () => {
-  const [stats, setStats] = useState({ artists: 0, tracks: 0, competitions: 0, fans: 0 });
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { data } = await supabase.rpc('get_public_platform_stats');
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        const d = data as Record<string, unknown>;
-        setStats({
-          artists: Number(d.artists_count) || 0,
-          tracks: Number(d.tracks_count) || 0,
-          competitions: Number(d.competitions_count) || 0,
-          fans: 0,
-        });
-      }
-    };
-    fetchStats();
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center space-y-6 mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold">
+
+      <section className="px-4 pb-20 pt-28">
+        <div className="container mx-auto max-w-3xl space-y-10">
+          <header className="space-y-4 text-center">
+            <h1 className="text-4xl font-bold md:text-6xl">
               Success <span className="text-gradient">Stories</span>
             </h1>
-            <p className="text-xl text-muted-foreground">
-              Real artists building real careers on BAK55
+            <p className="text-lg text-muted-foreground">
+              We are early. Rather than invent stories, we are showing you exactly where we are.
             </p>
-          </div>
+          </header>
 
-          <Card className="p-12 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 mb-12">
-            <div className="text-center space-y-6">
-              <Quote className="w-12 h-12 text-primary mx-auto" />
-              <p className="text-2xl font-medium leading-relaxed">
-                "We're just getting started, but our vision is clear: create pathways to success for African artists who've been locked out of opportunity."
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-secondary/10 p-8 md:p-12">
+            <div className="space-y-6 text-center">
+              <Quote className="mx-auto h-10 w-10 text-primary" />
+              <p className="text-xl font-medium leading-relaxed md:text-2xl">
+                "We're just getting started, but our vision is clear: create pathways to success for
+                African artists who've been locked out of opportunity."
               </p>
-              <div className="pt-4">
-                <p className="font-bold text-lg">Bith Agustine A.</p>
-                <p className="text-muted-foreground">Founder & CEO, BAK55</p>
+              <div className="pt-2">
+                <p className="text-lg font-bold">Bith Agustine A.</p>
+                <p className="text-muted-foreground">Founder, BAK55</p>
               </div>
             </div>
           </Card>
 
-          <div className="space-y-12">
-            {/* Live Platform Stats */}
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
-              <h2 className="text-3xl font-bold mb-6">Platform Growth — Live</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Music className="w-8 h-8 text-primary" />
-                    <div className="text-4xl font-bold text-gradient-primary">{stats.artists}</div>
-                  </div>
-                  <p className="text-muted-foreground">Artists on the platform, creating and competing</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-8 h-8 text-secondary" />
-                    <div className="text-4xl font-bold text-gradient-secondary">{stats.tracks}</div>
-                  </div>
-                  <p className="text-muted-foreground">Tracks uploaded and available for streaming</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="w-8 h-8 text-accent" />
-                    <div className="text-4xl font-bold text-accent">{stats.competitions}</div>
-                  </div>
-                  <p className="text-muted-foreground">Active competitions running right now</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-8 h-8 text-primary" />
-                    <div className="text-4xl font-bold text-gradient-primary">5</div>
-                  </div>
-                  <p className="text-muted-foreground">Years of artist management experience</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
-              <h2 className="text-3xl font-bold mb-6">Our Track Record</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gradient-primary">5</div>
-                  <p className="text-muted-foreground">Emerging artists successfully helped to record professional songs and EPs, showcasing our commitment to nurturing African talent</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gradient-secondary">10</div>
-                  <p className="text-muted-foreground">Live events organized with 500+ average attendance</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-accent">50+</div>
-                  <p className="text-muted-foreground">Industry connections including A&Rs at major labels</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-4xl font-bold text-gradient-primary">$110M</div>
-                  <p className="text-muted-foreground">Sub-Saharan Africa music market we're building for (IFPI 2025)</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10">
-              <h2 className="text-3xl font-bold mb-6">The Founding 100</h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                We're building BAK55 with a select group of founding artists who believe in our vision. These pioneers will shape the platform and enjoy lifetime benefits.
-              </p>
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <h3 className="font-bold mb-2">What Founding Artists Get:</h3>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li>• Lifetime founding artist status badge</li>
-                    <li>• Priority access to all new features and AI tools</li>
-                    <li>• Exclusive direct line to the founding team</li>
-                    <li>• Input on platform development and features</li>
-                    <li>• Bonus BAKCoins package to kickstart earnings</li>
-                    <li>• Featured in launch marketing and success stories</li>
-                  </ul>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 sm:p-12 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
-              <div className="text-center space-y-6">
-                <h2 className="text-3xl font-bold">Your Success Story Starts Here</h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Join the movement to build a fairer music industry. Be part of the first wave of artists who prove that sustainable careers are possible without exploitation.
-                </p>
-                <Link to="/join" className="inline-block w-full sm:w-auto">
-                  <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                    Become a Founding Artist
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-
-            <div className="text-center pt-8">
-              <p className="text-muted-foreground">
-                Success stories will be updated regularly as our community grows.
-                <br />
-                Follow our journey and be inspired by artists building their dreams on BAK55.
+          <Card className="space-y-6 border-primary/10 bg-card/50 p-6 backdrop-blur-sm md:p-10">
+            <div>
+              <h2 className="text-2xl font-bold">Where the platform stands today</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Live counts from our database, not targets.
               </p>
             </div>
-          </div>
+            <LiveStatsRow />
+          </Card>
+
+          <Card className="space-y-4 border-secondary/10 bg-card/50 p-6 backdrop-blur-sm md:p-10">
+            <h2 className="text-2xl font-bold">Why there are no stories here yet</h2>
+            <p className="text-muted-foreground">
+              A success story means an artist earned something meaningful, or reached an audience they
+              could not reach before, and can say so in their own words. That takes a full
+              competition season and real payouts behind it. We have run our first competition and
+              our first payouts; we have not yet run enough of either to claim outcomes.
+            </p>
+            <p className="text-muted-foreground">
+              When an artist does have a story, it will appear here with their name, their words and
+              the date — and only with their permission. Nothing on this page will ever be written on
+              an artist's behalf.
+            </p>
+            <div className="pt-2">
+              <Button variant="outline" asChild>
+                <Link to="/changelog">See what we have actually shipped</Link>
+              </Button>
+            </div>
+          </Card>
+
+          <JourneyTimeline />
+
+          <Card className="space-y-4 border-secondary/10 bg-card/50 p-6 backdrop-blur-sm md:p-10">
+            <h2 className="text-2xl font-bold">The Founding Artists</h2>
+            <p className="text-muted-foreground">
+              Artists who join during beta shape what gets built. That is the offer, and it is the
+              whole offer:
+            </p>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>• A founding artist badge on your profile</li>
+              <li>• Early access to new features before general release</li>
+              <li>• A direct line to the team, and your bug reports prioritised</li>
+              <li>• Input on what we build next</li>
+            </ul>
+            <p className="text-sm text-muted-foreground">
+              We are not promising audience size, income or exposure. Those depend on the work.
+            </p>
+          </Card>
+
+          <Card className="border-accent/20 bg-gradient-to-br from-accent/10 to-primary/10 p-6 text-center sm:p-12">
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold md:text-3xl">Be early</h2>
+              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                Join while the platform is still small enough that your feedback changes it.
+              </p>
+              <Link to="/join" className="inline-block w-full sm:w-auto">
+                <Button variant="hero" size="xl" className="w-full sm:w-auto">
+                  Join as an Artist
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </div>
       </section>
 

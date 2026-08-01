@@ -181,7 +181,7 @@ export default function BlogPost() {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Transform Your Music Career?</h2>
               <p className="text-lg text-foreground/90 mb-6 max-w-2xl mx-auto">
-                Join thousands of independent artists earning real money through competitions
+                BAK55 is in open beta — upload your music, enter competitions and get paid directly by fans
               </p>
               <div className="flex items-center justify-center gap-4">
                 <Button size="lg" variant="secondary" onClick={() => navigate('/signup')}>
