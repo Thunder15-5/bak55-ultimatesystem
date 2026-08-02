@@ -113,6 +113,14 @@ const ProducerUploadBeat = lazyRetry(() => import("./pages/producer/ProducerUplo
 const ProducerCollaborations = lazyRetry(() => import("./pages/producer/ProducerCollaborations"));
 const ProducerCompetitions = lazyRetry(() => import("./pages/producer/ProducerCompetitions"));
 const Upgrade = lazyRetry(() => import("./pages/Upgrade"));
+const CompetitionMarketplace = lazyRetry(() => import("./pages/CompetitionMarketplace"));
+const Organizers = lazyRetry(() => import("./pages/Organizers"));
+const OrganizerPublicProfile = lazyRetry(() => import("./pages/OrganizerPublicProfile"));
+const OrganizerSetup = lazyRetry(() => import("./pages/organizer/OrganizerSetup"));
+const OrganizerDashboard = lazyRetry(() => import("./pages/organizer/OrganizerDashboard"));
+const CompetitionBuilder = lazyRetry(() => import("./pages/organizer/CompetitionBuilder"));
+const OrganizerCompetitionManage = lazyRetry(() => import("./pages/organizer/OrganizerCompetitionManage"));
+const OrganizerAdmin = lazyRetry(() => import("./pages/admin/OrganizerAdmin"));
 const Leaderboard = lazyRetry(() => import("./pages/Leaderboard"));
 const Apply = lazyRetry(() => import("./pages/Apply"));
 const InstallApp = lazyRetry(() => import("./pages/InstallApp"));
@@ -175,9 +183,18 @@ const App = () => (
                 <Route path="/artist/:id" element={<ArtistProfile />} />
           <Route path="/catalog" element={<MusicCatalog />} />
           <Route path="/streaming" element={<Streaming />} />
-          <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions" element={<CompetitionMarketplace />} />
+          <Route path="/competitions/all" element={<Competitions />} />
           <Route path="/competitions/active" element={<CompetitionsActive />} />
           <Route path="/competition/:id" element={<CompetitionDetails />} />
+          <Route path="/organizers" element={<Organizers />} />
+          <Route path="/organizer/setup" element={<ProtectedRoute><OrganizerSetup /></ProtectedRoute>} />
+          <Route path="/organizer/dashboard" element={<ProtectedRoute><RouteErrorBoundary><OrganizerDashboard /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/organizer/competitions/new" element={<ProtectedRoute><CompetitionBuilder /></ProtectedRoute>} />
+          <Route path="/organizer/competitions/:id/edit" element={<ProtectedRoute><CompetitionBuilder /></ProtectedRoute>} />
+          <Route path="/organizer/competitions/:id/manage" element={<ProtectedRoute><OrganizerCompetitionManage /></ProtectedRoute>} />
+          <Route path="/organizer/:slug" element={<OrganizerPublicProfile />} />
+
            <Route path="/apply" element={<Apply />} />
            <Route path="/beats" element={<BeatsCatalog />} />
            <Route path="/producer/:id" element={<ProducerProfile />} />
@@ -294,6 +311,7 @@ const App = () => (
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><RouteErrorBoundary><Admin /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/admin/organizers" element={<ProtectedRoute requiredRole="admin"><OrganizerAdmin /></ProtectedRoute>} />
                 <Route path="/admin/streaming" element={<ProtectedRoute requiredRole="admin"><Streaming /></ProtectedRoute>} />
                 <Route path="/admin/profile" element={<ProtectedRoute requiredRole="admin"><Profile /></ProtectedRoute>} />
                 <Route path="/admin/wallet" element={<ProtectedRoute requiredRole="admin"><Wallet /></ProtectedRoute>} />

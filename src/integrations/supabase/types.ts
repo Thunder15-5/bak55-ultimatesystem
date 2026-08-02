@@ -1536,6 +1536,50 @@ export type Database = {
           },
         ]
       }
+      competition_revenue_config: {
+        Row: {
+          competition_id: string
+          created_at: string
+          entry_fee_organizer_pct: number
+          entry_fee_platform_pct: number
+          id: string
+          updated_at: string
+          voting_artist_pct: number
+          voting_organizer_pct: number
+          voting_platform_pct: number
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          entry_fee_organizer_pct?: number
+          entry_fee_platform_pct?: number
+          id?: string
+          updated_at?: string
+          voting_artist_pct?: number
+          voting_organizer_pct?: number
+          voting_platform_pct?: number
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          entry_fee_organizer_pct?: number
+          entry_fee_platform_pct?: number
+          id?: string
+          updated_at?: string
+          voting_artist_pct?: number
+          voting_organizer_pct?: number
+          voting_platform_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_revenue_config_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_stages: {
         Row: {
           challenge_theme: string | null
@@ -1603,62 +1647,86 @@ export type Database = {
       }
       competitions: {
         Row: {
+          competition_type: string
+          country: string | null
           cover_image: string | null
           created_at: string
           created_by: string
           description: string | null
           end_date: string
           entry_fee: number | null
+          featured: boolean
           genres: string[] | null
           id: string
+          judging_method: string
           max_submissions: number | null
+          organizer_id: string | null
           prize_amount: number
+          registration_end: string | null
+          registration_start: string | null
           rules: Json | null
           start_date: string
           status: Database["public"]["Enums"]["competition_status"] | null
           title: string
           updated_at: string
           visibility: string | null
+          vote_price: number
           voting_end_date: string | null
           voting_start_date: string | null
         }
         Insert: {
+          competition_type?: string
+          country?: string | null
           cover_image?: string | null
           created_at?: string
           created_by: string
           description?: string | null
           end_date: string
           entry_fee?: number | null
+          featured?: boolean
           genres?: string[] | null
           id?: string
+          judging_method?: string
           max_submissions?: number | null
+          organizer_id?: string | null
           prize_amount: number
+          registration_end?: string | null
+          registration_start?: string | null
           rules?: Json | null
           start_date: string
           status?: Database["public"]["Enums"]["competition_status"] | null
           title: string
           updated_at?: string
           visibility?: string | null
+          vote_price?: number
           voting_end_date?: string | null
           voting_start_date?: string | null
         }
         Update: {
+          competition_type?: string
+          country?: string | null
           cover_image?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
           end_date?: string
           entry_fee?: number | null
+          featured?: boolean
           genres?: string[] | null
           id?: string
+          judging_method?: string
           max_submissions?: number | null
+          organizer_id?: string | null
           prize_amount?: number
+          registration_end?: string | null
+          registration_start?: string | null
           rules?: Json | null
           start_date?: string
           status?: Database["public"]["Enums"]["competition_status"] | null
           title?: string
           updated_at?: string
           visibility?: string | null
+          vote_price?: number
           voting_end_date?: string | null
           voting_start_date?: string | null
         }
@@ -1675,6 +1743,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizers"
             referencedColumns: ["id"]
           },
         ]
@@ -3411,6 +3486,157 @@ export type Database = {
         }
         Relationships: []
       }
+      organizer_followers: {
+        Row: {
+          created_at: string
+          id: string
+          organizer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organizer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organizer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizer_followers_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizer_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          organizer_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          organizer_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          organizer_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizer_reviews_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizers: {
+        Row: {
+          average_rating: number
+          city: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          country: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          featured: boolean
+          follower_count: number
+          id: string
+          logo_url: string | null
+          name: string
+          organizer_type: Database["public"]["Enums"]["organizer_type"]
+          owner_id: string
+          slug: string
+          socials: Json
+          total_competitions: number
+          total_contestants: number
+          total_prize_awarded: number
+          updated_at: string
+          verification: Database["public"]["Enums"]["verification_status"]
+          verified_at: string | null
+          verified_by: string | null
+          website: string | null
+        }
+        Insert: {
+          average_rating?: number
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          follower_count?: number
+          id?: string
+          logo_url?: string | null
+          name: string
+          organizer_type?: Database["public"]["Enums"]["organizer_type"]
+          owner_id: string
+          slug: string
+          socials?: Json
+          total_competitions?: number
+          total_contestants?: number
+          total_prize_awarded?: number
+          updated_at?: string
+          verification?: Database["public"]["Enums"]["verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          average_rating?: number
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          follower_count?: number
+          id?: string
+          logo_url?: string | null
+          name?: string
+          organizer_type?: Database["public"]["Enums"]["organizer_type"]
+          owner_id?: string
+          slug?: string
+          socials?: Json
+          total_competitions?: number
+          total_contestants?: number
+          total_prize_awarded?: number
+          updated_at?: string
+          verification?: Database["public"]["Enums"]["verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
@@ -3530,6 +3756,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_revenue_defaults: {
+        Row: {
+          created_at: string
+          entry_fee_organizer_pct: number
+          entry_fee_platform_pct: number
+          id: string
+          updated_at: string
+          updated_by: string | null
+          voting_artist_pct: number
+          voting_organizer_pct: number
+          voting_platform_pct: number
+        }
+        Insert: {
+          created_at?: string
+          entry_fee_organizer_pct?: number
+          entry_fee_platform_pct?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          voting_artist_pct?: number
+          voting_organizer_pct?: number
+          voting_platform_pct?: number
+        }
+        Update: {
+          created_at?: string
+          entry_fee_organizer_pct?: number
+          entry_fee_platform_pct?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          voting_artist_pct?: number
+          voting_organizer_pct?: number
+          voting_platform_pct?: number
+        }
+        Relationships: []
       }
       playlist_tracks: {
         Row: {
@@ -5570,13 +5832,26 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "artist" | "brand" | "admin" | "fan" | "producer"
+      app_role: "artist" | "brand" | "admin" | "fan" | "producer" | "organizer"
       competition_status:
         | "draft"
         | "active"
         | "voting"
         | "completed"
         | "cancelled"
+      organizer_type:
+        | "studio"
+        | "producer"
+        | "label"
+        | "brand"
+        | "event_organizer"
+        | "university"
+        | "college"
+        | "ngo"
+        | "talent_agency"
+        | "government"
+        | "festival"
+        | "other"
       submission_status: "pending" | "approved" | "rejected"
       transaction_type:
         | "purchase"
@@ -5587,6 +5862,7 @@ export type Database = {
         | "spending"
         | "withdrawal"
         | "income"
+      verification_status: "unverified" | "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5714,13 +5990,27 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["artist", "brand", "admin", "fan", "producer"],
+      app_role: ["artist", "brand", "admin", "fan", "producer", "organizer"],
       competition_status: [
         "draft",
         "active",
         "voting",
         "completed",
         "cancelled",
+      ],
+      organizer_type: [
+        "studio",
+        "producer",
+        "label",
+        "brand",
+        "event_organizer",
+        "university",
+        "college",
+        "ngo",
+        "talent_agency",
+        "government",
+        "festival",
+        "other",
       ],
       submission_status: ["pending", "approved", "rejected"],
       transaction_type: [
@@ -5733,6 +6023,7 @@ export const Constants = {
         "withdrawal",
         "income",
       ],
+      verification_status: ["unverified", "pending", "verified", "rejected"],
     },
   },
 } as const
