@@ -76,7 +76,7 @@ export default function CompetitionMarketplace() {
 
   return (
     <>
-      <PageSEO page="competitions" />
+      <PageSEO page="competition" />
       <div className="min-h-[100dvh] bg-background">
         <Navbar />
         <main className="container mx-auto max-w-6xl px-4 pt-24 pb-24">
