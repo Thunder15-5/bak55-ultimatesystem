@@ -113,6 +113,14 @@ const ProducerUploadBeat = lazyRetry(() => import("./pages/producer/ProducerUplo
 const ProducerCollaborations = lazyRetry(() => import("./pages/producer/ProducerCollaborations"));
 const ProducerCompetitions = lazyRetry(() => import("./pages/producer/ProducerCompetitions"));
 const Upgrade = lazyRetry(() => import("./pages/Upgrade"));
+const CompetitionMarketplace = lazyRetry(() => import("./pages/CompetitionMarketplace"));
+const Organizers = lazyRetry(() => import("./pages/Organizers"));
+const OrganizerPublicProfile = lazyRetry(() => import("./pages/OrganizerPublicProfile"));
+const OrganizerSetup = lazyRetry(() => import("./pages/organizer/OrganizerSetup"));
+const OrganizerDashboard = lazyRetry(() => import("./pages/organizer/OrganizerDashboard"));
+const CompetitionBuilder = lazyRetry(() => import("./pages/organizer/CompetitionBuilder"));
+const OrganizerCompetitionManage = lazyRetry(() => import("./pages/organizer/OrganizerCompetitionManage"));
+const OrganizerAdmin = lazyRetry(() => import("./pages/admin/OrganizerAdmin"));
 const Leaderboard = lazyRetry(() => import("./pages/Leaderboard"));
 const Apply = lazyRetry(() => import("./pages/Apply"));
 const InstallApp = lazyRetry(() => import("./pages/InstallApp"));
