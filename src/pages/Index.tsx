@@ -12,6 +12,8 @@ import { StickyMobileCTA } from "@/components/mobile/StickyMobileCTA";
 import { useAuth } from "@/contexts/AuthContext";
 import { FeaturedArtistsCarousel } from "@/components/FeaturedArtistsCarousel";
 import { FAQ } from "@/components/FAQ";
+import { HostOnBak55 } from "@/components/home/HostOnBak55";
+import { VerifiedOrganizers } from "@/components/home/VerifiedOrganizers";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSEO } from "@/components/SEO";
 import { Card } from "@/components/ui/card";
@@ -101,6 +103,8 @@ const Index = () => {
             </div>
           </section>
 
+          <HostOnBak55 />
+          <VerifiedOrganizers />
           <SocialProof />
           <HowItWorks />
 
