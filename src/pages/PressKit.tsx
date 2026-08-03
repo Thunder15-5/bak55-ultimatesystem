@@ -92,10 +92,10 @@ const PressKit = () => {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Market context we cite elsewhere (Sub-Saharan Africa recorded music revenue) comes from
-              the IFPI Global Music Report and is attributed as such. It describes the market, not
-              BAK55.
+              We do not publish third-party market projections as BAK55 traction. Every figure on
+              this site is read live from our own database.
             </p>
+
           </Card>
 
           <JourneyTimeline />
