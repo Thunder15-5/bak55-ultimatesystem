@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { LiveStatsRow } from "@/components/LiveStatsRow";
 import {
   Target, Eye, Music, Users, TrendingUp, DollarSign,
   ArrowRight, Shield, Zap, Globe, AlertTriangle, CheckCircle2,
