@@ -135,34 +135,21 @@ const About = () => {
               </div>
             </section>
 
-            {/* Market Opportunity */}
+            {/* Where we are today */}
             <section className="py-12 md:py-20 px-4">
               <div className="container mx-auto max-w-4xl">
                 <Card className="p-8 md:p-10 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/10">
-                  <h2 className="text-2xl md:text-3xl font-heading font-bold mb-8 text-center">
-                    The <span className="text-gradient">Market Opportunity</span>
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold mb-3 text-center">
+                    Where We <span className="text-gradient">Stand Today</span>
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div className="text-center p-4">
-                      <DollarSign className="w-10 h-10 text-primary mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-gradient mb-1">$110M</div>
-                      <p className="text-sm text-muted-foreground">Sub-Saharan Africa Recorded Music Revenue (2024)</p>
-                    </div>
-                    <div className="text-center p-4">
-                      <TrendingUp className="w-10 h-10 text-secondary mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-gradient-secondary mb-1">22.6%</div>
-                      <p className="text-sm text-muted-foreground">Year-on-Year Growth (Fastest Globally)</p>
-                    </div>
-                    <div className="text-center p-4">
-                      <Music className="w-10 h-10 text-accent mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-accent mb-1">$1B+</div>
-                      <p className="text-sm text-muted-foreground">African Creator Economy by 2030</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">Source: IFPI Global Music Report 2025</p>
+                  <p className="mb-8 text-center text-sm text-muted-foreground">
+                    Live counts read directly from our database. No projections, no estimates.
+                  </p>
+                  <LiveStatsRow />
                 </Card>
               </div>
             </section>
+
 
             {/* Why Now */}
             <section className="py-12 md:py-20 px-4">
