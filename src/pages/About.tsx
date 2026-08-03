@@ -20,9 +20,10 @@ const differentiators = [
 
 const whyNowReasons = [
   { icon: Smartphone, title: "Mobile Money is Mature", text: "M-Pesa and fintech APIs make micropayments viable across Africa. This wasn't possible 5 years ago." },
-  { icon: Globe, title: "Africa's Global Moment", text: "Afrobeats is the fastest-growing genre globally. Sub-Saharan Africa music revenue grew 22.6% YoY — fastest in the world." },
+  { icon: Globe, title: "Africa's Global Moment", text: "Afrobeats and African sounds are breaking worldwide, but most emerging artists still have no structured route to an audience." },
   { icon: Brain, title: "AI Reduces Costs", text: "What used to require a label — feedback, analytics, positioning — can now be delivered via software at near-zero cost." },
-  { icon: BarChart3, title: "Youth Demographics", text: "Africa's median age is 19. The continent will add 800M+ people under 30 by 2050 — the largest untapped creator market on Earth." },
+  { icon: BarChart3, title: "Youth Demographics", text: "Africa is the youngest continent on earth, and its next generation of artists is building online first." },
+
 ];
 
 const About = () => {
