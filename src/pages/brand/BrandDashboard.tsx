@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatsCard, DashboardHeader, QuickActions, DashboardSkeleton } from '@/components/dashboard';
 import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3, Target } from 'lucide-react';
 import { BrandCampaignManager } from '@/components/BrandCampaignManager';
+import { LiveStatsRow } from '@/components/LiveStatsRow';
 
 export default function BrandDashboard() {
   const { user } = useAuth();
