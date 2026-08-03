@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { LiveStatsRow } from "@/components/LiveStatsRow";
 import {
   Target, Eye, Music, Users, TrendingUp, DollarSign,
   ArrowRight, Shield, Zap, Globe, AlertTriangle, CheckCircle2,
@@ -19,9 +20,10 @@ const differentiators = [
 
 const whyNowReasons = [
   { icon: Smartphone, title: "Mobile Money is Mature", text: "M-Pesa and fintech APIs make micropayments viable across Africa. This wasn't possible 5 years ago." },
-  { icon: Globe, title: "Africa's Global Moment", text: "Afrobeats is the fastest-growing genre globally. Sub-Saharan Africa music revenue grew 22.6% YoY — fastest in the world." },
+  { icon: Globe, title: "Africa's Global Moment", text: "Afrobeats and African sounds are breaking worldwide, but most emerging artists still have no structured route to an audience." },
   { icon: Brain, title: "AI Reduces Costs", text: "What used to require a label — feedback, analytics, positioning — can now be delivered via software at near-zero cost." },
-  { icon: BarChart3, title: "Youth Demographics", text: "Africa's median age is 19. The continent will add 800M+ people under 30 by 2050 — the largest untapped creator market on Earth." },
+  { icon: BarChart3, title: "Youth Demographics", text: "Africa is the youngest continent on earth, and its next generation of artists is building online first." },
+
 ];
 
 const About = () => {
@@ -135,34 +137,21 @@ const About = () => {
               </div>
             </section>
 
-            {/* Market Opportunity */}
+            {/* Where we are today */}
             <section className="py-12 md:py-20 px-4">
               <div className="container mx-auto max-w-4xl">
                 <Card className="p-8 md:p-10 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/10">
-                  <h2 className="text-2xl md:text-3xl font-heading font-bold mb-8 text-center">
-                    The <span className="text-gradient">Market Opportunity</span>
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold mb-3 text-center">
+                    Where We <span className="text-gradient">Stand Today</span>
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div className="text-center p-4">
-                      <DollarSign className="w-10 h-10 text-primary mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-gradient mb-1">$110M</div>
-                      <p className="text-sm text-muted-foreground">Sub-Saharan Africa Recorded Music Revenue (2024)</p>
-                    </div>
-                    <div className="text-center p-4">
-                      <TrendingUp className="w-10 h-10 text-secondary mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-gradient-secondary mb-1">22.6%</div>
-                      <p className="text-sm text-muted-foreground">Year-on-Year Growth (Fastest Globally)</p>
-                    </div>
-                    <div className="text-center p-4">
-                      <Music className="w-10 h-10 text-accent mx-auto mb-3" aria-hidden="true" />
-                      <div className="text-3xl font-bold text-accent mb-1">$1B+</div>
-                      <p className="text-sm text-muted-foreground">African Creator Economy by 2030</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">Source: IFPI Global Music Report 2025</p>
+                  <p className="mb-8 text-center text-sm text-muted-foreground">
+                    Live counts read directly from our database. No projections, no estimates.
+                  </p>
+                  <LiveStatsRow />
                 </Card>
               </div>
             </section>
+
 
             {/* Why Now */}
             <section className="py-12 md:py-20 px-4">

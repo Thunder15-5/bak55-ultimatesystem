@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatsCard, DashboardHeader, QuickActions, DashboardSkeleton } from '@/components/dashboard';
 import { Trophy, Users, Wallet, Plus, TrendingUp, Music, Award, BarChart3, Target } from 'lucide-react';
 import { BrandCampaignManager } from '@/components/BrandCampaignManager';
+import { LiveStatsRow } from '@/components/LiveStatsRow';
 
 export default function BrandDashboard() {
   const { user } = useAuth();
@@ -202,30 +203,19 @@ export default function BrandDashboard() {
                     </Card>
                   </div>
 
-                  {/* Market Insights */}
+                  {/* Platform snapshot — live data only */}
                   <Card className="border-border/50">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <BarChart3 className="h-4 w-4 text-primary" />
-                        African Music Market Insights
-                        <span className="text-[10px] text-muted-foreground font-normal ml-1">(IFPI 2025)</span>
+                        BAK55 platform snapshot
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
-                        <p className="text-xl font-bold text-primary mb-0.5">$110M</p>
-                        <p className="text-xs text-muted-foreground">Sub-Saharan Africa revenue</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/10 text-center">
-                        <p className="text-xl font-bold text-secondary mb-0.5">22.6%</p>
-                        <p className="text-xs text-muted-foreground">YoY growth (fastest globally)</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-accent/5 border border-accent/10 text-center">
-                        <p className="text-xl font-bold text-accent mb-0.5">$59M</p>
-                        <p className="text-xs text-muted-foreground">Nigeria & SA Spotify payouts</p>
-                      </div>
+                    <CardContent>
+                      <LiveStatsRow />
                     </CardContent>
                   </Card>
+
                 </TabsContent>
 
                 <TabsContent value="campaigns">
