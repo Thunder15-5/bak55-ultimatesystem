@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Target, DollarSign, Users, Zap, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
+import { LiveStatsRow } from "@/components/LiveStatsRow";
 
 const Investors = () => {
   return (
