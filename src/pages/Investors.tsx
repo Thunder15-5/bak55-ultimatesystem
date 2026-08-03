@@ -53,75 +53,52 @@ const Investors = () => {
             </div>
           </Card>
 
-          {/* Market Opportunity - UPDATED WITH VERIFIED IFPI DATA */}
+          {/* Where we are today — live platform data only */}
           <div className="space-y-12 mb-16">
             <div className="text-center">
               <h2 className="text-4xl font-bold mb-4">
-                The <span className="text-gradient">Opportunity</span>
+                Where We <span className="text-gradient">Stand Today</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Verified IFPI Global Music Report 2025 data showing Africa's explosive growth
+                We are an open beta, self-funded and based in Nairobi. Every number below is read
+                live from our database — we publish no projections as if they were traction.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all hover:scale-105">
-                <DollarSign className="w-12 h-12 text-primary mb-4" />
-                <h3 className="text-2xl font-bold mb-3">$110M Market</h3>
-                <p className="text-muted-foreground">
-                  Sub-Saharan Africa recorded music revenue (2024). Fastest-growing region globally with Afrobeats going mainstream.
-                </p>
-                <p className="text-xs text-primary/60 mt-2">Source: IFPI Global Music Report 2025</p>
-              </Card>
+            <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
+              <LiveStatsRow />
+            </Card>
 
-              <Card className="p-8 bg-card/50 backdrop-blur-sm border-secondary/10 hover:border-secondary/30 transition-all hover:scale-105">
-                <TrendingUp className="w-12 h-12 text-secondary mb-4" />
-                <h3 className="text-2xl font-bold mb-3">22.6% YoY Growth</h3>
-                <p className="text-muted-foreground">
-                  Year-on-year growth rate—the fastest of any region worldwide. Digital adoption accelerating across the continent.
-                </p>
-                <p className="text-xs text-secondary/60 mt-2">Source: IFPI Global Music Report 2025</p>
-              </Card>
-
-              <Card className="p-8 bg-card/50 backdrop-blur-sm border-accent/10 hover:border-accent/30 transition-all hover:scale-105">
-                <Globe className="w-12 h-12 text-accent mb-4" />
-                <h3 className="text-2xl font-bold mb-3">First-Mover</h3>
-                <p className="text-muted-foreground">
-                  No direct competitors in integrated AI-powered, fair-economy model. Defining the category for African music tech.
-                </p>
-              </Card>
-            </div>
-
-            {/* Additional Market Context */}
             <Card className="p-8 bg-card/50 backdrop-blur-sm border-primary/10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h4 className="text-xl font-bold mb-3 flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
-                    Why Now?
+                    Why we are building this
                   </h4>
                   <ul className="space-y-2 text-muted-foreground">
-                    <li>• Afrobeats is now a global genre on mainstream charts</li>
-                    <li>• Mobile money penetration enables direct artist payments</li>
-                    <li>• Youth population (median age 19) driving digital adoption</li>
-                    <li>• Internet access growing 20%+ annually across Africa</li>
+                    <li>• Emerging African artists have no structured route to an audience</li>
+                    <li>• Mobile money makes direct, low-value artist payments practical</li>
+                    <li>• Competitions give fans a reason to pay attention and to pay</li>
+                    <li>• Organizers — studios, labels, brands — need tooling to run them</li>
                   </ul>
                 </div>
                 <div>
                   <h4 className="text-xl font-bold mb-3 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-secondary" />
-                    Revenue Reality
+                    How the economy works
                   </h4>
                   <ul className="space-y-2 text-muted-foreground">
-                    <li>• $59M Spotify payouts to Nigeria & South Africa (2024)</li>
-                    <li>• Most artists lack infrastructure to monetize effectively</li>
-                    <li>• Label contracts often take 50-80% of artist revenue</li>
-                    <li>• BAK55 offers fair 85/15 artist-first split</li>
+                    <li>• 1 BAKCoin = $0.16, fixed and published</li>
+                    <li>• 85/15 artist-first split on beat and track sales</li>
+                    <li>• 0% platform fee on tips under 50 BAK</li>
+                    <li>• Every fee is disclosed in-product before payment</li>
                   </ul>
                 </div>
               </div>
             </Card>
           </div>
+
 
           {/* Traction & Roadmap */}
           <Card className="p-12 bg-card/50 backdrop-blur-sm border-primary/10 mb-16">
