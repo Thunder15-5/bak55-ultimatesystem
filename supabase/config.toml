@@ -40,7 +40,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.mpesa-withdraw]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-withdrawal]
 verify_jwt = true
