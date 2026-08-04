@@ -1,202 +1,120 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const requestId = crypto.randomUUID();
+  const log = (msg: string, extra: Record<string, unknown> = {}) =>
+    console.log(JSON.stringify({ fn: "deposit-review", requestId, msg, ...extra }));
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
     );
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
+    if (!token) return json({ code: "unauthorized", error: "Authentication required" }, 401);
 
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const { data: { user }, error: authError } = await admin.auth.getUser(token);
+    if (authError || !user) return json({ code: "unauthorized", error: "Authentication required" }, 401);
+
+    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+    if (!isAdmin) return json({ code: "forbidden", error: "Admin access required" }, 403);
+
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ code: "invalid_request", error: "Invalid request body" }, 400);
     }
 
-    // Check if user is admin
-    const { data: roleCheck } = await supabaseClient.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin'
+    const requestIdParam = String(body.request_id ?? "");
+    const action = String(body.action ?? "");
+    const notes = body.notes ? String(body.notes).slice(0, 500) : null;
+
+    if (!/^[0-9a-f-]{36}$/i.test(requestIdParam) || !["approve", "reject"].includes(action)) {
+      return json({ code: "invalid_request", error: "Invalid parameters" }, 400);
+    }
+
+    // Wallet credit, ledger entry, status flip, notification and audit log
+    // all happen atomically inside the locked routine — no double-credits.
+    const rpcName = action === "approve" ? "approve_deposit_request" : "reject_deposit_request";
+    const { data: result, error: rpcError } = await admin.rpc(rpcName, {
+      p_request_id: requestIdParam,
+      p_admin_id: user.id,
+      p_notes: notes,
     });
 
-    if (!roleCheck) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (rpcError) {
+      log("rpc_failed", { rpcName, error: rpcError.message });
+      return json({ code: "config_error", error: "Could not process this deposit" }, 500);
     }
 
-    const { request_id, action, notes } = await req.json();
-
-    if (!request_id || !action || !['approve', 'reject'].includes(action)) {
-      return new Response(JSON.stringify({ error: 'Invalid parameters' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const payload = result as Record<string, unknown>;
+    if (!payload?.success) {
+      log("review_rejected", { code: payload?.code });
+      return json({ code: payload?.code ?? "rejected", error: payload?.error }, 400);
     }
 
-    // Get deposit request
-    const { data: depositRequest, error: fetchError } = await supabaseClient
-      .from('deposit_requests')
-      .select('*')
-      .eq('id', request_id)
-      .single();
+    log("review_complete", { action, requestId: requestIdParam, adminId: user.id });
 
-    if (fetchError || !depositRequest) {
-      return new Response(JSON.stringify({ error: 'Deposit request not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (depositRequest.status !== 'pending') {
-      return new Response(JSON.stringify({ error: 'Request already processed' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (action === 'approve') {
-      // Get user's wallet
-      const { data: wallet, error: walletError } = await supabaseClient
-        .from('wallets')
-        .select('*')
-        .eq('user_id', depositRequest.user_id)
+    // Email notification is best-effort
+    try {
+      const { data: depositRequest } = await admin
+        .from("deposit_requests")
+        .select("user_id, amount_kes, expected_bak, receipt_code")
+        .eq("id", requestIdParam)
         .single();
 
-      if (walletError || !wallet) {
-        return new Response(JSON.stringify({ error: 'Wallet not found' }), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      if (depositRequest) {
+        const { data: profile } = await admin
+          .from("profiles").select("email, username, display_name")
+          .eq("id", depositRequest.user_id).maybeSingle();
+
+        if (profile?.email) {
+          await admin.functions.invoke("send-email", {
+            body: {
+              to: profile.email,
+              subject: action === "approve" ? "Deposit Approved — BAKCoins Credited" : "Deposit Request Update",
+              template: action === "approve" ? "deposit_approved" : "deposit_rejected",
+              data: {
+                username: profile.display_name || profile.username || "there",
+                bak_amount: depositRequest.expected_bak,
+                amount_kes: depositRequest.amount_kes,
+                receipt_code: depositRequest.receipt_code,
+                reason: notes || undefined,
+              },
+            },
+          });
+        }
       }
-
-      // Credit wallet
-      const { error: creditError } = await supabaseClient
-        .from('wallets')
-        .update({ balance: wallet.balance + depositRequest.expected_bak })
-        .eq('id', wallet.id);
-
-      if (creditError) {
-        console.error('Error crediting wallet:', creditError);
-        return new Response(JSON.stringify({ error: 'Failed to credit wallet' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Record transaction
-      const { error: txError } = await supabaseClient
-        .from('transactions')
-        .insert({
-          wallet_id: wallet.id,
-          type: 'income',
-          amount: depositRequest.expected_bak,
-          description: `Manual M-Pesa deposit: ${depositRequest.amount_kes} KSh`,
-          metadata: { 
-            provider: 'manual_mpesa',
-            receipt_code: depositRequest.receipt_code,
-            deposit_request_id: request_id
-          }
-        });
-
-      if (txError) {
-        console.error('Error recording transaction:', txError);
-      }
-
-      console.log(`Approved deposit request ${request_id}: ${depositRequest.expected_bak} BAK to user ${depositRequest.user_id}`);
+    } catch (e) {
+      log("email_failed", { error: String(e) });
     }
 
-    // Update deposit request status
-    const { error: updateError } = await supabaseClient
-      .from('deposit_requests')
-      .update({
-        status: action === 'approve' ? 'approved' : 'rejected',
-        reviewed_by: user.id,
-        reviewed_at: new Date().toISOString(),
-        notes: notes || null
-      })
-      .eq('id', request_id);
-
-    if (updateError) {
-      console.error('Error updating deposit request:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to update request' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get user profile for email
-    const { data: userProfile } = await supabaseClient
-      .from('profiles')
-      .select('email, username, display_name')
-      .eq('id', depositRequest.user_id)
-      .single();
-
-    // Create notification for user
-    await supabaseClient
-      .from('notifications')
-      .insert({
-        user_id: depositRequest.user_id,
-        type: action === 'approve' ? 'deposit_approved' : 'deposit_rejected',
-        title: action === 'approve' ? '✅ Deposit Approved' : '❌ Deposit Rejected',
-        message: action === 'approve' 
-          ? `Your deposit of ${depositRequest.expected_bak} BAKCoins has been approved!`
-          : `Your deposit request was rejected. ${notes || 'Please contact support for details.'}`,
-        link: '/wallet'
-      });
-
-    // Send email notification
-    if (userProfile?.email) {
-      try {
-        await supabaseClient.functions.invoke('send-email', {
-          body: {
-            to: userProfile.email,
-            subject: action === 'approve' 
-              ? '✅ Deposit Approved - BAKCoins Credited!'
-              : '⚠️ Deposit Request Update',
-            template: action === 'approve' ? 'deposit_approved' : 'deposit_rejected',
-            data: {
-              username: userProfile.display_name || userProfile.username || 'there',
-              bak_amount: depositRequest.expected_bak,
-              amount_kes: depositRequest.amount_kes,
-              receipt_code: depositRequest.receipt_code,
-              reason: notes || undefined
-            }
-          }
-        });
-      } catch (emailError) {
-        console.error('Failed to send deposit email:', emailError);
-      }
-    }
-
-    return new Response(JSON.stringify({ 
+    return json({
       success: true,
-      action: action,
-      message: `Deposit request ${action}d successfully`
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      action,
+      credited_bak: payload.credited_bak ?? null,
+      new_balance: payload.new_balance ?? null,
+      message: `Deposit request ${action}d successfully`,
     });
-
-  } catch (error: any) {
-    console.error('Error in deposit-review:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  } catch (error) {
+    console.error(JSON.stringify({ fn: "deposit-review", requestId, msg: "unhandled", error: String(error) }));
+    return json({ code: "config_error", error: "Failed to review deposit" }, 500);
   }
 });
