@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 
 const corsHeaders = {
@@ -6,398 +6,183 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface WithdrawalRequest {
-  amount: number;
-  phone_number: string;
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+/** Normalize a Kenyan MSISDN to 254XXXXXXXXX; null when invalid. */
+function normalizeKenyanPhone(input: string): string | null {
+  const digits = (input ?? "").replace(/[\s\-()]/g, "");
+  const m = /^(?:\+?254|0)?([17]\d{8})$/.exec(digits);
+  return m ? `254${m[1]}` : null;
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
+
+  const requestId = crypto.randomUUID();
+  const log = (msg: string, extra: Record<string, unknown> = {}) =>
+    console.log(JSON.stringify({ fn: "process-withdrawal", requestId, msg, ...extra }));
 
   try {
-    const supabaseClient = createClient(
+    const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
     );
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (!token) return json({ success: false, code: "unauthorized", error: "Authentication required" }, 401);
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
-
+    const { data: { user }, error: userError } = await admin.auth.getUser(token);
     if (userError || !user) {
-      throw new Error("Unauthorized");
+      log("auth_failed", { error: userError?.message });
+      return json({ success: false, code: "unauthorized", error: "Authentication required" }, 401);
     }
 
-    // Verify user is an artist or admin
-    const { data: roles, error: rolesError } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-
+    // Role gate: artists (and admins) may withdraw
+    const { data: roles, error: rolesError } = await admin
+      .from("user_roles").select("role").eq("user_id", user.id);
     if (rolesError) {
-      throw new Error("Failed to verify user role");
+      log("role_lookup_failed", { error: rolesError.message });
+      return json({ success: false, code: "config_error", error: "Could not verify your account" }, 500);
+    }
+    const roleList = (roles ?? []).map((r: { role: string }) => r.role);
+    if (!roleList.includes("artist") && !roleList.includes("admin")) {
+      return json({ success: false, code: "forbidden", error: "Only artists can withdraw funds" }, 403);
     }
 
-    const userRoles = roles?.map(r => r.role) || [];
-    const isArtist = userRoles.includes('artist') || userRoles.includes('admin');
-    
-    if (!isArtist) {
-      throw new Error("Only artists can withdraw funds");
+    // Suspended accounts cannot move money
+    const { data: profile } = await admin
+      .from("profiles").select("banned, username, email, display_name").eq("id", user.id).maybeSingle();
+    if (profile?.banned) {
+      return json({ success: false, code: "forbidden", error: "Your account is suspended" }, 403);
     }
 
-    const body = await req.json();
-    const { amount, phone_number, bank_details }: { amount: number; phone_number: string; bank_details?: any } = body;
-
-    // Production validation
-    if (typeof amount !== 'number' || isNaN(amount) || !phone_number) {
-      throw new Error("Invalid withdrawal request data");
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ success: false, code: "invalid_amount", error: "Invalid request body" }, 400);
     }
 
-    console.log("Processing withdrawal:", { user_id: user.id, amount });
+    const amount = Number(body.amount);
+    const rawPhone = String(body.phone_number ?? "");
+    const bankDetails = (body.bank_details ?? {}) as Record<string, unknown>;
 
-    // Check for existing pending withdrawal
-    const { data: existingPending } = await supabaseClient
-      .from("transactions")
-      .select("id")
-      .eq("wallet_id", (await supabaseClient.from("wallets").select("id").eq("user_id", user.id).single()).data?.id)
-      .eq("type", "withdrawal")
-      .filter("metadata->>status", "in", '("pending","processing","pending_manual")')
-      .limit(1);
-
-    if (existingPending && existingPending.length > 0) {
-      throw new Error("You already have a pending withdrawal request. Please wait for it to be processed.");
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return json({ success: false, code: "invalid_amount", error: "Invalid withdrawal amount" }, 400);
+    }
+    const phone = normalizeKenyanPhone(rawPhone);
+    if (!phone) {
+      return json({ success: false, code: "invalid_phone", error: "Invalid Kenyan phone number" }, 400);
+    }
+    const accountName = String((bankDetails as { accountName?: string }).accountName ?? "").trim();
+    if (accountName.length < 2 || accountName.length > 100) {
+      return json({ success: false, code: "invalid_name", error: "Invalid account name" }, 400);
     }
 
-    // BAK55 Platform Operations Wallet (receives withdrawal fees)
-    const PLATFORM_USER_ID = "b2a31558-e58a-466f-99b8-7ba636bcf6be";
+    log("withdrawal_requested", { userId: user.id, amount });
 
-    // Validation
-    const MIN_WITHDRAWAL = 250; // 250 BAK minimum
-    const MAX_WITHDRAWAL = 50000; // 50,000 BAK
-    const CONVERSION_RATE = 1; // 1 BAK = 1 KSh (configurable)
-    const WITHDRAWAL_FEE_PERCENT = 0.05; // 5% fee
+    // All balance checks, limits, eligibility, deduction, fee split and
+    // ledger writes happen atomically inside this locked routine.
+    const { data: result, error: rpcError } = await admin.rpc("request_withdrawal", {
+      p_user_id: user.id,
+      p_amount: amount,
+      p_phone: phone,
+      p_bank_details: { accountName, accountNumber: phone, bankName: "M-Pesa" },
+    });
 
-    if (amount < MIN_WITHDRAWAL) {
-      throw new Error(`Minimum withdrawal is ${MIN_WITHDRAWAL} BAKCoins`);
+    if (rpcError) {
+      log("rpc_failed", { error: rpcError.message });
+      return json({ success: false, code: "config_error", error: "Could not process withdrawal" }, 500);
     }
 
-    if (amount > MAX_WITHDRAWAL) {
-      throw new Error(`Maximum withdrawal is ${MAX_WITHDRAWAL} BAKCoins`);
+    const payload = result as Record<string, unknown>;
+    if (!payload?.success) {
+      log("withdrawal_rejected", { userId: user.id, code: payload?.code });
+      return json({ success: false, code: payload?.code ?? "rejected", error: payload?.error, issues: payload?.issues }, 400);
     }
 
-    // Validate phone number (Kenyan format)
-    const phoneRegex = /^(?:254|\+254|0)?([17]\d{8})$/;
-    if (!phoneRegex.test(phone_number)) {
-      throw new Error("Invalid Kenyan phone number format");
-    }
+    const reference = String(payload.reference);
+    const netAmount = Number(payload.net_amount);
+    const fee = Number(payload.fee);
 
-    // Format phone number to 254XXXXXXXXX
-    const formattedPhone = phone_number.replace(/^(?:254|\+254|0)?/, '254');
+    log("withdrawal_recorded", { userId: user.id, reference, netAmount, fee });
 
-    // Get user's wallet with row locking
-    const { data: wallet, error: walletError } = await supabaseClient
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+    // Non-critical side effects: never fail the payout on these.
+    const displayName = profile?.display_name || profile?.username || user.email?.split("@")[0] || "User";
 
-    if (walletError || !wallet) {
-      throw new Error("Wallet not found");
-    }
-
-    // Check sufficient balance
-    if (parseFloat(wallet.balance) < amount) {
-      throw new Error(`Insufficient balance. Available: ${wallet.balance} BAKCoins`);
-    }
-
-    // Check daily withdrawal limit
-    const today = new Date().toISOString().split('T')[0];
-    const { data: todayWithdrawals } = await supabaseClient
-      .from("transactions")
-      .select("amount")
-      .eq("wallet_id", wallet.id)
-      .eq("type", "withdrawal")
-      .gte("created_at", today + "T00:00:00")
-      .lte("created_at", today + "T23:59:59");
-
-    const dailyTotal = todayWithdrawals?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
-    const DAILY_LIMIT = 100000; // 100,000 BAKCoins per day
-
-    if (dailyTotal + amount > DAILY_LIMIT) {
-      throw new Error(`Daily withdrawal limit exceeded. Limit: ${DAILY_LIMIT} BAKCoins, Used today: ${dailyTotal} BAKCoins`);
-    }
-
-    // Calculate KSh amount and withdrawal fee (15% fee)
-    const kshAmount = amount * CONVERSION_RATE;
-    const withdrawalFee = amount * WITHDRAWAL_FEE_PERCENT;
-    const netAmount = amount - withdrawalFee;
-    const netKshAmount = netAmount * CONVERSION_RATE;
-
-    // Fraud detection - check for suspicious patterns
-    const { data: recentWithdrawals } = await supabaseClient
-      .from("transactions")
-      .select("*")
-      .eq("wallet_id", wallet.id)
-      .eq("type", "withdrawal")
-      .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
-      .order("created_at", { ascending: false });
-
-    // Flag if more than 3 withdrawals in the last hour
-    const isSuspicious = (recentWithdrawals?.length || 0) >= 3;
-
-    if (isSuspicious) {
-      console.warn("⚠️ Suspicious withdrawal pattern detected", {
-        user_id: user.id,
-        recent_count: recentWithdrawals?.length,
-      });
-
-      // Create admin task for manual review
-      await supabaseClient.from("admin_tasks").insert({
-        task_type: "review_withdrawal",
-        related_id: user.id,
+    const sideEffects: Promise<unknown>[] = [
+      admin.from("admin_tasks").insert({
+        task_type: "process_withdrawal",
+        related_id: payload.transaction_id as string,
         status: "pending",
         metadata: {
-          amount,
-          phone_number: formattedPhone,
-          reason: "Multiple withdrawals in short time",
-        },
-      });
-
-      throw new Error("Withdrawal flagged for review. Our team will process it manually within 2 hours.");
-    }
-
-    // Get platform wallet for fee crediting
-    const { data: platformWallet, error: platformWalletError } = await supabaseClient
-      .from("wallets")
-      .select("id, balance")
-      .eq("user_id", PLATFORM_USER_ID)
-      .single();
-
-    if (platformWalletError || !platformWallet) {
-      console.error("Platform wallet not found:", platformWalletError);
-      throw new Error("Platform configuration error");
-    }
-
-    // Deduct from wallet atomically
-    const { error: deductError } = await supabaseClient
-      .from("wallets")
-      .update({
-        balance: parseFloat(wallet.balance) - amount,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", wallet.id)
-      .eq("balance", wallet.balance); // Optimistic locking
-
-    if (deductError) {
-      throw new Error("Failed to deduct from wallet - concurrent modification detected");
-    }
-
-    // Credit withdrawal fee to platform operations wallet
-    const { error: platformCreditError } = await supabaseClient
-      .from("wallets")
-      .update({
-        balance: parseFloat(platformWallet.balance) + withdrawalFee,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", platformWallet.id);
-
-    if (platformCreditError) {
-      console.error("Failed to credit platform wallet:", platformCreditError);
-      // Non-critical, continue but log
-    }
-
-    // Create transaction records
-    const reference = `WDL-${Date.now()}-${user.id.substring(0, 8)}`;
-    
-    // User's withdrawal transaction
-    const { data: transaction, error: txError } = await supabaseClient
-      .from("transactions")
-      .insert({
-        wallet_id: wallet.id,
-        type: "withdrawal",
-        amount: -amount, // Negative for withdrawal
-        withdrawal_fee: withdrawalFee,
-        description: `Withdrawal to ${formattedPhone}`,
-        mpesa_phone_number: formattedPhone,
-        metadata: {
-          ksh_amount: kshAmount,
-          net_ksh_amount: netKshAmount,
-          status: "processing",
+          user_id: user.id,
+          username: profile?.username ?? null,
+          email: profile?.email ?? user.email,
+          amount: payload.gross_amount,
+          net_amount: netAmount,
+          withdrawal_fee: fee,
+          phone_number: phone,
+          account_details: { accountName, accountNumber: phone, bankName: "M-Pesa" },
           reference,
         },
-      })
-      .select()
-      .single();
-
-    // Platform fee transaction
-    await supabaseClient
-      .from("transactions")
-      .insert({
-        wallet_id: platformWallet.id,
-        type: "earning",
-        amount: withdrawalFee,
-        description: `Withdrawal fee (15% of ${amount.toFixed(2)} BAK)`,
-        reference_id: transaction?.id,
-        metadata: {
-          type: "withdrawal_fee",
-          user_id: user.id,
-          gross_amount: amount,
-          fee_percentage: 15,
-        },
-      });
-
-    if (txError) {
-      console.error("Failed to create transaction record:", txError);
-      // Rollback wallet deduction
-      await supabaseClient
-        .from("wallets")
-        .update({ balance: wallet.balance })
-        .eq("id", wallet.id);
-      throw new Error("Failed to create transaction record");
-    }
-
-    // Send withdrawal request email with real user data
-    try {
-      const { data: userProfile } = await supabaseClient
-        .from('profiles')
-        .select('username, display_name')
-        .eq('id', user.id)
-        .single();
-
-      await supabaseClient.functions.invoke("send-email", {
+      }),
+      admin.from("admin_activity_log").insert({
+        user_id: user.id,
+        event_type: "withdrawal_request",
+        event_category: "payment",
+        description: `Withdrawal request: ${payload.gross_amount} BAK by ${displayName}`,
+        metadata: { amount: payload.gross_amount, fee, net: netAmount, reference, phone_number: phone },
+      }),
+      admin.from("user_roles").select("user_id").eq("role", "admin").then(({ data: admins }) => {
+        if (!admins?.length) return null;
+        return admin.from("notifications").insert(
+          admins.map((a: { user_id: string }) => ({
+            user_id: a.user_id,
+            type: "withdrawal_request",
+            title: "New Withdrawal Request",
+            message: `${displayName} requested ${Number(payload.gross_amount).toFixed(2)} BAK (net ${netAmount.toFixed(2)} BAK)`,
+            link: "/admin",
+            priority: "high",
+            category: "payment",
+          })),
+        );
+      }),
+      admin.functions.invoke("send-email", {
         body: {
           to: user.email,
-          subject: "Withdrawal Request Received 💰",
+          subject: "Withdrawal Request Received",
           template: "withdrawal_request",
-          data: {
-            username: userProfile?.display_name || userProfile?.username || user.email?.split('@')[0] || 'User',
-            amount,
-            ksh_amount: kshAmount,
-            phone_number: formattedPhone,
-            reference,
-          },
+          data: { username: displayName, amount: payload.gross_amount, net_amount: netAmount, fee, phone_number: phone, reference },
         },
-      });
-    } catch (emailError) {
-      console.error("Failed to send email:", emailError);
-    }
-
-    // Process withdrawal via M-PESA Daraja API (B2C)
-    // NOTE: This requires M-PESA Daraja API credentials
-    // For now, we'll mark it as pending and process via webhook
-    
-    const MPESA_CONSUMER_KEY = Deno.env.get("MPESA_CONSUMER_KEY");
-    const MPESA_CONSUMER_SECRET = Deno.env.get("MPESA_CONSUMER_SECRET");
-    const MPESA_SHORTCODE = Deno.env.get("MPESA_SHORTCODE");
-    const MPESA_PASSKEY = Deno.env.get("MPESA_PASSKEY");
-
-    if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
-      console.warn("⚠️ M-PESA credentials not configured - withdrawal pending manual processing");
-      
-      // Create admin task for manual processing
-      const { data: userProfile } = await supabaseClient
-        .from('profiles')
-        .select('username, email')
-        .eq('id', user.id)
-        .single();
-
-      await supabaseClient.from("admin_tasks").insert({
-        task_type: "process_withdrawal",
-        related_id: transaction.id,
-        status: "pending",
-        metadata: {
-          user_id: user.id,
-          username: userProfile?.username || 'Unknown',
-          email: userProfile?.email || user.email,
-          amount,
-          net_amount: netAmount,
-          withdrawal_fee: withdrawalFee,
-          ksh_amount: netKshAmount,
-          phone_number: formattedPhone,
-          wallet_balance_before: wallet.balance,
-          bank_details: bank_details || {},
-          reference,
-        },
-      });
-
-      // Notify all admins
-      const { data: adminIds } = await supabaseClient
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-
-      if (adminIds && adminIds.length > 0) {
-        const notifications = adminIds.map((admin: any) => ({
-          user_id: admin.user_id,
-          type: 'withdrawal_request',
-          title: '💰 New Withdrawal Request',
-          message: `${userProfile?.username || 'A user'} requested withdrawal of ${amount.toFixed(2)} BAK (${netKshAmount.toFixed(0)} KES)`,
-          link: '/admin',
-          priority: 'high',
-          category: 'payment',
-        }));
-        await supabaseClient.from('notifications').insert(notifications);
-      }
-
-      // Log admin activity
-      await supabaseClient.from('admin_activity_log').insert({
-        user_id: user.id,
-        event_type: 'withdrawal_request',
-        event_category: 'payment',
-        description: `Withdrawal request: ${amount} BAK by ${userProfile?.username}`,
-        metadata: { amount, reference, phone_number: formattedPhone },
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: "pending_manual",
-          message: "Withdrawal request submitted. Manual processing required.",
-          transaction_id: transaction.id,
-          reference,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // TODO: Implement M-PESA B2C payment
-    // For now, mark as pending
-    console.log("M-PESA B2C payment would be initiated here");
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        status: "processing",
-        message: `Withdrawal of ${netAmount} BAKCoins (${netKshAmount} KSh) is being processed to ${formattedPhone}`,
-        transaction_id: transaction.id,
-        reference,
-        net_amount: netAmount,
-        fee: withdrawalFee,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  } catch (error: any) {
-    console.error("Error processing withdrawal:", error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Failed to process withdrawal",
-      }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    ];
+
+    const settled = await Promise.allSettled(sideEffects);
+    settled.forEach((s, i) => {
+      if (s.status === "rejected") log("side_effect_failed", { index: i, reason: String(s.reason) });
+    });
+
+    return json({
+      success: true,
+      status: "pending_manual",
+      message: "Withdrawal request submitted. Payouts are processed within 24–72 hours.",
+      transaction_id: payload.transaction_id,
+      reference,
+      gross_amount: payload.gross_amount,
+      fee,
+      net_amount: netAmount,
+      new_balance: payload.new_balance,
+    });
+  } catch (error) {
+    console.error(JSON.stringify({ fn: "process-withdrawal", requestId, msg: "unhandled", error: String(error) }));
+    return json({ success: false, code: "config_error", error: "Failed to process withdrawal" }, 500);
   }
 });
