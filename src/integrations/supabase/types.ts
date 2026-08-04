@@ -5740,6 +5740,10 @@ export type Database = {
         Args: { p_reason?: string; p_target_user_id: string }
         Returns: Json
       }
+      approve_deposit_request: {
+        Args: { p_admin_id: string; p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
       auto_select_competition_winners: { Args: never; Returns: undefined }
       calculate_submission_final_scores: {
         Args: { competition_uuid: string }
@@ -5818,6 +5822,19 @@ export type Database = {
         | { Args: { _amount: number; _user_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_not_fan: { Args: { user_id_param: string }; Returns: boolean }
+      reject_deposit_request: {
+        Args: { p_admin_id: string; p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
+      request_withdrawal: {
+        Args: {
+          p_amount: number
+          p_bank_details?: Json
+          p_phone: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       settle_amplify_campaign: {
         Args: { p_campaign_id: string }
         Returns: Json
