@@ -5728,6 +5728,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_payment: {
+        Args: { p_admin_id: string; p_transaction_id: string }
+        Returns: Json
+      }
+      admin_complete_withdrawal: {
+        Args: {
+          p_admin_id: string
+          p_mpesa_receipt?: string
+          p_task_id: string
+        }
+        Returns: Json
+      }
+      admin_fail_withdrawal: {
+        Args: { p_admin_id: string; p_reason?: string; p_task_id: string }
+        Returns: Json
+      }
       admin_invalidate_votes: {
         Args: {
           p_reason?: string
@@ -5738,6 +5754,10 @@ export type Database = {
       }
       admin_suspend_user: {
         Args: { p_reason?: string; p_target_user_id: string }
+        Returns: Json
+      }
+      approve_deposit_request: {
+        Args: { p_admin_id: string; p_notes?: string; p_request_id: string }
         Returns: Json
       }
       auto_select_competition_winners: { Args: never; Returns: undefined }
@@ -5818,6 +5838,19 @@ export type Database = {
         | { Args: { _amount: number; _user_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_not_fan: { Args: { user_id_param: string }; Returns: boolean }
+      reject_deposit_request: {
+        Args: { p_admin_id: string; p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
+      request_withdrawal: {
+        Args: {
+          p_amount: number
+          p_bank_details?: Json
+          p_phone: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       settle_amplify_campaign: {
         Args: { p_campaign_id: string }
         Returns: Json

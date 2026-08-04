@@ -14,13 +14,21 @@ import { actionToast } from "@/lib/actionToast";
 import { useWithdrawalEligibility } from "@/hooks/useWithdrawalEligibility";
 import { Link } from "react-router-dom";
 
+import {
+  MIN_WITHDRAWAL_BAK,
+  WITHDRAWAL_FEE_PERCENT,
+  moneyErrorMessage,
+  round2,
+  validateWithdrawal,
+  withdrawalFee,
+  withdrawalNet,
+} from "@/lib/money";
+
 interface WithdrawDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSuccess?: () => void;
 }
-
-const FEE_PCT = 0.05; // 5% withdrawal fee
 
 export function WithdrawDialog({ open, onOpenChange, onSuccess }: WithdrawDialogProps) {
   const { user } = useAuth();
@@ -32,24 +40,34 @@ export function WithdrawDialog({ open, onOpenChange, onSuccess }: WithdrawDialog
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const available = eligibility?.available_balance ?? 0;
-  const minWithdraw = eligibility?.min_withdrawal ?? 250;
+  const available = round2(eligibility?.available_balance ?? 0);
+  const minWithdraw = eligibility?.min_withdrawal ?? MIN_WITHDRAWAL_BAK;
   const numericAmount = Number(amount) || 0;
-  const fee = useMemo(() => numericAmount * FEE_PCT, [numericAmount]);
-  const net = useMemo(() => Math.max(0, numericAmount - fee), [numericAmount, fee]);
+  const fee = useMemo(() => withdrawalFee(numericAmount), [numericAmount]);
+  const net = useMemo(() => withdrawalNet(numericAmount), [numericAmount]);
+
+  const validation = useMemo(
+    () =>
+      validateWithdrawal({
+        amount: numericAmount,
+        phone,
+        accountName,
+        availableBalance: available,
+        minWithdrawal: minWithdraw,
+      }),
+    [numericAmount, phone, accountName, available, minWithdraw],
+  );
 
   const tooLow = numericAmount > 0 && numericAmount < minWithdraw;
   const tooHigh = numericAmount > available;
-  const validAmount = numericAmount >= minWithdraw && numericAmount <= available;
-  const canSubmit =
-    !!eligibility?.eligible && validAmount && phone.trim().length >= 9 && accountName.trim().length > 1 && agree && !submitting;
+  const canSubmit = !!eligibility?.eligible && validation.valid && agree && !submitting;
 
   useEffect(() => {
     if (open) refetch();
   }, [open]);
 
   const handleWithdraw = async () => {
-    if (!canSubmit || !user) return;
+    if (!canSubmit || !user || !validation.valid) return;
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -59,18 +77,24 @@ export function WithdrawDialog({ open, onOpenChange, onSuccess }: WithdrawDialog
       }
       const { data, error } = await supabase.functions.invoke("process-withdrawal", {
         body: {
-          amount: numericAmount,
-          phone_number: phone.trim(),
-          bank_details: { accountName: accountName.trim(), accountNumber: phone.trim(), bankName: "M-Pesa" },
+          amount: validation.amount,
+          phone_number: validation.phone,
+          bank_details: {
+            accountName: accountName.trim(),
+            accountNumber: validation.phone,
+            bankName: "M-Pesa",
+          },
         },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error || data?.success === false) {
+        throw new Error(moneyErrorMessage(data?.code, data?.error));
+      }
 
       actionToast.success(
         "Payout requested",
-        `${net.toFixed(2)} BAK queued · Ref ${data?.reference ?? "pending"}. ETA 24–72h.`,
+        `${Number(data?.net_amount ?? net).toFixed(2)} BAK queued · Ref ${data?.reference ?? "pending"}. ETA 24–72h.`,
       );
       setAmount(""); setPhone(""); setAccountName(""); setAgree(false);
       onOpenChange(false);
@@ -81,6 +105,7 @@ export function WithdrawDialog({ open, onOpenChange, onSuccess }: WithdrawDialog
       setSubmitting(false);
     }
   };
+
 
   return (
     <ResponsiveModal

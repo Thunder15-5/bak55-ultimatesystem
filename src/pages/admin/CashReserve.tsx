@@ -125,13 +125,16 @@ export default function CashReserve() {
 
   const handleApproveWithdrawal = async (taskId: string) => {
     try {
-      const { error } = await supabase.functions.invoke("mpesa-withdraw", {
-        body: { task_id: taskId, admin_id: user?.id },
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("mpesa-withdraw", {
+        body: { task_id: taskId, action: "complete" },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      toast.success("Withdrawal approved and processed!");
+      toast.success("Payout marked as sent");
       fetchPendingTasks();
       fetchReserveData();
     } catch (error: any) {
@@ -141,63 +144,16 @@ export default function CashReserve() {
 
   const handleApprovePayment = async (transactionId: string) => {
     try {
-      const { data: payment, error: fetchError } = await supabase
-        .from("payment_transactions")
-        .select("*")
-        .eq("id", transactionId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const metadata = payment.metadata as any;
-      const bakAmount = metadata?.bak_amount || payment.amount / 20;
-
-      // Update payment status
-      const { error: updateError } = await supabase
-        .from("payment_transactions")
-        .update({ status: "success", updated_at: new Date().toISOString() })
-        .eq("id", transactionId);
-
-      if (updateError) throw updateError;
-
-      // Get or create wallet
-      let { data: wallet } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", payment.user_id)
-        .single();
-
-      if (!wallet) {
-        const { data: newWallet, error: createError } = await supabase
-          .from("wallets")
-          .insert({ user_id: payment.user_id, balance: bakAmount.toString() })
-          .select()
-          .single();
-        if (createError) throw createError;
-        wallet = newWallet;
-      } else {
-        await supabase
-          .from("wallets")
-          .update({ balance: (parseFloat(wallet.balance.toString()) + bakAmount).toString() })
-          .eq("id", wallet.id);
-      }
-
-      // Create transaction record
-      await supabase.from("transactions").insert({
-        wallet_id: wallet.id,
-        amount: bakAmount.toString(),
-        type: "earning",
-        description: `Purchased ${bakAmount} BAKCoins (Admin Approved)`,
-        reference_id: transactionId,
-        metadata: {
-          payment_method: "manual",
-          amount_paid_ksh: payment.amount,
-          admin_approved: true,
-          approved_by: user?.id,
-        },
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("admin-approve-payment", {
+        body: { transaction_id: transactionId, action: "approve" },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
 
-      toast.success("Payment approved and BAKCoins credited!");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(data?.message || "Payment approved and BAKCoins credited!");
       fetchPendingPayments();
       fetchReserveData();
     } catch (error: any) {
@@ -207,12 +163,14 @@ export default function CashReserve() {
 
   const handleRejectPayment = async (transactionId: string) => {
     try {
-      const { error } = await supabase
-        .from("payment_transactions")
-        .update({ status: "failed", updated_at: new Date().toISOString() })
-        .eq("id", transactionId);
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("admin-approve-payment", {
+        body: { transaction_id: transactionId, action: "reject" },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Payment rejected");
       fetchPendingPayments();
@@ -220,6 +178,7 @@ export default function CashReserve() {
       toast.error(error.message || "Failed to reject payment");
     }
   };
+
 
   if (loading) {
     return (

@@ -40,7 +40,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.mpesa-withdraw]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-withdrawal]
 verify_jwt = true
@@ -113,3 +113,6 @@ verify_jwt = false
 
 [functions.generate-og-image]
 verify_jwt = false
+
+[functions.admin-approve-payment]
+verify_jwt = true
