@@ -5728,6 +5728,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_payment: {
+        Args: { p_admin_id: string; p_transaction_id: string }
+        Returns: Json
+      }
+      admin_complete_withdrawal: {
+        Args: {
+          p_admin_id: string
+          p_mpesa_receipt?: string
+          p_task_id: string
+        }
+        Returns: Json
+      }
+      admin_fail_withdrawal: {
+        Args: { p_admin_id: string; p_reason?: string; p_task_id: string }
+        Returns: Json
+      }
       admin_invalidate_votes: {
         Args: {
           p_reason?: string
