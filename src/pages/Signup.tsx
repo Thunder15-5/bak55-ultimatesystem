@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/featureFlags";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { checkPassword } from "@/lib/authRules";
 
 const logoImage = "/bak55-logo.png";
 
