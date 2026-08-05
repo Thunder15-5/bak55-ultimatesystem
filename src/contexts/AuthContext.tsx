@@ -1,19 +1,52 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { lovable } from "@/integrations/lovable/index";
+import {
+  authRedirectUrl,
+  authErrorMessage,
+  dashboardPathFor,
+  primaryRoleOf,
+} from "@/lib/authRules";
+
+export interface AccountProfile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  banned: boolean | null;
+  suspended_at: string | null;
+  suspension_reason: string | null;
+  onboarding_completed: boolean | null;
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /** True once the initial session + role + profile fetch has settled. */
+  ready: boolean;
   isActivated: boolean;
-  signUp: (email: string, password: string, userData: SignUpData, redirectUrl?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string, redirectUrl?: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  profile: AccountProfile | null;
+  isSuspended: boolean;
+  suspensionReason: string | null;
+  emailVerified: boolean;
+  needsOnboarding: boolean;
   userRole: string | null;
   userRoles: string[];
+  signUp: (email: string, password: string, userData: SignUpData, redirectUrl?: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, redirectUrl?: string) => Promise<{ error: any }>;
+  signInWithGoogle: (redirectPath?: string) => Promise<{ error: any }>;
+  signInWithMagicLink: (email: string, redirectPath?: string) => Promise<{ error: any }>;
+  sendPasswordReset: (email: string) => Promise<{ error: any }>;
+  resendVerification: (email?: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  /** Revokes every session for this user on all devices. */
+  signOutAllDevices: () => Promise<{ error: any }>;
+  refreshAccount: () => Promise<void>;
 }
 
 interface SignUpData {
@@ -35,121 +68,124 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isActivated, setIsActivated] = useState(true); // Default to true - no activation required
+  const [ready, setReady] = useState(false);
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const navigate = useNavigate();
+  const mounted = useRef(true);
 
-  const fetchUserRoles = async (userId: string) => {
-    try {
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
+  const loadAccount = useCallback(async (userId: string) => {
+    const [rolesRes, profileRes] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase
+        .from("profiles")
+        .select(
+          "id, username, display_name, email, avatar_url, banned, suspended_at, suspension_reason, onboarding_completed"
+        )
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
 
-      if (error) {
-        console.error("Error fetching user roles:", error);
-        return;
-      }
+    if (!mounted.current) return;
 
-      const allRoles = roles?.map((r: any) => r.role) ?? [];
+    if (rolesRes.error) {
+      console.error("Failed to load roles", rolesRes.error);
+    } else {
+      const allRoles = (rolesRes.data ?? []).map((r) => String(r.role));
       setUserRoles(allRoles);
-      
-      let primaryRole = null;
-      if (allRoles.includes('admin')) primaryRole = 'admin';
-      else if (allRoles.includes('brand')) primaryRole = 'brand';
-      else if (allRoles.includes('producer')) primaryRole = 'producer';
-      else if (allRoles.includes('artist')) primaryRole = 'artist';
-      else if (allRoles.includes('fan')) primaryRole = 'fan';
-      
-      setUserRole(primaryRole);
-      if (primaryRole) {
-        sessionStorage.setItem('userRole', primaryRole);
-      }
-    } catch (err) {
-      console.error("Error in fetchUserRoles:", err);
+      const primary = primaryRoleOf(allRoles);
+      setUserRole(primary);
+      if (primary) sessionStorage.setItem("userRole", primary);
+      else sessionStorage.removeItem("userRole");
     }
-  };
+
+    if (profileRes.error) {
+      console.error("Failed to load profile", profileRes.error);
+    } else {
+      setProfile((profileRes.data as AccountProfile) ?? null);
+    }
+  }, []);
+
+  const clearAccount = useCallback(() => {
+    setUserRole(null);
+    setUserRoles([]);
+    setProfile(null);
+    sessionStorage.removeItem("userRole");
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    mounted.current = true;
     let initialLoadDone = false;
 
-    // Try to restore from session storage for instant UI
-    const cachedRole = sessionStorage.getItem('userRole');
-    if (cachedRole) {
-      setUserRole(cachedRole);
-    }
+    const cachedRole = sessionStorage.getItem("userRole");
+    if (cachedRole) setUserRole(cachedRole);
 
-    // Set up auth state listener FIRST (for ongoing changes only)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Only handle ongoing changes AFTER initial load is done
-        if (!initialLoadDone) return;
-        
-        if (session?.user) {
-          // Use setTimeout to avoid deadlock per Supabase docs
-          setTimeout(() => {
-            if (!isMounted) return;
-            fetchUserRoles(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-          setUserRoles([]);
-          sessionStorage.removeItem('userRole');
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!mounted.current) return;
+
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!initialLoadDone) return;
+
+      if (nextSession?.user) {
+        // Defer to avoid deadlocking the auth callback.
+        setTimeout(() => {
+          if (mounted.current) loadAccount(nextSession.user.id);
+        }, 0);
+      } else if (event === "SIGNED_OUT") {
+        clearAccount();
       }
-    );
+    });
 
-    // INITIAL load - this is the ONLY place that controls loading state
-    const initializeAuth = async () => {
+    (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!isMounted) return;
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
+        if (!mounted.current) return;
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserRoles(session.user.id);
-        } else {
-          setUserRole(null);
-          setUserRoles([]);
-          sessionStorage.removeItem('userRole');
-        }
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user) await loadAccount(initialSession.user.id);
+        else clearAccount();
       } catch (err) {
         console.error("Auth initialization error:", err);
       } finally {
-        if (isMounted) {
+        if (mounted.current) {
           initialLoadDone = true;
           setLoading(false);
+          setReady(true);
         }
       }
-    };
-
-    initializeAuth();
+    })();
 
     return () => {
-      isMounted = false;
+      mounted.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadAccount, clearAccount]);
 
-  const signUp = async (email: string, password: string, userData: SignUpData, redirectUrl?: string) => {
+  const refreshAccount = useCallback(async () => {
+    if (user?.id) await loadAccount(user.id);
+  }, [user?.id, loadAccount]);
+
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: SignUpData,
+    redirectUrl?: string
+  ) => {
     try {
-      const PRODUCTION_DOMAIN = "https://www.bak55talent.co.ke";
-      const emailRedirect = `${PRODUCTION_DOMAIN}/login`;
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: emailRedirect,
+          emailRedirectTo: authRedirectUrl("/auth/callback"),
           data: {
             username: userData.username,
             role: userData.role,
@@ -165,111 +201,169 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             industry: userData.industry || null,
             producerName: userData.producerName || userData.username,
             producer_name: userData.producerName || userData.username,
-          }
-        }
+          },
+        },
       });
 
-      if (error) {
-        console.error("Signup error:", error);
-        return { error };
+      if (error) return { error };
+
+      // With email confirmation on, signUp returns no session — the user is NOT
+      // logged in yet. Never route them into the app in that case.
+      if (data.user && !data.session) {
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        return { error: null };
       }
 
-      if (data.user) {
-        toast.success("Account created successfully! Welcome to BAK55!");
-        
-        // Send welcome email in background (don't block)
-        try {
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: email,
-              subject: 'Welcome to BAK55 Talent!',
-              template: 'welcome',
-              data: { username: userData.username }
-            }
-          });
-        } catch (emailErr) {
-          console.log('Welcome email error (non-blocking):', emailErr);
-        }
-        
-        // Navigate to redirect URL if provided, otherwise to appropriate dashboard
-        if (redirectUrl) {
-          navigate(redirectUrl);
-        } else if (userData.role === 'artist') {
-          navigate('/artist/dashboard');
-        } else if (userData.role === 'brand') {
-          navigate('/brand/dashboard');
-        } else if (userData.role === 'producer') {
-          navigate('/producer/dashboard');
-        } else {
-          navigate('/fan/dashboard');
-        }
+      if (data.session) {
+        await loadAccount(data.user!.id);
+        toast.success("Welcome to BAK55!");
+        navigate(redirectUrl || dashboardPathFor(userData.role), { replace: true });
       }
 
       return { error: null };
     } catch (err: any) {
       console.error("Unexpected signup error:", err);
-      return { error: { message: err.message || "An unexpected error occurred during signup" } };
+      return { error: { message: authErrorMessage(err) } };
     }
   };
 
   const signIn = async (email: string, password: string, redirectUrl?: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error };
+      if (!data.user) return { error: { message: "Login failed. Please try again." } };
 
-      if (error) {
-        return { error };
+      const [rolesRes, profileRes] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", data.user.id),
+        supabase
+          .from("profiles")
+          .select("suspended_at, suspension_reason, banned")
+          .eq("id", data.user.id)
+          .maybeSingle(),
+      ]);
+
+      const suspended = Boolean(profileRes.data?.suspended_at || profileRes.data?.banned);
+      await loadAccount(data.user.id);
+
+      if (suspended) {
+        navigate("/account-suspended", { replace: true });
+        return { error: null };
       }
 
-      if (data.user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id);
-
-        const allRoles = roles?.map((r: any) => r.role) ?? [];
-        
-        let role = null;
-        if (allRoles.includes('admin')) role = 'admin';
-        else if (allRoles.includes('brand')) role = 'brand';
-        else if (allRoles.includes('producer')) role = 'producer';
-        else if (allRoles.includes('artist')) role = 'artist';
-        else if (allRoles.includes('fan')) role = 'fan';
-
-        toast.success("Logged in successfully!");
-        
-        // Navigate to redirect URL if provided, otherwise to appropriate dashboard
-        if (redirectUrl) {
-          navigate(redirectUrl);
-        } else if (role === "admin") {
-          navigate("/admin");
-        } else if (role) {
-          navigate(`/${role}/dashboard`);
-        } else {
-          navigate("/fan/dashboard");
-        }
-      }
-
+      const role = primaryRoleOf((rolesRes.data ?? []).map((r) => String(r.role)));
+      toast.success("Logged in successfully");
+      navigate(redirectUrl || dashboardPathFor(role), { replace: true });
       return { error: null };
     } catch (err: any) {
       console.error("Unexpected login error:", err);
-      return { error: { message: err.message || "An unexpected error occurred during login" } };
+      return { error: { message: authErrorMessage(err) } };
+    }
+  };
+
+  const signInWithGoogle = async (redirectPath?: string) => {
+    try {
+      if (redirectPath) sessionStorage.setItem("signupIntentRedirect", redirectPath);
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: authRedirectUrl("/auth/callback"),
+      });
+      if (result.error) return { error: { message: authErrorMessage(result.error) } };
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: authErrorMessage(err) } };
+    }
+  };
+
+  const signInWithMagicLink = async (email: string, redirectPath?: string) => {
+    try {
+      if (redirectPath) sessionStorage.setItem("signupIntentRedirect", redirectPath);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: authRedirectUrl("/auth/callback") },
+      });
+      if (error) return { error: { message: authErrorMessage(error) } };
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: authErrorMessage(err) } };
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: authRedirectUrl("/reset-password"),
+      });
+      if (error) return { error: { message: authErrorMessage(error) } };
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: authErrorMessage(err) } };
+    }
+  };
+
+  const resendVerification = async (email?: string) => {
+    const target = email || user?.email;
+    if (!target) return { error: { message: "No email address to send to." } };
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: target,
+        options: { emailRedirectTo: authRedirectUrl("/auth/callback") },
+      });
+      if (error) return { error: { message: authErrorMessage(error) } };
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: authErrorMessage(err) } };
     }
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setUserRole(null);
-    setUserRoles([]);
+    clearAccount();
     sessionStorage.clear();
-    toast.success("Logged out successfully!");
-    navigate("/");
+    toast.success("Logged out");
+    navigate("/", { replace: true });
   };
 
+  const signOutAllDevices = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      if (error) return { error: { message: authErrorMessage(error) } };
+      clearAccount();
+      sessionStorage.clear();
+      navigate("/login", { replace: true });
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: authErrorMessage(err) } };
+    }
+  };
+
+  const isSuspended = Boolean(profile?.suspended_at || profile?.banned);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, isActivated, signUp, signIn, signOut, userRole, userRoles }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        ready,
+        isActivated: true,
+        profile,
+        isSuspended,
+        suspensionReason: profile?.suspension_reason ?? null,
+        emailVerified: Boolean(user?.email_confirmed_at),
+        needsOnboarding: Boolean(user) && ready && userRoles.length === 0,
+        userRole,
+        userRoles,
+        signUp,
+        signIn,
+        signInWithGoogle,
+        signInWithMagicLink,
+        sendPasswordReset,
+        resendVerification,
+        signOut,
+        signOutAllDevices,
+        refreshAccount,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

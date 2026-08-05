@@ -22,6 +22,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AccountSuspended from "./pages/AccountSuspended";
+
 import NotFound from "./pages/NotFound";
 
 // Retry wrapper for lazy imports (handles chunk loading failures in in-app browsers)
@@ -173,6 +175,8 @@ const App = () => (
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/account-suspended" element={<AccountSuspended />} />
+
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/transparency" element={<Transparency />} />
                   <Route path="/design-system" element={<DesignSystem />} />

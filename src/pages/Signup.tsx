@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/featureFlags";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { checkPassword } from "@/lib/authRules";
 
 const logoImage = "/bak55-logo.png";
 
@@ -236,7 +238,7 @@ export default function Signup() {
     return error?.message || "Failed to create account. Please try again.";
   };
 
-  const canProceedStep2 = email && password && password.length >= 6 && username;
+  const canProceedStep2 = Boolean(email && username && checkPassword(password).valid);
   const canSubmit = agreedToTerms && confirmedAge;
 
   const handleSubmit = async () => {
@@ -642,16 +644,15 @@ export default function Signup() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
                     autoComplete="new-password"
                     required
                   />
-                  {password && password.length < 6 && (
-                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
-                  )}
+                  <PasswordStrengthMeter password={password} />
+
                 </div>
               </div>
 
