@@ -642,16 +642,15 @@ export default function Signup() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-12 bg-background/50 border-border/50 focus:border-primary text-base"
                     autoComplete="new-password"
                     required
                   />
-                  {password && password.length < 6 && (
-                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
-                  )}
+                  <PasswordStrengthMeter password={password} />
+
                 </div>
               </div>
 
