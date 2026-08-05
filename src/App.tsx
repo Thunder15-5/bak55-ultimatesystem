@@ -22,6 +22,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AccountSuspended from "./pages/AccountSuspended";
+
 import NotFound from "./pages/NotFound";
 
 // Retry wrapper for lazy imports (handles chunk loading failures in in-app browsers)
