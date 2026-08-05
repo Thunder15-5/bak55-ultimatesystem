@@ -690,8 +690,11 @@ export default function Profile() {
           </TabsContent>
 
           <TabsContent value="notifications">
+          <TabsContent value="notifications" className="space-y-6">
             <NotificationPreferences />
+            <AccountSecurityCard />
           </TabsContent>
+
         </Tabs>
       </div>
     </div>
