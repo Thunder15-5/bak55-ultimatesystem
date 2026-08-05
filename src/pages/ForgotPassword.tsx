@@ -16,27 +16,30 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (!email.trim()) {
       toast.error("Please enter your email address");
       return;
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://www.bak55talent.co.ke/reset-password`,
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: authRedirectUrl("/reset-password"),
       });
       if (error) {
-        toast.error(error.message || "Failed to send reset email");
+        toast.error(authErrorMessage(error, "Failed to send reset email"));
       } else {
+        // Always show the same confirmation so the form can't be used to
+        // discover which emails have accounts.
         setEmailSent(true);
         toast.success("Reset link sent!");
       }
-    } catch {
-      toast.error("An unexpected error occurred");
+    } catch (err) {
+      toast.error(authErrorMessage(err, "An unexpected error occurred"));
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-8">
