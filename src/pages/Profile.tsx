@@ -689,8 +689,8 @@ export default function Profile() {
             <ReferralSystem />
           </TabsContent>
 
-          <TabsContent value="notifications">
           <TabsContent value="notifications" className="space-y-6">
+
             <NotificationPreferences />
             <AccountSecurityCard />
           </TabsContent>
