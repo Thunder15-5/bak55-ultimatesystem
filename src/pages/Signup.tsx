@@ -236,7 +236,7 @@ export default function Signup() {
     return error?.message || "Failed to create account. Please try again.";
   };
 
-  const canProceedStep2 = email && password && password.length >= 6 && username;
+  const canProceedStep2 = Boolean(email && username && checkPassword(password).valid);
   const canSubmit = agreedToTerms && confirmedAge;
 
   const handleSubmit = async () => {
