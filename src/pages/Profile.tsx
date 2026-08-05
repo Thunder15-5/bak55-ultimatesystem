@@ -26,6 +26,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { KYCVerification } from "@/components/KYCVerification";
 import { DirectChat } from "@/components/DirectChat";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
+import { AccountSecurityCard } from "@/components/auth/AccountSecurityCard";
+
 import { Bell } from "lucide-react";
 
 export default function Profile() {
