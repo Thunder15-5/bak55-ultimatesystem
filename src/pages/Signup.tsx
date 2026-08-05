@@ -12,8 +12,6 @@ import {
   Sparkles,
   Mail,
   Lock,
-import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
-import { checkPassword } from "@/lib/authRules";
   User,
   Music2,
   Building2,
