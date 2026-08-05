@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Mail, CheckCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { authRedirectUrl, authErrorMessage } from "@/lib/authRules";
+
 
 const logoImage = "/bak55-logo.png";
 
