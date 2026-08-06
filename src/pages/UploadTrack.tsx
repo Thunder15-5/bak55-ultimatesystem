@@ -146,6 +146,26 @@ export default function UploadTrack() {
       toast.error("Please select an audio file");
       return;
     }
+    const selectedAudioFile = audioFile;
+    if (uploadMode === 'new' && selectedAudioFile) {
+      const allowedAudioTypes = new Set(['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/flac', 'audio/aac', 'audio/ogg']);
+      if (!allowedAudioTypes.has(selectedAudioFile.type) || selectedAudioFile.size > 20 * 1024 * 1024) {
+        toast.error("Choose a supported audio file up to 20 MB");
+        return;
+      }
+      if (!formData.title.trim() || formData.title.trim().length > 120) {
+        toast.error("Track title must be between 1 and 120 characters");
+        return;
+      }
+      if (coverFile && (!coverFile.type.startsWith('image/') || coverFile.size > 10 * 1024 * 1024)) {
+        toast.error("Cover art must be an image up to 10 MB");
+        return;
+      }
+      if (isPaidDownload && !submitToCompetition && (Number(priceBak) < 2.5 || Number(priceBak) > 100000)) {
+        toast.error("Paid tracks must cost between 2.5 and 100,000 BAK");
+        return;
+      }
+    }
     if (uploadMode === 'existing' && !selectedExistingTrack) {
       toast.error("Please select a track");
       return;
@@ -167,6 +187,7 @@ export default function UploadTrack() {
         if (!existingTrack) throw new Error("Track not found");
         trackData = existingTrack;
       } else {
+        if (!selectedAudioFile) throw new Error("Please select an audio file");
         // Sanitize title for filename - only remove truly invalid characters
         const sanitizeForFilename = (title: string): string => {
           // Only remove characters that are invalid in filenames: / \ : * ? " < > |
@@ -174,7 +195,7 @@ export default function UploadTrack() {
         };
 
         // Get file extension from original file
-        const fileExtension = audioFile!.name.split('.').pop()?.toLowerCase() || 'mp3';
+        const fileExtension = selectedAudioFile.name.split('.').pop()?.toLowerCase() || 'mp3';
         const sanitizedTitle = sanitizeForFilename(formData.title);
         
         // Create filename with song title, preserving spaces and capitalization
@@ -183,7 +204,7 @@ export default function UploadTrack() {
         
         const { error: audioError } = await supabase.storage
           .from("tracks")
-          .upload(audioPath, audioFile!);
+          .upload(audioPath, selectedAudioFile);
 
         if (audioError) throw audioError;
 
@@ -212,8 +233,8 @@ export default function UploadTrack() {
           .from("tracks")
           .insert({
             artist_id: user.id,
-            title: formData.title,
-            genre: formData.genre,
+            title: formData.title.trim(),
+            genre: formData.genre.trim().slice(0, 60),
             audio_url: audioUrl,
             cover_image: coverUrl,
             moderation_status: 'pending',
