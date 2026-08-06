@@ -5842,6 +5842,10 @@ export type Database = {
         Args: { p_admin_id: string; p_notes?: string; p_request_id: string }
         Returns: Json
       }
+      renew_fan_club_membership: {
+        Args: { p_membership_id: string }
+        Returns: Json
+      }
       request_withdrawal: {
         Args: {
           p_amount: number
