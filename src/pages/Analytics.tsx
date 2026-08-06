@@ -18,6 +18,7 @@ import {
   Clock, MapPin, Lightbulb, Calendar, Loader2, Sparkles
 } from "lucide-react";
 import { RevenueBreakdown } from "@/components/RevenueBreakdown";
+import { RetryableError } from "@/components/RetryableError";
 
 interface AnalyticsData {
   tracks: number;
@@ -56,6 +57,7 @@ export default function Analytics() {
   const [insights, setInsights] = useState<Insights | null>(null);
   const [trends, setTrends] = useState<any>(null);
   const [timing, setTiming] = useState<any>(null);
+  const [loadError, setLoadError] = useState(false);
   
   const [playsOverTime, setPlaysOverTime] = useState<any[]>([]);
   const [earningsOverTime, setEarningsOverTime] = useState<any[]>([]);
@@ -90,34 +92,46 @@ export default function Analytics() {
   }, [user, userRole]);
 
   const fetchAnalyticsData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
+      setLoadError(false);
       
       // Fetch tracks with play history
-      const { data: tracks } = await supabase
+      const { data: tracks, error: tracksError } = await supabase
         .from('tracks')
         .select('id, title, plays, created_at, genre')
-        .eq('artist_id', user?.id)
+        .eq('artist_id', user.id)
         .order('created_at', { ascending: true });
+      if (tracksError) throw tracksError;
 
-      // Fetch followers count
-      const { count: followersCount } = await supabase
-        .from('followers')
-        .select('*', { count: 'exact', head: true })
-        .eq('artist_id', user?.id);
+      const trackIds = (tracks || []).map((track) => track.id);
+      const [followersResult, artistResult, submissionsResult, historyResult, walletResult] = await Promise.all([
+        supabase.from('followers').select('*', { count: 'exact', head: true }).eq('artist_id', user.id),
+        supabase.from('artist_profiles').select('total_earnings').eq('user_id', user.id).maybeSingle(),
+        supabase.from('submissions').select('ai_score, vote_count').eq('artist_id', user.id),
+        trackIds.length
+          ? supabase.from('listening_history').select('user_id').in('track_id', trackIds).limit(1000)
+          : Promise.resolve({ data: [], error: null }),
+        supabase.from('wallets').select('id').eq('user_id', user.id).maybeSingle(),
+      ]);
+      const queryError = followersResult.error || artistResult.error || submissionsResult.error || historyResult.error || walletResult.error;
+      if (queryError) throw queryError;
+      const followersCount = followersResult.count;
+      const artistProfile = artistResult.data;
+      const submissions = submissionsResult.data;
 
-      // Fetch artist profile for earnings
-      const { data: artistProfile } = await supabase
-        .from('artist_profiles')
-        .select('total_earnings')
-        .eq('user_id', user?.id)
-        .single();
-
-      // Fetch competition stats
-      const { data: submissions } = await supabase
-        .from('submissions')
-        .select('ai_score, vote_count')
-        .eq('artist_id', user?.id);
+      const listenerIds = [...new Set((historyResult.data || []).map((entry) => entry.user_id).filter(Boolean))] as string[];
+      const { data: listenerProfiles, error: listenerError } = listenerIds.length
+        ? await supabase.from('profiles_public').select('id, location').in('id', listenerIds)
+        : { data: [], error: null };
+      if (listenerError) throw listenerError;
+      const locationByUser = new Map((listenerProfiles || []).map((profile) => [profile.id, profile.location]));
+      const topLocations = (historyResult.data || []).reduce<Record<string, number>>((locations, entry) => {
+        const location = entry.user_id ? locationByUser.get(entry.user_id) : null;
+        if (location) locations[location] = (locations[location] || 0) + 1;
+        return locations;
+      }, {});
 
       // Create plays over time data
       const playsData = tracks?.map((track, idx) => ({
@@ -156,7 +170,7 @@ export default function Analytics() {
         followers: followersCount || 0,
         totalEarnings: artistProfile?.total_earnings || 0,
         avgPlaysPerTrack: avgPlays,
-        topLocations: { 'Kenya': 80, 'Nigeria': 15, 'Other': 5 },
+        topLocations,
         recentPerformance,
         competitionStats: {
           totalSubmissions,
@@ -166,11 +180,7 @@ export default function Analytics() {
       });
 
       // Fetch transactions for earnings over time
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
+      const wallet = walletResult.data;
 
       if (wallet) {
         const { data: transactions } = await supabase
@@ -192,6 +202,7 @@ export default function Analytics() {
 
     } catch (error: any) {
       console.error('Error fetching analytics:', error);
+      setLoadError(true);
       toast.error("Failed to load analytics data");
     } finally {
       setLoading(false);
@@ -327,6 +338,8 @@ export default function Analytics() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </CardContent>
               </Card>
+            ) : loadError ? (
+              <RetryableError title="Analytics couldn't load" onRetry={fetchAnalyticsData} />
             ) : (
               <>
                 {analyticsData && (

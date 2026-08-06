@@ -50,14 +50,17 @@ export default function ArtistDashboard() {
   }, [user]);
 
   const fetchStats = async () => {
+    if (!user) return;
     try {
       const [walletData, tracksData, artistProfile, followersResult, competitionsResult] = await Promise.all([
-        supabase.from("wallets").select("id, balance").eq("user_id", user?.id).maybeSingle(),
-        supabase.from("tracks").select("id, title, plays").eq("artist_id", user?.id).order("plays", { ascending: false }),
-        supabase.from("artist_profiles").select("total_earnings").eq("user_id", user?.id).maybeSingle(),
-        supabase.from("followers").select("*", { count: "exact", head: true }).eq("artist_id", user?.id),
-        supabase.from("submissions").select("*", { count: "exact", head: true }).eq("artist_id", user?.id),
+        supabase.from("wallets").select("id, balance").eq("user_id", user.id).maybeSingle(),
+        supabase.from("tracks").select("id, title, plays").eq("artist_id", user.id).order("plays", { ascending: false }),
+        supabase.from("artist_profiles").select("total_earnings").eq("user_id", user.id).maybeSingle(),
+        supabase.from("followers").select("*", { count: "exact", head: true }).eq("artist_id", user.id),
+        supabase.from("submissions").select("*", { count: "exact", head: true }).eq("artist_id", user.id),
       ]);
+      const initialError = walletData.error || tracksData.error || artistProfile.error || followersResult.error || competitionsResult.error;
+      if (initialError) throw initialError;
 
       const trackIds = tracksData.data?.map(t => t.id) || [];
       const [likesResult, commentsResult, transactionsResult] = await Promise.all([

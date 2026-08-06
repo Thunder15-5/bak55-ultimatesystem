@@ -49,7 +49,7 @@ export function ArtistLevelCard({ userId, compact = false }: ArtistLevelCardProp
           </Badge>
         </div>
         <CardDescription>
-          {level.level < 4 ? "Keep growing to unlock more perks!" : "You've reached the highest level!"}
+          {nextLevel ? "Keep growing to unlock more perks!" : "You've reached the highest level!"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -105,7 +105,7 @@ export function ArtistLevelCard({ userId, compact = false }: ArtistLevelCardProp
           ) : (
             <>
               <Lock className="w-3 h-3" />
-              Reach Level 2 to unlock withdrawals
+              Reach the required level and complete verification to unlock withdrawals
             </>
           )}
         </div>
