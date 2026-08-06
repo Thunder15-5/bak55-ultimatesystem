@@ -59,25 +59,20 @@ Deno.serve(async (req) => {
       const tier = (membership as any).fan_club_tiers;
       const price = tier?.price_bak || 0;
 
-      // Check wallet balance
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('id, balance')
-        .eq('user_id', membership.fan_id)
-        .single();
+      const { data: renewalResult, error: renewalError } = await supabase.rpc(
+        'renew_fan_club_membership',
+        { p_membership_id: membership.id },
+      );
+      const renewal = renewalResult as { success?: boolean; error?: string; expires_at?: string } | null;
 
-      if (!wallet || wallet.balance < price) {
-        // Insufficient balance - expire membership
-        await supabase
-          .from('fan_club_memberships')
-          .update({ status: 'expired' })
-          .eq('id', membership.id);
-
+      if (renewalError || !renewal?.success) {
         await supabase.from('notifications').insert({
           user_id: membership.fan_id,
           type: 'membership_expired',
           title: '❌ Fan Club Membership Expired',
-          message: `Your fan club membership could not be renewed due to insufficient BAKCoins (needed ${price} BAK).`,
+          message: renewal?.error === 'Insufficient balance'
+            ? `Your fan club membership could not be renewed due to insufficient BAKCoins (needed ${price} BAK).`
+            : 'Your fan club membership could not be renewed. You can rejoin from the artist profile.',
           link: '/wallet/buy-coins',
           category: 'subscription',
           priority: 'high',
@@ -86,49 +81,7 @@ Deno.serve(async (req) => {
         failed++;
         continue;
       }
-
-      // Deduct from wallet
-      await supabase
-        .from('wallets')
-        .update({ balance: wallet.balance - price })
-        .eq('id', wallet.id)
-        .eq('balance', wallet.balance); // Optimistic locking
-
-      // Record transaction
-      await supabase.from('transactions').insert({
-        wallet_id: wallet.id,
-        type: 'fan_club_renewal',
-        amount: -price,
-        description: `Fan club renewal - ${tier?.tier_name || 'Membership'}`,
-      });
-
-      // Credit artist
-      const { data: artistWallet } = await supabase
-        .from('wallets')
-        .select('id, balance')
-        .eq('user_id', membership.artist_id)
-        .single();
-
-      if (artistWallet) {
-        await supabase
-          .from('wallets')
-          .update({ balance: artistWallet.balance + price })
-          .eq('id', artistWallet.id);
-
-        await supabase.from('transactions').insert({
-          wallet_id: artistWallet.id,
-          type: 'fan_club_earning',
-          amount: price,
-          description: `Fan club subscription renewal`,
-        });
-      }
-
-      // Extend membership by 30 days
-      const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      await supabase
-        .from('fan_club_memberships')
-        .update({ expires_at: newExpiry })
-        .eq('id', membership.id);
+      const newExpiry = renewal.expires_at || membership.expires_at;
 
       // Notify fan
       await supabase.from('notifications').insert({
