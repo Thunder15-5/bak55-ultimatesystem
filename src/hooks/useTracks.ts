@@ -53,15 +53,12 @@ export function useApprovedTracks() {
 
       // Fetch artist profiles for these tracks
       const artistIds = [...new Set(tracksData.map(t => t.artist_id))];
-      const { data: artistsData } = await supabase
-        .from("artist_profiles")
-        .select("user_id, stage_name")
-        .in("user_id", artistIds);
-
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, display_name")
-        .in("id", artistIds);
+      const [artistsResult, profilesResult] = await Promise.all([
+        supabase.from("artist_profiles").select("user_id, stage_name").in("user_id", artistIds).eq("hidden", false),
+        supabase.from("profiles_public").select("id, username, avatar_url, display_name").in("id", artistIds),
+      ]);
+      const artistsData = artistsResult.data;
+      const profilesData = profilesResult.data;
 
       // Merge data
       const tracksWithArtists: Track[] = tracksData.map(track => ({
@@ -131,7 +128,7 @@ export function useTrendingTracks(limit: number = 5) {
           .select('user_id, stage_name')
           .in('user_id', artistIds),
         supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('id, display_name, username')
           .in('id', artistIds)
       ]);

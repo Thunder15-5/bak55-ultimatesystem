@@ -15,6 +15,7 @@ import { EarningsByStream, type StreamRow } from "@/components/revenue/EarningsB
 import { PayoutLedger, type LedgerEntry } from "@/components/revenue/PayoutLedger";
 import { WithdrawalEligibilityCard } from "@/components/WithdrawalEligibilityCard";
 import { WithdrawDialog } from "@/components/revenue/WithdrawDialog";
+import { RetryableError } from "@/components/RetryableError";
 
 type Bucket = StreamRow["key"];
 
@@ -64,35 +65,42 @@ export default function ArtistRevenue() {
   const [loading, setLoading] = useState(true);
   const [txns, setTxns] = useState<any[]>([]);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (user) fetchData();
   }, [user]);
 
   const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
+    setLoadError(false);
     try {
-      const { data: wallet } = await supabase
+      const { data: wallet, error: walletError } = await supabase
         .from("wallets")
         .select("id")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .maybeSingle();
+      if (walletError) throw walletError;
 
       if (!wallet?.id) {
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("transactions")
         .select("id, type, amount, description, created_at")
         .eq("wallet_id", wallet.id)
         .gt("amount", 0)
         .order("created_at", { ascending: false })
         .limit(500);
+      if (error) throw error;
 
       setTxns(data || []);
     } catch (e) {
       console.error("Revenue fetch error", e);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -219,6 +227,8 @@ export default function ArtistRevenue() {
               </div>
               <Skeleton className="h-80 w-full" />
             </div>
+          ) : loadError ? (
+            <RetryableError title="Revenue couldn't load" onRetry={fetchData} />
           ) : (
             <TooltipProvider delayDuration={200}>
               <RevenueHeroCard
@@ -231,7 +241,7 @@ export default function ArtistRevenue() {
 
               <div className="grid lg:grid-cols-2 gap-4">
                 <EarningsByStream rows={computed.rows} />
-                <WithdrawalEligibilityCard userId={user!.id} />
+                <WithdrawalEligibilityCard userId={user?.id || ""} />
               </div>
 
               <PayoutLedger entries={computed.ledger} />

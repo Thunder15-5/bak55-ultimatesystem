@@ -132,7 +132,7 @@ export default function ArtistProfile() {
   const fetchArtistData = async () => {
     try {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select(`
           id, username, bio, location, avatar_url, created_at,
           artist_profiles (stage_name, genres, social_links, verified, talent_score, total_earnings, banner_url)
@@ -154,6 +154,7 @@ export default function ArtistProfile() {
       .from("tracks")
       .select("*")
       .eq("artist_id", id)
+      .eq("moderation_status", "approved")
       .order("created_at", { ascending: false });
     setTracks(data || []);
   };
@@ -179,7 +180,7 @@ export default function ArtistProfile() {
   const fetchActiveSubmission = async () => {
     try {
       const { data } = await supabase
-        .from("competition_submissions" as any)
+        .from("submissions")
         .select("id, competition_id, votes_count, competitions(title, status, voting_end)")
         .eq("artist_id", id)
         .eq("status", "approved")
@@ -202,18 +203,26 @@ export default function ArtistProfile() {
   const fetchRelatedArtists = async (genres: string[]) => {
     try {
       const { data } = await supabase
-        .from("artist_profiles" as any)
-        .select("id, stage_name, genres, profiles(username, avatar_url)")
-        .neq("id", id)
+        .from("artist_profiles")
+        .select("user_id, stage_name, genres")
+        .neq("user_id", id)
+        .eq("hidden", false)
         .overlaps("genres", genres)
         .limit(8);
-      const mapped: RelatedArtist[] = (data || []).map((a: any) => ({
-        id: a.id,
-        username: a.profiles?.username || "",
-        avatar_url: a.profiles?.avatar_url || "",
-        stage_name: a.stage_name,
-        genres: a.genres,
-      }));
+      const artistIds = (data || []).map((a) => a.user_id);
+      const { data: profiles } = artistIds.length
+        ? await supabase.from("profiles_public").select("id, username, avatar_url").in("id", artistIds)
+        : { data: [] };
+      const mapped: RelatedArtist[] = (data || []).map((a) => {
+        const profile = profiles?.find((p) => p.id === a.user_id);
+        return {
+          id: a.user_id,
+          username: profile?.username || "",
+          avatar_url: profile?.avatar_url || "",
+          stage_name: a.stage_name || undefined,
+          genres: a.genres || undefined,
+        };
+      });
       setRelatedArtists(mapped);
     } catch {
       setRelatedArtists([]);

@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { actionToast } from "@/lib/actionToast";
+import { PressableButton } from "@/components/PressableButton";
 import { Crown, Star, Heart, Loader2, CheckCircle2, Lock } from "lucide-react";
 
 interface FanClubTier {
@@ -36,12 +37,13 @@ export function FanClubSection({ artistId, isOwner = false }: FanClubSectionProp
   }, [artistId, user]);
 
   const fetchTiers = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('fan_club_tiers')
       .select('*')
       .eq('artist_id', artistId)
       .eq('is_active', true)
       .order('tier_level');
+    if (error) actionToast.error("Couldn't load fan club tiers");
     setTiers((data as any[]) || []);
     setLoading(false);
   };
@@ -59,66 +61,19 @@ export function FanClubSection({ artistId, isOwner = false }: FanClubSectionProp
 
   const handleSubscribe = async (tier: FanClubTier) => {
     if (!user) {
-      toast.error("Please log in to subscribe");
+      actionToast.error("Please log in to subscribe");
       return;
     }
 
     setSubscribing(tier.id);
     try {
-      // Check wallet balance
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!wallet || wallet.balance < tier.price_bak) {
-        toast.error(`Insufficient balance. You need ${tier.price_bak} BAK.`);
-        return;
-      }
-
-      // Deduct from wallet
-      const { data: deductResult } = await supabase.rpc('deduct_wallet', {
-        p_user_id: user.id,
-        p_amount: tier.price_bak,
-        p_description: `Fan Club: ${tier.tier_name} subscription`,
-      });
-
-      if (!(deductResult as any)?.success) {
-        toast.error((deductResult as any)?.error || 'Payment failed');
-        return;
-      }
-
-      // Credit artist (90% of subscription)
-      const artistShare = tier.price_bak * 0.9;
-      const { data: artistWallet } = await supabase
-        .from('wallets')
-        .select('id')
-        .eq('user_id', artistId)
-        .maybeSingle();
-
-      if (artistWallet) {
-        await supabase
-          .from('wallets')
-          .update({ balance: artistShare })
-          .eq('user_id', artistId);
-      }
-
-      // Create membership
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-      await supabase.from('fan_club_memberships').insert({
-        fan_id: user.id,
-        tier_id: tier.id,
-        artist_id: artistId,
-        expires_at: expiresAt.toISOString(),
-      });
-
-      toast.success(`Subscribed to ${tier.tier_name}!`);
-      fetchMemberships();
+      const { data, error } = await supabase.rpc('subscribe_fan_club', { p_tier_id: tier.id });
+      const result = data as { success?: boolean; error?: string } | null;
+      if (error || !result?.success) throw new Error(result?.error || error?.message || "Payment failed");
+      setMemberships((current) => current.includes(tier.id) ? current : [...current, tier.id]);
+      actionToast.success(`Subscribed to ${tier.tier_name}`);
     } catch (err) {
-      toast.error("Failed to subscribe");
+      actionToast.error(err instanceof Error ? err.message : "Failed to subscribe");
     } finally {
       setSubscribing(null);
     }
@@ -181,12 +136,13 @@ export function FanClubSection({ artistId, isOwner = false }: FanClubSectionProp
                     </div>
                   )}
                   {!isOwner && (
-                    <Button
+                    <PressableButton
                       size="sm"
                       className="w-full"
                       variant={isMember ? "outline" : "default"}
                       disabled={isMember || subscribing === tier.id}
                       onClick={() => handleSubscribe(tier)}
+                      hapticPattern="success"
                     >
                       {subscribing === tier.id ? (
                         <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processing...</>
@@ -195,7 +151,7 @@ export function FanClubSection({ artistId, isOwner = false }: FanClubSectionProp
                       ) : (
                         `Subscribe — ${tier.price_bak} BAK`
                       )}
-                    </Button>
+                    </PressableButton>
                   )}
                 </div>
               );

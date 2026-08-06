@@ -32,10 +32,10 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      subscribeToNotifications();
-    }
+    if (!user) return;
+    fetchNotifications();
+    const unsubscribe = subscribeToNotifications();
+    return unsubscribe;
   }, [user]);
 
   const fetchNotifications = async () => {
@@ -86,10 +86,11 @@ export function NotificationBell() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await supabase
+      const { error } = await supabase
         .from("notifications")
         .update({ read: true })
         .eq("id", notificationId);
+      if (error) throw error;
 
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
@@ -104,11 +105,12 @@ export function NotificationBell() {
     if (!user) return;
 
     try {
-      await supabase
+      const { error } = await supabase
         .from("notifications")
         .update({ read: true })
         .eq("user_id", user.id)
         .eq("read", false);
+      if (error) throw error;
 
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
