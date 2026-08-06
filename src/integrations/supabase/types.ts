@@ -5855,6 +5855,7 @@ export type Database = {
         Args: { p_campaign_id: string }
         Returns: Json
       }
+      subscribe_fan_club: { Args: { p_tier_id: string }; Returns: Json }
       transfer_funds: {
         Args: {
           recipient_id: string
